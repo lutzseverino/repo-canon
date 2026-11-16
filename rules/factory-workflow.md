@@ -47,8 +47,7 @@ Implement is the minimum; triage and review are optional. Without triage,
 readiness comes only from a person; without review, implement delivers and
 merges its own PR. Otherwise only review merges. Triage stays read-only, and
 every run ends with a result the factory posts and turns into labels.
-Configuration holds mechanics; execution choices follow Repository model
-policy and review's `differentProvider` follows Provider diversity below.
+Configuration holds mechanics; execution choices follow Model selection below.
 
 ## Handoffs
 
@@ -134,17 +133,15 @@ none of its tickets' models.
 
 Triage's suggestion, the accepting reviewer's label, factory triage's issue
 label and every hand launch, including hand reviews, choose by the host's
-Model guidance: fit first, then the cheaper model when several fit. Host
-guidance owns the fit and cost information; Repo Canon supplies no model
-ranking or task-difficulty ladder. Repository preferences and host capabilities
-bound choices. The one-line model reason identifies the actual guidance used.
-A model without guidance is never chosen by judgment: it runs only when the
-owner explicitly names it for a launch or as a configured default. When
-guidance leaves the choice open, use the configured host default
-(`models.default`), even if unguided, and say that guidance did not settle it.
+Model guidance: fit first, then narrower, then cheaper. Host guidance owns
+the fit and cost information; Repo Canon supplies no model ranking or
+task-difficulty ladder. The one-line model reason identifies the actual
+guidance used.
 
-Prefer omitting `@<effort>` to inherit the per-model override or host-wide
-effort. Explicit effort remains valid. The chosen model label uses
+For model resolution, fallback and provider diversity, follow
+[Scriptorium's model selection documentation](https://github.com/lutzseverino/scriptorium/blob/scriptorium-v4.1.0/docs/usage/host.md#model-selection).
+
+The chosen model label uses
 `model:<slug>` or `model:<provider>/<slug>`, optionally followed by
 `@<effort>`; create the label if the repository lacks it. A `claude-*` or
 `gpt-*` slug needs no provider. Create missing model labels with color
@@ -162,122 +159,6 @@ the brief. An orchestrating agent that accepts the brief is that reviewer: it
 chooses the label itself, weighing the suggestion, and the research run that
 suggested it applies no label. The factory's triage run chooses its own, as
 Triage run says.
-
-Repository preferences constrain the label triage suggests or chooses: select
-within the repository's initial-implement preference and host capabilities.
-The reviewer weighs that preference when applying or replacing the suggestion.
-
-The host owns capabilities, credentials and per-kind defaults, including the
-implement retry default. Defaults alone never define the capability catalog.
-Malformed, conflicting or host-forbidden model labels hold work with a visible
-model-label reason, including a relaunch whose recorded choice is forbidden.
-Repository fallback never bypasses those shared-gate holds; it handles
-temporary unavailability of an otherwise valid choice.
-
-For a hand launch whose fitting provider is draining or paused, wait or choose
-another model whose guidance also fits. Never choose an unfitting model to
-avoid quota. Factory review and implement retry retain deterministic repository
-policy and host per-kind defaults, the `wait`/`host-default` fallback and
-provider diversity below; guidance adds no per-issue factory review chooser.
-
-### Choosing examples
-
-These placeholders illustrate choices, not shipped model guidance, costs or
-effort values. Assume host capabilities and repository preferences permit the
-named choices. The host's guidance says `provider-a/model-docs` suits
-"documentation and policy edits; lower cost", `provider-b/model-general` suits
-"documentation, policy edits and code review; higher cost", and
-`provider-c/model-ui` suits "visual design; lowest cost".
-`provider-d/model-unguided` has no guidance. All providers are available unless
-stated otherwise. Each quoted reason is the one-line reason for that choice.
-
-| Consumer and work                                                               | Choice and reason                                                                                                                                              |
-| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Triage suggestion for a policy edit                                             | Suggest `model:provider-a/model-docs`: "Host guidance fits documentation and policy edits; lower cost than the other fitting model-general."                   |
-| Accepting reviewer of that edit, with model-general suggested                   | Choose `model:provider-a/model-docs`: "Both guidance entries fit policy edits; model-docs is lower cost."                                                      |
-| Factory triage's issue label for a documentation edit                           | Ask for `model:provider-a/model-docs`: "Host guidance fits documentation at lower cost than model-general; model-ui only fits visual design."                  |
-| Hand review of a code change                                                    | Choose `provider-b/model-general`: "Host guidance fits code review; the cheaper models' guidance does not."                                                    |
-| Hand documentation launch, considering the unguided model                       | Choose `provider-a/model-docs`: "Host guidance fits documentation at lower cost; model-unguided has no guidance for a judgment choice."                        |
-| Owner explicitly names model-unguided for a hand launch                         | Use `provider-d/model-unguided`: "Owner explicitly named this model; no guidance-based choice was made."                                                       |
-| Guidance leaves a hand launch's choice open; `models.default` is model-unguided | Use `provider-d/model-unguided`: "Guidance does not settle this work; use the configured host default, which has no guidance."                                 |
-| Hand documentation launch; provider A is draining or paused                     | Wait for A, or choose `provider-b/model-general`: "Host guidance also fits documentation; provider A is held, and available model-ui fits visual design only." |
-
-For effort examples only, suppose host effort is `high` and model-docs has a
-`medium` override. `model:provider-a/model-docs` inherits `medium`;
-`model:provider-b/model-general` inherits `high`.
-`model:provider-a/model-docs@high` explicitly selects `high`; all three are
-valid selections. These choosing examples supply no launch templates: the
-orchestration integration owns the validated status read, effective model and
-effort on each template, and budget in the records-only status view.
-
-## Repository model policy
-
-The optional repository-owned `.github/factory-model-policy.json` has this
-one authoritative structural contract. A present file is a JSON object with
-exactly these required root fields:
-
-- `version`: the number `1`.
-- `fallback`: `"wait"` or `"host-default"`.
-- `runKinds`: an object with optional `triage`, `implement` and `review` keys.
-  `triage` and `review` each hold a Selection. `implement` is an object with
-  optional `initial` and `retry` keys, each a Selection.
-
-A Selection is exactly `{ "provider": string, "model": string, "effort"?: string }`
-or exactly `{ "source": "issue-label" }`. Every string is nonempty and trimmed.
-Omitted effort inherits host/provider configuration. Unknown fields at every
-level, mixed selectors, wrong types, non-object roots, malformed JSON and
-unsupported versions are invalid. Empty `runKinds` and empty `implement`
-objects are valid inheritance. A present file requires explicit fallback;
-Repo Canon chooses no fallback, provider, model or effort for adopters.
-The read-only `factory-model-policy` check passes absence as unconfigured and
-fails invalid or unreadable files with their path and an actionable correction.
-It validates syntax and structure locally, without a live host catalog or
-credentials. Capability membership and temporary availability are host duties.
-
-Scriptorium v4 resolves selections within host capabilities. The issue label
-selects the initial implement attempt only: label, then initial-implement
-policy, then host default. Triage, review and implement retry use their stage's
-policy, then host default. A stage can explicitly reuse the issue label with
-`{ "source": "issue-label" }`, which requires a usable issue label at runtime.
-Missing preferences or a missing file retain host defaults, including retry;
-they never imply a Repo Canon model choice.
-
-For an otherwise valid preference that is unavailable, `wait` preserves the
-issue, work and PR without launching until it is usable or configuration
-changes. `host-default` uses the available host default for that kind/attempt,
-otherwise waits. Neither authorizes arbitrary catalog substitution, credential
-expansion, retry loops, label rewrites or bypassing a bad-label hold.
-
-The repository deliberately creates or changes its policy in a separate
-post-adoption commit. Adoption owns validation only: it never creates,
-rewrites, normalizes, deletes or copies policy values, including on update,
-removal or re-adoption. Invalid data is reported, never repaired. The
-repository that deliberately configures the policy supplies all its values.
-
-### Provider diversity
-
-`runKinds.review.differentProvider` remains mechanics. When true, compare the
-chosen review provider with the implement attempt that actually produced the
-reviewed PR, including retries and hand-backs. If they match, the sole
-alternative is the host's explicitly configured per-kind review default.
-Switch only when no policy file exists or fallback is `host-default`, and
-that default is available within capabilities on a different provider.
-Otherwise run on the chosen provider and report unavailable diversity; never
-wait solely for diversity or scan the catalog. This applies even when the
-review preference itself is available. False or absent adds no diversity
-requirement.
-
-Acceptance examples use placeholders, never shipped defaults: diversity is
-true, the PR-producing implement attempt used `provider-a/model-impl`, and
-named models are available within capabilities unless stated otherwise.
-
-| Review preference                     | Fallback       | Host review default                            | Outcome                                                          |
-| ------------------------------------- | -------------- | ---------------------------------------------- | ---------------------------------------------------------------- |
-| `provider-a/model-review` (available) | `host-default` | `provider-b/model-host`                        | Switch to the host default for diversity                         |
-| `provider-a/model-review`             | `wait`         | `provider-b/model-host`                        | Keep preference; report unavailable diversity without waiting    |
-| `provider-a/model-review`             | `host-default` | Missing, provider A, or unavailable provider B | Keep preference; report unavailable diversity without waiting    |
-| No policy                             | —              | `provider-b/model-host`                        | Host default satisfies diversity                                 |
-| No policy                             | —              | `provider-a/model-host`                        | Keep host default; report unavailable diversity, no scan or wait |
 
 ## Triage run
 
@@ -302,8 +183,7 @@ contracts rule, so a run on one asks for no `type:` label in any outcome.
 
 A brief it writes with no open question it accepts, as the GitHub rules'
 Readiness roles allow, asking for `state:ready` with the labels readiness
-needs: one `model:` label it chooses under Model selection and Repository model
-policy, within host capabilities, any
+needs: one `model:` label it chooses under Model selection, any
 `factory:skip` that Skipped work requires, and a `priority:` label as the
 GitHub rules' Labels section says.
 

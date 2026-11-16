@@ -75,7 +75,7 @@ describes direct callers and retirement of the former `scripts/` targets.
 The resolved `standard` profile combines exact files, contextual files,
 repository declarations and whole skill directories. The `factory` profile
 adds factory configuration, workflow and rules, and the `factory` skill.
-The `standard` profile has nine checks, and `factory` has ten. Each has two fixes
+The `standard` and `factory` profiles each have nine checks, two fixes
 and four discovery scripts.
 
 The `workbench` profile excludes the other default declarations with
@@ -192,17 +192,3 @@ adoption establish those separately. Source publication follows the
 [release procedure](release.md), and each
 [published release](https://github.com/lutzseverino/repo-canon/releases) carries
 its notes.
-
-The factory profile's `factory-workflow` declaration retains the read-only
-`factory-model-policy` check and `operations/lib/factory-model-policy.mjs`,
-with no parser packages or network dependency. The optional repository-owned
-`.github/factory-model-policy.json` is never an exact, copied, reconciled or
-discovery-owned file. Adoption, update, removal and re-adoption preserve it
-byte for byte, and validation reports invalid values without repairing them.
-Deliberate policy changes belong in a separate post-adoption commit. Exact
-configuration version 3 holds mechanics only; Scriptorium v4 resolves repository
-preferences and fallback within host capabilities and credentials. Absence
-retains host per-kind defaults, including implement retry. See the
-[factory workflow rules](../../rules/factory-workflow.md#repository-model-policy)
-for the authoritative schema and resolution contract. Host deployment and live
-acceptance remain separate work.
