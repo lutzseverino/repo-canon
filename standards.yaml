@@ -377,8 +377,12 @@ defaults:
               - operations/lib/entry-document.mjs
               - operations/lib/rendered-markdown.mjs
               - operations/lib/local-markdown-links.mjs
+              - operations/lib/github-operation.mjs
               - vendor/marked
               - vendor/parse5
+              - vendor/postern/postern.mjs
+              - vendor/postern/LICENSE
+              - vendor/postern/README.md
             arguments: []
           prerequisite:
             version-arguments: ["--version"]

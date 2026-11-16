@@ -724,12 +724,13 @@ Set \`HARBOR_PORT\`.
   });
 
   assert.equal(outcome.status, 0, outcome.stderr);
-  assert.deepEqual(outcome.result, {
-    format: "repo-standards/result/v2",
-    status: "passed",
-    message:
-      "Repository README structure is valid; factual content still requires maintainer or agent review.",
-  });
+  assert.equal(outcome.result.format, "repo-standards/result/v2");
+  assert.equal(outcome.result.status, "passed");
+  // The fixture has no GitHub remote, so the About comparison is skipped.
+  assert.match(
+    outcome.result.message,
+    /^Repository README structure is valid; factual content still requires maintainer or agent review\. The GitHub About description was not compared: /,
+  );
 });
 
 test("passes an all-rights-reserved notice with its matching License link", (t) => {

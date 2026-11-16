@@ -8,8 +8,9 @@ whose allowed target is the root `README.md`, and returns one
 
 The operation requires Node.js 24 or 26. Its integration metadata is `node` with
 `["--version"]`, version range `>=24.0.0 <25.0.0 || >=26.0.0 <27.0.0`, retained resource directories
-`vendor/marked` and `vendor/parse5`, the shared rendered-Markdown and local-link
-modules, and a 30-second timeout. It uses the vendored Marked 18.0.13 lexer,
+`vendor/marked` and `vendor/parse5`, the shared rendered-Markdown, local-link
+and GitHub operation modules, the vendored Postern bundle with its license and
+metadata, and a 30-second timeout. It uses the vendored Marked 18.0.13 lexer,
 parse5 8.0.1 fragment parser, and shared
 `operations/lib/rendered-markdown.mjs` resource so structural decisions follow
 one rendered Markdown and HTML representation. The operation keeps its
@@ -28,7 +29,7 @@ the term and its defining glossary in each correction. It reads these files
 even when they belong to another declaration or lie outside this check's target;
 it never changes them. Repositories without glossaries pass this part.
 
-One optional project image, then the title, description and badges form one
+A leading project image, then the title, description and badges form one
 centered header block. Before the first title, the check accepts only one
 plain image or `picture` containing exactly one visible `img` fallback with a
 nonempty source. A picture's `source` alternatives count as the same image;
@@ -43,7 +44,7 @@ a `p align="center"` centers its content too. Attribute names and values are
 case-insensitive, but `data-align` and values such as `centerpiece` do not
 count. HTML comments and hidden elements contribute no rendered content or
 centering. Both a single centered `div` and individually centered title,
-description and badge paragraphs pass, with an optional image centered by the
+description and badge paragraphs pass, with a project image centered by the
 shared wrapper, its containing paragraph, or its own accepted centering
 attribute. The check still locates the first nonempty level-one title and
 now validates its rendered prefix.
@@ -66,8 +67,30 @@ keep their heading, section, text and badge behavior.
 The rules give a GitHub-supported theme-aware example with dark and light
 sources plus an image fallback. Image suitability, actual source availability
 and theme rendering, and the choice between decorative empty alt text and an
-informative text alternative remain contextual adoption assessments. The check
-neither requires an image nor creates artwork or selects arbitrary icon files.
+informative text alternative remain contextual adoption assessments. The rules
+require a project's icon as that image; whether a project has an icon is an
+adoption assessment, so the check neither requires an image nor creates
+artwork or selects icon files.
+
+When the README has a description paragraph, the check also reads the
+repository's GitHub About description through the shared GitHub repository read
+in `operations/lib/github-operation.mjs`, the one the GitHub remote-setup fixes
+and probes use, with Postern access and the signed-in `gh` credential. It reads
+the repository and never writes the About description or the README. It trims
+both texts and collapses each whitespace run to one space, then compares them
+exactly, so letter case, punctuation and a final period count. A difference is a
+`failed` correction quoting both texts and asking for the same sentence; an
+empty, `null` or missing About description is a difference. A README without a
+description paragraph already fails, and the check makes no GitHub request.
+
+The comparison is skipped when the About description cannot be read: `gh` is
+missing or older than 2.57.0, no `gh` account is signed in for github.com, the
+Git remotes give no single github.com repository, or a GitHub request fails as
+not found, unauthenticated, rate-limited, invalid or unavailable. A skip never
+changes the status the other README checks give. The message then says the
+About description was not compared and gives the shared read's neutral reason,
+which carries no platform message, account detail or credential. A match adds
+a note to the message saying so.
 
 `operations/lib/entry-document.mjs` is retained alongside both entry-document
 checks and the documentation scope drafter, the documentation declaration's
@@ -79,11 +102,12 @@ review.
 
 The result statuses have distinct meanings:
 
-- `passed` means the checked structure is valid. Description facts, badges, commands,
+- `passed` means the checked structure is valid and the About description
+  matches or was not compared. Description facts, badges, commands,
   license facts, and prose still need maintainer or agent review.
 - `failed` is a policy failure with concrete corrections, such as centering the
   project image, title, description or badges, removing unexpected content
-  before the title, restoring section order, reducing a pointer
+  before the title, making the About description the README description, restoring section order, reducing a pointer
   section to its link, or fixing the License link. It is returned by a successful process so Repository
   Standards can collect ordinary check evidence.
 - `blocked` means a missing, multiple, or unnamed root `LICENSE` file requires
@@ -128,10 +152,22 @@ link in the same run, within their separate declarations' targets.
 Run the public-boundary fixtures with Node.js 24 or 26:
 
 ```sh
-node --test test/repository-readme-check.test.mjs
+node --test test/repository-readme-check.test.mjs test/repository-readme-about.test.mjs
 ```
 
-The fixtures cover optional plain images and theme-aware pictures in both
+`test/repository-readme-about.test.mjs` runs the About comparison against the
+credential-only `gh` fixture and the stateful Postern transport fixture, so no
+request reaches GitHub. It covers equal texts, whitespace-only differences,
+differences by a final period, letter case or a word, empty, `null` and missing
+About descriptions, and no request without a description paragraph. Every
+skipped case passes a valid README and keeps the structural corrections of an
+invalid one: missing or old `gh`, no signed-in account, no, non-GitHub or
+several github.com remotes, failed account and repository requests, invalid
+responses and transport failures. Each message is checked for the credential,
+account and platform message, and the run for project changes and GitHub
+writes. The comparison also runs from the retained layout.
+
+The fixtures cover headers with and without plain images and theme-aware pictures in both
 centered header forms, image links, image-specific centering corrections,
 extra images, unrelated rendered prefixes, missing or hidden picture fallbacks,
 and comments and nonrendered prefixes. They also cover Markdown inside a

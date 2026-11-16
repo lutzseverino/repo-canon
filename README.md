@@ -1,6 +1,6 @@
 <div align="center">
   <h1>Repo Canon</h1>
-  <p>Shared documentation, contribution, and coding-agent conventions for maintainers who want consistent repositories.</p>
+  <p>A ready-made setup to adopt with Repo Standards: AGENTS.md, agent skills, contribution guidelines, issue and PR templates, and checks.</p>
   <p>
     <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black" alt="JavaScript">
     <img src="https://img.shields.io/badge/Node.js-24%20%7C%2026-5FA04E?logo=node.js&logoColor=white" alt="Node.js 24 or 26">
