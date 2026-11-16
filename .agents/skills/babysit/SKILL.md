@@ -142,8 +142,15 @@ Immediately before its merge write, it reads `labels.hold` and
 `labels.releaseHold` from
 `.scriptorium/config.json` at that same destination default-branch snapshot and
 lists open issues and PRs for the repository hold and open PRs for the release
-hold, excluding only the PR being merged. An absent file or key adds no hold. Unreadable or invalid configuration or issue/PR reads
-permit no merge write and follow the freshness-read failure handling.
+hold, excluding only the PR being merged. A candidate is a hold only when its
+own labels carry the exact configured name (REST label objects and strings are
+recognized). A filter result disagreeing with a candidate's own labels refuses
+with exit `3`, even alongside real holds: the diagnostic names each inconsistent
+item, label key and name, and pinned revision, and states that no hold was
+confirmed for that item and none was bypassed. Follow the owner handoff without
+retrying merge. An absent file or key adds no hold. Unreadable labels or invalid
+configuration or issue/PR reads permit no merge write and follow the
+freshness-read failure handling.
 
 ## Branch-update recovery
 

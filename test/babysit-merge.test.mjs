@@ -42,6 +42,11 @@ const factoryConfiguration = {
   version: 1,
   labels: { releaseHold: "factory:release-hold" },
 };
+/**
+ * @param {number} number
+ * @param {string} [state]
+ * @param {(string | { name: string })[]} [labels]
+ */
 const releaseIssue = (
   number,
   state = "open",
@@ -385,6 +390,145 @@ test("another open release PR holds an installed merge without a write", (t) => 
   assert.equal(result.state.merge, undefined);
 });
 
+test("a stale hold-filter result refuses with the inconsistent item's labels and pinned revision", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const result = run(
+    t,
+    {
+      factoryConfiguration: { version: 3, labels: { hold: "factory:hold" } },
+      releaseIssuesResponse: [
+        { number: 18, state: "open", labels: [{ name: "state:triage" }] },
+      ],
+    },
+    undefined,
+    target,
+  );
+  assert.equal(result.status, 3, result.stderr);
+  assert.equal(result.state.merge, undefined);
+  assert.match(result.stderr, /#18/);
+  assert.match(result.stderr, /labels\.hold.*factory:hold/);
+  assert.ok(result.stderr.includes("b".repeat(40)), result.stderr);
+  assert.match(
+    result.stderr,
+    /label-filter result disagrees with.*own labels/i,
+  );
+  assert.match(result.stderr, /no hold was confirmed.*none was bypassed/i);
+  assert.doesNotMatch(result.stderr, /Repository or release merge hold/);
+});
+
+test("only exact own-label matches confirm repository and release holds", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const key of ["hold", "releaseHold"]) {
+    const label = key === "hold" ? "factory:hold" : "factory:release-hold";
+    for (const { labels, status } of [
+      { labels: [{ name: "type:bug" }, { name: label }], status: 9 },
+      { labels: ["type:bug", label], status: 9 },
+      { labels: [{ name: "type:bug" }, label], status: 9 },
+      { labels: [{ name: label.toUpperCase() }], status: 3 },
+      { labels: [], status: 3 },
+    ]) {
+      const issue = { number: 18, state: "open", labels };
+      const result = run(
+        t,
+        {
+          factoryConfiguration: { version: 3, labels: { [key]: label } },
+          releaseIssuesResponse: [
+            key === "hold" ? issue : { ...issue, pull_request: {} },
+          ],
+        },
+        undefined,
+        target,
+      );
+      assert.equal(result.status, status, result.stderr);
+      assert.equal(result.state.merge, undefined);
+      assert.match(result.stderr, /#18/);
+      if (status === 9)
+        assert.match(result.stderr, /Repository or release merge hold/);
+      else {
+        assert.ok(result.stderr.includes(`labels.${key}`), result.stderr);
+        assert.ok(result.stderr.includes(label), result.stderr);
+        assert.ok(result.stderr.includes("b".repeat(40)), result.stderr);
+        assert.match(
+          result.stderr,
+          /label-filter result disagrees with.*own labels/i,
+        );
+        assert.doesNotMatch(result.stderr, /Repository or release merge hold/);
+      }
+    }
+  }
+});
+
+test("inconsistent items take precedence over real holds and name every mismatch", (t) => {
+  for (const key of ["hold", "releaseHold"]) {
+    const label = "factory:hold";
+    const items = [
+      releaseIssue(24, "open", [{ name: label }]),
+      releaseIssue(18, "open", [{ name: "state:triage" }]),
+      releaseIssue(19, "open", []),
+    ];
+    for (const issues of [items, items.toReversed()]) {
+      const result = run(t, {
+        factoryConfiguration: { version: 3, labels: { [key]: label } },
+        releaseIssuesResponse: issues,
+      });
+      assert.equal(result.status, 3, result.stderr);
+      assert.equal(result.state.merge, undefined);
+      assert.match(result.stderr, /#18/);
+      assert.match(result.stderr, /#19/);
+      assert.doesNotMatch(result.stderr, /Repository or release merge hold/);
+    }
+  }
+});
+
+test("unreadable candidate labels refuse even when another entry matches the hold", (t) => {
+  for (const key of ["hold", "releaseHold"]) {
+    for (const labels of [
+      undefined,
+      null,
+      "factory:hold",
+      {},
+      [null],
+      [42],
+      [{}],
+      [{ name: 42 }],
+      [{ name: "factory:hold" }, {}],
+    ]) {
+      const result = run(t, {
+        factoryConfiguration: { version: 3, labels: { [key]: "factory:hold" } },
+        releaseIssuesResponse: [{ ...releaseIssue(18), labels }],
+      });
+      assert.equal(result.status, 3, result.stderr);
+      assert.equal(result.state.merge, undefined);
+      assert.match(result.stderr, /Could not read own labels for #18/);
+      assert.ok(result.stderr.includes(`labels.${key}`), result.stderr);
+      assert.ok(result.stderr.includes("b".repeat(40)), result.stderr);
+      assert.doesNotMatch(result.stderr, /Repository or release merge hold/);
+    }
+  }
+});
+
+test("irrelevant filter results remain exempt even with inconsistent or missing labels", (t) => {
+  for (const key of ["hold", "releaseHold"]) {
+    const result = run(t, {
+      factoryConfiguration: { version: 3, labels: { [key]: "factory:hold" } },
+      releaseIssuesResponse: [
+        { number: 12, state: "open", pull_request: {} },
+        releaseIssue(12, "open", []),
+        { number: 24, state: "closed", pull_request: {} },
+        releaseIssue(25, "closed", []),
+        ...(key === "releaseHold"
+          ? [
+              { number: 18, state: "open" },
+              { number: 19, state: "open", labels: [] },
+            ]
+          : []),
+      ],
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.state.merge);
+  }
+});
+
 test("only other open labelled PRs hold merges; issues and the release PR itself do not", (t) => {
   const cases = [
     { issues: [releaseIssue(12)], status: 0 },
@@ -436,7 +580,10 @@ test("repository holds preserve pinned configuration, pagination, label encoding
   };
   const paged = run(t, {
     factoryConfiguration: configuration,
-    releaseIssuePages: [[releaseIssue(12)], [{ number: 24, state: "open" }]],
+    releaseIssuePages: [
+      [releaseIssue(12)],
+      [{ number: 24, state: "open", labels: [{ name: label }] }],
+    ],
   });
   assert.equal(paged.status, 9, paged.stderr);
   assert.match(paged.stderr, /#24/);
