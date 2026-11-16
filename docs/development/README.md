@@ -77,9 +77,11 @@ the release fixture's answers and a disposable source containing only declared
 inputs; GitHub HTTP responses and Git transport use local fixtures, with no
 in-tree factory dependency. The Git attributes guidance's worked block and the
 release fixture must mark every `.mjs`, `.js` and `.sh` file that the standard
-and factory declarations install outside `vendor/` and `.github/`, and no
-repository-owned path. Standard/factory updates from v0.27.0, whose block
-omits two of them, must request the `git-attributes` reassessment.
+and factory declarations install outside `vendor/`, `.github/` and
+`.repo-standards/`, and no repository-owned path. Standard/factory updates from
+v0.27.0, whose block omits the code-review skill's `ownership-facts.mjs` and
+`operations/lib/factory-labels.mjs`, must request the `git-attributes`
+reassessment.
 Standard/factory updates from an orchestrate-owning release verify removal of
 the whole skill, its link and retained inputs, including the CLI's normal
 preservation of edited installations. A disposable source-authoring update

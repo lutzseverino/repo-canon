@@ -219,13 +219,14 @@ for (const [name, attributes] of [
         .trim()
         .split("\n")
         .map((line) => line.split(" ")[0]);
-    for (const pattern of entries) {
-      assert.ok(!pattern.startsWith(".repo-standards/"), pattern);
-      assert.ok(
-        !["scripts/**", "operations/**", ".agents/skills/**"].includes(pattern),
-        pattern,
-      );
-    }
+    // Each entry names an installed counted file or its installed skill's own
+    // directory, never `.repo-standards/` or a shared parent.
+    const owned = new Set(
+      installed.map((path) =>
+        path.replace(/^(\.agents\/skills\/[^/]+\/).*/, "$1**"),
+      ),
+    );
+    for (const pattern of entries) assert.ok(owned.has(pattern), pattern);
   });
 
 test("public CLI 10.0.0 adopts and updates the standard and factory profiles with vendored installed code, repository-wide rules and stack rules only for a confirmed Project", (t) => {
