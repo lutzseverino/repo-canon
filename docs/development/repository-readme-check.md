@@ -83,10 +83,11 @@ exactly, so letter case, punctuation and a final period count. A difference is a
 empty, `null` or missing About description is a difference. A README without a
 description paragraph already fails, and the check makes no GitHub request.
 
-The comparison is skipped when the About description cannot be read: `gh` is
-missing or older than 2.57.0, no `gh` account is signed in for github.com, the
-Git remotes give no single github.com repository, or a GitHub request fails as
-not found, unauthenticated, rate-limited, invalid or unavailable. A skip never
+The comparison is skipped when the About description cannot be read: Git is
+missing or older than 2.18.0, `gh` is missing or older than 2.57.0, no `gh`
+account is signed in for github.com, the Git remotes give no single github.com
+repository, GitHub resolves that repository as another one, or a GitHub request
+fails as not found, unauthenticated, rate-limited, invalid or unavailable. A skip never
 changes the status the other README checks give. The message then says the
 About description was not compared and gives the shared read's neutral reason,
 which carries no platform message, account detail or credential. A match adds

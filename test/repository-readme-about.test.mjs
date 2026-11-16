@@ -203,7 +203,7 @@ const unreadable = [
       },
     },
     undefined,
-    /Multiple github\.com repositories/,
+    /Multiple github\.com repositories.*resolve the target before Repository README check\./,
   ],
   .../** @type {[number, RegExp][]} */ ([
     [404, /HTTP 404/],

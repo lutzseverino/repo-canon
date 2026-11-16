@@ -257,7 +257,7 @@ for (const probe of probes) {
       assertProbe(
         scenario.invoke(),
         "not-ready",
-        "Multiple github.com repositories were found in Git remotes (acme/widgets, other/widgets); resolve the target before setup.",
+        `Multiple github.com repositories were found in Git remotes (acme/widgets, other/widgets); resolve the target before ${probe.name}.`,
       );
       assert.deepEqual(scenario.readState().apiHosts ?? [], []);
       assertNoWrites(scenario);
