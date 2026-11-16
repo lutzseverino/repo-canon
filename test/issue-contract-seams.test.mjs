@@ -128,6 +128,65 @@ function setPrevious(s, state) {
   s.comments[s.comments.length - 1] = notice(state);
 }
 
+for (const mode of ["prepared", "comment", "body"]) {
+  for (const eventLabel of ["state:ready", "ready-for-agent"]) {
+    test(`${mode}: a former readiness name preserves exemption with a ${eventLabel} review event`, () => {
+      const s = historical(mode);
+      setPrevious(s, { ...previous(s), label: "ready-for-agent" });
+      s.issueEvents[0].label.name = eventLabel;
+      const decision = decide(s);
+      const state = stateOf(decision);
+      assert.doesNotMatch(decision.message, /Seams/);
+      assert.equal(state.format, seamsResultFormat);
+      assert.equal(state.seamsExemption.label, "state:ready");
+      assert.equal(state.seamsExemption.reviewEventId, "101");
+      if (eventLabel === "state:ready") {
+        assert.equal(decision.exitCode, 0, decision.message);
+        assert.deepEqual(decision.removeLabels, []);
+        assert.deepEqual(decision.addLabels, []);
+        assert.equal(state.status, "approved");
+        assert.equal(state.label, "state:ready");
+      }
+      // Current readiness for former event names belongs to #1060.
+    });
+  }
+
+  test(`${mode}: retained v3 evidence reads former names and writes canonical names`, () => {
+    const s = historical(mode);
+    rewrite(s, decide(s));
+    const state = previous(s);
+    state.label = "ready-for-agent";
+    state.seamsExemption.label = "ready-for-agent";
+    setPrevious(s, state);
+    const decision = decide(s);
+    assert.equal(decision.exitCode, 0, decision.message);
+    assert.deepEqual(decision.removeLabels, []);
+    assert.deepEqual(decision.addLabels, []);
+    const written = stateOf(decision);
+    assert.equal(written.format, seamsResultFormat);
+    assert.equal(written.status, "approved");
+    assert.equal(written.label, "state:ready");
+    assert.deepEqual(written.seamsExemption, {
+      ...state.seamsExemption,
+      label: "state:ready",
+    });
+  });
+
+  test(`${mode}: unrelated stored labels never qualify as readiness`, () => {
+    for (const label of ["ready-for-human", "state:owner", "unknown-label"]) {
+      for (const retained of [false, true]) {
+        const s = historical(mode);
+        if (retained) rewrite(s, decide(s));
+        const state = previous(s);
+        state.label = label;
+        if (retained) state.seamsExemption.label = label;
+        setPrevious(s, state);
+        assert.match(decide(s).message, /Seams/);
+      }
+    }
+  });
+}
+
 test("historical factory readiness cannot use repository role when its proof is missing", () => {
   for (const mode of ["comment", "body"]) {
     for (const author of ["factory[bot]", "Factory[bot]", "FACTORY[BOT]"]) {
@@ -245,6 +304,22 @@ test("old age, unrelated/structural/unreadable evidence and boundary equality gr
       });
     },
     (s) => {
+      setPrevious(s, { ...previous(s), reviewEventId: "999" });
+    },
+    (s) => {
+      s.issueEvents[0].actor.login = "another-maintainer";
+      s.permissions["another-maintainer"] = { role: "admin" };
+    },
+    (s) => {
+      s.issueEvents[0].label.name = "ready-for-human";
+    },
+    (s) => {
+      setPrevious(s, { ...previous(s), evaluatedAt: "2036-11-11T00:00:00Z" });
+    },
+    (s) => {
+      s.issueEvents[0].created_at = "2036-11-11T00:00:00Z";
+    },
+    (s) => {
       s.permissions.maintainer = { role: "write" };
     },
     (s) => {
@@ -255,10 +330,16 @@ test("old age, unrelated/structural/unreadable evidence and boundary equality gr
         "<!-- repo-canon:issue-contract-feedback --> unreadable";
     },
   ]) {
-    const s = historical("prepared");
-    s.issue.created_at = "2000-01-01T00:00:00Z";
-    alter(s);
-    assert.match(decide(s).message, /Seams/);
+    for (const mode of ["prepared", "comment", "body"]) {
+      for (const label of ["state:ready", "ready-for-agent"]) {
+        const s = historical(mode);
+        s.issue.created_at = "2000-01-01T00:00:00Z";
+        alter(s);
+        const state = previous(s);
+        if (state) setPrevious(s, { ...state, label });
+        assert.match(decide(s).message, /Seams/);
+      }
+    }
   }
 });
 

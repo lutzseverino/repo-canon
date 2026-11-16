@@ -140,8 +140,8 @@ test("every lutzseverino GitHub document link in source inputs is pinned", () =>
 // ADR 0031 renamed the workflow states and categories into label families and
 // removed `factory:needs-input`. Installed text names only the new labels; the
 // vendored upstream snapshot and each skill's credits describe upstream's own
-// roles, the triage label mapping's first column names them, and label setup
-// names the former labels it renames.
+// roles, the triage label mapping's first column names them,
+// and the canonical label metadata names the former labels setup renames.
 test("no source input names a label that ADR 0031 renamed or removed", () => {
   const former =
     /(?<![\w-])(?:needs-triage|needs-info|ready-for-agent|ready-for-human|needs-input|needsInput)(?![\w-])/;
@@ -149,7 +149,7 @@ test("no source input names a label that ADR 0031 renamed or removed", () => {
     if (
       path.startsWith("vendor/") ||
       path.endsWith("/CREDITS.md") ||
-      path === "operations/setup-github-labels.mjs"
+      path === "operations/lib/canonical-labels.mjs"
     )
       continue;
     let text = readFileSync(join(root, path), "utf8");

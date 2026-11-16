@@ -150,6 +150,15 @@ review, the review precedes or equals its evaluation, and any source edit time
 also predates cutover. Missing/unreadable/unrelated or awaiting-review evidence
 never qualifies. Pre-release age alone never qualifies an unapproved Brief.
 
+A stored approval naming a former name of `state:ready`, currently
+`ready-for-agent`, counts as `state:ready`. The same standard-owned former-name
+declaration drives canonical-labels setup's in-place renames. The exemption's
+review-event lookup accepts either name while still requiring the recorded event
+ID and actor. Written results use `state:ready` in both `label` and
+`seamsExemption.label`, including when retaining v3 evidence under a former name;
+the result format is unchanged. This equivalence does not change readiness
+transition or ordering checks for events under former names.
+
 ### Exemption result v3
 
 An exempt revision publishes `format: "repo-canon/issue-contract-state/v3"`,
@@ -167,7 +176,7 @@ identity. The remaining values identify the original exact pre-cutover approval,
 its publication and its authorized review. A held source selection can retain
 this historical proof while its top-level revision/source are null; it grants
 no eligibility until the selector again proves that exact unchanged revision.
-They persist unchanged on repeated
+Except for canonicalizing former readiness names, they persist unchanged on repeated
 evaluations, readiness removal, superseding states and fresh review of that same
 revision. The top-level current approval fields keep their existing meanings:
 exemption is never authorization. A changed revision/source loses the exemption
