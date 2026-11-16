@@ -55,6 +55,246 @@ const releaseIssue = (
   },
 });
 
+test("direct merge refuses an owner gate without changing delivery state", (t) => {
+  const result = run(t, { labels: ["gate:owner-review"], traceRequests: true });
+  assert.equal(result.status, 3, result.stderr);
+  assert.match(result.stderr, /gate:owner-review on the PR/);
+  assert.equal(result.state.merge, undefined);
+  assert.deepEqual(result.state.labels, ["gate:owner-review"]);
+  assert.ok(
+    result.state.requests.every((request) =>
+      /^(GET |POST \/graphql$)/.test(request),
+    ),
+  );
+});
+
+test("owner gates block source and installed merges across author policies", (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const target of [undefined, installed]) {
+    for (const state of [
+      {},
+      { factoryConfiguration: { version: 3, labels: {} } },
+      { author: "another-app[bot]", reviewConfiguration: { policy } },
+      { author: "factory-app[bot]", reviewConfiguration: {} },
+      {
+        author: "factory-app[bot]",
+        reviewConfiguration: { policy },
+        reviews: [review(outcome)],
+      },
+    ]) {
+      for (const label of [
+        "gate:owner-review",
+        "gate:major-release",
+        "gate:custom",
+      ]) {
+        const result = run(t, { ...state, labels: [label] }, undefined, target);
+        assert.equal(result.status, 3, result.stderr);
+        assert.match(result.stderr, new RegExp(`${label} on the PR`));
+        assert.equal(result.state.merge, undefined);
+        assert.equal(result.stdout, "");
+      }
+    }
+  }
+});
+
+test("closing-issue gates survive partial removal; fresh invocations resume after all are cleared", (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const target of [undefined, installed]) {
+    const original = {
+      labels: ["gate:major-release", "type:bug"],
+      closes: [5, 7],
+      issues: {
+        5: ["state:ready"],
+        7: ["gate:owner-review"],
+        8: ["gate:custom"],
+      },
+      reviews: [review(outcome)],
+      comments: [{ body: "Owner approved; please merge" }],
+      traceRequests: true,
+    };
+    const both = run(t, original, undefined, target);
+    assert.equal(both.status, 3, both.stderr);
+    assert.match(
+      both.stderr,
+      /gate:major-release on the PR.*gate:owner-review on #7/,
+    );
+    const remaining = run(
+      t,
+      { ...original, labels: ["type:bug"] },
+      undefined,
+      target,
+    );
+    assert.equal(remaining.status, 3, remaining.stderr);
+    assert.match(remaining.stderr, /gate:owner-review on #7/);
+    for (const result of [both, remaining]) {
+      assert.equal(result.state.merge, undefined);
+      assert.deepEqual(result.state.issues, original.issues);
+      assert.deepEqual(result.state.reviews, original.reviews);
+      assert.deepEqual(result.state.comments, original.comments);
+      assert.ok(
+        result.state.requests.every((request) =>
+          /^(GET |POST \/graphql$)/.test(request),
+        ),
+      );
+    }
+    const cleared = {
+      ...original,
+      labels: ["type:bug"],
+      issues: { ...original.issues, 7: [] },
+    };
+    const resumed = run(t, cleared, undefined, target);
+    assert.equal(resumed.status, 0, resumed.stderr);
+    assert.ok(
+      resumed.state.merge,
+      "unrelated issue #8's gate cannot hold delivery",
+    );
+    const issueLess = run(
+      t,
+      { labels: ["type:bug"], issues: original.issues },
+      undefined,
+      target,
+    );
+    assert.equal(issueLess.status, 0, issueLess.stderr);
+    for (const { state, status } of [
+      { state: { stale: true }, status: 4 },
+      { state: { strict: false }, status: 3 },
+      { state: { checks: [] }, status: 2 },
+      {
+        state: {
+          author: "factory-app[bot]",
+          reviewConfiguration: { policy },
+          reviews: [],
+        },
+        status: 5,
+      },
+    ]) {
+      const result = run(t, { ...cleared, ...state }, undefined, target);
+      assert.equal(result.status, status, result.stderr);
+      assert.equal(result.state.merge, undefined);
+    }
+  }
+});
+
+const gateConnection = (nodes = []) => ({
+  nodes,
+  pageInfo: { hasNextPage: false },
+});
+const gatePull = () => ({
+  labels: gateConnection(),
+  closingIssuesReferences: gateConnection([
+    { number: 5, labels: gateConnection() },
+  ]),
+});
+const gateResponse = (pull) => ({
+  data: { repository: { pullRequest: pull } },
+});
+
+test("incomplete, malformed and failed owner-gate evidence never permits a merge", (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const incomplete = [
+    {},
+    { errors: [{ message: "gate query failed" }] },
+    { ...gateResponse(gatePull()), errors: { message: "malformed errors" } },
+    ...[null, {}, { labels: gateConnection() }].map(gateResponse),
+    ...[
+      { nodes: [] },
+      { nodes: null, pageInfo: { hasNextPage: false } },
+      { nodes: [], pageInfo: {} },
+      { nodes: [], pageInfo: { hasNextPage: "false" } },
+      { nodes: [], pageInfo: { hasNextPage: true } },
+    ].flatMap((connection) => [
+      gateResponse({ ...gatePull(), labels: connection }),
+      gateResponse({ ...gatePull(), closingIssuesReferences: connection }),
+      gateResponse({
+        ...gatePull(),
+        closingIssuesReferences: gateConnection([
+          { number: 5, labels: connection },
+        ]),
+      }),
+    ]),
+    ...[null, {}, { name: null }, { name: 42 }, { name: "" }].flatMap(
+      (label) => [
+        gateResponse({ ...gatePull(), labels: gateConnection([label]) }),
+        gateResponse({
+          ...gatePull(),
+          closingIssuesReferences: gateConnection([
+            { number: 5, labels: gateConnection([label]) },
+          ]),
+        }),
+      ],
+    ),
+    ...[null, {}, { number: 0 }, { number: "5" }].map((issue) =>
+      gateResponse({
+        ...gatePull(),
+        closingIssuesReferences: gateConnection([issue]),
+      }),
+    ),
+  ];
+  for (const target of [undefined, installed]) {
+    for (const ownerGatesResponse of incomplete) {
+      const result = run(t, { ownerGatesResponse }, undefined, target);
+      assert.equal(
+        result.status,
+        3,
+        `${JSON.stringify(ownerGatesResponse)}\n${result.stderr}`,
+      );
+      assert.match(result.stderr, /owner.gate/i);
+      assert.equal(result.state.merge, undefined);
+    }
+    for (const failOwnerGates of [502, 403, 401]) {
+      const result = run(
+        t,
+        { failOwnerGates, traceRequests: true },
+        undefined,
+        target,
+      );
+      assert.equal(
+        result.status,
+        failOwnerGates === 502 ? 3 : 1,
+        result.stderr,
+      );
+      assert.equal(result.state.merge, undefined);
+      assert.equal(result.state.requests.at(-1), "POST /graphql");
+    }
+  }
+});
+
+test("final preflight observes new PR and closing-issue gates after slow checks or threads", (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const target of [undefined, installed]) {
+    for (const phase of ["afterChecks", "afterThreads"]) {
+      for (const change of [
+        { labels: ["gate:owner-review"] },
+        { closes: [5, 7], issues: { 7: ["gate:major-release"] } },
+        { ownerGatesResponse: {} },
+        { failOwnerGates: 403 },
+      ]) {
+        const result = run(
+          t,
+          {
+            reviewConfiguration: { reviewer: configuredReviewer },
+            [phase]: change,
+            traceRequests: true,
+          },
+          undefined,
+          target,
+        );
+        assert.equal(
+          result.status,
+          change.failOwnerGates ? 1 : 3,
+          result.stderr,
+        );
+        assert.equal(result.state.merge, undefined);
+        if (!change.ownerGatesResponse && !change.failOwnerGates)
+          assert.match(
+            result.stderr,
+            /gate:(owner-review on the PR|major-release on #7)/,
+          );
+      }
+    }
+  }
+});
+
 test("installed merge accepts the shipped configuration and version 1 on the default branch", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const shipped = JSON.parse(
