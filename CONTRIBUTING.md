@@ -23,7 +23,7 @@ implementation contract in its issue body and needs no intake triage, Agent
 Brief, or category label. A triaged request uses the validator's body Agent Brief after explicit
 activation. Preparation retains latest-comment contracts; cutoff preserves exact unchanged
 inventoried comments until revision into the body. Preserve one verbatim `Original request` at the body's end.
-See the [Agent Brief rules](.repo-standards/rules/github-repository-configuration.md#agent-brief).
+See [Agent Brief](.repo-standards/rules/github-repository-configuration.md#agent-brief).
 
 Before implementing, read the whole issue, its discussion, its parent
 specification, and its blockers, and clarify contradictions. Start a ticket
