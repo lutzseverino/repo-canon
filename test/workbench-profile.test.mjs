@@ -53,8 +53,8 @@ const skills = [
 // The files the installed skill executables import, and the license notices
 // for the skills and those files, by declaration and installed path. `triage`'s
 // readiness command imports the issue-contract validator, which imports the
-// rendered-Markdown runtime and its parsers; `babysit`, `orchestrate`'s wait
-// and that validator import Postern.
+// canonical label metadata and the rendered-Markdown runtime and its parsers;
+// `babysit`, `orchestrate`'s wait and that validator import Postern.
 const support = {
   "canonical-label-metadata": "operations/lib/canonical-labels.mjs",
   "factory-label-metadata": "operations/lib/factory-labels.mjs",
