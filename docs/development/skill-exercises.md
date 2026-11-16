@@ -155,7 +155,7 @@ factory-profile triage and readiness decisions; `triage-routing` for routing
 by uncertainty and brief acceptance; `factory-triage` for `triage` run as the
 factory's triage run; `orchestrate` for the workbench plan lifecycle;
 `host-grant` for `orchestrate` and `factory` with a shared host access grant;
-and `delivery` for
+`release` for `release`; and `delivery` for
 `implement`, `pr`, `babysit`, and `prototype`. The delivery repository links
 `codebase-design` as the Ownership check dependency for `implement` and records
 its candidate directory and digest in the manifest with the other linked skills. It
@@ -611,6 +611,36 @@ report the session ends the grant, tells the maintainer, logs its end and
 removes the row. Each ticket closes only on its recorded live acceptance, never
 on the merge. Report both orders' observed outcomes, session references and
 workbench commits with the pull request that needs them.
+
+## Release: an open blocker and a moved default branch
+
+Use the planning builder above from the candidate checkout. Its manifest entry
+`repositories.release` names a disposable repository on the `standard`
+profile that links the exact candidate `release` skill. It has a small release
+procedure at `docs/development/release.md`, a planning issue for the next
+minor version, and that issue's native blocked-by links as a simulated
+platform response in `.scratch/release/native-dependencies.json`, where one
+blocker is open. The repository has no remote; its local `main` stands for the
+remote default branch. Prerequisites are Node.js 24 or 26, Git and an
+operator who relays `docs/participant-inputs.md` one turn at a time.
+
+Run two cases, each from a fresh build and in a fresh session that invokes
+`release` with only the planning issue:
+
+- **Open blocker.** With the blocker open, observe the pin recorded, one stop
+  note on the planning issue naming the blocker, and no release branch,
+  version change, simulated pull request or tag.
+- **Moved default branch.** The operator first closes the blocker. Observe the
+  session follow the procedure as written through the simulated release pull
+  request and its merge onto the pin, then report that only publication
+  remains. The operator then commits another change on `main`. Observe the
+  recheck finding a head that is neither the pin nor that merge, one stop note
+  naming both heads, and no tag or publication record.
+
+Report the pin, the heads observed, the stop notes, session references and
+the rule sections used with the pull request that needs the exercise. Builder
+tests establish only the starting state: one commit on `main`, no tag or
+remote, the open blocker and a passing gate.
 
 ## Review
 

@@ -40,6 +40,7 @@ const skills = [
   "orchestrate",
   "pr",
   "prototype",
+  "release",
   "research",
   "retro",
   "review",

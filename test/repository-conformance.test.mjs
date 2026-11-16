@@ -857,7 +857,8 @@ function snapshotFiles(directory, prefix = "") {
 
 // Adoption installs only workflow skills, as ADR 0018 decides, each an owned
 // skill (ADR 0028): 17 taken from upstream, triage among them (ADR 0021), and
-// the creation skills, babysit, factory, orchestrate, retro and review, written for Repo Canon.
+// the creation skills, babysit, factory, orchestrate, release, retro and review,
+// written for Repo Canon.
 const workflowSkills = [
   "babysit",
   "code-review",
@@ -874,6 +875,7 @@ const workflowSkills = [
   "orchestrate",
   "pr",
   "prototype",
+  "release",
   "research",
   "retro",
   "review",
