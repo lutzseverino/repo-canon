@@ -1457,6 +1457,12 @@ test("all hand launches share one invocation-and-context template", () => {
     assert.ok(named || /^none\b/i.test(skill.text), stage.text);
     assert.ok(input.text, stage.text);
   }
+  // Brief review is triage's accept mode, not a gap.
+  const [, , briefReview] = stages.rows.find(
+    ([stage]) => stage.text === "Brief review and readiness",
+  );
+  const [named] = briefReview.tokens;
+  assert.deepEqual([named.type, named.text], ["codespan", "triage"]);
 });
 
 test("orchestration text stays within its per-file and total budgets", () => {

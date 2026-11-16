@@ -299,7 +299,11 @@ issue-contract validator's revision convention. Dynamic drafts receive no
 identifier before their text exists. The helper computes identity only;
 structure and independent acceptance remain separate checks. Turn 4 requires
 an independent review, the reviewer's chosen model and request 01's ticket 05
-blocker before reporting acceptance.
+blocker before reporting acceptance. Request 02's acceptance runs as `triage`'s
+accept mode: the session that published 02's revision refuses and posts no
+verdict, and a fresh session posts one local verdict comment with the verdict,
+the exact `sha256:` revision and each finding's evidence, then records the
+readiness command it would run.
 
 Turn 5 actually edits request 01's accepted retained Summary, preserving both
 texts. Observe readiness invalidated and record the missing-notice handoff
