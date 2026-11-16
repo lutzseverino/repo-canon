@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { PlatformError } from "../postern/postern.mjs";
 import { lexer } from "../marked/marked.esm.js";
+import { canonicalLabelName } from "../../operations/lib/canonical-labels.mjs";
 import {
   interpretMarkdown,
   markdownInlineText,
@@ -603,7 +604,7 @@ function historicalSeamsApproval(snapshot, recorded) {
     (event) =>
       String(event.id) === recorded.reviewEventId &&
       event.event === "labeled" &&
-      event.label?.name === recorded.label &&
+      canonicalLabelName(event.label?.name) === recorded.label &&
       event.actor?.login === recorded.reviewer,
   );
   let authority = reviewerAuthority(snapshot.permissions, recorded.reviewer);
@@ -1711,6 +1712,11 @@ function feedbackState(body) {
     return null;
   }
   if (!state || typeof state !== "object" || Array.isArray(state)) return null;
+  // Read stored approvals in today's vocabulary, without changing timeline
+  // transition handling. Written results retain the current canonical names.
+  state.label = canonicalLabelName(state.label);
+  if (state.seamsExemption && typeof state.seamsExemption === "object")
+    state.seamsExemption.label = canonicalLabelName(state.seamsExemption.label);
   if (state.format === seamsResultFormat) {
     if (
       !validSeamsExemption(state.seamsExemption) ||

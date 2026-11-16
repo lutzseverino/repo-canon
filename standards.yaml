@@ -133,6 +133,7 @@ defaults:
             executable: node
             script: operations/setup-github-labels.mjs
             resources:
+              - operations/lib/canonical-labels.mjs
               - operations/lib/factory-labels.mjs
               - operations/lib/github-operation.mjs
               - vendor/postern/postern.mjs
@@ -304,6 +305,11 @@ defaults:
       kind: file
       target: operations/lib/factory-labels.mjs
       exact: operations/lib/factory-labels.mjs
+
+    canonical-label-metadata:
+      kind: file
+      target: operations/lib/canonical-labels.mjs
+      exact: operations/lib/canonical-labels.mjs
 
     rendered-markdown-runtime:
       kind: file

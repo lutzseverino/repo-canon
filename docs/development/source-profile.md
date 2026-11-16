@@ -84,7 +84,7 @@ declarations, which standard and factory exclude. It retains skill directories a
 files without rules, guidance, checks, fixes or discovery. The files are the two skill license notices, the three Postern
 files that `babysit`, the `orchestrate` wait and the issue-contract validator
 import, and that validator, which the `triage` readiness command imports, with its
-body-source/ledger modules and the rendered-Markdown runtime and the Marked and parse5 files it imports. The
+body-source/ledger modules, the canonical label metadata, and the rendered-Markdown runtime and the Marked and parse5 files it imports. The
 excluded declarations include all three default workflows,
 `issue-contract-workflow`, `pr-metadata-workflow` and
 `standards-update-workflow`, so the profile installs nothing under `.github/`.
@@ -136,7 +136,7 @@ checks. The [web check](typescript-web-stack-check.md) and
 [web discovery](typescript-web-stack-scope-drafter.md) pages define their
 execution and checked/assessed boundary. Other operation resources retain the shared GitHub operation
 module, Repo Canon's MIT license and third-party notice, and every license
-linked by that notice. The rendered-Markdown runtime, parser files and Postern resources are also
+linked by that notice. The rendered-Markdown runtime, canonical label metadata, parser files and Postern resources are also
 exact declarations because the validators and babysit import them from the
 adopting repository. Each executable therefore resolves the same relative
 import layout after installation or resource retention.
