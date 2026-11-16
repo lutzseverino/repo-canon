@@ -518,6 +518,39 @@ test("AGENTS.md names no rules path", () => {
   );
 });
 
+test("Credentials limits finding-write relief and preserves every refusal's identity and retry bans", () => {
+  const credentials = read("CONTRIBUTING.md")
+    .split("## Credentials\n\n")[1]
+    .split("\n## ")[0]
+    .trim()
+    .split(/\n\s*\n/u)
+    .map((paragraph) => paragraph.replace(/\s+/gu, " "));
+  assert.deepEqual(credentials, [
+    "Use only supplied credentials. Never look for, test or use another identity, " +
+      "including tokens, CLI logins, environment variables, connectors, apps or the " +
+      "agent provider's own login. Searching, such as listing credential variables or " +
+      "probing other `gh` configurations, counts as looking. Never retry a " +
+      "permission-refused call; every refusal retains these bans.",
+    'Only a refused finding write following Findings takes its "if filing fails" ' +
+      "path instead of an owner stop: list each unfiled finding where the links " +
+      "would go, naming its target repository and stating it was not filed, and " +
+      "continue delivery. Findings never block or delay the run's pull request or " +
+      "other work.",
+    "Every other refused write, such as a push or merge, stops the run with an owner handoff, " +
+      "as does a refused read the work depends on. The work depends on a read when " +
+      "any step the run must complete uses its result: implementation contracts, " +
+      "issues and blockers; check, review, readiness and merge gate evidence, " +
+      "including branch protection and rulesets; state behind writes; and every read " +
+      "made by scripts the run's skill directs. A read the run cannot show to be " +
+      "unneeded counts as one the work depends on.",
+    "A refused read the work does not depend on ends no run: continue without its " +
+      "result, never repeat it. Record its method, endpoint, platform refusal message " +
+      "and what could not be learned in the final report (factory run result) and any " +
+      "worker handoff, without tokens or credential values. Add no comment occasion; " +
+      "keep this record out of the internal review template.",
+  ]);
+});
+
 // Fixed budgets make entry-document growth visible in review.
 const wordBudgets = { "AGENTS.md": 223 };
 

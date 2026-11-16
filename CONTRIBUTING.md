@@ -349,10 +349,16 @@ Use only supplied credentials. Never look for, test or use another identity,
 including tokens, CLI logins, environment variables, connectors, apps or the
 agent provider's own login. Searching, such as listing credential variables or
 probing other `gh` configurations, counts as looking. Never retry a
-permission-refused call; both cases below retain these bans.
+permission-refused call; every refusal retains these bans.
 
-A refused write, such as a push or merge, stops the run with an owner handoff,
-as does a refused read the work depends on. The work depends on a read when
+Only a refused finding write following Findings takes its "if filing fails"
+path instead of an owner stop: list each unfiled finding where the links
+would go, naming its target repository and stating it was not filed, and
+continue delivery. Findings never block or delay the run's pull request or
+other work.
+
+Every other refused write, such as a push or merge, stops the run with an owner
+handoff, as does a refused read the work depends on. The work depends on a read when
 any step the run must complete uses its result: implementation contracts,
 issues and blockers; check, review, readiness and merge gate evidence,
 including branch protection and rulesets; state behind writes; and every read
