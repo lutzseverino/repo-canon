@@ -151,7 +151,10 @@ GitHub CLI 2.57.0 or newer, one unambiguous github.com remote, authenticated
 access, and the required repository permissions before mutation. Both GitHub
 fixes declare `remote-setup`, and their readiness probes run the same
 verification read-only, with the same Node.js prerequisite and timeout, before
-inspection writes anything. Marked and
+inspection writes anything. The Repository README check reads the GitHub About
+description through the same verification and repository read, without a
+permission requirement, and skips that comparison instead of failing when the
+read is unavailable. Marked and
 parse5 are retained resources, so adopters do not install parser packages.
 
 Source maintainers need Node.js 24 or 26, npm, Git, and a pinned public Repository

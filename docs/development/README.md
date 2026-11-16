@@ -345,7 +345,8 @@ already runs the suite on every pull request.
   automation must respect, and how shared instructions and configuration adapt
   upstream setup.
 - [Repository README check](repository-readme-check.md): operation protocol,
-  outcomes, prerequisites, and focused fixture command.
+  GitHub About description comparison, outcomes, prerequisites, and focused
+  fixture commands.
 - [Sandbox image build workflow](sandbox-image-workflow.md): the factory
   profile's pull request job, change detection, toolchain build, permissions,
   and executable fixtures.
