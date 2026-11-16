@@ -36,7 +36,8 @@ comment write, and the exit status, with no network or file access. Its closed
 path needs only the fetched issue, and its open path needs the contract snapshot.
 The file also exports `readinessTriggerUnrecorded`, a pure predicate over the same
 snapshot, and, for the `triage` readiness command, `readyLabels`, the notice
-barrier `noticePrecedes` and `observedChangeId`, so the command copies none of
+barrier `noticePrecedes`, `observedChangeId` and the observed-transition barrier
+`observedBarrier`, so the command copies none of
 the rules they decide. After applying readiness, the command waits for a result
 that observed its own readiness event and decides it. A result that awaits
 review, carries no rejection reason and leaves the readiness label on the issue
@@ -316,9 +317,17 @@ it saw. That application's own run then finds it after the barrier and decides
 it on its merits. This holds whatever started the earlier run: another label,
 a comment, an edit or any other trigger. An application at or before the
 previous result's observed transition, one the timeline cannot place after
-it, or one by the sender of the run's own trigger for that label stays
-observed: its removal is not recorded yet. So the observed transition never
-moves behind the previous result's, and a lagging timeline still fails closed.
+it, one by the sender of the run's own application of that label, or one before
+the run's own removal of that label stays observed: its removal is not recorded
+yet. So the observed transition never moves behind the previous result's.
+
+The labels and timeline alone cannot tell an application made after the run
+read its labels from one whose removal the timeline has not recorded yet. For a
+run that another trigger started, such as another label or a comment, the
+validator takes the application as unseen. When the same sender then removes
+and reapplies readiness and the timeline records neither change, the retry's
+run binds that earlier application. It does not fail closed, as it does when an
+earlier run observed the application.
 
 Every readiness rejection records its reason, such as an unauthorized
 reviewer's "is not authorized to grant readiness", and so does a workflow state

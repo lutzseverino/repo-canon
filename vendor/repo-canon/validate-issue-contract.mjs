@@ -687,8 +687,9 @@ function eventId(event) {
 }
 
 // The latest event the previous result observed, the review an earlier
-// approval without an observed event recorded, or `null` for none.
-function observedBarrier(recorded) {
+// approval without an observed event recorded, or `null` for none. The
+// `triage` readiness command compares it with `observedChangeId`.
+export function observedBarrier(recorded) {
   return recorded?.observedEventId ?? recorded?.reviewEventId ?? null;
 }
 
@@ -1941,18 +1942,19 @@ function issueTimeline({ event, issue, issueEvents }) {
   // follows `barrierEventId`, the event the previous result observed. Such a
   // run read its labels before that application, and so before every later
   // event. An application at or before the barrier, one the timeline cannot
-  // order after it, or one by the sender of the run's own trigger for that
-  // label was seen: a removal the timeline has not recorded yet explains its
-  // absence.
+  // order after it, one by the sender of the run's own application of that
+  // label, or one before the run's own removal of that label was seen: a
+  // removal the timeline has not recorded yet explains its absence.
   function seenCount(labels, barrierEventId) {
     let count = issueEvents.length;
     for (const label of readyLabels) {
       if (labels.has(label) || !latestChangeIsApplication(label)) continue;
       const application = lastApplication(label);
       const triggered =
-        event.kind === "labeled" &&
         event.label === label &&
-        event.actor?.login === application.event.actor?.login;
+        (event.kind === "unlabeled" ||
+          (event.kind === "labeled" &&
+            event.actor?.login === application.event.actor?.login));
       if (
         !triggered &&
         eventsAfter(barrierEventId)?.includes(application.event)

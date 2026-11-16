@@ -2899,6 +2899,40 @@ decisionTable(
         feedbackBody: /"observedEventId":"303"/,
       },
     })),
+    {
+      name: "a removal run of that readiness observes it while the removal is unrecorded, so the sender's unrecorded retry fails closed",
+      run: () => {
+        const earlier = heldRunSnapshot({
+          event: {
+            ...labeledBy("maintainer", "state:ready", { body: ticketBody }),
+            action: "unlabeled",
+          },
+        });
+        const decision = decideIssueContract(snapshotFor(earlier));
+        assertDecision(decision, { exitCode: 0, feedback: 13 });
+        assert.equal(
+          recordedState(decision.feedback.body).observedEventId,
+          "302",
+        );
+        const comments = structuredClone(earlier.comments);
+        applyFeedback(comments, decision);
+        comments[0].updated_at = "2026-09-14T17:02:30Z";
+        const retry = snapshotFor({
+          ...earlier,
+          issue: {
+            ...earlier.issue,
+            labels: [...earlier.issue.labels, { name: "state:ready" }],
+          },
+          comments,
+          event: labeledBy("maintainer", "state:ready", earlier.issue),
+        });
+        assert.equal(readinessTriggerUnrecorded(retry), true);
+        const failed = decideIssueContract(retry);
+        // The held ticket still carries its workflow state.
+        assertDecision(failed, { ...reapplicationFailsClosed, add: [] });
+        keepsNoApproval(failed);
+      },
+    },
     ...heldRuns.map(([name, event]) => ({
       name: `${name} keeps observing an application the notice observed while its removal is unrecorded`,
       snapshot: heldRunSnapshot({ event, observedEventId: "302" }),

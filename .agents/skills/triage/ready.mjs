@@ -6,6 +6,7 @@ import {
   issueContractResult,
   isSpecification,
   noticePrecedes,
+  observedBarrier,
   observedChangeId,
   readyLabels,
   readIssueContractObservation,
@@ -94,9 +95,7 @@ async function snapshot(connection, number) {
 
 // Whether the result has observed the latest readiness change.
 const processed = ({ state, events, current }) =>
-  current &&
-  (state?.observedEventId ?? state?.reviewEventId ?? null) ===
-    observedChangeId(events);
+  current && observedBarrier(state) === observedChangeId(events);
 
 // Whether a result that observed this command's readiness event still decides
 // none: it awaits review and rejects nothing while the label is on the issue,
