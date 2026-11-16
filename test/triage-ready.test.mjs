@@ -827,6 +827,52 @@ test("reports a rejection after its own event but ignores an earlier rejection",
   assert.equal(writes(rejected).length, 1);
 });
 
+test("waits past a notice that observed its own event without deciding it, then reports the verdict", async () => {
+  for (const [verdict, check] of /** @type {[object, Function][]} */ ([
+    [
+      {},
+      (result) => {
+        assert.equal(result.error, undefined);
+        assert.equal(result.code, 0);
+      },
+    ],
+    [
+      {
+        status: "awaiting-review",
+        observedEventId: "300",
+        reviewEventId: undefined,
+        rejectionReason: "Not authorized for readiness.",
+      },
+      (result) =>
+        assert.match(
+          result.error?.message ?? "",
+          /Not authorized for readiness/,
+        ),
+    ],
+  ])) {
+    let applied = 0;
+    const result = await exercise({
+      after: verdict,
+      onWait({ phase, state }) {
+        // An earlier run's notice that read the labels before readiness, as
+        // an earlier validator wrote it, still carrying no verdict.
+        if (phase === "applied" && ++applied === 1)
+          Object.assign(state, {
+            status: "awaiting-review",
+            label: null,
+            reviewer: null,
+            reviewEventId: null,
+            observedEventId: "300",
+            rejectionReason: null,
+          });
+      },
+    });
+    check(result);
+    assert.equal(applied, 2);
+    assert.equal(writes(result).length, 1);
+  }
+});
+
 test("reapplies a parent's approved readiness at or before its latest sub-issue link", async () => {
   for (const at of [time, "2026-10-25T11:59:59Z"]) {
     const result = await exercise({

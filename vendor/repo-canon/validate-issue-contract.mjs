@@ -464,7 +464,9 @@ function decideCurrentContract(snapshot) {
     kind: result.kind,
     event: evaluatedEvent(snapshot.event),
     evaluatedAt: snapshot.evaluatedAt ?? null,
-    observedEventId: eventId(timeline?.latestObservedTransition()),
+    observedEventId: eventId(
+      timeline?.observedTransition(result.labels, observedBarrier(recorded)),
+    ),
     sourceInvalidation: recorded?.sourceInvalidation ?? null,
   };
 
@@ -682,6 +684,12 @@ function evaluatedEvent(event) {
 // A timeline event's ID as the result records it.
 function eventId(event) {
   return event?.id == null ? null : String(event.id);
+}
+
+// The latest event the previous result observed, the review an earlier
+// approval without an observed event recorded, or `null` for none.
+function observedBarrier(recorded) {
+  return recorded?.observedEventId ?? recorded?.reviewEventId ?? null;
 }
 
 // When the validator first published this revision: carried from a previous
@@ -1298,10 +1306,10 @@ function assessReadiness({
     readyLabels.has(label),
   );
   const latestEvent = timeline.latestReadinessTransition();
-  const observedEvent = timeline.latestObservedTransition();
-  const observedEventId =
-    observedEvent?.id == null ? null : String(observedEvent.id);
   const recorded = feedbackState(previousFeedback?.body);
+  const observedEventId = eventId(
+    timeline.observedTransition(result.labels, observedBarrier(recorded)),
+  );
   const deletedBrief = supersedingDeletedBrief(currentEvent, result);
   const sourceInvalidation =
     deletedBrief ?? recorded?.sourceInvalidation ?? null;
@@ -1431,6 +1439,7 @@ function assessReadiness({
       timeline.rejectionUnchanged(
         recorded.observedEventId,
         recorded.rejectedCreationLabel,
+        result.labels,
       )
         ? recorded.rejectionReason
         : null;
@@ -1926,6 +1935,33 @@ function issueTimeline({ event, issue, issueEvents }) {
     return issueEvents.findLast(isObservedTransition) ?? null;
   }
 
+  // How many events a run that decided on `labels` saw: all of them, or
+  // those before the latest application of a readiness label that `labels`
+  // do not carry, when that application is the label's latest change and
+  // follows `barrierEventId`, the event the previous result observed. Such a
+  // run read its labels before that application, and so before every later
+  // event. An application at or before the barrier, one the timeline cannot
+  // order after it, or one by the sender of the run's own trigger for that
+  // label was seen: a removal the timeline has not recorded yet explains its
+  // absence.
+  function seenCount(labels, barrierEventId) {
+    let count = issueEvents.length;
+    for (const label of readyLabels) {
+      if (labels.has(label) || !latestChangeIsApplication(label)) continue;
+      const application = lastApplication(label);
+      const triggered =
+        event.kind === "labeled" &&
+        event.label === label &&
+        event.actor?.login === application.event.actor?.login;
+      if (
+        !triggered &&
+        eventsAfter(barrierEventId)?.includes(application.event)
+      )
+        count = Math.min(count, application.position - 1);
+    }
+    return count;
+  }
+
   // Whether the label's latest recorded change is its application.
   function latestChangeIsApplication(label) {
     const latestChange = issueEvents.findLast(
@@ -1940,14 +1976,28 @@ function issueTimeline({ event, issue, issueEvents }) {
     latestReadinessTransition,
     latestObservedTransition,
 
+    // The latest transition a run that decided on `labels` observed, after a
+    // previous result that observed `barrierEventId`: the latest one among
+    // the events it saw.
+    observedTransition(labels, barrierEventId) {
+      return (
+        issueEvents
+          .slice(0, seenCount(labels, barrierEventId))
+          .findLast(isObservedTransition) ?? null
+      );
+    },
+
     // Removing readiness is part of the validator's rejection cleanup, not
-    // another review attempt. Every other readiness transition replaces it.
-    // The creation review recorded which opener's label it rejected, so that
-    // label's creation event, first after no barrier, does not replace it.
-    rejectionUnchanged(observedEventId, rejectedCreationLabel) {
-      const observed = eventsAfter(observedEventId);
-      if (observed === null) return false;
-      const transitions = observed.filter(isReadinessTransition);
+    // another review attempt. Every other readiness transition the run that
+    // decided on `labels` saw replaces it. The creation review recorded which
+    // opener's label it rejected, so that label's creation event, first after
+    // no barrier, does not replace it.
+    rejectionUnchanged(observedEventId, rejectedCreationLabel, labels) {
+      const barrier = observedEventId == null ? 0 : position(observedEventId);
+      if (barrier === null) return false;
+      const transitions = issueEvents
+        .slice(barrier, seenCount(labels, observedEventId))
+        .filter(isReadinessTransition);
       const first = transitions[0];
       if (
         observedEventId == null &&
