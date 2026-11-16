@@ -222,8 +222,7 @@ Repository Standards'
   none were; create it on the first rejection as [OUT-OF-SCOPE.md](OUT-OF-SCOPE.md) says.
 - `vendor/repo-canon/validate-issue-contract.mjs`, `operations/lib/factory-labels.mjs`
   and the `babysit` skill's GitHub connection: `ready.mjs` imports them. If any
-  is missing it cannot start; stop at acceptance
-  as for credentials that cannot apply readiness.
+  is missing it cannot start; stop at acceptance as for credentials that cannot apply readiness.
 - `.repo-standards/rules/factory-workflow.md` and `.scriptorium/config.json` at the
   destination default branch: `ready.mjs` reads both for model applicability
   and prefix. If rules are missing there, it requires no model label.
