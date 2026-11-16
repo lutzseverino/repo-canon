@@ -147,10 +147,9 @@ own labels carry the exact configured name (REST label objects and strings are
 recognized). A filter result disagreeing with a candidate's own labels refuses
 with exit `3`, even alongside real holds: the diagnostic names each inconsistent
 item, label key and name, and pinned revision, and states that no hold was
-confirmed for that item and none was bypassed. Follow the owner handoff without
-retrying merge. An absent file or key adds no hold. Unreadable labels or invalid
-configuration or issue/PR reads permit no merge write and follow the
-freshness-read failure handling.
+confirmed for that item and none was bypassed. An absent file or key adds no
+hold. Unreadable labels or invalid configuration or issue/PR reads permit no
+merge write and follow the freshness-read failure handling.
 
 ## Branch-update recovery
 

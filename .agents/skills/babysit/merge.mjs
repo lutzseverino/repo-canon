@@ -215,21 +215,16 @@ async function mergeHolds(connection, revision, number) {
       )
         continue;
       const evidence = `#${issue.number}, .scriptorium/config.json labels.${key} (${JSON.stringify(label)})`;
-      if (
-        !Array.isArray(issue.labels) ||
-        !issue.labels.every(
-          (entry) =>
-            typeof entry === "string" || typeof entry?.name === "string",
-        )
-      ) {
+      const names = Array.isArray(issue.labels)
+        ? issue.labels.map((entry) =>
+            typeof entry === "string" ? entry : entry?.name,
+          )
+        : null;
+      if (!names?.every((name) => typeof name === "string")) {
         problems.push(`Could not read own labels for ${evidence}.`);
         continue;
       }
-      if (
-        !issue.labels.some(
-          (entry) => (typeof entry === "string" ? entry : entry.name) === label,
-        )
-      ) {
+      if (!names.includes(label)) {
         problems.push(
           `Inconsistent hold read for ${evidence}: label-filter result disagrees with the item's own labels; no hold was confirmed for this item and none was bypassed.`,
         );

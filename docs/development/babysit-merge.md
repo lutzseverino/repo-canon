@@ -136,8 +136,9 @@ read: exit `3`, no merge write, even when real holds are also present. The
 diagnostic names every inconsistent item, configured label key and name, and
 pinned revision. It explains that the label-filter result disagrees with the
 item's own labels, so no hold was confirmed for that item and none was bypassed.
-Missing or non-array labels, or an entry without a string name, are unreadable
-candidate labels and also refuse with exit `3`. Exempt items need no label
+Missing or non-array labels, or an entry that is neither a string nor an
+object with a string `name`, are unreadable candidate labels and also refuse
+with exit `3`. Exempt items need no label
 inspection. Unreadable or invalid factory configuration or issue/PR-list reads
 follow the same freshness failure handling: exit `3` needs the owner handoff
 without retrying merge, while a permission refusal returns `1` and stops
