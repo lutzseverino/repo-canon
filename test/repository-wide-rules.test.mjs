@@ -17,7 +17,10 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { parseStandards } from "../scripts/standards-declarations.mjs";
+import {
+  declarations,
+  parseStandards,
+} from "../scripts/standards-declarations.mjs";
 import { interpretMarkdown } from "../operations/lib/rendered-markdown.mjs";
 import { stringify } from "yaml";
 import {
@@ -41,6 +44,9 @@ const version = "v1.0.0";
 const previousVersion = "v0.18.0";
 const orchestrateVersion = "v0.99.0";
 const sourceVersion = "v0.19.0";
+// The last release whose worked block omits the code-review skill and the
+// factory label metadata.
+const latestRelease = "v0.27.0";
 // Declarations whose rules govern all work, with empty confirmed scope, and
 // the profiles that select them.
 const repositoryWide = {
@@ -125,32 +131,102 @@ const stackAssessment = {
   ),
 };
 
-test("the release fixture vendors the triage helper without covering repository-owned source or retained state", (t) => {
-  const project = mkdtempSync(join(tmpdir(), "repo-canon-attributes-"));
-  t.after(() => rmSync(project, { recursive: true, force: true }));
-  writeFileSync(join(project, ".gitattributes"), files[".gitattributes"]);
-  execFixtureGit(["init", "--quiet", project]);
-  const paths = [
-    ".agents/skills/triage/ready.mjs",
-    "wordtally.mjs",
-    "scripts/own.mjs",
-    "operations/own.mjs",
-    ".agents/skills/own/run.mjs",
-    ".repo-standards/inputs/source/operations/check.mjs",
-  ];
-  assert.deepEqual(
-    execFixtureGit(
-      ["-C", project, "check-attr", "linguist-vendored", "--", ...paths],
-      { encoding: "utf8" },
-    )
-      .trim()
-      .split("\n"),
-    paths.map(
-      (path, index) =>
-        `${path}: linguist-vendored: ${index === 0 ? "set" : "unspecified"}`,
-    ),
-  );
-});
+// The installed files a profile selects that Linguist would count: each exact
+// file's target and every file of each installed skill directory, outside the
+// paths Linguist's default vendor list or Repository Standards already cover.
+function countedFiles(profile) {
+  const paths = [];
+  for (const declaration of declarations(root)[profile]) {
+    if (declaration.kind === "file" && declaration.exact)
+      paths.push(declaration.target);
+    if (declaration.kind === "skill")
+      for (const entry of readdirSync(join(root, declaration.source), {
+        recursive: true,
+        withFileTypes: true,
+      }))
+        if (entry.isFile())
+          paths.push(
+            join(
+              ".agents/skills",
+              declaration.name,
+              relative(
+                join(root, declaration.source),
+                join(entry.parentPath, entry.name),
+              ),
+            ),
+          );
+  }
+  return paths
+    .filter((path) => /\.(?:mjs|js|sh)$/.test(path))
+    .filter((path) => !/^(?:vendor|\.github|\.repo-standards)\//.test(path))
+    .sort();
+}
+
+// The guidance's worked block, as an adopter copies it into `.gitattributes`.
+function workedBlock(guidance) {
+  const block = /```gitattributes\n([\s\S]*?)\n\s*```/.exec(guidance);
+  assert.ok(block, "the guidance gives a worked attributes block");
+  return block[1].replaceAll(/^ {3}/gm, "") + "\n";
+}
+
+// Repository-owned and retained paths that no Repo Canon entry may mark.
+const unvendored = [
+  "wordtally.mjs",
+  "scripts/own.mjs",
+  "operations/own.mjs",
+  ".agents/skills/own/run.mjs",
+  ".repo-standards/inputs/source/operations/check.mjs",
+];
+
+for (const [name, attributes] of [
+  [
+    "the guidance's worked block",
+    workedBlock(readFileSync(join(root, "guidance/git-attributes.md"), "utf8")),
+  ],
+  ["the release fixture's attributes", files[".gitattributes"]],
+])
+  test(`${name} vendors every counted file the standard and factory profiles install and nothing repository-owned`, (t) => {
+    const project = mkdtempSync(join(tmpdir(), "repo-canon-attributes-"));
+    t.after(() => rmSync(project, { recursive: true, force: true }));
+    writeFileSync(join(project, ".gitattributes"), attributes);
+    execFixtureGit(["init", "--quiet", project]);
+    const installed = [
+      ...new Set(["standard", "factory"].flatMap(countedFiles)),
+    ];
+    for (const path of [
+      ".agents/skills/code-review/ownership-facts.mjs",
+      "operations/lib/factory-labels.mjs",
+    ])
+      assert.ok(installed.includes(path), `both profiles install ${path}`);
+    const check = (paths) =>
+      execFixtureGit(
+        ["-C", project, "check-attr", "linguist-vendored", "--", ...paths],
+        { encoding: "utf8" },
+      )
+        .trim()
+        .split("\n");
+    assert.deepEqual(
+      check(installed),
+      installed.map((path) => `${path}: linguist-vendored: set`),
+    );
+    assert.deepEqual(
+      check(unvendored),
+      unvendored.map((path) => `${path}: linguist-vendored: unspecified`),
+    );
+    const entries =
+      /# BEGIN Repo Canon linguist-vendored\n([\s\S]*?)# END Repo Canon linguist-vendored\n/
+        .exec(attributes)[1]
+        .trim()
+        .split("\n")
+        .map((line) => line.split(" ")[0]);
+    for (const pattern of entries) {
+      assert.ok(!pattern.startsWith(".repo-standards/"), pattern);
+      assert.ok(
+        !["scripts/**", "operations/**", ".agents/skills/**"].includes(pattern),
+        pattern,
+      );
+    }
+  });
 
 test("public CLI 10.0.0 adopts and updates the standard and factory profiles with vendored installed code, repository-wide rules and stack rules only for a confirmed Project", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
@@ -287,7 +363,20 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
     "https://github.com/lutzseverino/repo-canon",
     `refs/tags/${sourceVersion}:refs/tags/${sourceVersion}`,
   );
-  publish([version, orchestrateVersion, sourceVersion, previousVersion]);
+  git(
+    source,
+    "fetch",
+    "--quiet",
+    "https://github.com/lutzseverino/repo-canon",
+    `refs/tags/${latestRelease}:refs/tags/${latestRelease}`,
+  );
+  publish([
+    version,
+    orchestrateVersion,
+    sourceVersion,
+    previousVersion,
+    latestRelease,
+  ]);
   for (const [
     label,
     profile,
@@ -309,6 +398,8 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       ]),
     ),
     ["standard-update", "standard", {}],
+    ["standard-release-update", "standard", {}],
+    ["factory-release-update", "factory", {}],
     [
       "factory-policy",
       "factory",
@@ -339,7 +430,9 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       ? sourceVersion
       : edited || label.includes("-orchestrate-")
         ? orchestrateVersion
-        : previousVersion;
+        : label.includes("-release-")
+          ? latestRelease
+          : previousVersion;
     const project = join(directory, label);
     mkdirSync(project);
     for (const [path, content] of Object.entries({ ...files, ...extraFiles })) {
@@ -539,7 +632,7 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
             kind === "assessment" &&
             report.missing.includes(question.id) &&
             name === "git-attributes" &&
-            selectedVersion === previousVersion
+            [previousVersion, latestRelease].includes(selectedVersion)
           )
             answer = {
               ...assessments[name],
@@ -652,6 +745,18 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
           ".agents/skills/triage/ready.mjs: linguist-vendored: unspecified",
           "the conforming previous adoption has no triage executable entry",
         );
+      if (baselineVersion === latestRelease)
+        assert.equal(
+          git(
+            project,
+            "check-attr",
+            "linguist-vendored",
+            "--",
+            ".agents/skills/code-review/ownership-facts.mjs",
+          ),
+          ".agents/skills/code-review/ownership-facts.mjs: linguist-vendored: unspecified",
+          "the conforming latest release adoption has no code-review entry",
+        );
       git(project, "add", "--all");
       git(
         project,
@@ -696,8 +801,9 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
           "Repository-owned toolchain and migration inputs",
         );
       }
-      // v0.18.0 predates orchestrate; those cases exercise stack updates only.
-      if (baselineVersion !== previousVersion) {
+      // v0.18.0 predates orchestrate and the latest release selects it only
+      // in the workbench profile; those cases exercise no removal.
+      if (![previousVersion, latestRelease].includes(baselineVersion)) {
         const skill = ".agents/skills/orchestrate";
         assert.ok(existsSync(join(project, skill, "SKILL.md")));
         if (baselineVersion === orchestrateVersion)
@@ -962,19 +1068,8 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
       ),
       `${profile} preserves every repository-owned attribute line`,
     );
-    const countedFiles = [
-      "scripts/issue-contract-sources.mjs",
-      "scripts/issue-contract-store.mjs",
-      "scripts/issue-contract-cutoff.mjs",
-      "operations/lib/rendered-markdown.mjs",
-      ".agents/skills/triage/ready.mjs",
-      ...readdirSync(join(project, ".agents/skills/babysit"))
-        .filter((name) => name.endsWith(".mjs"))
-        .map((name) => `.agents/skills/babysit/${name}`),
-      ".agents/skills/diagnosing-bugs/scripts/hitl-loop.template.sh",
-    ];
     for (const [paths, expected] of /** @type {[string[], string][]} */ ([
-      [countedFiles, "set"],
+      [countedFiles(profile), "set"],
       [ownScripts, "unspecified"],
     ])) {
       for (const path of paths) assert.ok(readFileSync(join(project, path)));

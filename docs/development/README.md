@@ -75,11 +75,16 @@ from each skill's `CREDITS.md`, the upstream base's bytes for every skill and
 setup file identical to its base. It uses
 the release fixture's answers and a disposable source containing only declared
 inputs; GitHub HTTP responses and Git transport use local fixtures, with no
-in-tree factory dependency. Standard/factory updates from an orchestrate-owning
-release verify removal of the whole skill, its link and retained inputs,
-including the CLI's normal preservation of edited installations. A disposable
-source-authoring update starts from Canon's actual recorded baseline, overlays
-its current authored source and verifies whole-directory preservation,
+in-tree factory dependency. The Git attributes guidance's worked block and the
+release fixture must mark every `.mjs`, `.js` and `.sh` file that the standard
+and factory declarations install outside `vendor/` and `.github/`, and no
+repository-owned path. Standard/factory updates from v0.27.0, whose block
+omits two of them, must request the `git-attributes` reassessment.
+Standard/factory updates from an orchestrate-owning release verify removal of
+the whole skill, its link and retained inputs, including the CLI's normal
+preservation of edited installations. A disposable source-authoring update
+starts from Canon's actual recorded baseline, overlays its current authored
+source and verifies whole-directory preservation,
 ready-to-commit status and retention through later updates. Set `REPO_STANDARDS_PREFIX` to reuse that public
 CLI installation, or the test installs it outside the checkout. Runtime
 preparation also needs npm registry access.

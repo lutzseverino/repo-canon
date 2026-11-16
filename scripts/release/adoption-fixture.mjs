@@ -43,7 +43,9 @@ scripts/issue-contract-sources.mjs linguist-vendored
 scripts/issue-contract-store.mjs linguist-vendored
 scripts/issue-contract-cutoff.mjs linguist-vendored
 operations/lib/rendered-markdown.mjs linguist-vendored
+operations/lib/factory-labels.mjs linguist-vendored
 .agents/skills/babysit/** linguist-vendored
+.agents/skills/code-review/** linguist-vendored
 .agents/skills/review/** linguist-vendored
 .agents/skills/triage/** linguist-vendored
 .agents/skills/diagnosing-bugs/** linguist-vendored
@@ -199,7 +201,7 @@ export const assessments = {
     explanation:
       "The root .gitattributes marks the installed counted files linguist-vendored with exact paths and individual installed skill directories, preserving the repository's text and line-ending setting.",
     evidence: [
-      ".gitattributes covers scripts/issue-contract-sources.mjs, scripts/issue-contract-store.mjs, scripts/issue-contract-cutoff.mjs, operations/lib/rendered-markdown.mjs, and the babysit, review, triage and diagnosing-bugs skill directories.",
+      ".gitattributes covers scripts/issue-contract-sources.mjs, scripts/issue-contract-store.mjs, scripts/issue-contract-cutoff.mjs, operations/lib/rendered-markdown.mjs, operations/lib/factory-labels.mjs, and the babysit, code-review, review, triage and diagnosing-bugs skill directories.",
       "The block matches no Wordtally source or .repo-standards path; vendor/ and .github/ already have Linguist's default exclusion.",
     ],
   },
