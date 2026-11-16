@@ -1013,34 +1013,32 @@ test("public CLI 10.0.0 adopts and updates the standard and factory profiles wit
         readFileSync(join(root, path)),
         `${profile} installs ${path}`,
       );
-    // Resolve links in the adopter, where the source's root rules/ tree
-    // does not exist. Factory-only guidance is conditional in both profiles.
+    // Resolve every repository-relative link in the adopter, where source-only
+    // documents do not exist. Factory-only guidance stays conditional.
     assert.equal(existsSync(join(project, "rules")), false);
     assert.equal(
       existsSync(join(project, ".repo-standards/rules/factory-workflow.md")),
       profile === "factory",
     );
-    const ruleLinks = interpretMarkdown(
+    const relativeLinks = interpretMarkdown(
       readFileSync(join(project, "CONTRIBUTING.md"), "utf8"),
     )
       .content.text()
-      .links.filter((target) => /(?:^|\/)rules\//.test(target));
-    assert.ok(ruleLinks.length > 0, `${label} has contribution rule links`);
-    for (const target of ruleLinks) {
-      assert.ok(
-        target.startsWith(".repo-standards/rules/"),
-        `${label} links to installed rules: ${target}`,
-      );
+      .links.filter((target) => !/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(target));
+    assert.ok(relativeLinks.length > 0, `${label} has contribution links`);
+    for (const target of relativeLinks) {
       const [path, fragment] = target.split("#");
       if (
         profile === "standard" &&
         path === ".repo-standards/rules/factory-workflow.md"
       )
         continue;
-      const installedRule = readFileSync(join(project, path), "utf8");
+      const destination = join(project, path || "CONTRIBUTING.md");
+      assert.ok(existsSync(destination), `${label} resolves file ${target}`);
+      const installedDocument = readFileSync(destination, "utf8");
       if (fragment)
         assert.ok(
-          interpretMarkdown(installedRule).headings.some(
+          interpretMarkdown(installedDocument).headings.some(
             ({ name }) =>
               name
                 .toLowerCase()
