@@ -31,9 +31,12 @@ factory's triage result, which the issue-contract validator reads to approve
 readiness the triage run applies. There is no factory configuration
 compatibility layer.
 
-The `babysit` merge check reads only labels from the destination default
-branch's configuration. It accepts versions 1, 2 and 3, so an adopter still on
-version 2 can deliver this update while retaining its hold checks. The factory
+The `babysit` merge check reads labels only from `.scriptorium/config.json` on
+the destination default branch, the trusted base, and accepts versions 1, 2
+and 3 there. A configuration found only at the legacy `.factory/config.json`
+supplies no holds. For the update window, follow the
+[factory toolchain image guidance](factory-sandbox-image.md)'s pre-merge check
+that no open issue or pull request carries a legacy hold label. The factory
 profile installs the `factory` skill for ongoing operations, including pause
 and resume through the repository hold.
 
