@@ -5141,10 +5141,25 @@ test("a validator fallback carried through an in-place rename preserves readines
 
 decisionTable("renamed workflow states use attributed history", [
   ...[
-    ["state:triage", "needs-triage", "maintainer", false],
-    ["state:owner", "ready-for-human", "maintainer", false],
-    ["state:triage", "needs-triage", "github-actions[bot]", true],
-  ].map(([state, former, actor, afterReview]) => ({
+    {
+      state: "state:triage",
+      former: "needs-triage",
+      actor: "maintainer",
+      afterReview: false,
+    },
+    {
+      state: "state:owner",
+      former: "ready-for-human",
+      actor: "maintainer",
+      afterReview: false,
+    },
+    {
+      state: "state:triage",
+      former: "needs-triage",
+      actor: "github-actions[bot]",
+      afterReview: true,
+    },
+  ].map(({ state, former, actor, afterReview }) => ({
     name: `${state} formerly applied by ${actor}${afterReview ? " after" : " before"} review preserves readiness`,
     snapshot: supersessionSnapshot({
       labels: ["state:ready", state],
