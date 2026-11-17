@@ -55,7 +55,9 @@ credentials and secret host material out of tracker records.
 ## Take the skip route
 
 For work excluded by the installed rules, arrange the ready, model and skip
-labels together through the authorized readiness path. Launch `implement`
+labels together through the authorized readiness path. When readiness is
+already approved without the skip or model label, run the same `triage`
+readiness command: it adds the missing labels and records readiness again. Launch `implement`
 directly with the contract, evidence, decisions, issue link and delivery role.
 The worker opens the PR and records its handoff as
 `.repo-standards/rules/comments.md#delivery-records` says. Continue as the orchestrating agent through `babysit` from that handoff;

@@ -210,7 +210,7 @@ async function exercise(options = {}, command = main) {
               fullDatabaseId: "42",
               id: "ISSUE_42",
               url: "https://github.com/owner/repo/issues/42",
-              state: "OPEN",
+              state: options.closed ? "CLOSED" : "OPEN",
               title: "Fixture request",
               body: options.body ?? "Intake",
               createdAt: time,
@@ -360,6 +360,25 @@ async function exercise(options = {}, command = main) {
             422,
           );
       }
+      // Companions added without readiness record only their own events.
+      if (!body.labels.includes(label)) {
+        if (options.addFailure)
+          return json({ message: "Labels refused" }, options.addFailure);
+        for (const name of body.labels)
+          if (!labels.includes(name)) {
+            labels.push(name);
+            events.push(
+              event(
+                150 + events.length,
+                name,
+                actor.login,
+                "labeled",
+                "2026-10-25T12:00:01Z",
+              ),
+            );
+          }
+        return json([]);
+      }
       for (const name of body.labels)
         if (!labels.includes(name)) labels.push(name);
       ownEvent = event(
@@ -383,7 +402,12 @@ async function exercise(options = {}, command = main) {
   const pause = async () => {
     assert.ok(++waits < 10, "command did not settle within fixture snapshots");
     if (phase === "removed")
-      state = { status: "awaiting-review", revision, observedEventId: "200" };
+      state = {
+        status: "awaiting-review",
+        revision,
+        observedEventId: "200",
+        ...options.afterRemoval,
+      };
     else if (phase === "applied")
       state = {
         status: "approved",
@@ -1249,4 +1273,203 @@ test("canonical readiness policy ignores conflicting and legacy-only configurati
   });
   assert.match(malformed.error?.message ?? "", /factory applicability/);
   assert.deepEqual(writes(malformed), []);
+});
+
+// Readiness the validator approved before a requested companion was attached.
+const approved = (options = {}) => ({
+  labels: [label, model, "factory:failed"],
+  events: [event(100, label, options.reviewer ?? "maintainer")],
+  ...options,
+  state: {
+    status: "approved",
+    label,
+    reviewer: options.reviewer ?? "maintainer",
+    observedEventId: undefined,
+    reviewEventId: "100",
+    ...options.state,
+  },
+});
+const removal = {
+  method: "DELETE",
+  path: `/repos/owner/repo/issues/42/labels/${encodeURIComponent(label)}`,
+  body: null,
+};
+
+test("source and installed commands record approved readiness again after adding a missing skip", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    for (const repositoryLabels of [
+      undefined,
+      [{ name: model, color: "abcdef", description: "Model" }],
+    ]) {
+      const result = await exercise(approved({ repositoryLabels }), command);
+      assert.equal(result.error, undefined);
+      assert.equal(result.code, 0);
+      assert.deepEqual(writes(result), [
+        ...(repositoryLabels
+          ? [{ method: "POST", path: "/repos/owner/repo/labels", body: skip }]
+          : []),
+        {
+          method: "POST",
+          path: "/repos/owner/repo/issues/42/labels",
+          body: { labels: [skip.name] },
+        },
+        removal,
+        {
+          method: "POST",
+          path: "/repos/owner/repo/issues/42/labels",
+          body: { labels: [model, skip.name, label] },
+        },
+      ]);
+      assert.deepEqual(
+        result.labels.toSorted(),
+        ["factory:failed", skip.name, model, label].toSorted(),
+      );
+    }
+  }
+});
+
+test("source and installed commands add and provision a missing model before recording approved readiness again", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    const result = await exercise(
+      approved({
+        labels: [label],
+        repositoryLabels: [],
+        argv: ["42", revision, model],
+      }),
+      command,
+    );
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
+    assert.deepEqual(writes(result), [
+      {
+        method: "POST",
+        path: "/repos/owner/repo/labels",
+        body: {
+          name: model,
+          color: "5319e7",
+          description: "Factory model: gpt-6.1-sol@high",
+        },
+      },
+      {
+        method: "POST",
+        path: "/repos/owner/repo/issues/42/labels",
+        body: { labels: [model] },
+      },
+      removal,
+      {
+        method: "POST",
+        path: "/repos/owner/repo/issues/42/labels",
+        body: { labels: [model, label] },
+      },
+    ]);
+  }
+});
+
+test("source and installed commands keep approved readiness when a companion cannot be attached", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    for (const failure of [403, 422, 503]) {
+      for (const options of [
+        { labelFailure: failure },
+        { createFailure: failure },
+        { addFailure: failure },
+      ]) {
+        const result = await exercise(
+          approved({ repositoryLabels: [], ...options }),
+          command,
+        );
+        assert.ok(result.error);
+        assert.equal(result.code, undefined);
+        assert.ok(result.labels.includes(label));
+        assert.equal(
+          result.requests.some(({ method }) => method === "DELETE"),
+          false,
+        );
+      }
+    }
+  }
+});
+
+test("source and installed commands never reapply readiness after a removal that is not awaiting review", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    for (const { afterRemoval, refusal } of [
+      {
+        afterRemoval: { revision: `sha256:${"b".repeat(64)}` },
+        refusal: /reviewed revision/,
+      },
+      {
+        afterRemoval: { status: "no-contract", revision: null },
+        refusal: /complete contract/,
+      },
+      {
+        afterRemoval: { status: "approved" },
+        refusal: /complete contract awaiting review/,
+      },
+    ]) {
+      const result = await exercise(approved({ afterRemoval }), command);
+      assert.match(result.error?.message ?? "", refusal);
+      assert.deepEqual(writes(result).slice(1), [removal]);
+      assert.ok(result.labels.includes(skip.name));
+      assert.equal(result.labels.includes(label), false);
+    }
+  }
+});
+
+test("source and installed commands record readiness again for an earlier reviewer under the validator's verdict", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    const accepted = await exercise(
+      approved({ reviewer: "somebody-else" }),
+      command,
+    );
+    assert.equal(accepted.error, undefined);
+    assert.equal(accepted.code, 0);
+    const rejected = await exercise(
+      approved({
+        reviewer: "somebody-else",
+        after: {
+          status: "awaiting-review",
+          observedEventId: "300",
+          reviewEventId: undefined,
+          rejectionReason: "@maintainer is not authorized to grant readiness.",
+        },
+      }),
+      command,
+    );
+    assert.match(rejected.error?.message ?? "", /not authorized/);
+    assert.ok(rejected.labels.includes(skip.name));
+  }
+});
+
+test("source and installed commands keep their refusals for approved readiness", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    for (const { options, refusal } of [
+      {
+        options: { labels: [label, model, skip.name] },
+        refusal: /complete contract awaiting review/,
+      },
+      {
+        options: { argv: ["42", revision] },
+        refusal: /complete contract awaiting review/,
+      },
+      {
+        options: { labels: [label, "model:other"] },
+        refusal: /exactly one model:/,
+      },
+      {
+        options: { labels: [label], argv: ["42", revision, skip.name] },
+        refusal: /exactly one model:/,
+      },
+      {
+        options: { closed: true },
+        refusal: /open issue/,
+      },
+      {
+        options: { state: { revision: `sha256:${"b".repeat(64)}` } },
+        refusal: /reviewed revision/,
+      },
+    ]) {
+      const result = await exercise(approved(options), command);
+      assert.match(result.error?.message ?? "", refusal);
+      assert.deepEqual(writes(result), []);
+    }
+  }
 });
