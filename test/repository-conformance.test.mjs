@@ -2,6 +2,7 @@ import { interpretMarkdown } from "../operations/lib/rendered-markdown.mjs";
 import { localLinks } from "../operations/lib/local-markdown-links.mjs";
 import { marked } from "../vendor/marked/marked.esm.js";
 import { declarations } from "../scripts/standards-declarations.mjs";
+import { directoryTree, entryPoints, readSet } from "../scripts/read-set.mjs";
 import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -516,7 +517,7 @@ test("AGENTS.md names no rules path", () => {
 });
 
 // Fixed budgets make entry-document growth visible in review.
-const wordBudgets = { "CONTRIBUTING.md": 3109, "AGENTS.md": 223 };
+const wordBudgets = { "AGENTS.md": 223 };
 
 function wordCount(text) {
   return text.match(/\S+/gu)?.length ?? 0;
@@ -555,7 +556,7 @@ test("a word budget passes at its limit and fails above it with the document, co
   );
 });
 
-test("CONTRIBUTING.md and AGENTS.md stay within their word budgets", () => {
+test("AGENTS.md stays within its word budget", () => {
   for (const [document, limit] of Object.entries(wordBudgets))
     assert.equal(
       wordBudgetFailure(
@@ -1355,16 +1356,9 @@ test("only workbench installs its owner-facing skills, while Canon retains the c
 // The core holds the purpose, the workbench files, the lifecycle, the wait
 // step and the report-back rule; templates, launches and Close live in the
 // references it links (#790).
-const orchestrateCoreLineLimit = 120;
-
-test("orchestrate keeps its core within its line limit and links its references", () => {
+test("orchestrate keeps its required sections and links its references", () => {
   const path = ".agents/skills/orchestrate/SKILL.md";
   const core = read(path);
-  const lines = core.replace(/\n$/, "").split("\n").length;
-  assert.ok(
-    lines <= orchestrateCoreLineLimit,
-    `${path} has ${lines} lines; the limit is ${orchestrateCoreLineLimit}`,
-  );
   const document = interpretMarkdown(core);
   const links = localLinks(root, path, document.content.elements);
   for (const name of orchestrateReferences)
@@ -1453,33 +1447,49 @@ test("all hand launches share one invocation-and-context template", () => {
   assert.deepEqual([named.type, named.text], ["codespan", "triage"]);
 });
 
-test("orchestration text stays within its per-file and total budgets", () => {
-  const paths = [
-    "SKILL.md",
-    ...orchestrateReferences.map((name) => `references/${name}`),
-  ];
-  let total = 0;
-  for (const path of paths) {
-    const lines = read(`.agents/skills/orchestrate/${path}`)
-      .trimEnd()
-      .split("\n").length;
-    assert.ok(lines <= 200, `${path}: ${lines} > 200`);
-    total += lines;
-  }
-  // Revision 2 recorded 686 orchestration lines before this rewrite.
-  assert.ok(total < 686, `orchestration text grew to ${total} lines`);
+test("improve-codebase-architecture keeps its line limit and launch heading order", () => {
   const architectureText = read(
     ".agents/skills/improve-codebase-architecture/SKILL.md",
   );
   const architectureLines = architectureText.trimEnd().split("\n").length;
   assert.ok(architectureLines <= 200);
-  assert.ok(total + architectureLines <= 686 + 90, "net skill text grows");
   const architecture = interpretMarkdown(architectureText);
   const headings = architecture.headings.map(({ name }) => name);
   assert.ok(headings.includes("Orchestrated launch"));
   assert.ok(
     headings.indexOf("Orchestrated launch") < headings.indexOf("Process"),
   );
+});
+
+test("entry-point read sets resolve every member at its source", () => {
+  const tree = directoryTree(root);
+  const sets = new Map(entryPoints.map((name) => [name, readSet(tree, name)]));
+  const orchestrate = sets.get("orchestrate").members;
+  for (const member of [
+    ".agents/skills/orchestrate/SKILL.md",
+    ...orchestrateReferences.map(
+      (name) => `.agents/skills/orchestrate/references/${name}`,
+    ),
+    "rules/comments.md",
+    "rules/factory-workflow.md",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    ".agents/skills/codebase-design/SKILL.md",
+    ".agents/skills/retro/SKILL.md",
+    ".agents/skills/babysit/SKILL.md",
+  ])
+    assert.ok(orchestrate.includes(member), member);
+  for (const rule of ["factory-workflow", "github-repository-configuration"])
+    assert.ok(sets.get("factory").members.includes(`rules/${rule}.md`));
+  for (const { members } of sets.values()) {
+    for (const member of members) {
+      assert.match(member, /\.md$/);
+      assert.doesNotMatch(
+        member,
+        /(?:CREDITS\.md|GLOSSARY\.md|docs\/adr\/|\.repo-standards\/)/,
+      );
+    }
+  }
 });
 
 // Check the whole installed directory and the shared delegation guidance.

@@ -1,4 +1,4 @@
 {
   "version": 1,
-  "checks": ["PR metadata", "Test"]
+  "checks": ["PR metadata", "Test", "Read set"]
 }
