@@ -76,6 +76,26 @@ test("list continuations keep visible fields, and nested items are not findings"
   assert.equal(holdingReview(nested, head), false);
 });
 
+test("task-list findings retain their visible checkbox and cannot become holding evidence", () => {
+  for (const checkbox of ["[ ]", "[x]"]) {
+    for (const text of [
+      "src/ledger.mjs:12 Refunds are missing.",
+      "An invalid finding.",
+    ]) {
+      for (const findings of ["None", ""]) {
+        const body =
+          review.replace("Findings: None", `Findings: ${findings}`) +
+          `\n- ${checkbox} ${text}`;
+        assert.equal(reviewedHead(body), head, body);
+        assert.equal(completeReview(body, head), false, body);
+        assert.equal(holdingReview(body, head), false, body);
+      }
+    }
+    const body = `- ${checkbox} Spec: Example outcome\n\n${review}`;
+    assert.equal(holdingReview(body, head), true, body);
+  }
+});
+
 test("separate fenced verification output preserves a completed review", () => {
   for (const fence of ["```", "~~~"]) {
     const log = `${fence}text\npnpm check\nAll checks passed\n${fence}`;

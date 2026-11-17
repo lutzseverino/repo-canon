@@ -66,9 +66,14 @@ function visibleLines(tokens, nested = false) {
       return shown(token).replace(/\n+$/, "").split("\n");
     if (token.type !== "list") return [""];
     return token.items.flatMap((entry) => {
-      const [first, ...rest] = visibleLines(entry.tokens, true);
+      // Marked separates a task checkbox from its text. Keep them on the
+      // same line so task findings and field-shaped tasks retain their marker.
+      const checkbox =
+        entry.tokens[0]?.type === "checkbox" ? entry.tokens[0].raw : "";
+      const content = checkbox ? entry.tokens.slice(1) : entry.tokens;
+      const [first, ...rest] = visibleLines(content, true);
       const marker = /^[\t ]*\S+[\t ]*/.exec(entry.raw)?.[0] ?? "";
-      const opening = (nested ? "  " : "") + marker + first;
+      const opening = (nested ? "  " : "") + marker + checkbox + first;
       return [first?.trim() ? opening : "", ...rest];
     });
   });

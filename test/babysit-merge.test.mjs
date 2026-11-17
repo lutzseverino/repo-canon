@@ -837,6 +837,32 @@ No external reviewer runs on app-authored PRs.`;
   }
 });
 
+test("source and installed merge reject holding reviews contradicted by task-list findings", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const entry of [undefined, target]) {
+    for (const task of [
+      "- [ ] merge.mjs:1 A visible finding.",
+      "- [x] A visible invalid finding.",
+    ]) {
+      const body = outcome
+        .replace(/^Findings:.*$/m, "Findings: None")
+        .replace(/^- .*$/m, task);
+      const result = run(
+        t,
+        {
+          author: "factory-app[bot]",
+          reviewConfiguration: { policy },
+          reviews: [review(body)],
+        },
+        undefined,
+        entry,
+      );
+      assert.equal(result.status, 5, `${body}\n${result.stderr}`);
+      assert.equal(result.state.merge, undefined);
+    }
+  }
+});
+
 test("the review skill's posted round review is the app-author internal review record", async (t) => {
   const directory = mkdtempSync(join(tmpdir(), "babysit-review-round-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
