@@ -674,9 +674,10 @@ The adapter reads these issues only for a structurally complete specification
 that carries a readiness label, through each repository's issue tracker, and
 reads its tickets' bodies for the tally. A failed supersession read refuses the
 grant with its reason; an unreadable ticket's footprint is unknown. The
-`triage` readiness command calls the same exported `supersededWithoutFate`
-before writing any label and stops with the same refusal. The parser is
-exported as `contractFootprint`.
+`triage` readiness command checks the same exported `footprintRefusal` and
+`supersededWithoutFate` before writing any label, even to record approved
+readiness again, and stops with the same refusal. The parser is exported as
+`contractFootprint`.
 
 ## Running the fixtures
 

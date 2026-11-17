@@ -4,6 +4,7 @@ import { setTimeout as wait } from "node:timers/promises";
 import { factorySkipLabel } from "../../../operations/lib/factory-labels.mjs";
 import {
   contractFootprint,
+  footprintRefusal,
   issueContractResult,
   isSpecification,
   noticePrecedes,
@@ -95,10 +96,14 @@ async function snapshot(connection, number) {
   return { issue, events, current, ...result };
 }
 
-// The validator's refusal of a specification while an issue it supersedes has
-// no fate, checked before any label write.
-async function supersession(connection, issue) {
+// The validator's refusal of a new grant, checked before any label write,
+// including the withdrawal that records approved readiness again: a direct
+// contract's malformed footprint, or a specification's superseded issue
+// without a fate.
+async function grantRefusal(connection, { issue, state }) {
   const repository = connection.repository.path;
+  const footprint = footprintRefusal(state.kind, issue.body, repository);
+  if (footprint || !isSpecification(issue)) return footprint;
   const unfated = await supersededWithoutFate({
     specification: { repository, number: issue.number },
     footprint: contractFootprint(issue.body, repository),
@@ -231,7 +236,7 @@ export async function main(
   const prefix = await modelPolicy(connection);
   const isModel = (name) => prefix !== null && name.startsWith(prefix);
   let before;
-  let superseded = null;
+  let refusalChecked = false;
   for (;;) {
     before = await snapshot(connection, number);
     if (
@@ -251,9 +256,10 @@ export async function main(
       await pause(2000);
       continue;
     }
-    if (superseded === null && isSpecification(before.issue)) {
-      superseded = (await supersession(connection, before.issue)) ?? "";
-      if (superseded) throw new Error(superseded);
+    if (!refusalChecked) {
+      const refusal = await grantRefusal(connection, before);
+      if (refusal) throw new Error(refusal);
+      refusalChecked = true;
     }
     const staleParent = parentNeedsReapply(before, readyLabel);
     // Approved readiness lacking a requested companion is recorded again.

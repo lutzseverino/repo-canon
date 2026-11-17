@@ -482,8 +482,7 @@ export async function supersededWithoutFate({
 // `snapshot.tickets` holds as `{ repository, number, body }`. Shown, never
 // gated; a contract without the three fields is listed as unknown.
 function footprintTally(snapshot, result) {
-  if (!["specification", "implementation ticket"].includes(result.kind))
-    return null;
+  if (!directContractKinds.includes(result.kind)) return null;
   const { repository } = snapshot;
   const contracts = [
     {
@@ -511,15 +510,25 @@ function footprintTally(snapshot, result) {
   const unknownNote = unknown.length
     ? ` Unknown footprint, without ${fields} lines: ${unknown.map(({ name }) => name).join(", ")}.`
     : "";
-  const { errors } = contracts[0].footprint;
-  const errorNote = errors.length ? ` ${footprintRefusal(errors)}` : "";
+  const refusal = footprintRefusal(
+    result.kind,
+    result.contract.body,
+    repository,
+  );
+  const errorNote = refusal ? ` ${refusal}` : "";
   return `Footprint: ${count(adds, "add")} against ${count(deletes, "delete")}${scope}, shown and never gated.${unknownNote}${errorNote}`;
 }
 
-// The refusal of a new readiness grant to a contract whose footprint names a
-// file path or leaves a field empty.
-function footprintRefusal(errors) {
-  return `A new readiness grant waits for a well-formed footprint. ${errors.join(" ")}`;
+const directContractKinds = ["specification", "implementation ticket"];
+
+// The refusal of a new readiness grant to a direct contract whose footprint
+// names a file path or leaves a field empty, or null.
+export function footprintRefusal(kind, body, repository) {
+  if (!directContractKinds.includes(kind)) return null;
+  const { errors } = contractFootprint(body, repository);
+  return errors.length
+    ? `A new readiness grant waits for a well-formed footprint. ${errors.join(" ")}`
+    : null;
 }
 
 // The refusal naming each superseded issue still missing a fate.
@@ -1754,22 +1763,23 @@ function assessReadiness({
     // A new grant to a direct contract waits for a well-formed footprint and,
     // for a specification, for every superseded issue's fate.
     const supersession = snapshot.supersession;
-    const footprintErrors = ["specification", "implementation ticket"].includes(
-      result.kind,
-    )
-      ? contractFootprint(result.contract.body, snapshot.repository).errors
-      : [];
     const refusal = approval
       ? null
-      : footprintErrors.length
-        ? footprintRefusal(footprintErrors)
-        : result.kind !== "specification"
+      : (footprintRefusal(
+          result.kind,
+          result.contract.body,
+          snapshot.repository,
+        ) ??
+        (result.kind !== "specification"
           ? null
           : !supersession
             ? "The fates of the issues this specification supersedes were not read."
             : supersession.error
               ? `Could not read the fates of the issues this specification supersedes: ${supersession.error}`
-              : supersessionRefusal(supersession.unfated, snapshot.repository);
+              : supersessionRefusal(
+                  supersession.unfated,
+                  snapshot.repository,
+                )));
     if (refusal)
       return {
         valid: false,
