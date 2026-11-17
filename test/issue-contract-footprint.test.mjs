@@ -13,11 +13,14 @@ import { main as ready } from "../.agents/skills/triage/ready.mjs";
 import { decideIssueContract } from "./helpers/contract-decision.mjs";
 import { contractWorld } from "./helpers/contract-world.mjs";
 import {
+  approvedTicketFeedback,
   bot,
   createdWithReadiness,
   neutralEvent,
   publishedState,
+  readinessReview,
   repository,
+  role,
   specificationBody,
   ticketBody,
 } from "./helpers/issue-contracts.mjs";
@@ -64,39 +67,107 @@ test("a contract without the footprint fields has an unknown footprint", () => {
   ]);
 });
 
-test("the validator rejects file paths and unknown ids in the footprint", () => {
+test("prose, repeated and code-quoted field lines keep the footprint readable", () => {
+  const footprint = (lines) =>
+    contractFootprint(`${ticketBody}\n\n${lines}`, repository);
+  const prose = footprint(
+    "- `Supersedes:`, holding ADR and issue ids;\n- `Adds:` and `Deletes:`, each holding durable surfaces.\n\nSupersedes: #888's broad wake behavior, and other/name#784's removal only; their correctness remains. No ADR is superseded.\n**Adds:** a\n\n**Adds:** b; c\n\nDeletes: `now.md` prose above its first section",
+  );
+  assert.deepEqual(prose.supersedes, {
+    issues: [
+      { repository, number: 888 },
+      { repository: "other/name", number: 784 },
+    ],
+    adrs: [],
+  });
+  assert.deepEqual(prose.adds, ["a", "b", "c"]);
+  assert.deepEqual(prose.errors, [
+    "Name durable surfaces in `Deletes:`, never file paths: `now.md prose above its first section`.",
+  ]);
+  for (const supersedes of [
+    "None. Implements ADRs 0040 and 0046; it replaces no ADR or other issue.",
+    "none; closed #1087 delivered only the unneeded-read exception",
+    "the owner's reservation of every close-or-hold disposition",
+  ]) {
+    const parsed = footprint(
+      `Supersedes: ${supersedes}\nAdds: none\nDeletes: none`,
+    );
+    assert.deepEqual(parsed.supersedes, { issues: [], adrs: [] }, supersedes);
+    assert.deepEqual(parsed.errors, [], supersedes);
+  }
+  assert.deepEqual(
+    footprint(
+      "Supersedes: ADRs 0040 and 0046, other/name adr 11\nAdds: none\nDeletes: none",
+    ).supersedes.adrs,
+    [
+      { repository, number: 40 },
+      { repository, number: 46 },
+      { repository: "other/name", number: 11 },
+    ],
+  );
+});
+
+test("a malformed footprint refuses a new readiness grant without a structural error", () => {
+  const created = createdWithReadiness({ run: "opened" });
+  created.issue.body = `${ticketBody}${fields(
+    "ADR 0040, docs/adr/0040-watch.md",
+    "`scripts/read-set.mjs`; skill `orchestrate`",
+    "docs/adr/; CONTRIBUTING.md",
+  )}`;
+  created.event.issue.body = created.issue.body;
+  const decision = decideIssueContract({
+    ...created,
+    repository,
+    event: neutralEvent(created.event),
+    blockedBy: [],
+    parent: null,
+    bodyRevision: { id: "ISSUE_42", lastEditedAt: null },
+  });
+  assert.deepEqual(decision.removeLabels, ["state:ready"]);
+  const state = publishedState(decision.feedback.body);
+  assert.equal(state.status, "awaiting-review");
+  for (const item of [
+    "docs/adr/0040-watch.md",
+    "scripts/read-set.mjs",
+    "docs/adr/",
+    "CONTRIBUTING.md",
+  ]) {
+    assert.ok(state.rejectionReason.includes(`\`${item}\``), item);
+    assert.ok(decision.feedback.body.includes(`\`${item}\``), item);
+  }
+  assert.ok(!state.rejectionReason.includes("orchestrate"));
+});
+
+test("an approved ready contract keeps readiness with a footprint it would now refuse", () => {
   const issue = {
     number: 42,
+    node_id: "ISSUE_42",
     state: "open",
-    body: `${ticketBody}${fields(
-      "ADR 0040, the old plan",
-      "`scripts/read-set.mjs`; skill `orchestrate`",
-      "docs/adr/; CONTRIBUTING.md",
-    )}`,
-    labels: [],
+    body: `${ticketBody}\n\n**Deletes:**\n\n- an old step\n\nSupersedes: #888's broad behavior\nAdds: a\nDeletes: \`now.md\` prose`,
+    labels: [{ name: "state:ready" }],
+    user: { login: "maintainer" },
   };
   const decision = decideIssueContract({
     repository,
     issue,
-    comments: [],
+    comments: [
+      { ...approvedTicketFeedback(issue), updated_at: "2026-09-14T16:59:00Z" },
+    ],
     blockedBy: [],
     parent: null,
     bodyRevision: { id: "ISSUE_42", lastEditedAt: null },
-    issueEvents: [],
+    issueEvents: [readinessReview],
+    permissions: { maintainer: role("admin") },
+    event: neutralEvent({
+      action: "edited",
+      issue: { number: 42 },
+      sender: { login: "maintainer" },
+    }),
   });
-  assert.equal(decision.exitCode, 1);
-  for (const item of [
-    "the old plan",
-    "scripts/read-set.mjs",
-    "docs/adr/",
-    "CONTRIBUTING.md",
-  ])
-    assert.ok(decision.message.includes(`\`${item}\``), item);
-  assert.ok(!decision.message.includes("orchestrate"));
-  assert.equal(
-    publishedState(decision.feedback.body).status,
-    "needs-attention",
-  );
+  assert.equal(decision.exitCode, 0);
+  assert.deepEqual(decision.removeLabels ?? [], []);
+  assert.deepEqual(decision.addLabels ?? [], []);
+  assert.equal(publishedState(decision.feedback.body).status, "approved");
 });
 
 test("the result shows adds against deletes and lists unknown footprints", () => {
@@ -233,7 +304,7 @@ test("a superseding specification with one fated issue and one unfated issue is 
   await bothRefuse(
     t,
     {
-      body: `${specificationBody}${fields("#7, #8, #9")}`,
+      body: `${specificationBody}${fields("#7, #8, #9, #10")}`,
       others: [
         {
           number: 7,
@@ -256,12 +327,19 @@ test("a superseding specification with one fated issue and one unfated issue is 
           ],
         },
         { number: 9, state: "closed", body: ticketBody },
+        {
+          number: 10,
+          body: ticketBody,
+          comments: [
+            { author: "maintainer", body: fate("closed as superseded") },
+          ],
+        },
       ],
     },
     (reason) => {
       assert.match(reason, /fate/);
       assert.match(reason, /#8\b/);
-      assert.doesNotMatch(reason, /#7\b|#9\b/);
+      assert.doesNotMatch(reason, /#7\b|#9\b|#10\b/);
     },
   );
 });
@@ -280,10 +358,11 @@ test("an issue citing a superseded ADR without a fate is refused", async (t) => 
         { number: 9, body: `${ticketBody}\n\nAs ADR 0041 decides.` },
         { number: 10, state: "closed", body: `${ticketBody}\n\nADR 0040.` },
         { number: 11, body: "```\nADR 0040\n```" },
+        { number: 12, body: `${ticketBody}\n\nAs adr 0040 decides.` },
       ],
     },
     (reason) => {
-      assert.match(reason, /#7, #8\.$/);
+      assert.match(reason, /#7, #8, #12\.$/);
     },
   );
 });

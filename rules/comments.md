@@ -92,6 +92,8 @@ Fate: <closed as superseded | rescoped | kept, with a one-line reason>
 Source: <link to the superseding specification>
 ```
 
+A `closed as superseded` fate also closes the issue.
+
 New evidence on an existing finding is one comment on its issue, linking the
 evidence's source.
 

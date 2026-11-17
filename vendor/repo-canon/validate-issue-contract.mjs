@@ -199,14 +199,15 @@ function normalizeMarkdown(value) {
 
 // A direct contract's footprint (ADR 0045): its `Supersedes:` line names the
 // ADRs and issues it replaces, and its `Adds:` and `Deletes:` lines name
-// durable surfaces, never file paths. Each field is one line of rendered
-// prose; code, HTML and quotations are example content.
+// durable surfaces, never file paths. A field is a line of rendered prose that
+// starts with its plain or bold name; code, HTML and quotations are example
+// content.
 const footprintFields = ["Supersedes", "Adds", "Deletes"];
 const fileExtensions =
   /\.(?:md|mdx|mjs|cjs|js|jsx|ts|tsx|json|jsonc|ya?ml|sh|toml|txt|lock|html|css|py)$/i;
 
 // The rendered prose lines of a Markdown document and its link targets,
-// without code, HTML or blockquotes.
+// without code blocks, HTML or blockquotes. Inline code keeps its backticks.
 function proseLines(markdown) {
   const lines = [""];
   const links = [];
@@ -214,7 +215,8 @@ function proseLines(markdown) {
     for (const token of tokens ?? []) {
       if (token.type === "html") continue;
       if (token.type === "br") lines.push("");
-      else if (token.type === "codespan") lines[lines.length - 1] += token.text;
+      else if (token.type === "codespan")
+        lines[lines.length - 1] += `\`${token.text}\``;
       else if (token.tokens) {
         if (token.type === "link") links.push(token.href);
         inline(token.tokens);
@@ -250,25 +252,34 @@ function referenceText({ repository, number }, from) {
     : `${repository}#${number}`;
 }
 
-function supersededId(item, repository) {
-  const issue =
-    new RegExp(String.raw`^(${repositoryPattern})?#(\d+)$`).exec(item) ??
-    new RegExp(
-      String.raw`^https:\/\/github\.com\/(${repositoryPattern})\/issues\/(\d+)\/?$`,
-    ).exec(item);
-  if (issue)
-    return {
-      type: "issues",
-      repository: issue[1] ?? repository,
-      number: Number(issue[2]),
-    };
-  const adr = new RegExp(
-    String.raw`^(?:(${repositoryPattern}) )?ADR[ -]?(\d+)$`,
-    "i",
-  ).exec(item);
-  return adr
-    ? { type: "adrs", repository: adr[1] ?? repository, number: Number(adr[2]) }
-    : null;
+// The ADR and issue ids a `Supersedes:` value names in its prose. A value
+// starting with `none` names none, whatever its explanation cites.
+function supersededIds(value, repository) {
+  const ids = { issues: [], adrs: [] };
+  if (/^none\b/i.test(value)) return ids;
+  const id = new RegExp(
+    String.raw`https:\/\/github\.com\/(${repositoryPattern})\/issues\/(\d+)|(?<![\w/#])(?:(${repositoryPattern}))?#(\d+)|(?:(${repositoryPattern})\s+)?\bADR(s?)[ -]?(\d+)((?:(?:\s*,\s*|\s+and\s+|\s*,\s*and\s+)\d+\b)*)`,
+    "gi",
+  );
+  for (const match of value.matchAll(id)) {
+    const [, urlRepository, urlNumber, issueRepository, issueNumber] = match;
+    const [adrRepository, plural, adrNumber, more] = match.slice(5);
+    if (urlNumber || issueNumber)
+      ids.issues.push({
+        repository: urlRepository ?? issueRepository ?? repository,
+        number: Number(urlNumber ?? issueNumber),
+      });
+    else
+      for (const number of [
+        adrNumber,
+        ...(plural ? (more.match(/\d+/g) ?? []) : []),
+      ])
+        ids.adrs.push({
+          repository: adrRepository ?? repository,
+          number: Number(number),
+        });
+  }
+  return ids;
 }
 
 function isFilePath(item) {
@@ -287,51 +298,45 @@ function isFilePath(item) {
 }
 
 // The footprint a direct contract body states. `known` is false while any of
-// the three fields is missing; that footprint is unknown, never empty.
+// the three fields is missing; that footprint is unknown, never empty. A
+// repeated field adds its items. `errors` names file paths and empty fields,
+// which refuse a new readiness grant but never structure or an approval.
 // `repository` resolves unqualified ADR and issue ids.
 export function contractFootprint(body, repository) {
   const found = new Map();
-  const errors = [];
   for (const line of proseLines(body ?? "").lines) {
     const match = /^(Supersedes|Adds|Deletes)\s*:\s*(.*)$/i.exec(line);
     if (!match) continue;
     const name = footprintFields.find(
       (field) => field.toLowerCase() === match[1].toLowerCase(),
     );
-    if (found.has(name)) errors.push(`State \`${name}:\` once.`);
-    else found.set(name, match[2].trim());
+    found.set(name, [...(found.get(name) ?? []), match[2].trim()]);
   }
-  const items = (name, separator) => {
-    const value = found.get(name) ?? "";
-    if (/^none\.?$/i.test(value)) return [];
-    return value
-      .split(separator)
+  const errors = [];
+  const items = (name, separator) =>
+    (found.get(name) ?? [])
+      .filter((value) => !/^none\b/i.test(value))
+      .flatMap((value) => value.replace(/`/g, "").split(separator))
       .map((item) => item.trim().replace(/\.$/, "").trim())
       .filter(Boolean);
-  };
   const supersedes = { issues: [], adrs: [] };
-  for (const item of items("Supersedes", /[,;]/)) {
-    const id = supersededId(item, repository);
-    if (!id)
-      errors.push(
-        `Name each ADR or issue in \`Supersedes:\` as \`ADR 0045\`, \`owner/name ADR 0045\`, \`#123\` or \`owner/name#123\`, or write \`none\`; \`${item}\` is none of these.`,
-      );
-    else
-      supersedes[id.type].push({
-        repository: id.repository,
-        number: id.number,
-      });
+  for (const value of found.get("Supersedes") ?? []) {
+    const ids = supersededIds(value.replace(/`/g, ""), repository);
+    supersedes.issues.push(...ids.issues);
+    supersedes.adrs.push(...ids.adrs);
   }
   const surfaces = {};
-  for (const name of ["Adds", "Deletes"]) {
-    surfaces[name] = items(name, ";");
+  for (const name of footprintFields) {
+    surfaces[name] = items(name, name === "Supersedes" ? /[,;]/ : ";");
     for (const item of surfaces[name].filter(isFilePath))
       errors.push(
-        `Name durable surfaces in \`${name}:\`, never file paths: \`${item}\`.`,
+        name === "Supersedes"
+          ? `Name ADRs and issues in \`Supersedes:\` by id, never by file path: \`${item}\`.`
+          : `Name durable surfaces in \`${name}:\`, never file paths: \`${item}\`.`,
       );
   }
   for (const name of footprintFields)
-    if (found.has(name) && !found.get(name))
+    if (found.get(name)?.every((value) => !value))
       errors.push(`Complete \`${name}:\`, or write \`none\`.`);
   const missing = footprintFields.filter((name) => !found.has(name));
   return {
@@ -367,7 +372,7 @@ function citesAdr(body, issueRepository, adr, knownRepositories) {
     .flatMap((path) => [path.toLowerCase(), path.split("/")[1].toLowerCase()]);
   const citation = new RegExp(
     String.raw`(?:(\S+)\s+)?\bADR[ -]?0*${adr.number}(?!\d)`,
-    "g",
+    "gi",
   );
   for (const line of lines)
     for (const [, before] of line.matchAll(citation)) {
@@ -383,8 +388,9 @@ function citesAdr(body, issueRepository, adr, knownRepositories) {
 }
 
 // Whether a comment records the issue's fate under the specification: a
-// `Fate:` line that keeps it with a reason or rescopes it, in a comment
-// linking the specification. A closed issue needs no fate.
+// `Fate:` line that closes it as superseded, rescopes it or keeps it with a
+// reason, in a comment linking the specification. A closed issue needs no
+// fate.
 function recordsFate(body, issueRepository, specification) {
   const { lines, links } = proseLines(body ?? "");
   const [owner, name] = specification.repository
@@ -400,7 +406,7 @@ function recordsFate(body, issueRepository, specification) {
   if (![...lines, ...links].some((text) => reference.test(text))) return false;
   return lines.some((line) => {
     const fate = /^Fate\s*:\s*(.*)$/i.exec(line)?.[1] ?? "";
-    if (/^rescoped\b/i.test(fate)) return true;
+    if (/^(?:rescoped|closed as superseded)\b/i.test(fate)) return true;
     const reason = /^kept\b(.*)$/i
       .exec(fate)?.[1]
       ?.replace(new RegExp(reference.source, "gi"), "");
@@ -505,7 +511,15 @@ function footprintTally(snapshot, result) {
   const unknownNote = unknown.length
     ? ` Unknown footprint, without ${fields} lines: ${unknown.map(({ name }) => name).join(", ")}.`
     : "";
-  return `Footprint: ${count(adds, "add")} against ${count(deletes, "delete")}${scope}, shown and never gated.${unknownNote}`;
+  const { errors } = contracts[0].footprint;
+  const errorNote = errors.length ? ` ${footprintRefusal(errors)}` : "";
+  return `Footprint: ${count(adds, "add")} against ${count(deletes, "delete")}${scope}, shown and never gated.${unknownNote}${errorNote}`;
+}
+
+// The refusal of a new readiness grant to a contract whose footprint names a
+// file path or leaves a field empty.
+function footprintRefusal(errors) {
+  return `A new readiness grant waits for a well-formed footprint. ${errors.join(" ")}`;
 }
 
 // The refusal naming each superseded issue still missing a fate.
@@ -1222,7 +1236,6 @@ function validate({
     ]) {
       requireSection(sections, name, errors, { allowEmpty: true });
     }
-    errors.push(...contractFootprint(body).errors);
     return outcome("specification", errors, labels, true, {
       type: "issue-body",
       body,
@@ -1235,7 +1248,6 @@ function validate({
     requireSection(sections, "Blocked by", errors, {
       allowExternalValue: blockedBy.length > 0,
     });
-    errors.push(...contractFootprint(body).errors);
     return outcome("implementation ticket", errors, labels, true, {
       type: "issue-body",
       body,
@@ -1739,16 +1751,25 @@ function assessReadiness({
           !authority.error && creationEvent ? grant.label : null,
       };
     }
-    // A new grant to a specification waits for every superseded issue's fate.
+    // A new grant to a direct contract waits for a well-formed footprint and,
+    // for a specification, for every superseded issue's fate.
     const supersession = snapshot.supersession;
-    const refusal =
-      approval || result.kind !== "specification"
-        ? null
-        : !supersession
-          ? "The fates of the issues this specification supersedes were not read."
-          : supersession.error
-            ? `Could not read the fates of the issues this specification supersedes: ${supersession.error}`
-            : supersessionRefusal(supersession.unfated, snapshot.repository);
+    const footprintErrors = ["specification", "implementation ticket"].includes(
+      result.kind,
+    )
+      ? contractFootprint(result.contract.body, snapshot.repository).errors
+      : [];
+    const refusal = approval
+      ? null
+      : footprintErrors.length
+        ? footprintRefusal(footprintErrors)
+        : result.kind !== "specification"
+          ? null
+          : !supersession
+            ? "The fates of the issues this specification supersedes were not read."
+            : supersession.error
+              ? `Could not read the fates of the issues this specification supersedes: ${supersession.error}`
+              : supersessionRefusal(supersession.unfated, snapshot.repository);
     if (refusal)
       return {
         valid: false,
