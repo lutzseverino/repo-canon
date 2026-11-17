@@ -865,6 +865,48 @@ test("source and installed merge reject holding reviews contradicted by task-lis
   }
 });
 
+test("source and installed merge exclude inline metadata and code examples from reviews", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const fields = outcome
+    .split("\n\n")[1]
+    .replace(/^Findings:.*$/m, "Findings: None")
+    .replace(/^- .*$/m, "")
+    .trimEnd();
+  const inlineExamples = [
+    ...["script", "style", "title", "pre"].map(
+      (tag) => `prefix <${tag}>\n${fields}\n</${tag}>`,
+    ),
+    `[label](/target "title\n${fields}\nend")`,
+    `![label](/target "title\n${fields}\nend")`,
+    `![label\n${fields}\nend](/target)`,
+    `<span title="title\n${fields}\nend">label</span>`,
+    `\`\`example\n${fields}\nend\`\``,
+  ].map((source) => `- ${source.replaceAll("\n", "\n  ")}`);
+  for (const entry of [undefined, target]) {
+    for (const hidden of inlineExamples) {
+      for (const visible of [false, true]) {
+        const body = visible ? `${hidden}\n\n${outcome}` : hidden;
+        const result = run(
+          t,
+          {
+            author: "factory-app[bot]",
+            reviewConfiguration: { policy },
+            reviews: [review(body)],
+          },
+          undefined,
+          entry,
+        );
+        assert.equal(
+          result.status,
+          visible ? 0 : 5,
+          `${body}\n${result.stderr}`,
+        );
+        assert.equal(Boolean(result.state.merge), visible);
+      }
+    }
+  }
+});
+
 test("the review skill's posted round review is the app-author internal review record", async (t) => {
   const directory = mkdtempSync(join(tmpdir(), "babysit-review-round-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));

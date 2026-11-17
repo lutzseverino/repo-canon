@@ -31,21 +31,84 @@ const completed = (value) =>
 
 const blank = (text) => text.replace(/[^\r\n]/g, " ");
 
-// A token's source with its inline HTML comments blanked in place, so hiding
-// content never joins fragments into a field or a head SHA. Each child's
-// source follows the previous one's within its parent's, so code spans keep
-// comment markers as text. A child that cannot be located hides its parent.
-function shown(token) {
-  if (token.type === "html")
-    return token.raw.startsWith("<!--") ? blank(token.raw) : token.raw;
-  let text = token.raw;
+const exampleElements = new Set([
+  "code",
+  "pre",
+  "kbd",
+  "script",
+  "style",
+  "textarea",
+  "title",
+  "xmp",
+  "iframe",
+  "noembed",
+  "noframes",
+]);
+
+function htmlContext(raw, context) {
+  const tag = /^<(\/?)([a-z][\w:-]*)(?=[\s/>])/i.exec(raw);
+  if (!tag) return;
+  const name = tag[2].toLowerCase();
+  if (tag[1] && context.element === name) context.element = null;
+  else if (!tag[1] && !context.element && exampleElements.has(name))
+    context.element = name;
+}
+
+const hasText = (token) =>
+  !["html", "image"].includes(token.type) &&
+  (token.tokens ? token.tokens.some(hasText) : Boolean(token.text?.trim()));
+
+// Keep character offsets while excluding inline metadata. Its non-rendered line
+// breaks and code-span line breaks become spaces, as their displayed text does.
+// A child that cannot be located hides its parent instead of exposing evidence.
+function shown(token, context) {
+  if (token.type === "html") {
+    htmlContext(token.raw, context);
+    return " ".repeat(token.raw.length);
+  }
+  if (token.type === "image") return " ".repeat(token.raw.length);
+  if (token.type === "codespan")
+    return context.element
+      ? " ".repeat(token.raw.length)
+      : token.raw.replace(/[\r\n]/g, " ");
+  if (token.type === "link" && !token.autolink) {
+    if (!token.tokens.some(hasText)) return blank(token.raw);
+    // Marked removes escaped brackets from a link's label. Locate that label
+    // only at its source prefix; titles and reference/destination syntax never
+    // participate in the recursive read. Keep the brackets themselves so
+    // removing markup cannot manufacture a field at either end of the label.
+    let end = 1;
+    for (let index = 0; index < token.text.length; index++, end++) {
+      if (token.raw[end] !== token.text[index]) {
+        if (token.raw[end] !== "\\" || token.raw[end + 1] !== token.text[index])
+          return blank(token.raw);
+        end++;
+      }
+    }
+    if (token.raw[0] !== "[" || token.raw[end] !== "]") return blank(token.raw);
+    const label = shown(
+      {
+        type: "text",
+        raw: token.text,
+        tokens: token.tokens,
+      },
+      context,
+    );
+    if (!label.trim()) return blank(token.raw);
+    const padding = " ".repeat(end - 1 - token.text.length);
+    // Retain link delimiters so a visible label is not mistaken for a plain
+    // bracketed placeholder after its metadata is hidden.
+    const metadata = token.raw.slice(end + 1).replace(/[^\r\n()[\]]/g, " ");
+    return `[${label}]${padding}${metadata}`;
+  }
+  let text = context.element ? " ".repeat(token.raw.length) : token.raw;
   let at = 0;
   for (const child of token.tokens ?? []) {
-    const start = text.indexOf(child.raw, at);
+    const start = token.raw.indexOf(child.raw, at);
     if (start < 0) return blank(token.raw);
     text =
       text.slice(0, start) +
-      shown(child) +
+      shown(child, context) +
       text.slice(start + child.raw.length);
     at = start + child.raw.length;
   }
@@ -60,10 +123,14 @@ function shown(token) {
 // items too, so a field continuing an item still counts. An item's first line
 // keeps its marker unless an example opens it, indented when nested, so only
 // top-level items are findings.
-function visibleLines(tokens, nested = false) {
+function visibleLines(tokens, nested = false, context = { element: null }) {
   return tokens.flatMap((token) => {
     if (["paragraph", "text", "heading"].includes(token.type))
-      return shown(token).replace(/\n+$/, "").split("\n");
+      return shown(token, context).replace(/\n+$/, "").split("\n");
+    // A closing tag can be a separate block token after an inline opening.
+    // The block's own content remains excluded.
+    if (token.type === "html" && context.element)
+      htmlContext(token.raw, context);
     if (token.type !== "list") return [""];
     return token.items.flatMap((entry) => {
       // Marked separates a task checkbox from its text. Keep them on the
@@ -72,7 +139,7 @@ function visibleLines(tokens, nested = false) {
       const checkbox =
         entry.tokens[0]?.type === "checkbox" ? entry.tokens[0].raw : "";
       const content = checkbox ? entry.tokens.slice(1) : entry.tokens;
-      const [first, ...rest] = visibleLines(content, true);
+      const [first, ...rest] = visibleLines(content, true, context);
       const marker = /^[\t ]*\S+[\t ]*/.exec(entry.raw)?.[0] ?? "";
       const opening = (nested ? "  " : "") + marker + checkbox + first;
       return [checkbox || first?.trim() ? opening : "", ...rest];

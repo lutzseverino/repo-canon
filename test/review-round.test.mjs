@@ -382,8 +382,21 @@ test("installed reassessment retains later round counts, App identity and owner 
 test("source and installed rounds post and track reviews with separate verification material", async (t) => {
   const target = installedValidator(t, ".agents/skills/review/round.mjs");
   const installed = await import(pathToFileURL(target).href);
+  const fields = reviewBody(head).split("\n\n")[1];
+  const inlineExamples = [
+    ...["script", "style", "title", "pre"].map(
+      (tag) => `prefix <${tag}>\n${fields}\n</${tag}>`,
+    ),
+    `[label](/target "title\n${fields}\nend")`,
+    `![label](/target "title\n${fields}\nend")`,
+    `![label\n${fields}\nend](/target)`,
+    `<span title="title\n${fields}\nend">label</span>`,
+    `\`\`example\n${fields}\nend\`\``,
+  ].map((source) => `- ${source.replaceAll("\n", "\n  ")}`);
   for (const entry of [main, installed.main]) {
     for (const body of [
+      ...inlineExamples.map((example) => `${example}\n\n${reviewBody(head)}`),
+      `- [label\n${fields.replace(/^/gm, "  ")}\n  end](/target "title")`,
       `${reviewBody(head)}\n\n\`\`\`text\npnpm check passed\n\`\`\``,
       `~~~text\npnpm check passed\n~~~\n\n${reviewBody(head)}`,
       `${reviewBody(head)}\n\n<!-- verification marker -->`,
@@ -418,6 +431,7 @@ test("source and installed rounds post and track reviews with separate verificat
       );
     }
     for (const body of [
+      ...inlineExamples,
       `~~~markdown\n${reviewBody(head)}\n~~~`,
       `${reviewBody(head)}\n- [ ] src/ledger.mjs:12 A visible finding.`,
       `${reviewBody(head)}\n- [x] A visible invalid finding.`,

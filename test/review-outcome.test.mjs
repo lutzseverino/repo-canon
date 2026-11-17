@@ -32,6 +32,32 @@ const examples = [
   (body) => `- <pre>\n${body.replace(/^/gm, "  ")}\n  </pre>`,
   (body) => `<!--\n${body}\n-->`,
 ];
+const inlineExamples = [
+  ...[
+    "script",
+    "style",
+    "pre",
+    "code",
+    "kbd",
+    "textarea",
+    "title",
+    "xmp",
+    "iframe",
+    "noembed",
+    "noframes",
+  ].map(
+    (tag) => (body) =>
+      `- prefix <${tag}>\n${body.replace(/^/gm, "  ")}\n  </${tag}>`,
+  ),
+  (body) => `- [label](/target "title\n${body.replace(/^/gm, "  ")}\n  end")`,
+  (body) => `- [label](/target 'title\n${body.replace(/^/gm, "  ")}\n  end')`,
+  (body) => `- [label](/target (title\n${body.replace(/^/gm, "  ")}\n  end))`,
+  (body) => `- ![label](/target "title\n${body.replace(/^/gm, "  ")}\n  end")`,
+  (body) => `- ![label\n${body.replace(/^/gm, "  ")}\n  end](/target)`,
+  (body) =>
+    `- <span title="title\n${body.replace(/^/gm, "  ")}\n  end">label</span>`,
+  (body) => `- \`\`example\n${body.replace(/^/gm, "  ")}\n  end\`\``,
+];
 
 test("lazy blockquote continuations nested in lists cannot supply a review", () => {
   for (const opening of [
@@ -233,6 +259,117 @@ test("comments inside inline formatting stay hidden", () => {
     const visible = review.replace(line, `${line} ${wrap("a <!-- b --> c")}`);
     assert.equal(completeReview(visible, head), true, visible);
     assert.equal(holdingReview(visible, head), true, visible);
+  }
+});
+
+test("inline metadata and code spans cannot supply fields or duplicate visible evidence", () => {
+  for (const example of inlineExamples) {
+    const hidden = example(review);
+    assert.equal(reviewedHead(hidden), null, hidden);
+    assert.equal(completeReview(hidden, head), false, hidden);
+    assert.equal(holdingReview(hidden, head), false, hidden);
+    for (const visible of [review, withFinding]) {
+      const body = `${hidden}\n\n${visible}`;
+      assert.equal(reviewedHead(body), head, body);
+      assert.equal(completeReview(body, head), true, body);
+      assert.equal(holdingReview(body, head), visible === review, body);
+    }
+    const located = hidden.replace(
+      /^- /,
+      "- src/ledger.mjs:24 Actual finding. ",
+    );
+    const body = `${withFinding}\n\n${located}`;
+    assert.equal(reviewedHead(body), head, body);
+    assert.equal(completeReview(body, head), true, body);
+    assert.equal(holdingReview(body, head), false, body);
+    for (const field of review.split("\n")) {
+      const body = `${review.replace(field, "")}\n\n${example(field)}`;
+      assert.equal(completeReview(body, head), false, body);
+      assert.equal(holdingReview(body, head), false, body);
+    }
+  }
+});
+
+test("visible link labels keep their fields and inline comments without exposing metadata", () => {
+  for (const label of ["label", "label\\] with an escaped bracket"]) {
+    const fields = review.replace("Fixed:", "<!-- hidden -->\nFixed:");
+    const body = `- [${label}\n${fields.replace(/^/gm, "  ")}\n  end](/target "title")`;
+    assert.equal(reviewedHead(body), head, body);
+    assert.equal(completeReview(body, head), true, body);
+    assert.equal(holdingReview(body, head), true, body);
+  }
+  for (const link of [
+    "[a\\]b](/target)",
+    "[**label** with <!-- hidden --> text](/target)",
+    "[label][reference]",
+    "<https://example.com?a=1&b=2>",
+  ]) {
+    const value = link.startsWith("<") ? `Passed; ${link}` : link;
+    const body =
+      review.replace(/^Spec:.*$/m, `Spec: ${value}`) +
+      '\n\n[reference]: /target "title"';
+    assert.equal(completeReview(body, head), true, body);
+  }
+  const malformed = `- [label](<destination\n${review.replace(/^/gm, "  ")}\n  end>)`;
+  assert.equal(holdingReview(malformed, head), true);
+  for (const label of [
+    "<!-- hidden -->",
+    "**<!-- hidden -->**",
+    "![alt](/image)",
+    "<code>Passed</code>",
+    "<script>Passed</script>",
+  ]) {
+    const body = review.replace(
+      /^Spec:.*$/m,
+      `Spec: [${label}](/target "Passed")`,
+    );
+    assert.equal(completeReview(body, head), false, body);
+  }
+});
+
+test("inline attributes cannot hide an item's visible finding text", () => {
+  for (const item of [
+    '- <span title="hidden\n  metadata">An invalid visible finding.</span>',
+    '- ![alt](/target "hidden\n  metadata") An invalid visible finding.',
+  ]) {
+    const body = `${review}\n\n${item}`;
+    assert.equal(reviewedHead(body), head, body);
+    assert.equal(completeReview(body, head), false, body);
+    assert.equal(holdingReview(body, head), false, body);
+  }
+});
+
+test("inline raw-element context survives block boundaries and ends only at its matching tag", () => {
+  for (const tag of [
+    "script",
+    "style",
+    "pre",
+    "code",
+    "kbd",
+    "textarea",
+    "title",
+    "xmp",
+    "iframe",
+    "noembed",
+    "noframes",
+  ]) {
+    const opening = `prefix <${tag.toUpperCase()} class="example">`;
+    const wrong = tag === "script" ? "style" : "script";
+    const hidden = `${opening}\n\n${review}\n\n</${wrong}>\n\n${review}`;
+    assert.equal(holdingReview(hidden, head), false, hidden);
+    const visible = `${hidden}\n\n</${tag}>\n\n${review}`;
+    assert.equal(holdingReview(visible, head), true, visible);
+    for (const example of ["```text", "> "]) {
+      const body =
+        example === "> "
+          ? `> ${opening}\n\n${review}`
+          : `${example}\n${opening}\n\`\`\`\n\n${review}`;
+      assert.equal(holdingReview(body, head), true, body);
+    }
+  }
+  for (const tag of ["span", "div"]) {
+    const body = `- prefix <${tag}>\n${review.replace(/^/gm, "  ")}\n  </${tag}>`;
+    assert.equal(holdingReview(body, head), true, body);
   }
 });
 
