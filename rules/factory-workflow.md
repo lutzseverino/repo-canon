@@ -133,10 +133,11 @@ none of its tickets' models.
 
 Triage's suggestion, the accepting reviewer's label, factory triage's issue
 label and every hand launch, including hand reviews, choose by the host's
-Model guidance: fit first, then narrower, then cheaper. Host guidance owns
-the fit and cost information; Repo Canon supplies no model ranking or
-task-difficulty ladder. The one-line model reason identifies the actual
-guidance used.
+Model guidance: fit first, then narrower, then cheaper. Where several models
+fit, choose the one the host declares narrower than another fitting model,
+otherwise the cheaper one. The host owns the fit, narrower-model and cost
+information; Repo Canon supplies no model ranking or task-difficulty ladder.
+The one-line model reason identifies the actual guidance used.
 
 For model resolution, fallback and provider diversity, follow
 [Scriptorium's model selection documentation](https://github.com/lutzseverino/scriptorium/blob/scriptorium-v4.1.0/docs/usage/host.md#model-selection).
