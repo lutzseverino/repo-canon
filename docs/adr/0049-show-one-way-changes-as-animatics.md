@@ -32,7 +32,7 @@ names none.
 
 - Every pull request, as upstream's own draft rule has it: rejected, because
   dependency bumps, adoptions and releases give a person no map to follow, and
-  each video costs a model's time and about two minutes of voicing.
+  each video costs a model's time and a build of about two minutes.
 - A pull request comment: rejected, because the comment rules allow no such
   occasion, and the owner expected the body.
 - A link to a video kept on a pull request asset branch, or a release asset:
@@ -40,9 +40,9 @@ names none.
 - A Scriptorium run step that makes the video: rejected, because Scriptorium
   names no skill content and the projects would then be coupled.
 - Owning a copy of upstream's unreleased draft now: rejected, because the
-  in-progress bucket stays outside the promoted set and the draft still
-  changes daily. The fixes found in trials go upstream first and remain owned
-  edits if upstream does not take them.
+  in-progress bucket stays outside the promoted set. The skill taken from
+  upstream's release keeps the trial fixes as owned edits, unless upstream has
+  taken them by then.
 
 ## Consequences
 
