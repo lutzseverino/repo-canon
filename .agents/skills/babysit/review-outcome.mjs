@@ -46,12 +46,31 @@ const exampleElements = new Set([
 ]);
 
 function htmlContext(raw, context) {
-  const tag = /^<(\/?)([a-z][\w:-]*)(?=[\s/>])/i.exec(raw);
-  if (!tag) return;
-  const name = tag[2].toLowerCase();
-  if (tag[1] && context.element === name) context.element = null;
-  else if (!tag[1] && !context.element && exampleElements.has(name))
-    context.element = name;
+  let at = 0;
+  while (at < raw.length) {
+    const element = context.elements.at(-1);
+    // Raw-text elements do not nest. Their first matching end tag closes
+    // them even when it occurs inside otherwise tag-shaped or comment text.
+    if (element && !["code", "pre", "kbd"].includes(element)) {
+      const close = new RegExp(`</${element}\\s*>`, "i").exec(raw.slice(at));
+      if (!close) return;
+      context.elements.pop();
+      at += close.index + close[0].length;
+      continue;
+    }
+    const start = raw.indexOf("<", at);
+    if (start < 0) return;
+    // A block HTML token can contain several tags. Reuse Marked's HTML-token
+    // rule so comments and quoted attributes cannot masquerade as end tags.
+    const html = marked.Lexer.rules.inline.normal.tag.exec(raw.slice(start));
+    at = start + (html?.[0].length ?? 1);
+    if (!html) continue;
+    const tag = /^<(\/?)([a-z][\w:-]*)(?=[\s/>])/i.exec(html[0]);
+    if (!tag) continue;
+    const name = tag[2].toLowerCase();
+    if (tag[1] && element === name) context.elements.pop();
+    else if (!tag[1] && exampleElements.has(name)) context.elements.push(name);
+  }
 }
 
 const hasText = (token) =>
@@ -68,7 +87,7 @@ function shown(token, context) {
   }
   if (token.type === "image") return " ".repeat(token.raw.length);
   if (token.type === "codespan")
-    return context.element
+    return context.elements.length
       ? " ".repeat(token.raw.length)
       : token.raw.replace(/[\r\n]/g, " ");
   if (token.type === "link" && !token.autolink) {
@@ -101,7 +120,7 @@ function shown(token, context) {
     const metadata = token.raw.slice(end + 1).replace(/[^\r\n()[\]]/g, " ");
     return `[${label}]${padding}${metadata}`;
   }
-  let text = context.element ? " ".repeat(token.raw.length) : token.raw;
+  let text = context.elements.length ? " ".repeat(token.raw.length) : token.raw;
   let at = 0;
   for (const child of token.tokens ?? []) {
     const start = token.raw.indexOf(child.raw, at);
@@ -123,14 +142,13 @@ function shown(token, context) {
 // items too, so a field continuing an item still counts. An item's first line
 // keeps its marker unless an example opens it, indented when nested, so only
 // top-level items are findings.
-function visibleLines(tokens, nested = false, context = { element: null }) {
+function visibleLines(tokens, nested = false, context = { elements: [] }) {
   return tokens.flatMap((token) => {
     if (["paragraph", "text", "heading"].includes(token.type))
       return shown(token, context).replace(/\n+$/, "").split("\n");
     // A closing tag can be a separate block token after an inline opening.
     // The block's own content remains excluded.
-    if (token.type === "html" && context.element)
-      htmlContext(token.raw, context);
+    if (token.type === "html") htmlContext(token.raw, context);
     if (token.type !== "list") return [""];
     return token.items.flatMap((entry) => {
       // Marked separates a task checkbox from its text. Keep them on the

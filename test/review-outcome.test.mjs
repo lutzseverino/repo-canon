@@ -373,6 +373,31 @@ test("inline raw-element context survives block boundaries and ends only at its 
   }
 });
 
+test("nested code examples and HTML block chunks retain the correct excluded context", () => {
+  for (const outer of ["code", "pre", "kbd"]) {
+    for (const inner of [outer, "script", "style"]) {
+      const hidden = `- prefix <${outer}><${inner}>inner</${inner}>\n${review.replace(/^/gm, "  ")}\n  </${outer}>`;
+      assert.equal(holdingReview(hidden, head), false, hidden);
+      assert.equal(holdingReview(`${hidden}\n\n${review}`, head), true, hidden);
+    }
+    for (const syntax of [
+      "<!-- </code> </pre> </kbd> -->",
+      '<span title="</code> </pre> </kbd>">inner</span>',
+    ]) {
+      const hidden = `- prefix <${outer}>${syntax}\n${review.replace(/^/gm, "  ")}\n  </${outer}>`;
+      assert.equal(holdingReview(hidden, head), false, hidden);
+    }
+  }
+  for (const tag of ["script", "style", "code", "pre", "title"]) {
+    const body = `- prefix <${tag}>\n\n  <div>inner</${tag}></div>\n\n${review}`;
+    assert.equal(holdingReview(body, head), true, body);
+  }
+  for (const tag of ["script", "style"]) {
+    const body = `- prefix <${tag}><${tag}>inner</${tag}>\n${review.replace(/^/gm, "  ")}\n  </${tag}>`;
+    assert.equal(holdingReview(body, head), true, body);
+  }
+});
+
 test("hidden text cannot join fragments into a required field or head", () => {
   for (const body of [
     review.replace("Standards:", "Stan<!-- marker -->dards:"),

@@ -384,6 +384,7 @@ test("source and installed rounds post and track reviews with separate verificat
   const installed = await import(pathToFileURL(target).href);
   const fields = reviewBody(head).split("\n\n")[1];
   const inlineExamples = [
+    `prefix <code><code>inner</code>\n${fields}\n</code>`,
     ...["script", "style", "title", "pre"].map(
       (tag) => `prefix <${tag}>\n${fields}\n</${tag}>`,
     ),
@@ -396,6 +397,7 @@ test("source and installed rounds post and track reviews with separate verificat
   for (const entry of [main, installed.main]) {
     for (const body of [
       ...inlineExamples.map((example) => `${example}\n\n${reviewBody(head)}`),
+      `- prefix <script>\n\n  <div>inner</script></div>\n\n${reviewBody(head)}`,
       `- [label\n${fields.replace(/^/gm, "  ")}\n  end](/target "title")`,
       `${reviewBody(head)}\n\n\`\`\`text\npnpm check passed\n\`\`\``,
       `~~~text\npnpm check passed\n~~~\n\n${reviewBody(head)}`,

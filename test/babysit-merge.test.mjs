@@ -873,6 +873,7 @@ test("source and installed merge exclude inline metadata and code examples from 
     .replace(/^- .*$/m, "")
     .trimEnd();
   const inlineExamples = [
+    `prefix <code><code>inner</code>\n${fields}\n</code>`,
     ...["script", "style", "title", "pre"].map(
       (tag) => `prefix <${tag}>\n${fields}\n</${tag}>`,
     ),
@@ -904,6 +905,22 @@ test("source and installed merge exclude inline metadata and code examples from 
         assert.equal(Boolean(result.state.merge), visible);
       }
     }
+    const result = run(
+      t,
+      {
+        author: "factory-app[bot]",
+        reviewConfiguration: { policy },
+        reviews: [
+          review(
+            `- prefix <script>\n\n  <div>inner</script></div>\n\n${outcome}`,
+          ),
+        ],
+      },
+      undefined,
+      entry,
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.state.merge);
   }
 });
 
