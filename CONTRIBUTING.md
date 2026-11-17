@@ -141,11 +141,10 @@ checks documented in the development guide before requesting review.
 
 ## Findings
 
-Every agent run records findings: implementation, release, review, and adoption or update. A
-finding is a defect, gap, or stale instruction the run observed outside the
-work it is responsible for. Fix defects inside the change's responsibility in
-the change. An adoption run's own contextual work in the adopting repository
-is not a finding.
+Implementation, release, review, adoption and update runs record findings, filed
+under the factory rules' [environment-performed step rule](.repo-standards/rules/factory-workflow.md#run-kinds).
+A run's change fixes defects within its work; findings are defects, gaps or stale
+instructions observed outside it, except adoption's contextual work.
 
 A factory run cites its filing run in each finding it files, and never opens a
 separate unticketed pull request: out-of-scope work, however small, is a
@@ -158,7 +157,7 @@ in the repository responsible for the affected material or tooling. Each issue
 cites the run's pull request or issue and distinguishes what the run observed
 from what it only read in code. Leave the issues to triage.
 
-Link every filed or existing issue in this order:
+Link filed or existing issues in this order, counting the environment's issue report as the links' home:
 
 1. A run with a pull request links them from a comment on that pull request.
    For adoption, use its check-outcomes comment.
@@ -250,20 +249,21 @@ adoption pull request, use the adoption record as described below.
 
 ### Worker handoff
 
-Before worker handoff, every required check must pass on the latest pushed PR
-head. Required names come from the pinned trusted default-branch
-`.github/required-checks.json` under the `github-repository-configuration`
-rules. Every configured location runs the same required command:
+Before worker handoff, required checks must pass on the latest pushed PR head;
+the separate-review handoff's passing-checks condition follows the factory rules'
+[environment-performed step rule](.repo-standards/rules/factory-workflow.md#run-kinds).
+Required names come from pinned trusted default-branch `.github/required-checks.json`
+under the `github-repository-configuration` rules. Each location runs the required command:
 
 - `github`: use required hosted check results on that head.
 - `runner`: use required commit statuses from the repository's named runner.
 - `self-reported`: run and report the required local command on that head.
 
-A head change invalidates earlier evidence. Pending, missing, failing,
-unavailable or unrun required results cannot qualify. Unavailable Actions cannot
-substitute a local pass for configured runner results. Fix and revalidate, or
-follow existing blocked/failure delivery rules, naming checks and reasons.
-Add no timeout, fallback or bypass.
+A head change invalidates earlier evidence. Run-performed gates reject pending,
+missing, failing, unavailable or unrun results. Unavailable Actions cannot
+substitute a local pass for configured runner results. Fix and revalidate or
+follow blocked/failure delivery rules, naming checks and reasons. Add no timeout,
+fallback or bypass.
 
 Record the full head SHA, trusted declaration revision, location, required command,
 names and outcomes. Draft-to-separate-review and no-review handoffs both retain

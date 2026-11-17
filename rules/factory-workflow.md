@@ -49,6 +49,9 @@ merges its own PR. Otherwise only review merges. Triage stays read-only, and
 every run ends with a result the factory posts and turns into labels.
 Configuration holds mechanics; execution choices follow Model selection below.
 
+Where the run's environment states it performs a named step, the run leaves
+that step to it.
+
 ## Handoffs
 
 Runs hand off through the issue's workflow state and pull request:
