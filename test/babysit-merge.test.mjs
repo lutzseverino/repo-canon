@@ -865,6 +865,34 @@ test("source and installed merge reject holding reviews contradicted by task-lis
   }
 });
 
+test("source and installed merge reject hidden outcomes and code opened in quotes", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const holding = outcome
+    .replace(/^Findings:.*$/m, "Findings: None")
+    .replace(/^- .*$/m, "");
+  const fields = holding.split("\n\n")[1].trimEnd();
+  for (const entry of [undefined, target]) {
+    for (const body of [
+      holding.replace(/^Standards:.*$/m, "Standards: **<!-- no outcome -->**"),
+      `> prefix <code>\n\n- wrapper\n${fields.replace(/^/gm, "  ")}\n\n</code>`,
+      `prefix [<code>](/target)\n\n${fields}\n\n</code>`,
+    ]) {
+      const result = run(
+        t,
+        {
+          author: "factory-app[bot]",
+          reviewConfiguration: { policy },
+          reviews: [review(body)],
+        },
+        undefined,
+        entry,
+      );
+      assert.equal(result.status, 5, `${body}\n${result.stderr}`);
+      assert.equal(result.state.merge, undefined);
+    }
+  }
+});
+
 test("source and installed merge exclude inline metadata and code examples from reviews", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const fields = outcome

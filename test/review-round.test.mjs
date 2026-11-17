@@ -398,6 +398,7 @@ test("source and installed rounds post and track reviews with separate verificat
     for (const body of [
       ...inlineExamples.map((example) => `${example}\n\n${reviewBody(head)}`),
       `- prefix <script>\n\n  <div>inner</script></div>\n\n${reviewBody(head)}`,
+      `> prefix <script>\n\n${fields}\n\n</script></blockquote>\n\n${reviewBody(head)}`,
       `- [label\n${fields.replace(/^/gm, "  ")}\n  end](/target "title")`,
       `${reviewBody(head)}\n\n\`\`\`text\npnpm check passed\n\`\`\``,
       `~~~text\npnpm check passed\n~~~\n\n${reviewBody(head)}`,
@@ -434,6 +435,12 @@ test("source and installed rounds post and track reviews with separate verificat
     }
     for (const body of [
       ...inlineExamples,
+      reviewBody(head).replace(
+        /^Standards:.*$/m,
+        "Standards: **<!-- no outcome -->**",
+      ),
+      `> prefix <code>\n\n- wrapper\n${fields.replace(/^/gm, "  ")}\n\n</code>`,
+      `prefix [<code>](/target)\n\n${fields}\n\n</code>`,
       `~~~markdown\n${reviewBody(head)}\n~~~`,
       `${reviewBody(head)}\n- [ ] src/ledger.mjs:12 A visible finding.`,
       `${reviewBody(head)}\n- [x] A visible invalid finding.`,

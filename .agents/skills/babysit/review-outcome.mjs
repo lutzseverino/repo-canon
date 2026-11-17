@@ -32,6 +32,7 @@ const completed = (value) =>
 const blank = (text) => text.replace(/[^\r\n]/g, " ");
 
 const exampleElements = new Set([
+  "blockquote",
   "code",
   "pre",
   "kbd",
@@ -44,6 +45,7 @@ const exampleElements = new Set([
   "noembed",
   "noframes",
 ]);
+const normalElements = new Set(["blockquote", "code", "pre", "kbd"]);
 
 function htmlContext(raw, context) {
   let at = 0;
@@ -51,7 +53,7 @@ function htmlContext(raw, context) {
     const element = context.elements.at(-1);
     // Raw-text elements do not nest. Their first matching end tag closes
     // them even when it occurs inside otherwise tag-shaped or comment text.
-    if (element && !["code", "pre", "kbd"].includes(element)) {
+    if (element && !normalElements.has(element)) {
       const close = new RegExp(`</${element}\\s*>`, "i").exec(raw.slice(at));
       if (!close) return;
       context.elements.pop();
@@ -68,14 +70,22 @@ function htmlContext(raw, context) {
     const tag = /^<(\/?)([a-z][\w:-]*)(?=[\s/>])/i.exec(html[0]);
     if (!tag) continue;
     const name = tag[2].toLowerCase();
-    if (tag[1] && element === name) context.elements.pop();
+    if (tag[1] && name === "blockquote") {
+      const quote = context.elements.lastIndexOf(name);
+      // A quote closes its normal descendants. Active code formatting is
+      // reconstructed outside it; a raw-text child consumes the end tag above.
+      if (quote >= 0)
+        context.elements.splice(
+          quote,
+          context.elements.length - quote,
+          ...context.elements
+            .slice(quote + 1)
+            .filter((name) => name === "code"),
+        );
+    } else if (tag[1] && element === name) context.elements.pop();
     else if (!tag[1] && exampleElements.has(name)) context.elements.push(name);
   }
 }
-
-const hasText = (token) =>
-  !["html", "image"].includes(token.type) &&
-  (token.tokens ? token.tokens.some(hasText) : Boolean(token.text?.trim()));
 
 // Keep character offsets while excluding inline metadata. Its non-rendered line
 // breaks and code-span line breaks become spaces, as their displayed text does.
@@ -91,7 +101,6 @@ function shown(token, context) {
       ? " ".repeat(token.raw.length)
       : token.raw.replace(/[\r\n]/g, " ");
   if (token.type === "link" && !token.autolink) {
-    if (!token.tokens.some(hasText)) return blank(token.raw);
     // Marked removes escaped brackets from a link's label. Locate that label
     // only at its source prefix; titles and reference/destination syntax never
     // participate in the recursive read. Keep the brackets themselves so
@@ -122,15 +131,19 @@ function shown(token, context) {
   }
   let text = context.elements.length ? " ".repeat(token.raw.length) : token.raw;
   let at = 0;
+  let visibleChild = false;
   for (const child of token.tokens ?? []) {
     const start = token.raw.indexOf(child.raw, at);
     if (start < 0) return blank(token.raw);
+    const content = shown(child, context);
+    visibleChild ||= Boolean(content.trim());
     text =
-      text.slice(0, start) +
-      shown(child, context) +
-      text.slice(start + child.raw.length);
+      text.slice(0, start) + content + text.slice(start + child.raw.length);
     at = start + child.raw.length;
   }
+  // Delimiters around hidden children are not an outcome of their own.
+  if (["strong", "em", "del"].includes(token.type) && !visibleChild)
+    return blank(token.raw);
   return text;
 }
 
@@ -144,6 +157,12 @@ function shown(token, context) {
 // top-level items are findings.
 function visibleLines(tokens, nested = false, context = { elements: [] }) {
   return tokens.flatMap((token) => {
+    if (token.type === "blockquote") {
+      htmlContext("<blockquote>", context);
+      visibleLines(token.tokens, true, context);
+      htmlContext("</blockquote>", context);
+      return [""];
+    }
     if (["paragraph", "text", "heading"].includes(token.type))
       return shown(token, context).replace(/\n+$/, "").split("\n");
     // A closing tag can be a separate block token after an inline opening.

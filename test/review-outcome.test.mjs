@@ -262,6 +262,67 @@ test("comments inside inline formatting stay hidden", () => {
   }
 });
 
+test("formatting around hidden content cannot supply an outcome", () => {
+  for (const key of ["Standards", "Spec", "Fixed"]) {
+    for (const value of [
+      "**<!-- no outcome -->**",
+      "*<!-- no outcome -->*",
+      "~~<!-- no outcome -->~~",
+      "**_<!-- no outcome -->_**",
+      "**<code>hidden outcome</code>**",
+      "**[<!-- no outcome -->](/target)**",
+    ]) {
+      const body = review.replace(
+        new RegExp(`^${key}:.*$`, "m"),
+        `${key}: ${value}`,
+      );
+      assert.equal(completeReview(body, head), false, body);
+      assert.equal(holdingReview(body, head), false, body);
+    }
+    const body = review.replace(
+      new RegExp(`^${key}:.*$`, "m"),
+      `${key}: **Passed <!-- note -->**`,
+    );
+    assert.equal(holdingReview(body, head), true, body);
+  }
+});
+
+test("quoted HTML keeps later code examples excluded until the matching close", () => {
+  for (const tag of [
+    "code",
+    "script",
+    "style",
+    "textarea",
+    "title",
+    "xmp",
+    "iframe",
+    "noembed",
+    "noframes",
+  ]) {
+    const body = `> prefix <${tag}>\n\n- wrapper\n${review.replace(/^/gm, "  ")}\n\n</${tag}>`;
+    assert.equal(completeReview(body, head), false, body);
+    assert.equal(holdingReview(body, head), false, body);
+    const closeQuote = tag === "code" ? "" : "</blockquote>\n\n";
+    assert.equal(
+      holdingReview(`${body}\n\n${closeQuote}${review}`, head),
+      true,
+      body,
+    );
+  }
+  for (const body of [
+    `> prefix <pre><script>\n\n</script>\n\n${review}\n\n</pre></blockquote>`,
+    `> prefix <code><!-- </code> -->\n\n${review}\n\n</code>`,
+    `prefix [<code>](/target)\n\n${review}\n\n</code>`,
+    `prefix [**<code>**](/target)\n\n${review}\n\n</code>`,
+  ]) {
+    assert.equal(holdingReview(body, head), false, body);
+    assert.equal(holdingReview(`${body}\n\n${review}`, head), true, body);
+  }
+  for (const tag of ["pre", "kbd"]) {
+    assert.equal(holdingReview(`> prefix <${tag}>\n\n${review}`, head), true);
+  }
+});
+
 test("inline metadata and code spans cannot supply fields or duplicate visible evidence", () => {
   for (const example of inlineExamples) {
     const hidden = example(review);
@@ -359,13 +420,14 @@ test("inline raw-element context survives block boundaries and ends only at its 
     assert.equal(holdingReview(hidden, head), false, hidden);
     const visible = `${hidden}\n\n</${tag}>\n\n${review}`;
     assert.equal(holdingReview(visible, head), true, visible);
-    for (const example of ["```text", "> "]) {
-      const body =
-        example === "> "
-          ? `> ${opening}\n\n${review}`
-          : `${example}\n${opening}\n\`\`\`\n\n${review}`;
-      assert.equal(holdingReview(body, head), true, body);
-    }
+    const fenced = `\`\`\`text\n${opening}\n\`\`\`\n\n${review}`;
+    assert.equal(holdingReview(fenced, head), true, fenced);
+    const quoted = `> ${opening}\n\n${review}`;
+    assert.equal(
+      holdingReview(quoted, head),
+      ["pre", "kbd"].includes(tag),
+      quoted,
+    );
   }
   for (const tag of ["span", "div"]) {
     const body = `- prefix <${tag}>\n${review.replace(/^/gm, "  ")}\n  </${tag}>`;
