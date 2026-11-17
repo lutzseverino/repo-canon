@@ -86,7 +86,7 @@ export function namedPaths(text, { markdown = false, inReads = false } = {}) {
 }
 
 /**
- * The SKILL.md Reads section: its list items, each with the paths and skills
+ * The SKILL.md Reads section: its list items, each with the paths, skills and rules
  * it names.
  * @param {string} skill
  */
@@ -106,6 +106,13 @@ export function readsSection(skill) {
     ),
     skills: [...text.matchAll(/\bthe `([\w-]+)` skill/gi)].map(
       ([, name]) => name,
+    ),
+    rules: [
+      ...text.matchAll(
+        /`[\w-]+`(?:\s*(?:,\s*(?:and\s+|or\s+)?|and\s+|or\s+)(?:the\s+)?`[\w-]+`)*\s+rules?\b/gi,
+      ),
+    ].flatMap(([names]) =>
+      [...names.matchAll(/`([\w-]+)`/g)].map(([, name]) => name),
     ),
   }));
 }

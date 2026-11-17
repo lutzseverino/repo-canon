@@ -304,12 +304,38 @@ own documentation and README checks, profile declarations, factory
 configuration, source size limits, upstream snapshot integrity, installed skill
 structure, and license notices. The suite uses the shared YAML reader for
 `standards.yaml` and the rendered Markdown readers for headings and links.
-It preserves single-home checks, entry-document word budgets, and
-`orchestrate`'s required sections, reference links, application independence and
-120-line core limit. License notices in owned skills and notices linked from
+It preserves single-home checks, `AGENTS.md`'s 223-word budget, the read-set
+budget, and `orchestrate`'s required sections, reference links and application
+independence. License notices in owned skills and notices linked from
 `THIRD_PARTY_NOTICES.md` are checked against their vendored licenses, including
 fixtures with dropped or altered notices. Rule and skill wording stays with
 pull request review and release skill exercises, as ADR 0032 decides above.
+
+The read-set budget (ADR 0048) measures bytes for the `orchestrate`, `factory`,
+`triage`, `implement` and `review` entry points. It follows the skills named in
+each reached skill's Reads section and counts their Markdown (except credits
+and licenses), named rules at their `rules/` source, and named `CONTRIBUTING.md`
+and `AGENTS.md`. It excludes scripts, configuration, domain and tracker records,
+workbench records and Scriptorium status. Shared members count once, and missing
+skills or rules fail with the entry point and naming skill.
+
+Every pull request's `Read set` check compares its head against its base commit
+using the head's computation for both. Growth fails unless the description's
+Merge Danger section has a line `Read set: <reason>` with a meaningful reason,
+using the PR metadata validator's placeholder rules. Description edits rerun
+the check. There is no stored budget number. Outside pull requests, including
+`pnpm validate` and pushes to `main`, only membership is checked, without a
+comparison gate. `AGENTS.md` keeps its word budget and
+`improve-codebase-architecture` keeps its own 200-line limit.
+
+Compare the working tree against any Git ref locally; the command prints every
+entry point's base bytes, head bytes and difference, even when growth fails:
+
+```sh
+node scripts/read-set.mjs compare origin/main
+node scripts/read-set.mjs compare origin/main --description /path/to/pr-body.md
+```
+
 The fixture-builder suites check repositories' files, issue metadata, linked
 skills, provenance and Git state, and execute their local commands without
 pinning exercise prose.

@@ -87,7 +87,7 @@ test("read-only check works from retained resources and never supplies repositor
         "utf8",
       ),
     ),
-    ["PR metadata", "Test"],
+    ["PR metadata", "Test", "Read set"],
   );
 });
 
