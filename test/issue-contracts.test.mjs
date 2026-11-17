@@ -3501,7 +3501,7 @@ decisionTable("workflow states are ordered against the review", [
 // An approved direct ticket that a factory stop left in `state:owner`: the
 // factory's App applied the stop at 17:05, which superseded the review's
 // readiness, and the validator removed `state:ready`. A person answers the
-// stop at 17:10 by applying the issue's next state.
+// stop at 18:10 by applying the issue's next state.
 function answeredStop(state) {
   const stop = supersessionSnapshot({
     labels: ["state:ready", "state:owner"],

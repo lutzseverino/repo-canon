@@ -168,8 +168,8 @@ Triage run says.
 
 Factory triage uses `triage` on one issue, without an orchestrating agent,
 workbench or decision inbox. It only reads: no posts, labels, pushes or fixes.
-Its result asks the factory to post its brief or question and apply its chosen
-labels, never a `gate:` label.
+Its result asks the factory to post its brief, question or cited carrier and
+apply its chosen labels, never a `gate:` label.
 
 It applies the contribution guide's inference test with sources recorded only
 in the repository: its ADRs, its glossary, and linked issues and their
@@ -345,8 +345,8 @@ outside reporter holds. A factory run asks for that state in its run result.
 Work without an issue uses no state label.
 
 A person answers a stop by applying the issue's next state, or by closing the
-issue; the one-state rule replaces the stop. Each stop names its exact next
-state:
+issue; the one-state rule replaces the stop. Each stop names the exact next
+state that answers it, one of these:
 
 - `state:ready` at the unchanged approved contract resumes the stopped work:
   the same work and pull request on a current base, whether the pull request

@@ -82,9 +82,9 @@ at its own time bound.
 
 Answer the question through the guide's owner-question route, posting as
 `.repo-standards/rules/comments.md#disclaimers` says, and meet the installed
-Questions and stops rule's conditions for a changed contract. Then return the
-issue to `state:ready`, which is the only way to resume it: never clear another
-label for it, and never merge the stopped PR by hand. For skipped work,
+Questions and stops rule's conditions for a changed contract. Then apply the
+exact next state the stop names, or close the issue, as that rule says: never
+clear another label for it, and never merge the stopped PR by hand. For skipped work,
 continue as Take the skip route says instead.
 
 ## Pause and resume one repository
