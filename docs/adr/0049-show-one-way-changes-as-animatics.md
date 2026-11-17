@@ -1,6 +1,6 @@
 # Show one-way changes as animatics in the pull request body
 
-Status: accepted (2026-11-14)
+Status: accepted (2026-11-14).
 
 A pull request whose change is a one-way change carries an animatic in its
 body. The author's session makes it, the factory's implement run included, with
@@ -9,14 +9,15 @@ upstream releases it. The video is for people, not for agents (owner,
 2026-11-13: "The videos would be for any human. Cause agents don't really need
 it." and "I agree this should only be used for some PRs"). The Merge Danger
 door the author already writes decides which pull requests get one (owner,
-2026-11-13: "One way changes maybe?"), and a pull request metadata check
-enforces it, following the owner's 2026-10-11 rule to lead with fixes code or
-CI can check. The video goes in the body, where an uploaded video plays inline
-(owner, 2026-11-13: "I expected the PR body so my public projects get videos on
-their PRs"). It belongs to the shared workflow rather than one person's setup
-(owner, 2026-11-13: "I'd want this to be tied to the workflow and the factory
-being able to follow it without many changes except from maybe permissions for
-file uploads").
+2026-11-13: "One way changes maybe?"), and any person may still ask for one on
+another pull request. A pull request metadata check enforces the video on
+one-way changes, following the owner's 2026-10-11 rule to lead with fixes code
+or CI can check. The video goes in the body, where an uploaded video plays
+inline (owner, 2026-11-13: "I expected the PR body so my public projects get
+videos on their PRs"). It belongs to the shared workflow rather than one
+person's setup (owner, 2026-11-13: "I'd want this to be tied to the workflow
+and the factory being able to follow it without many changes except from maybe
+permissions for file uploads").
 
 The skill's voice and settings stay at upstream's keyless defaults, so Repo
 Canon makes no choice that belongs to one person's machine (owner, 2026-10-29:
@@ -51,4 +52,6 @@ names none.
   libraries, and these count as delivery runtime under the sandbox-image
   rules. The run downloads the rest only when a video is due.
 - A one-way pull request cannot pass its metadata check without an uploaded
-  video in its body.
+  video in its body. A factory repository enforces the check only after its
+  sandbox image carries the toolchain and a live upload with the supplied
+  credential has worked, so the factory never stalls on a rule it cannot meet.
