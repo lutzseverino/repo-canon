@@ -116,9 +116,28 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         state.comparison ?? {
           status: stale ? "diverged" : "ahead",
           behind_by: stale ? 1 : 0,
+          merge_base_commit: {
+            sha: state.mergeBase ?? state.testedBase ?? "b".repeat(40),
+          },
         },
       );
     }
+    // Declared deletions: trees and changed files by revision and PR.
+    const tree = /\/git\/trees\/([0-9a-f]{40})$/.exec(path);
+    if (tree) {
+      if (state.failTree)
+        return json({ message: "tree read failed" }, state.failTree);
+      return json({
+        sha: tree[1],
+        truncated: state.truncatedTree ?? false,
+        tree: Object.keys(state.files?.[tree[1]] ?? {}).map((path) => ({
+          path,
+          type: "blob",
+        })),
+      });
+    }
+    if (/\/pulls\/\d+\/files$/.test(path))
+      return json(state.changedFiles ?? []);
     if (path.endsWith("/issues")) {
       if (state.failReleasePulls)
         return json(
@@ -146,6 +165,67 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       );
     }
     if (path === "/graphql") {
+      if (body.query.includes("BabysitClosingContracts")) {
+        if (state.failContracts)
+          return json({ message: "contract read failed" }, state.failContracts);
+        return json({
+          data: {
+            repository: {
+              pullRequest: {
+                closingIssuesReferences: connection(
+                  (state.closes ?? []).map((number) => ({
+                    number,
+                    body: state.bodies?.[number] ?? "",
+                    repository: {
+                      nameWithOwner: state.repository ?? "example/repository",
+                    },
+                  })),
+                ),
+              },
+            },
+          },
+        });
+      }
+      if (body.query.includes("BabysitOpenContracts"))
+        return json({
+          data: {
+            repository: {
+              issues: connection(
+                Object.entries(state.bodies ?? {}).map(([number, body]) => ({
+                  number: Number(number),
+                  body,
+                })),
+              ),
+            },
+          },
+        });
+      if (
+        body.query.includes("query PinnedFiles(") &&
+        "rules0" in body.variables
+      ) {
+        const revision = body.variables.revision;
+        return json({
+          data: {
+            repository: {
+              commit: { __typename: "Commit", oid: revision },
+              ...Object.fromEntries(
+                Object.entries(body.variables)
+                  .filter(([key]) => key.startsWith("rules"))
+                  .map(([key, expression]) => [
+                    key,
+                    {
+                      __typename: "Blob",
+                      isTruncated: false,
+                      text: state.files[revision][
+                        expression.slice(revision.length + 1)
+                      ],
+                    },
+                  ]),
+              ),
+            },
+          },
+        });
+      }
       if (body.query.includes("closingIssuesReferences")) {
         if (state.failOwnerGates)
           return json({ message: "gate read failed" }, state.failOwnerGates);

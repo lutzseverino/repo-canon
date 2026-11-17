@@ -107,7 +107,7 @@ body was checked. Link-free bodies need no reconstruction.
    | --- | --- |
    | `0` | Merged. Record any installed-rule-required outcome under `.repo-standards/rules/comments.md#delivery-records`: delivered head, validation/review results and printed merge commit SHA. |
    | `2` | Head changed or current-head validation has not succeeded. Return to step 1. |
-   | `3` | Not merged; owner needed, including a `gate:` label on the PR or any closing issue. Leave it open and hand off under `.repo-standards/rules/comments.md#owner-questions`, without retrying merge. |
+   | `3` | Not merged; owner needed, including a `gate:` label on the PR or any closing issue, a closing issue's declared deletion still present, or an edit to a surface another open issue's `Deletes:` names. Leave it open and hand off under `.repo-standards/rules/comments.md#owner-questions`, without retrying merge. |
    | `4` | Stale base. Enter Branch-update recovery: at most 2 further updates for a non-overlapping advance; the next stale base goes to the owner with "base did not settle". An overlap after the first update goes to the owner. |
    | `5` | Current-head policy-skip review missing/incomplete. Complete both internal reviews, post under `.repo-standards/rules/comments.md#reviews` using wait's full-head template, verify other merge conditions and rerun merge. No owner handoff. |
    | `6` | Configured-reviewer threads remain unresolved. Resolve them on the platform, verify the other gates and rerun merge. Replies alone do not resolve threads. |
@@ -264,13 +264,18 @@ Paths are relative to the repository root.
   missing or unreadable, that path permits no merge.
 - `.scriptorium/config.json`: its `labels.hold` and `labels.releaseHold`, which the
   merge command reads. When the file or a key is missing, that hold does not apply.
+- `.agents/skills/` and `rules/` at the pull request's head and merge base: the
+  skills, references and rule sections that open issues' `Deletes:` lines name,
+  which the merge command resolves. When a surface is missing at both, the
+  command reports it unchecked.
 - `.repo-standards/runtime/`: the pinned Repository Standards runtime, its
   `package-lock.json` and `node_modules/.bin/repo-standards`, which the
   request command uses to rebuild an adoption summary. When it is missing, no
   link is exempt as part of an adoption summary.
-- `vendor/postern/postern.mjs`, `vendor/marked/marked.esm.js` and
-  `vendor/parse5/parse5.esm.js`: the bundles the commands import, which Repo
-  Canon's adoption installs. When they are missing, the commands cannot start:
+- `vendor/postern/postern.mjs`, `vendor/marked/marked.esm.js`,
+  `vendor/parse5/parse5.esm.js` and `vendor/repo-canon/validate-issue-contract.mjs`:
+  the bundles and contract parser the commands import, which Repo Canon's
+  adoption installs. When they are missing, the commands cannot start:
   carry out each step by hand with the GitHub CLI under the same rules, and
   squash-merge with the subject `<title> (#<number>)` and the PR body passed
   explicitly.

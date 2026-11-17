@@ -697,6 +697,20 @@ grant with its reason; an unreadable ticket's footprint is unknown. The
 readiness again, and stops with the same refusal. The parser is exported as
 `contractFootprint`.
 
+The `babysit` merge command checks declared deletions with that parser, as
+the [merge script](babysit-merge.md#declared-deletions) describes. It resolves
+three `Deletes:` forms to the files that hold them, with names in backticks or
+double quotes:
+
+- `skill <name>`: the files in `.agents/skills/<name>/`;
+- `reference "<name>" (<skill>)`: the file named `<name>`, with any
+  extension, in `.agents/skills/<skill>/references/`;
+- `rule section "<heading>" (<name> rules)`: that heading's section in
+  `rules/<name>.md`, the name's words joined by hyphens.
+
+It reports any other item, and a surface held at neither the merge base nor
+the head, as not checked.
+
 ## Running the fixtures
 
 Run the issue-contract scenarios locally with:
