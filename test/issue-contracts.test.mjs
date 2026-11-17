@@ -57,6 +57,7 @@ function snapshotFor({
   permissions = {},
   bodyLastEditedAt = null,
   issueEvents = [],
+  repositoryLabels = [],
 }) {
   return {
     repository,
@@ -71,6 +72,7 @@ function snapshotFor({
       lastEditedAt: bodyLastEditedAt,
     },
     issueEvents,
+    repositoryLabels,
     permissions,
   };
 }
@@ -5113,3 +5115,192 @@ test("deleted Briefs without a global identifier preserve numeric marker parity"
     }
   }
 });
+
+test("a validator fallback carried through an in-place rename preserves readiness", () => {
+  const snapshot = supersessionSnapshot({
+    labels: ["state:ready", "state:triage"],
+    issueEvents: [
+      triagedLabel(
+        100,
+        "needs-triage",
+        "2026-09-14T16:00:00Z",
+        "github-actions[bot]",
+      ),
+      readinessReview,
+    ],
+  });
+  const decision = decideIssueContract(snapshotFor(snapshot));
+  assertDecision(decision, {
+    exitCode: 0,
+    remove: ["state:triage"],
+    feedback: 13,
+    feedbackBody: /readiness recorded/i,
+  });
+  assert.doesNotMatch(decision.feedback.body, /supersed|needs-triage/);
+});
+
+decisionTable("renamed workflow states use attributed history", [
+  ...[
+    {
+      state: "state:triage",
+      former: "needs-triage",
+      actor: "maintainer",
+      afterReview: false,
+    },
+    {
+      state: "state:owner",
+      former: "ready-for-human",
+      actor: "maintainer",
+      afterReview: false,
+    },
+    {
+      state: "state:triage",
+      former: "needs-triage",
+      actor: "github-actions[bot]",
+      afterReview: true,
+    },
+  ].map(({ state, former, actor, afterReview }) => ({
+    name: `${state} formerly applied by ${actor}${afterReview ? " after" : " before"} review preserves readiness`,
+    snapshot: supersessionSnapshot({
+      labels: ["state:ready", state],
+      issueEvents: afterReview
+        ? [
+            readinessReview,
+            triagedLabel(102, former, "2026-09-14T17:05:00Z", actor),
+          ]
+        : [
+            triagedLabel(100, former, "2026-09-14T16:00:00Z", actor),
+            readinessReview,
+          ],
+    }),
+    expected: {
+      exitCode: 0,
+      remove: [state],
+      feedback: 13,
+      feedbackBody: /readiness recorded/i,
+    },
+    check: (decision) =>
+      assert.doesNotMatch(
+        decision.feedback.body,
+        /supersed|needs-triage|ready-for-human/,
+      ),
+  })),
+  {
+    name: "an attributed removal leaves the carried state after every recorded event",
+    snapshot: supersessionSnapshot({
+      labels: ["state:ready", "state:triage"],
+      issueEvents: [
+        triagedLabel(
+          99,
+          "needs-triage",
+          "2026-09-14T15:00:00Z",
+          "github-actions[bot]",
+        ),
+        triagedUnlabel(100, "needs-triage", "2026-09-14T16:00:00Z"),
+        readinessReview,
+      ],
+    }),
+    expected: supersededBy("state:triage"),
+  },
+  {
+    name: "a live former label has its own history",
+    snapshot: {
+      ...supersessionSnapshot({
+        labels: ["state:ready", "state:triage"],
+        issueEvents: [stateLabeled(100, "needs-triage"), readinessReview],
+      }),
+      repositoryLabels: ["needs-triage", "state:triage", "state:ready"],
+    },
+    expected: supersededBy("state:triage"),
+  },
+  {
+    name: "a former-name removal after the first current-name event is ignored",
+    snapshot: supersessionSnapshot({
+      labels: ["state:ready", "state:triage"],
+      issueEvents: [
+        triagedLabel(
+          100,
+          "state:triage",
+          "2026-09-14T16:00:00Z",
+          "github-actions[bot]",
+        ),
+        readinessReview,
+        triagedUnlabel(102, "needs-triage", "2026-09-14T17:05:00Z"),
+      ],
+    }),
+    expected: {
+      exitCode: 0,
+      remove: ["state:triage"],
+      feedback: 13,
+      feedbackBody: /readiness recorded/i,
+    },
+  },
+  {
+    name: "a former-name application after a current-name removal is ignored",
+    snapshot: supersessionSnapshot({
+      labels: ["state:ready", "state:triage"],
+      issueEvents: [
+        triagedUnlabel(99, "state:triage", "2026-09-14T15:00:00Z"),
+        triagedLabel(
+          100,
+          "needs-triage",
+          "2026-09-14T16:00:00Z",
+          "github-actions[bot]",
+        ),
+        readinessReview,
+      ],
+    }),
+    expected: supersededBy("state:triage"),
+  },
+  {
+    name: "a former readiness name still cannot establish a readiness transition",
+    snapshot: supersessionSnapshot({
+      labels: ["state:ready"],
+      issueEvents: [{ ...readinessReview, label: { name: "ready-for-agent" } }],
+    }),
+    expected: {
+      exitCode: 1,
+      remove: ["state:ready"],
+      add: ["state:triage"],
+      feedback: 13,
+      feedbackBody:
+        /timeline does not contain the current readiness label event/i,
+    },
+  },
+  ...[
+    ["state:grill", /awaiting authorized review/i],
+    ["wontfix", /valid triaged wontfix request/i],
+  ].map(([later, message]) => ({
+    name: `${later} applied after the former-name state settles as the only state`,
+    snapshot: (() => {
+      const snapshot = triagedSnapshot({
+        labels: ["type:bug", "state:owner", later],
+      });
+      snapshot.issueEvents = [
+        triagedLabel(1, "ready-for-human", "2026-10-13T06:00:00Z"),
+        triagedLabel(2, later, "2026-10-13T07:00:00Z"),
+      ];
+      return snapshot;
+    })(),
+    expected: { exitCode: 0, remove: ["state:owner"], feedback: 13, message },
+  })),
+  {
+    name: "wontfix after a renamed triage state settles as the issue outcome",
+    snapshot: (() => {
+      const snapshot = triagedSnapshot({
+        labels: ["type:bug", "state:triage", "wontfix"],
+      });
+      snapshot.issueEvents = [
+        triagedLabel(1, "needs-triage", "2026-10-13T06:00:00Z"),
+        triagedLabel(2, "wontfix", "2026-10-13T07:00:00Z"),
+      ];
+      return snapshot;
+    })(),
+    expected: {
+      exitCode: 0,
+      remove: ["state:triage"],
+      feedback: 13,
+      message: /valid triaged wontfix request/i,
+    },
+  },
+]);
