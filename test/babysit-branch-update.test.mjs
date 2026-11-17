@@ -12,12 +12,16 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import test from "node:test";
 import { installedValidator } from "./helpers/installed-validator.mjs";
+import {
+  fixtureGitEnvironment,
+  spawnFixtureGit,
+} from "../scripts/support/fixture-git.mjs";
 
 function repository(t) {
   const root = mkdtempSync(join(tmpdir(), "canon-branch-update-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const git = (...args) => {
-    const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+    const result = spawnFixtureGit(args, { cwd: root });
     assert.equal(result.status, 0, result.stderr);
     return result.stdout.trim();
   };
@@ -55,7 +59,7 @@ function repository(t) {
         String(updates),
         ...(replacement ? [replacement] : []),
       ],
-      { cwd: root, encoding: "utf8" },
+      { cwd: root, encoding: "utf8", env: fixtureGitEnvironment() },
     );
     return {
       ...result,
@@ -223,7 +227,7 @@ function command(t, repo, name, state, flags = []) {
       cwd: repo.root,
       encoding: "utf8",
       timeout: 15000,
-      env: { ...process.env, FAKE_GH_STATE: statePath },
+      env: fixtureGitEnvironment({ FAKE_GH_STATE: statePath }),
     },
   );
   assert.ifError(result.error);

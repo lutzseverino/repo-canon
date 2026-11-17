@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 // Usage: node request.mjs <number> [--fixes-review] [--repo <owner/name>]
+//        [--updated-from <base>:<head>:<new base>]
 // Run before every wait, including resumed runs. --fixes-review says this
 // head fixes a finding requiring another request under the installed rules.
 // Exit 0 means the request rule was applied (which may require no request);

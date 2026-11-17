@@ -21,7 +21,7 @@
 // counts as a failed check.
 //
 // Usage: node wait.mjs <number> [--repo <owner/name>] [--limit <seconds>]
-//        [--interval <seconds>]
+//        [--interval <seconds>] [--updated-from <base>:<head>:<new base>]
 //
 // The default polling limit is 540 seconds. Each platform request has a
 // 45-second timeout; paginated reads retain their request bounds.
