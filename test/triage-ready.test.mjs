@@ -1389,6 +1389,21 @@ test("source and installed commands keep approved readiness when a companion can
   }
 });
 
+test("source and installed commands keep approved readiness whose footprint a new grant would refuse", async (t) => {
+  for (const command of await readinessCommands(t)) {
+    const result = await exercise(
+      approved({
+        body: "Intake\n\nSupersedes: none\nAdds: a\nDeletes: `now.md` prose",
+        state: { kind: "implementation ticket" },
+      }),
+      command,
+    );
+    assert.match(result.error?.message ?? "", /footprint.*`now\.md prose`/);
+    assert.deepEqual(writes(result), []);
+    assert.ok(result.labels.includes(label));
+  }
+});
+
 test("source and installed commands never reapply readiness after a removal that is not awaiting review", async (t) => {
   for (const command of await readinessCommands(t)) {
     for (const { afterRemoval, refusal } of [

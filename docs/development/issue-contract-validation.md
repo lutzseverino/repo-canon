@@ -625,6 +625,60 @@ carries readiness and an Agent Brief, which orders `wontfix` against the review
 like any other state. Readiness beside a `wontfix` outcome without an Agent
 Brief is a structural error.
 
+## Footprint and supersession
+
+A direct specification or implementation ticket states its footprint
+([ADR 0045](../adr/0045-check-supersession-and-footprint-at-readiness.md)) in
+three lines of its body:
+
+- `Supersedes:` names the ADRs and issues it replaces: `ADR 0045` or
+  `ADRs 0040 and 0046` in the contract's repository, `owner/name ADR 0011` in
+  another, and `#123`, `owner/name#123` or an issue URL. The ids are read from
+  its prose; a value starting with `none` names none.
+- `Adds:` and `Deletes:` name durable surfaces, separated by semicolons: a
+  skill or one of its references, a label, a configuration key, a rule section
+  or a record kind.
+
+A field line starts with the field's plain or bold name; a repeated field adds
+its items. Lines in code, HTML and blockquotes are examples, and a line starting
+with inline code is prose. A contract without all three lines has an unknown
+footprint: it is never treated as empty, and it does not hold readiness back.
+
+A file path in any field, being a word with a `/` that ends in a file extension
+or in `/` or a file name with a common source or document extension, and an
+empty field are rejected: they never fail the structure, and they refuse a new
+readiness grant naming each. A recorded approval keeps readiness, so open
+contracts gain well-formed lines when next rescoped.
+
+Each awaiting-review or approved result of a direct contract ends with a
+`Footprint:` line outside the state line. It counts the adds against the
+deletes, one per item, over the contract and, for a specification, its native
+sub-issue tickets, names each contract whose footprint is unknown, and ends
+with the contract's own rejected items. The tally is shown, never gated.
+
+A new readiness grant to a specification is refused while an open issue it
+supersedes has no fate. Those issues are the open issues its `Supersedes:`
+names, and the open issues in its repositories, its own and its tickets', whose
+body cites an ADR it supersedes as `ADR 0045`, as `name ADR 0045` or
+`owner/name ADR 0045`, or by a link to the ADR's file. A bare `ADR 0045` cites
+only the ADR of the issue's own repository, and not when another of those
+repositories' names qualifies it. The specification and its tickets are never
+candidates. A fate is a comment on the issue, as the
+[comment rules](../../rules/comments.md#fates) shape it, that links the
+specification and closes the issue as superseded, rescopes it or keeps it with
+a reason; a closed issue needs none. The refusal removes the readiness label and names each issue still
+missing a fate in the awaiting-review result's rejection reason. A recorded
+approval is not checked again.
+
+The adapter reads these issues only for a structurally complete specification
+that carries a readiness label, through each repository's issue tracker, and
+reads its tickets' bodies for the tally. A failed supersession read refuses the
+grant with its reason; an unreadable ticket's footprint is unknown. The
+`triage` readiness command checks the same exported `footprintRefusal` and
+`supersededWithoutFate` before writing any label, even to record approved
+readiness again, and stops with the same refusal. The parser is exported as
+`contractFootprint`.
+
 ## Running the fixtures
 
 Run the issue-contract scenarios locally with:
@@ -683,7 +737,10 @@ that must remain inert. Run
 `node --test test/issue-contract-triage-readiness.test.mjs` for the factory
 triage path: approval with a matching result, refusal without one, for another
 revision, or for an issue the same or an unnamed run wrote, person readiness
-either way, and the configuration reader. Run `node --test test/issue-contract-result.test.mjs` for the published
+either way, and the configuration reader. Run `node --test test/issue-contract-footprint.test.mjs` for the footprint
+fields, an approved contract keeping readiness with rejected items, the tally, and the supersession refusal in both the validator and the
+readiness command, with fated, unfated, closed and ADR-citing issues.
+Run `node --test test/issue-contract-result.test.mjs` for the published
 result: its complete v1 line, its write on every evaluated event, each rule
 above, and unknown formats and other authors. Its shared examples run the
 validator's adapter and the `triage` readiness command against one in-memory

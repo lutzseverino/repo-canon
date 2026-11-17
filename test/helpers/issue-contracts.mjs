@@ -71,6 +71,9 @@ export function feedbackState({
   observedEventId = null,
   sourceInvalidation = null,
   kind = "implementation ticket",
+  footprint = ["implementation ticket", "specification"].includes(kind)
+    ? unknownFootprint
+    : null,
 }) {
   const state = JSON.stringify(
     status === "approved"
@@ -92,10 +95,14 @@ export function feedbackState({
         },
   );
   if (status === "approved") {
-    return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${contractRevision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`;
+    return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${contractRevision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.${footprint ? `\n\n${footprint}` : ""}`;
   }
-  return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${contractRevision}\`.\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply \`state:ready\`. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.`;
+  return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${contractRevision}\`.\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply \`state:ready\`. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.${footprint ? `\n\n${footprint}` : ""}`;
 }
+
+// The result line for a direct contract without footprint fields.
+export const unknownFootprint =
+  "Footprint: unknown, without `Supersedes:`, `Adds:` and `Deletes:` lines.";
 
 // The maintained feedback comment, recording an approval of the direct ticket
 // body by `maintainer` unless the state says otherwise.

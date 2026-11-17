@@ -73,12 +73,14 @@ inference test under **Inferred, listed for the owner**, with dated sources
 and veto. Grill answers and plan approval remain gates.
 
 The grill writer invokes `to-spec`, then `to-tickets`, publishing direct body
-contracts for independent review, without intake triage, redundant Agent
-Briefs or category labels. One specification lives in the repository
-containing most work; tickets in their responsible repositories are its native
-sub-issues with blockers. Copy relied-on decisions, dates and quotes into
-every contract. A failed native edge stops progression: report the exact
-missing relationship and platform failure.
+contracts for independent review. Each states `Supersedes:` (ADRs, issues),
+`Adds:` and `Deletes:` (durable surfaces, never paths) lines; readiness waits
+for a fate on each open issue a specification supersedes, directly or by ADR.
+One specification lives in the repository containing most work; tickets in
+their responsible repositories are its native sub-issues with blockers. Copy
+relied-on decisions, dates and quotes into every contract. A failed native
+edge stops progression: report the exact missing relationship and platform
+failure.
 
 The orchestrating agent decides the final split, merging, splitting, dropping
 or setting aside drafts, and never accepts its own contract. Substantial split
@@ -94,15 +96,13 @@ leave readiness to the owner, reporting links under comment rules.
 Changes to a plan's goal, Done means or row scope require an amendment grill,
 possibly one round: revise the specification, then run `to-tickets` on the
 delta, updating affected contracts and native links. Edited accepted contracts
-lose readiness; require new notice, independent review and renewed readiness.
-Findings, follow-ups passing the inference test and reorderings already
-permitted by blockers need no amendment. Progress never edits ready contracts.
+need independent review again. Findings, follow-ups passing the inference test
+and reorderings already permitted by blockers need no amendment.
 
 Grills edit domain documents on their own branch and checkout, never a shared
 default-branch checkout. Open one draft PR per repository with domain changes,
 delivered by separate `review`, run by the orchestrating agent unless a
-factory reviews it. Return contracts for acceptance. Authoritative contracts
-stay in repository issues.
+factory reviews it. Return contracts for acceptance.
 
 A fact only an outside reporter holds goes to the reporter, with the issue in
 `state:reporter`. A question only the owner can answer goes to the owner with
