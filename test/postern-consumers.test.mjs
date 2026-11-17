@@ -214,7 +214,13 @@ test("Access supplements reject missing workflow, review-thread and push facts",
 
 test("unavailable prerequisite reads abort; role failures reach authorization cleanup", async (t) => {
   for (const reason of platformErrorReasons)
-    for (const stage of ["issue", "comments", "labelChanges", "role"]) {
+    for (const stage of [
+      "issue",
+      "comments",
+      "labels",
+      "labelChanges",
+      "role",
+    ]) {
       let mutations = 0;
       const issue = {
         number: 42,
@@ -242,6 +248,7 @@ test("unavailable prerequisite reads abort; role failures reach authorization cl
               updatedAt: "2026-09-14T16:59:00Z",
             },
           ],
+          labels: async () => [],
           labelChanges: async () => [
             {
               id: 101,
