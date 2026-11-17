@@ -183,6 +183,7 @@ async function mergeHolds(connection, revision, number) {
       "Invalid .scriptorium/config.json: expected version 1, 2 or 3 and a labels object when present.",
     );
   const holds = new Map();
+  const problems = [];
   for (const key of ["hold", "releaseHold"]) {
     const label = config.labels?.[key];
     if (label === undefined) continue;
@@ -208,13 +209,31 @@ async function mergeHolds(connection, revision, number) {
       throw new Error("Could not read a merge-hold issue or pull request.");
     for (const issue of issues) {
       if (
-        (key === "hold" || issue.pull_request) &&
-        issue.state === "open" &&
-        issue.number !== number
+        (key === "releaseHold" && !issue.pull_request) ||
+        issue.state !== "open" ||
+        issue.number === number
       )
-        holds.set(issue.number, issue);
+        continue;
+      const evidence = `#${issue.number}, .scriptorium/config.json labels.${key} (${JSON.stringify(label)})`;
+      const names = Array.isArray(issue.labels)
+        ? issue.labels.map((entry) =>
+            typeof entry === "string" ? entry : entry?.name,
+          )
+        : null;
+      if (!names?.every((name) => typeof name === "string")) {
+        problems.push(`Could not read own labels for ${evidence}.`);
+        continue;
+      }
+      if (!names.includes(label)) {
+        problems.push(
+          `Inconsistent hold read for ${evidence}: label-filter result disagrees with the item's own labels; no hold was confirmed for this item and none was bypassed.`,
+        );
+        continue;
+      }
+      holds.set(issue.number, issue);
     }
   }
+  if (problems.length) throw new Error(problems.join(" "));
   return [...holds.values()];
 }
 
