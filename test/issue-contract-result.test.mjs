@@ -648,6 +648,41 @@ test("shared examples: the factory's account applies readiness its triage result
     );
 });
 
+test("shared examples: edited factory results require independent person acceptance after their notice", async (t) => {
+  for (const change of ["edited", "same-second edit", "restored"]) {
+    await t.test(change, (t) =>
+      silenced(t, async () => {
+        const factory = "factory[bot]";
+        const world = contractWorld({
+          factory: true,
+          labels: ["type:enhancement", "state:triage", "model:x"],
+          triageResult: { marker: "factory:run", author: factory },
+        });
+        const original = `${completeAgentBrief}\n\n<!-- factory:run {"run":"triage-1"} -->`;
+        const brief = await briefed(world, original, factory);
+        world.editComment(
+          brief,
+          `${original}\n\nA person's change.`,
+          "maintainer",
+          change === "same-second edit" ? brief.createdAt : undefined,
+        );
+        if (change === "restored")
+          world.editComment(brief, original, "maintainer");
+        await world.deliver();
+        world.wait();
+        const { revision } = stateOf(world);
+        const refused = await readiness(world, revision, factory);
+        assert.match(refused.error?.message ?? "", /was edited/);
+        assert.equal(world.issue.labels.includes("state:ready"), false);
+        assert.equal(stateOf(world).status, "awaiting-review");
+        world.wait();
+        assert.deepEqual(await readiness(world, revision), { code: 0 });
+        assert.equal(stateOf(world).reviewer, "maintainer");
+      }),
+    );
+  }
+});
+
 test("shared examples: the validator and the readiness command agree", async (t) => {
   await t.test(
     "the reviewed revision is approved for the command's label event",
