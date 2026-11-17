@@ -9,4 +9,9 @@ export const seamsBoundary = {
 export const resolveBoundary = async () => seamsBoundary;
 // The adapter's read when nothing a specification supersedes lacks a fate.
 export const decideIssueContract = (snapshot) =>
-  decide({ seamsBoundary, supersession: { unfated: [] }, ...snapshot });
+  decide({
+    seamsBoundary,
+    supersession: { unfated: [] },
+    repositoryLabels: [],
+    ...snapshot,
+  });

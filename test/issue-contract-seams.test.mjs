@@ -522,6 +522,7 @@ test("the adapter loads historical authority before a first-cutover category rep
             createdAt: comment.created_at,
             updatedAt: comment.updated_at,
           })),
+        labels: async () => [],
         labelChanges: async () =>
           s.issueEvents.map((event) => ({
             id: String(event.id),
@@ -851,6 +852,7 @@ test("the adapter resolves a comment Brief's boundary before timeline state can 
         comments: async () => [
           { id: 12, nodeId: "C12", body: completeAgentBrief },
         ],
+        labels: async () => [],
         labelChanges: async () =>
           ["wontfix", "state:reporter"].map((label, index) => ({
             id: String(100 + index),
@@ -931,6 +933,7 @@ for (const planningLabel of ["wayfinder:map", "wayfinder:research"]) {
                 createdAt: comment.created_at,
                 updatedAt: comment.updated_at,
               })),
+            labels: async () => [],
             labelChanges: async () => {
               reads.push("timeline");
               return [];

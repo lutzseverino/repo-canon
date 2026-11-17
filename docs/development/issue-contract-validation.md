@@ -156,8 +156,26 @@ declaration drives canonical-labels setup's in-place renames. The exemption's
 review-event lookup accepts either name while still requiring the recorded event
 ID and actor. Written results use `state:ready` in both `label` and
 `seamsExemption.label`, including when retaining v3 evidence under a former name;
-the result format is unchanged. This equivalence does not change readiness
-transition or ordering checks for events under former names.
+the result format is unchanged. Readiness transitions still require the current
+name: `ready-for-agent` events cannot establish or retain readiness after a rename,
+so a fresh review is required as the adoption guidance states.
+
+For a carried non-readiness workflow state, timeline ordering attributes an event
+under a former name to its canonical label only when that former name is absent
+from the repository's live labels and the event precedes the first event under
+the current name on this issue (or there is no current-name event). The shared
+canonical-label declaration supplies the former names. Latest change, latest
+application and actor, position against a review, the validator's `state:triage`
+fallback exemption, selection among carried states and `wontfix` settlement all
+use that attributed history. Results and messages keep canonical names.
+
+A live former label has its own history, and former-name events after the first
+current-name event are ignored for canonical ordering. A carried state whose
+latest attributed change is a removal, or whose history has no attributed event,
+still follows every recorded event under the existing ordering rule. The adapter
+reads the complete live repository label names alongside the timeline; a failed
+label read aborts before any label mutation. A decision snapshot without live
+label names cannot attribute former-name events.
 
 ### Exemption result v3
 

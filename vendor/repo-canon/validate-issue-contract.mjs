@@ -617,6 +617,7 @@ const wayfinderChildFields = new Set(["parent", "question"]);
 // - `blockedBy`, `parent`: the port relationships and the resolved parent;
 // - `bodyRevision`: the direct body's `{ id, lastEditedAt }` edit revision;
 // - `issueEvents`: the complete authoritative issue-event timeline;
+// - `repositoryLabels`: the complete live repository label names;
 // - `permissions`: each looked-up login's repository `{ role }`, `null` when
 //   GitHub reports none, with an `error` when the lookup failed;
 // - `evaluatedAt`: the second the adapter decided in, which the result
@@ -2211,10 +2212,32 @@ function isReadinessTransition(candidate) {
 // was opened with) is at position zero and the Nth event at position N. Agent
 // Brief comments are ordered among themselves by comment ID, in
 // `latestAgentBrief`.
-function issueTimeline({ event, issue, issueEvents }) {
+function issueTimeline({ event, issue, issueEvents, repositoryLabels }) {
   if (!Array.isArray(issueEvents))
     throw new Error("The snapshot does not include the issue-event timeline.");
   const openingId = openingReviewId(issue);
+  const liveLabels = new Set(repositoryLabels);
+  // Keep event objects and positions intact, including readiness transitions.
+  // Only non-readiness workflow history can belong to an in-place rename.
+  const historyLabels = issueEvents.map((candidate, index) => {
+    const name = candidate.label?.name;
+    const canonical = canonicalLabelName(name);
+    if (
+      !Array.isArray(repositoryLabels) ||
+      !["labeled", "unlabeled"].includes(candidate.event) ||
+      name === canonical ||
+      !isWorkflowLabel(canonical) ||
+      readyLabels.has(canonical) ||
+      liveLabels.has(name)
+    )
+      return name;
+    const firstCurrent = issueEvents.findIndex(
+      (entry) =>
+        ["labeled", "unlabeled"].includes(entry.event) &&
+        entry.label?.name === canonical,
+    );
+    return firstCurrent < 0 || index < firstCurrent ? canonical : name;
+  });
 
   function position(eventId) {
     if (eventId == null) return null;
@@ -2227,8 +2250,8 @@ function issueTimeline({ event, issue, issueEvents }) {
 
   function lastApplication(label) {
     const index = issueEvents.findLastIndex(
-      (candidate) =>
-        candidate.event === "labeled" && candidate.label?.name === label,
+      (candidate, index) =>
+        candidate.event === "labeled" && historyLabels[index] === label,
     );
     return index < 0
       ? null
@@ -2310,9 +2333,9 @@ function issueTimeline({ event, issue, issueEvents }) {
   // Whether the label's latest recorded change is its application.
   function latestChangeIsApplication(label) {
     const latestChange = issueEvents.findLast(
-      (candidate) =>
+      (candidate, index) =>
         ["labeled", "unlabeled"].includes(candidate.event) &&
-        candidate.label?.name === label,
+        historyLabels[index] === label,
     );
     return latestChange?.event === "labeled";
   }
@@ -2675,6 +2698,7 @@ export async function runIssueContractValidation(
       lastEditedAt: current.bodyEditTime,
     },
     issueEvents: null,
+    repositoryLabels: null,
     permissions: {},
     triageResult,
   };
@@ -2760,6 +2784,9 @@ export async function runIssueContractValidation(
     (await tracker.labelChanges(issueNumber)).map(timelineEvent);
   let needs = snapshotNeeds(snapshot);
   if (needs.timeline) {
+    snapshot.repositoryLabels = (await tracker.labels()).map(
+      ({ name }) => name,
+    );
     snapshot.issueEvents = await readTimeline();
     needs = snapshotNeeds(snapshot);
   }

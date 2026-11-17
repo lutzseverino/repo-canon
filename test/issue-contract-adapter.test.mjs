@@ -49,6 +49,7 @@ async function exercise(
     event = {},
     comments = [],
     events = [],
+    repositoryLabels = [],
     permissions = {},
     parent = null,
     blockedBy = [],
@@ -155,6 +156,14 @@ async function exercise(
         },
       });
     }
+    if (path === `/repos/${repository}/labels`)
+      return json(
+        repositoryLabels.map((name) => ({
+          name,
+          color: "ffffff",
+          description: "",
+        })),
+      );
     if (path.endsWith("/events")) {
       const currentEvents = eventReads
         ? eventReads[Math.min(timelineRead++, eventReads.length - 1)]
@@ -660,7 +669,7 @@ test("timeline lag retries authoritative label changes within the existing bound
 });
 
 test("late prerequisite read failures abort before label or feedback mutation", async (t) => {
-  for (const path of ["/comments", "/events"]) {
+  for (const path of ["/comments", "/events", `/repos/${repository}/labels`]) {
     const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
     const result = await exercise(t, {
       issue,
@@ -1393,4 +1402,40 @@ test("publication dispatch re-evaluates current state without treating its sende
       request.body?.labels?.includes("state:ready"),
     ),
   );
+});
+
+test("the adapter uses live repository labels to attribute renamed workflow history", async (t) => {
+  for (const repositoryLabels of [[], ["needs-triage"]]) {
+    const result = await exercise(t, {
+      repositoryLabels,
+      issue: { body: ticketBody, labels: ["state:ready", "state:triage"] },
+      comments: [approvedTicketFeedback({ number: 42, body: ticketBody })],
+      events: [
+        {
+          id: 100,
+          event: "labeled",
+          label: { name: "needs-triage" },
+          actor: account("maintainer"),
+          created_at: "2026-09-14T16:00:00Z",
+        },
+        readinessReview,
+      ],
+      permissions: { maintainer: "admin" },
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.code, 0);
+    const removed = writes(result).filter(({ method }) => method === "DELETE");
+    assert.deepEqual(
+      removed.map(({ path }) => path),
+      [
+        `${issuePath}/labels/${repositoryLabels.length ? "state%3Aready" : "state%3Atriage"}`,
+      ],
+    );
+    const body = writes(result).at(-1).body.body;
+    assert.match(
+      body,
+      repositoryLabels.length ? /readiness removed/i : /readiness recorded/i,
+    );
+    assert.doesNotMatch(body, /needs-triage/);
+  }
 });

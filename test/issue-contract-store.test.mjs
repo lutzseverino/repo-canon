@@ -398,6 +398,7 @@ test("active adapter initializes new native tickets with incidental Brief headin
     capabilities: { bodyEditTime: true },
     issue: async () => issue,
     comments: async () => comments,
+    labels: async () => [],
     labelChanges: async () => [],
     async addLabels(number, labels) {
       issue.labels.push(...labels);
@@ -511,6 +512,7 @@ test("body-only historical approval resolves its boundary before category-error 
       capabilities: { bodyEditTime: true },
       issue: async () => issue,
       comments: async () => comments,
+      labels: async () => [],
       labelChanges: async () => [
         {
           id: "101",
@@ -629,6 +631,7 @@ test("active adapter durably records migration before feedback and cannot resurr
     capabilities: { bodyEditTime: true },
     issue: async () => issue,
     comments: async () => comments,
+    labels: async () => [],
     labelChanges: async () => [],
     async addLabels(number, labels) {
       issue.labels.push(...labels);
@@ -866,6 +869,7 @@ test("a missing inventoried record cannot reset migration history or restore leg
     capabilities: { bodyEditTime: true },
     issue: async () => issue,
     comments: async () => comments,
+    labels: async () => [],
     labelChanges: async () =>
       s.issueEvents.map((e) => ({
         id: e.id,
