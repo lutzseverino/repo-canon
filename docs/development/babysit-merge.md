@@ -138,12 +138,11 @@ pinned revision. It explains that the label-filter result disagrees with the
 item's own labels, so no hold was confirmed for that item and none was bypassed.
 Missing or non-array labels, or an entry that is neither a string nor an
 object with a string `name`, are unreadable candidate labels and also refuse
-with exit `3`. Exempt items need no label
-inspection. Unreadable or invalid factory configuration or issue/PR-list reads
-follow the same freshness failure handling: exit `3` needs the owner handoff
-without retrying merge, while a permission refusal returns `1` and stops
-immediately. No later read in that invocation can authorize a merge after an
-inconsistent or unreadable hold read.
+with exit `3`. Exempt items need no label inspection. Unreadable or invalid
+factory configuration or issue/PR-list reads follow the same freshness failure
+handling: exit `3` needs the owner handoff without retrying merge, while a
+permission refusal returns `1` and stops immediately. No later read in that
+invocation can authorize a merge after an inconsistent or unreadable hold read.
 
 On exit `9`, leave the PR open and do not retry yet. In a factory run, end the
 run so the factory can relaunch merging after the hold ends. Otherwise rerun
@@ -157,7 +156,7 @@ a newline. Failed or unconfirmed merges write no success output.
 
 Exit `0` means merged. Exit `3` means not merged and needs the owner: an active
 owner gate or unreadable/incomplete gate evidence, or
-the base branch requires a merge queue, or a successful merge call left the
+an inconsistent, unreadable or invalid merge-hold read, or the base branch requires a merge queue, or a successful merge call left the
 PR in a state other than `merged`, or neither freshness enforcement nor the proven private-plan path can be confirmed, or required-check/reviewer-thread evidence cannot be established. The skill hands off with a question under
 [the comment rules' owner questions](../../rules/comments.md#owner-questions),
 without retrying the merge. Exit `2` means current-head validation has not succeeded, or the head changed
@@ -214,7 +213,11 @@ refusals. Shared review reporting retains its explicit issue support and fails
 before writes on incomplete gate evidence. Release-hold fixtures cover installed
 execution, multiple holds, self-exemption, closed PRs, label removal, issues,
 absent configuration and keys, pinned configuration despite proposed local
-changes or a moving default branch, and unreadable or invalid reads. The freshness fixtures model two green PRs sharing one base, a base
+changes or a moving default branch, and unreadable or invalid reads. Own-label
+fixtures return unfiltered collections with REST label objects and strings:
+exact repository and release holds, stale filter results alone and alongside
+real holds, exempt items with mismatched labels, and unreadable candidate
+labels. The freshness fixtures model two green PRs sharing one base, a base
 advance after preflight refused at the platform boundary, replacement heads
 with pending or failed checks, classic and ruleset enforcement, explicit caller
 non-bypass evidence with absent, empty or nonempty global lists, other or missing
