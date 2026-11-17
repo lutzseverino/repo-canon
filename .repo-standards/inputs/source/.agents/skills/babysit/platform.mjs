@@ -1,17 +1,27 @@
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { connect, PlatformError } from "../../../vendor/postern/postern.mjs";
+import {
+  connect,
+  detectPlatform,
+  PlatformError,
+} from "../../../vendor/postern/postern.mjs";
 
 // The only credential is the GitHub CLI's currently authenticated credential.
 export function connectionFor(repository) {
-  const remote =
-    repository ??
-    process.env.GH_REPO ??
-    execFileSync("git", ["remote", "get-url", "origin"], {
-      encoding: "utf8",
-      timeout: 15_000,
-    }).trim();
+  let remote = repository ?? process.env.GH_REPO ?? defaultRemote();
+  if (!remote.includes(":")) {
+    // CLI selectors accept [HOST/]OWNER/REPO; retain an explicit host.
+    const selector =
+      /^(?:([a-z0-9.-]+)\/)?([a-z0-9_.-]+)\/([a-z0-9_.-]+)$/i.exec(remote);
+    if (!selector)
+      throw new PlatformError(
+        "unsupported",
+        "Repository selector must use [HOST/]OWNER/REPO.",
+      );
+    remote = `https://${selector[1] ?? "github.com"}/${selector[2]}/${selector[3]}`;
+  }
+  const identity = detectPlatform(remote);
   let credential;
   try {
     credential = execFileSync(
@@ -28,14 +38,158 @@ export function connectionFor(repository) {
     throw new Error(
       "The currently authenticated GitHub CLI credential is empty.",
     );
-  return connect(
-    remote.includes(":") ? remote : `https://github.com/${remote}`,
-    { credential, timeoutMs: 45_000 },
+  return connect(identity, { credential, timeoutMs: 45_000 });
+}
+
+// --view deliberately omits the host. Recover it from the configured remote,
+// without asking a platform API (which could already target the wrong host).
+function defaultRemote() {
+  const selected = execFileSync("gh", ["repo", "set-default", "--view"], {
+    encoding: "utf8",
+    timeout: 15_000,
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
+  const git = (...args) =>
+    execFileSync("git", args, {
+      encoding: "utf8",
+      timeout: 15_000,
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  if (!selected) return git("remote", "get-url", "origin");
+
+  const candidates = new Map();
+  const configuration = git(
+    "config",
+    "--null",
+    "--get-regexp",
+    "^remote\\..*\\.gh-resolved$",
   );
+  for (const entry of configuration.split("\0")) {
+    const match = /^remote\.(.+)\.gh-resolved\n([\s\S]+)$/.exec(entry);
+    if (!match) continue;
+    const [, name, resolution] = match;
+    const remote = git("remote", "get-url", name);
+    const scp = /^(?:[^@/\s]+@)?([^:/\s]+):(?!\/)(.+)$/.exec(remote);
+    const url = new URL(scp ? `ssh://${scp[1]}/${scp[2]}` : remote);
+    if (url.protocol === "ssh:" || url.protocol === "git+ssh:") {
+      const configuration = execFileSync("ssh", ["-G", url.hostname], {
+        encoding: "utf8",
+        timeout: 15_000,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      const hostname = /^hostname (\S+)$/m.exec(configuration)?.[1];
+      if (!hostname)
+        throw new Error("Could not resolve the configured SSH remote host.");
+      url.hostname = hostname;
+    }
+    const path = url.pathname.replace(/^\/+|\/+$/g, "").replace(/\.git$/, "");
+    const destination =
+      resolution === "base" ? path : resolution.split("/").slice(-2).join("/");
+    if (destination.toLowerCase() !== selected.toLowerCase()) continue;
+    const host =
+      url.protocol !== "https:" && url.hostname === "ssh.github.com"
+        ? "github.com"
+        : url.hostname;
+    if (process.env.GH_HOST && host !== process.env.GH_HOST.toLowerCase())
+      continue;
+    url.pathname = `/${selected}`;
+    candidates.set(host, url.href);
+  }
+  if (candidates.size !== 1)
+    throw new Error(
+      "Could not establish the configured GitHub CLI default repository host.",
+    );
+  return [...candidates.values()][0];
 }
 
 export async function requestData(connection, request) {
   return (await connection.access.request(request)).data;
+}
+
+// Paths are named by the caller. An existing snapshot keeps later reads at the
+// same immutable revision, including the merge guard's final configuration read.
+export async function pinnedFiles(connection, paths, snapshot) {
+  const repository = connection.repository.path;
+  const [owner, name] = repository.split("/");
+  const query = async (source, variables = {}) => {
+    const response = await requestData(connection, {
+      method: "POST",
+      path: "/graphql",
+      body: { query: source, variables: { owner, name, ...variables } },
+    });
+    if (response?.errors?.length || !response?.data?.repository)
+      throw new Error(`Could not read pinned files for ${repository}.`);
+    return response.data.repository;
+  };
+  if (!snapshot) {
+    const destination =
+      await query(`query PinnedFilesRevision($owner: String!, $name: String!) {
+      repository(owner: $owner, name: $name) {
+        nameWithOwner
+        defaultBranchRef { name target { __typename oid } }
+      }
+    }`);
+    const branch = destination.defaultBranchRef;
+    const revision = branch?.target?.oid;
+    if (
+      destination.nameWithOwner?.toLowerCase() !== repository.toLowerCase() ||
+      typeof branch?.name !== "string" ||
+      !branch.name ||
+      branch.target?.__typename !== "Commit" ||
+      !/^[0-9a-f]{40}$/i.test(revision ?? "")
+    )
+      throw new Error(
+        `Could not resolve the default-branch commit for ${repository}.`,
+      );
+    snapshot = {
+      revision,
+      evidence: `${repository} default branch ${branch.name}@${revision}`,
+    };
+  }
+  const { revision, evidence } = snapshot;
+  try {
+    const entries = Object.entries(paths);
+    const result = await query(
+      `query PinnedFiles($owner: String!, $name: String!, $revision: GitObjectID!${entries.map(([key]) => `, $${key}: String!`).join("")}) {
+        repository(owner: $owner, name: $name) {
+          commit: object(oid: $revision) { __typename oid }
+          ${entries.map(([key]) => `${key}: object(expression: $${key}) { __typename ... on Blob { text isTruncated } }`).join("\n")}
+        }
+      }`,
+      {
+        revision,
+        ...Object.fromEntries(
+          entries.map(([key, path]) => [key, `${revision}:${path}`]),
+        ),
+      },
+    );
+    if (
+      result.commit?.__typename !== "Commit" ||
+      result.commit.oid !== revision
+    )
+      throw new Error("Could not read the pinned commit.");
+    const files = Object.fromEntries(
+      entries.map(([key, path]) => {
+        const blob = result[key];
+        // Only explicit null in a successful response proves optional absence.
+        if (blob === null) return [key, null];
+        if (
+          blob?.__typename !== "Blob" ||
+          blob.isTruncated !== false ||
+          typeof blob.text !== "string"
+        )
+          throw new Error(`Could not read complete ${path}.`);
+        return [key, blob.text];
+      }),
+    );
+    return { revision, files, evidence };
+  } catch (error) {
+    if (error instanceof PlatformError) {
+      error.message = `${evidence}: ${error.message}`;
+      throw error;
+    }
+    throw new Error(`${evidence}: ${error.message}`, { cause: error });
+  }
 }
 
 export async function pages(connection, path) {
@@ -58,7 +212,7 @@ export async function checkRollup(connection, head) {
       body: {
         query: `query BabysitChecks($owner: String!, $name: String!, $head: String!, $after: String) {
           repository(owner: $owner, name: $name) { object(expression: $head) { ... on Commit { statusCheckRollup { contexts(first: 100, after: $after) {
-            nodes { __typename ... on CheckRun { name status conclusion detailsUrl startedAt checkSuite { workflowRun { workflow { name } } } } ... on StatusContext { context state targetUrl } }
+            nodes { __typename ... on CheckRun { name status conclusion detailsUrl startedAt checkSuite { workflowRun { workflow { name } } } } ... on StatusContext { context state targetUrl createdAt } }
             pageInfo { hasNextPage endCursor }
           } } } } }
         }`,
@@ -172,6 +326,15 @@ export function workflowRuns(pages) {
       runs.push(run);
     }
   }
+  const total = pages[0]?.total_count;
+  if (
+    total !== undefined &&
+    (!Number.isSafeInteger(total) ||
+      total < 0 ||
+      total !== runs.length ||
+      pages.some((page) => page.total_count !== total))
+  )
+    unreadable("complete workflow runs");
   return runs;
 }
 
@@ -218,6 +381,8 @@ export function conversationComments(pages) {
       if (
         typeof comment?.body !== "string" ||
         !Number.isFinite(Date.parse(comment.created_at)) ||
+        (comment.updated_at !== undefined &&
+          !Number.isFinite(Date.parse(comment.updated_at))) ||
         (comment.user != null &&
           (typeof comment.user.login !== "string" || !comment.user.login))
       )
@@ -225,11 +390,33 @@ export function conversationComments(pages) {
       comments.push({
         login: comment.user?.login,
         createdAt: comment.created_at,
+        ...(comment.updated_at !== undefined
+          ? { updatedAt: comment.updated_at }
+          : {}),
         body: comment.body,
       });
     }
   }
   return comments;
+}
+
+// Read the complete transition history each time; a resumed wait uses the same
+// platform time, and returning to draft does not erase an earlier ready event.
+export async function readyForReviewTime(connection, number) {
+  let latest = null;
+  for (const page of await pages(
+    connection,
+    `/repos/${connection.repository.path}/issues/${number}/timeline?per_page=100`,
+  )) {
+    if (!Array.isArray(page)) unreadable("ready-for-review history");
+    for (const event of page) {
+      if (event?.event !== "ready_for_review") continue;
+      const time = Date.parse(event.created_at);
+      if (!Number.isFinite(time)) unreadable("a ready-for-review time");
+      latest = latest === null ? time : Math.max(latest, time);
+    }
+  }
+  return latest;
 }
 
 // Whether GitHub recorded the push of the pull request's head, with its time
@@ -256,3 +443,72 @@ export const pushTime = async (pull, connection) => {
     pushRecorded: Boolean(recorded),
   };
 };
+
+// Thread resolution is a platform fact, independent of replies or review state.
+// The first comment identifies the opener; query all threads, including outdated.
+export async function unresolvedReviewerThreads(connection, number, reviewer) {
+  if (!reviewer) return [];
+  const [owner, name] = connection.repository.path.split("/");
+  const unresolved = [];
+  const cursors = new Set();
+  let after = null;
+  for (;;) {
+    const result = await requestData(connection, {
+      method: "POST",
+      path: "/graphql",
+      body: {
+        query: `query BabysitReviewThreads($owner: String!, $name: String!, $number: Int!, $after: String) {
+          repository(owner: $owner, name: $name) { pullRequest(number: $number) {
+            reviewThreads(first: 100, after: $after) {
+              nodes { id isResolved comments(first: 1) { nodes { author { __typename login } } } }
+              pageInfo { hasNextPage endCursor }
+            }
+          } }
+        }`,
+        variables: { owner, name, number, after },
+      },
+    });
+    const page = result?.data?.repository?.pullRequest?.reviewThreads;
+    if (
+      result?.errors?.length ||
+      !Array.isArray(page?.nodes) ||
+      typeof page.pageInfo?.hasNextPage !== "boolean"
+    )
+      throw new Error("Could not read complete configured-reviewer threads.");
+    for (const thread of page.nodes) {
+      const comments = thread?.comments?.nodes;
+      if (
+        typeof thread?.id !== "string" ||
+        !thread.id ||
+        typeof thread.isResolved !== "boolean" ||
+        !Array.isArray(comments) ||
+        comments.length !== 1 ||
+        typeof comments[0]?.author?.__typename !== "string" ||
+        !comments[0].author.__typename ||
+        typeof comments[0]?.author?.login !== "string" ||
+        !comments[0].author.login
+      )
+        throw new Error(
+          "Could not read a configured-reviewer thread opener or resolution.",
+        );
+      const author = comments[0].author;
+      // GraphQL omits the bot suffix that REST and reviewer declarations use,
+      // matching Postern's GraphQL account interpretation.
+      const login =
+        author.__typename === "Bot" && !author.login.endsWith("[bot]")
+          ? `${author.login}[bot]`
+          : author.login;
+      if (
+        login.toLowerCase() === reviewer.account.toLowerCase() &&
+        !thread.isResolved
+      )
+        unresolved.push(thread.id);
+    }
+    if (!page.pageInfo.hasNextPage) return unresolved;
+    const cursor = page.pageInfo.endCursor;
+    if (typeof cursor !== "string" || !cursor || cursors.has(cursor))
+      throw new Error("Could not read complete configured-reviewer threads.");
+    cursors.add(cursor);
+    after = cursor;
+  }
+}

@@ -2,48 +2,12 @@
   "format": "repo-standards/state/v8",
   "observations": [
     {
-      "phase": "fixes",
-      "scope": {
-        "github-repository-configuration": {
-          "paths": [],
-          "directories": []
-        }
-      },
-      "operation": {
-        "phase": "fixes",
-        "declaration": "github-repository-configuration",
-        "id": "canonical-labels"
-      },
-      "operationIndex": 0,
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "changes": {},
-      "boundaryChanges": {},
-      "violations": []
-    },
-    {
-      "phase": "fixes",
-      "scope": {
-        "github-repository-configuration": {
-          "paths": [],
-          "directories": []
-        }
-      },
-      "operation": {
-        "phase": "fixes",
-        "declaration": "github-repository-configuration",
-        "id": "pull-request-integration"
-      },
-      "operationIndex": 1,
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "changes": {},
-      "boundaryChanges": {},
-      "violations": []
-    },
-    {
       "phase": "agent",
       "scope": {
+        "comments": {
+          "paths": [],
+          "directories": []
+        },
         "documentation": {
           "paths": [
             "GLOSSARY.md",
@@ -74,6 +38,32 @@
             "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
             "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
             "docs/adr/0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md",
+            "docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md",
+            "docs/adr/0027-give-the-workbench-its-own-profile.md",
+            "docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md",
+            "docs/adr/0029-make-the-validators-posted-result-the-only-contract-decision.md",
+            "docs/adr/0030-let-factory-triage-accept-its-own-brief.md",
+            "docs/adr/0031-name-labels-by-family.md",
+            "docs/adr/0032-test-behaviour-and-structure-not-wording.md",
+            "docs/adr/0033-give-every-value-one-value-owner.md",
+            "docs/adr/0034-choose-where-checks-run-at-adoption.md",
+            "docs/adr/0035-keep-the-implementation-contract-in-the-issue-body.md",
+            "docs/adr/0036-launch-hand-stages-with-identifiers-only.md",
+            "docs/adr/0037-act-in-repositories-only-through-launches.md",
+            "docs/adr/0038-exempt-genuine-dependabot-pull-requests-from-body-sections.md",
+            "docs/adr/0039-own-pull-request-text-checks-and-retire-others-before-adoption.md",
+            "docs/adr/0040-watch-instead-of-launching.md",
+            "docs/adr/0041-answer-in-the-owners-place-except-reserved-decisions.md",
+            "docs/adr/0042-keep-agent-guidance-a-stable-map.md",
+            "docs/adr/0043-keep-the-contribution-guide-for-contributors.md",
+            "docs/adr/0044-lead-every-message-with-its-outcome.md",
+            "docs/adr/0045-check-supersession-and-footprint-at-readiness.md",
+            "docs/adr/0046-start-owner-facing-work-and-bridge-factory-gaps.md",
+            "docs/adr/0047-read-nothing-scriptorium-owns.md",
+            "docs/adr/0048-budget-the-computed-read-set.md",
+            "docs/adr/0050-answer-a-stop-by-applying-the-issues-next-state.md",
+            "docs/adr/0051-carry-a-request-whose-fate-a-record-settles.md",
+            "docs/adr/0052-update-a-non-overlapping-stale-base-within-the-attempt.md",
             "docs/adr/README.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
@@ -83,6 +73,7 @@
             "docs/development/documentation-scope-drafter.md",
             "docs/development/github-label-setup.md",
             "docs/development/github-pr-integration-setup.md",
+            "docs/development/issue-contract-v2.md",
             "docs/development/issue-contract-validation.md",
             "docs/development/pr-metadata-validation.md",
             "docs/development/release.md",
@@ -93,9 +84,13 @@
             "docs/development/standards-update-workflow.md",
             "docs/development/typescript-node-stack-check.md",
             "docs/development/typescript-node-stack-scope-drafter.md",
+            "docs/development/typescript-web-stack-check.md",
+            "docs/development/typescript-web-stack-scope-drafter.md",
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
+            "docs/usage/create-repository.md",
+            "docs/usage/install-skills.md",
             "docs/usage/stacks.md",
             "docs/usage/versioning.md"
           ],
@@ -103,7 +98,9 @@
         },
         "factory-sandbox-image": {
           "paths": [
-            ".factory/Dockerfile"
+            ".scriptorium/Dockerfile",
+            ".factory/Dockerfile",
+            ".factory/config.json"
           ],
           "directories": []
         },
@@ -143,15 +140,23 @@
           ],
           "directories": []
         },
+        "typescript-astro-stack": {
+          "paths": [],
+          "directories": []
+        },
         "typescript-node-stack": {
           "paths": [
             "package.json"
           ],
           "directories": []
+        },
+        "typescript-vite-stack": {
+          "paths": [],
+          "directories": []
         }
       },
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
+      "before": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "after": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -159,6 +164,10 @@
     {
       "phase": "agent",
       "scope": {
+        "comments": {
+          "paths": [],
+          "directories": []
+        },
         "documentation": {
           "paths": [
             "GLOSSARY.md",
@@ -189,6 +198,32 @@
             "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
             "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
             "docs/adr/0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md",
+            "docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md",
+            "docs/adr/0027-give-the-workbench-its-own-profile.md",
+            "docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md",
+            "docs/adr/0029-make-the-validators-posted-result-the-only-contract-decision.md",
+            "docs/adr/0030-let-factory-triage-accept-its-own-brief.md",
+            "docs/adr/0031-name-labels-by-family.md",
+            "docs/adr/0032-test-behaviour-and-structure-not-wording.md",
+            "docs/adr/0033-give-every-value-one-value-owner.md",
+            "docs/adr/0034-choose-where-checks-run-at-adoption.md",
+            "docs/adr/0035-keep-the-implementation-contract-in-the-issue-body.md",
+            "docs/adr/0036-launch-hand-stages-with-identifiers-only.md",
+            "docs/adr/0037-act-in-repositories-only-through-launches.md",
+            "docs/adr/0038-exempt-genuine-dependabot-pull-requests-from-body-sections.md",
+            "docs/adr/0039-own-pull-request-text-checks-and-retire-others-before-adoption.md",
+            "docs/adr/0040-watch-instead-of-launching.md",
+            "docs/adr/0041-answer-in-the-owners-place-except-reserved-decisions.md",
+            "docs/adr/0042-keep-agent-guidance-a-stable-map.md",
+            "docs/adr/0043-keep-the-contribution-guide-for-contributors.md",
+            "docs/adr/0044-lead-every-message-with-its-outcome.md",
+            "docs/adr/0045-check-supersession-and-footprint-at-readiness.md",
+            "docs/adr/0046-start-owner-facing-work-and-bridge-factory-gaps.md",
+            "docs/adr/0047-read-nothing-scriptorium-owns.md",
+            "docs/adr/0048-budget-the-computed-read-set.md",
+            "docs/adr/0050-answer-a-stop-by-applying-the-issues-next-state.md",
+            "docs/adr/0051-carry-a-request-whose-fate-a-record-settles.md",
+            "docs/adr/0052-update-a-non-overlapping-stale-base-within-the-attempt.md",
             "docs/adr/README.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
@@ -198,6 +233,7 @@
             "docs/development/documentation-scope-drafter.md",
             "docs/development/github-label-setup.md",
             "docs/development/github-pr-integration-setup.md",
+            "docs/development/issue-contract-v2.md",
             "docs/development/issue-contract-validation.md",
             "docs/development/pr-metadata-validation.md",
             "docs/development/release.md",
@@ -208,9 +244,13 @@
             "docs/development/standards-update-workflow.md",
             "docs/development/typescript-node-stack-check.md",
             "docs/development/typescript-node-stack-scope-drafter.md",
+            "docs/development/typescript-web-stack-check.md",
+            "docs/development/typescript-web-stack-scope-drafter.md",
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
+            "docs/usage/create-repository.md",
+            "docs/usage/install-skills.md",
             "docs/usage/stacks.md",
             "docs/usage/versioning.md"
           ],
@@ -218,7 +258,9 @@
         },
         "factory-sandbox-image": {
           "paths": [
-            ".factory/Dockerfile"
+            ".scriptorium/Dockerfile",
+            ".factory/Dockerfile",
+            ".factory/config.json"
           ],
           "directories": []
         },
@@ -258,15 +300,23 @@
           ],
           "directories": []
         },
+        "typescript-astro-stack": {
+          "paths": [],
+          "directories": []
+        },
         "typescript-node-stack": {
           "paths": [
             "package.json"
           ],
           "directories": []
+        },
+        "typescript-vite-stack": {
+          "paths": [],
+          "directories": []
         }
       },
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
+      "before": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "after": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -304,6 +354,32 @@
             "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
             "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
             "docs/adr/0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md",
+            "docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md",
+            "docs/adr/0027-give-the-workbench-its-own-profile.md",
+            "docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md",
+            "docs/adr/0029-make-the-validators-posted-result-the-only-contract-decision.md",
+            "docs/adr/0030-let-factory-triage-accept-its-own-brief.md",
+            "docs/adr/0031-name-labels-by-family.md",
+            "docs/adr/0032-test-behaviour-and-structure-not-wording.md",
+            "docs/adr/0033-give-every-value-one-value-owner.md",
+            "docs/adr/0034-choose-where-checks-run-at-adoption.md",
+            "docs/adr/0035-keep-the-implementation-contract-in-the-issue-body.md",
+            "docs/adr/0036-launch-hand-stages-with-identifiers-only.md",
+            "docs/adr/0037-act-in-repositories-only-through-launches.md",
+            "docs/adr/0038-exempt-genuine-dependabot-pull-requests-from-body-sections.md",
+            "docs/adr/0039-own-pull-request-text-checks-and-retire-others-before-adoption.md",
+            "docs/adr/0040-watch-instead-of-launching.md",
+            "docs/adr/0041-answer-in-the-owners-place-except-reserved-decisions.md",
+            "docs/adr/0042-keep-agent-guidance-a-stable-map.md",
+            "docs/adr/0043-keep-the-contribution-guide-for-contributors.md",
+            "docs/adr/0044-lead-every-message-with-its-outcome.md",
+            "docs/adr/0045-check-supersession-and-footprint-at-readiness.md",
+            "docs/adr/0046-start-owner-facing-work-and-bridge-factory-gaps.md",
+            "docs/adr/0047-read-nothing-scriptorium-owns.md",
+            "docs/adr/0048-budget-the-computed-read-set.md",
+            "docs/adr/0050-answer-a-stop-by-applying-the-issues-next-state.md",
+            "docs/adr/0051-carry-a-request-whose-fate-a-record-settles.md",
+            "docs/adr/0052-update-a-non-overlapping-stale-base-within-the-attempt.md",
             "docs/adr/README.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
@@ -313,6 +389,7 @@
             "docs/development/documentation-scope-drafter.md",
             "docs/development/github-label-setup.md",
             "docs/development/github-pr-integration-setup.md",
+            "docs/development/issue-contract-v2.md",
             "docs/development/issue-contract-validation.md",
             "docs/development/pr-metadata-validation.md",
             "docs/development/release.md",
@@ -323,9 +400,13 @@
             "docs/development/standards-update-workflow.md",
             "docs/development/typescript-node-stack-check.md",
             "docs/development/typescript-node-stack-scope-drafter.md",
+            "docs/development/typescript-web-stack-check.md",
+            "docs/development/typescript-web-stack-scope-drafter.md",
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
+            "docs/usage/create-repository.md",
+            "docs/usage/install-skills.md",
             "docs/usage/stacks.md",
             "docs/usage/versioning.md"
           ],
@@ -337,9 +418,29 @@
         "declaration": "documentation",
         "id": "documentation-navigation"
       },
-      "operationIndex": 2,
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
+      "operationIndex": 0,
+      "before": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "after": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "changes": {},
+      "boundaryChanges": {},
+      "violations": []
+    },
+    {
+      "phase": "checks",
+      "scope": {
+        "github-repository-configuration": {
+          "paths": [],
+          "directories": []
+        }
+      },
+      "operation": {
+        "phase": "checks",
+        "declaration": "github-repository-configuration",
+        "id": "required-checks"
+      },
+      "operationIndex": 1,
+      "before": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "after": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -357,9 +458,9 @@
         "declaration": "github-repository-configuration",
         "id": "pull-request-reviewer"
       },
-      "operationIndex": 3,
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
+      "operationIndex": 2,
+      "before": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "after": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -377,9 +478,9 @@
         "declaration": "github-repository-configuration",
         "id": "factory-review-policy"
       },
-      "operationIndex": 4,
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
+      "operationIndex": 3,
+      "before": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "after": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -397,9 +498,9 @@
         "declaration": "project-readmes",
         "id": "project-readme-structure"
       },
-      "operationIndex": 5,
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
+      "operationIndex": 4,
+      "before": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "after": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -419,9 +520,9 @@
         "declaration": "repository-readme",
         "id": "repository-readme-structure"
       },
-      "operationIndex": 6,
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
+      "operationIndex": 5,
+      "before": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "after": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -441,9 +542,9 @@
         "declaration": "typescript-node-stack",
         "id": "typescript-node-stack-manifests"
       },
-      "operationIndex": 7,
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
+      "operationIndex": 6,
+      "before": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "after": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
@@ -451,6 +552,10 @@
     {
       "phase": "agent",
       "scope": {
+        "comments": {
+          "paths": [],
+          "directories": []
+        },
         "documentation": {
           "paths": [
             "GLOSSARY.md",
@@ -481,6 +586,32 @@
             "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
             "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
             "docs/adr/0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md",
+            "docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md",
+            "docs/adr/0027-give-the-workbench-its-own-profile.md",
+            "docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md",
+            "docs/adr/0029-make-the-validators-posted-result-the-only-contract-decision.md",
+            "docs/adr/0030-let-factory-triage-accept-its-own-brief.md",
+            "docs/adr/0031-name-labels-by-family.md",
+            "docs/adr/0032-test-behaviour-and-structure-not-wording.md",
+            "docs/adr/0033-give-every-value-one-value-owner.md",
+            "docs/adr/0034-choose-where-checks-run-at-adoption.md",
+            "docs/adr/0035-keep-the-implementation-contract-in-the-issue-body.md",
+            "docs/adr/0036-launch-hand-stages-with-identifiers-only.md",
+            "docs/adr/0037-act-in-repositories-only-through-launches.md",
+            "docs/adr/0038-exempt-genuine-dependabot-pull-requests-from-body-sections.md",
+            "docs/adr/0039-own-pull-request-text-checks-and-retire-others-before-adoption.md",
+            "docs/adr/0040-watch-instead-of-launching.md",
+            "docs/adr/0041-answer-in-the-owners-place-except-reserved-decisions.md",
+            "docs/adr/0042-keep-agent-guidance-a-stable-map.md",
+            "docs/adr/0043-keep-the-contribution-guide-for-contributors.md",
+            "docs/adr/0044-lead-every-message-with-its-outcome.md",
+            "docs/adr/0045-check-supersession-and-footprint-at-readiness.md",
+            "docs/adr/0046-start-owner-facing-work-and-bridge-factory-gaps.md",
+            "docs/adr/0047-read-nothing-scriptorium-owns.md",
+            "docs/adr/0048-budget-the-computed-read-set.md",
+            "docs/adr/0050-answer-a-stop-by-applying-the-issues-next-state.md",
+            "docs/adr/0051-carry-a-request-whose-fate-a-record-settles.md",
+            "docs/adr/0052-update-a-non-overlapping-stale-base-within-the-attempt.md",
             "docs/adr/README.md",
             "docs/development/README.md",
             "docs/development/adoption-compatibility.md",
@@ -490,6 +621,7 @@
             "docs/development/documentation-scope-drafter.md",
             "docs/development/github-label-setup.md",
             "docs/development/github-pr-integration-setup.md",
+            "docs/development/issue-contract-v2.md",
             "docs/development/issue-contract-validation.md",
             "docs/development/pr-metadata-validation.md",
             "docs/development/release.md",
@@ -500,9 +632,13 @@
             "docs/development/standards-update-workflow.md",
             "docs/development/typescript-node-stack-check.md",
             "docs/development/typescript-node-stack-scope-drafter.md",
+            "docs/development/typescript-web-stack-check.md",
+            "docs/development/typescript-web-stack-scope-drafter.md",
             "docs/development/upstream-compatibility.md",
             "docs/usage/README.md",
             "docs/usage/adopt-repo-canon.md",
+            "docs/usage/create-repository.md",
+            "docs/usage/install-skills.md",
             "docs/usage/stacks.md",
             "docs/usage/versioning.md"
           ],
@@ -510,7 +646,9 @@
         },
         "factory-sandbox-image": {
           "paths": [
-            ".factory/Dockerfile"
+            ".scriptorium/Dockerfile",
+            ".factory/Dockerfile",
+            ".factory/config.json"
           ],
           "directories": []
         },
@@ -550,63 +688,29 @@
           ],
           "directories": []
         },
+        "typescript-astro-stack": {
+          "paths": [],
+          "directories": []
+        },
         "typescript-node-stack": {
           "paths": [
             "package.json"
           ],
           "directories": []
+        },
+        "typescript-vite-stack": {
+          "paths": [],
+          "directories": []
         }
       },
-      "before": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
-      "after": "sha256:6f867afdd07963d49eeaaf1386cb64a207f5bf446cc25d2bad4902260d5b8f67",
+      "before": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
+      "after": "sha256:38307b9f08b013fcf77775b09dfcac9c4d2408626eb813422850688ba9a822a6",
       "changes": {},
       "boundaryChanges": {},
       "violations": []
     }
   ],
   "operations": [
-    {
-      "operation": {
-        "declaration": "github-repository-configuration",
-        "phase": "fixes",
-        "id": "canonical-labels"
-      },
-      "process": {
-        "exitCode": 0,
-        "signal": null,
-        "error": null,
-        "timedOut": false
-      },
-      "result": {
-        "format": "repo-standards/result/v2",
-        "status": "unchanged",
-        "message": "GitHub labels already match the canonical configuration for lutzseverino/repo-canon."
-      },
-      "error": null,
-      "stdout": ".repo-standards/local/operations/0.stdout",
-      "stderr": ".repo-standards/local/operations/0.stderr"
-    },
-    {
-      "operation": {
-        "declaration": "github-repository-configuration",
-        "phase": "fixes",
-        "id": "pull-request-integration"
-      },
-      "process": {
-        "exitCode": 0,
-        "signal": null,
-        "error": null,
-        "timedOut": false
-      },
-      "result": {
-        "format": "repo-standards/result/v2",
-        "status": "unchanged",
-        "message": "GitHub PR integration already matches the canonical configuration for lutzseverino/repo-canon."
-      },
-      "error": null,
-      "stdout": ".repo-standards/local/operations/1.stdout",
-      "stderr": ".repo-standards/local/operations/1.stderr"
-    },
     {
       "operation": {
         "declaration": "documentation",
@@ -625,8 +729,29 @@
         "message": "Documentation navigation is valid; content placement and usefulness still require maintainer or agent review."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/2.stdout",
-      "stderr": ".repo-standards/local/operations/2.stderr"
+      "stdout": ".repo-standards/local/operations/0.stdout",
+      "stderr": ".repo-standards/local/operations/0.stderr"
+    },
+    {
+      "operation": {
+        "declaration": "github-repository-configuration",
+        "phase": "checks",
+        "id": "required-checks"
+      },
+      "process": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "timedOut": false
+      },
+      "result": {
+        "format": "repo-standards/result/v2",
+        "status": "passed",
+        "message": ".github/required-checks.json is valid."
+      },
+      "error": null,
+      "stdout": ".repo-standards/local/operations/1.stdout",
+      "stderr": ".repo-standards/local/operations/1.stderr"
     },
     {
       "operation": {
@@ -646,8 +771,8 @@
         "message": ".github/pull-request-reviewer.json is valid."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/3.stdout",
-      "stderr": ".repo-standards/local/operations/3.stderr"
+      "stdout": ".repo-standards/local/operations/2.stdout",
+      "stderr": ".repo-standards/local/operations/2.stderr"
     },
     {
       "operation": {
@@ -667,8 +792,8 @@
         "message": ".github/factory-review-policy.json is valid."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/4.stdout",
-      "stderr": ".repo-standards/local/operations/4.stderr"
+      "stdout": ".repo-standards/local/operations/3.stdout",
+      "stderr": ".repo-standards/local/operations/3.stderr"
     },
     {
       "operation": {
@@ -688,8 +813,8 @@
         "message": "Project README structure and shared setup and contribution links are valid for 0 concrete targets; Project membership, purpose, commands, configuration, documentation, and duplication of shared instructions still require maintainer or agent review."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/5.stdout",
-      "stderr": ".repo-standards/local/operations/5.stderr"
+      "stdout": ".repo-standards/local/operations/4.stdout",
+      "stderr": ".repo-standards/local/operations/4.stderr"
     },
     {
       "operation": {
@@ -706,11 +831,11 @@
       "result": {
         "format": "repo-standards/result/v2",
         "status": "passed",
-        "message": "Repository README structure is valid; factual content still requires maintainer or agent review."
+        "message": "Repository README structure is valid; factual content still requires maintainer or agent review. The GitHub About description was not compared: Repository README check could not verify lutzseverino/repo-canon: GitHub returned HTTP 403. Retry later. For full details, run gh api --hostname github.com repos/lutzseverino/repo-canon."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/6.stdout",
-      "stderr": ".repo-standards/local/operations/6.stderr"
+      "stdout": ".repo-standards/local/operations/5.stdout",
+      "stderr": ".repo-standards/local/operations/5.stderr"
     },
     {
       "operation": {
@@ -730,60 +855,68 @@
         "message": "The pnpm, lockfile, Node.js, oxlint, Prettier and validate script facts of the typescript-node stack are valid for 1 Project; TypeScript 7, node --test, required pull request checks running validate, and each Project's Setup and validation section still require the contextual assessment."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/7.stdout",
-      "stderr": ".repo-standards/local/operations/7.stderr"
+      "stdout": ".repo-standards/local/operations/6.stdout",
+      "stderr": ".repo-standards/local/operations/6.stderr"
     }
   ],
   "retryHistory": [],
   "changeSet": [
     {
-      "path": ".claude/skills/orchestrate",
+      "path": ".claude/skills/factory",
       "phases": [
         "installation"
       ]
     }
   ],
   "lastComplete": {
-    "run": "2beda45a-edab-4e06-8f68-1185a7f8a4d0",
-    "inspection": "sha256:944e5ac8996aad34db762f62b0ad2914cc72accede6e0d54ca0d2e22a5c044fc",
-    "completedAt": "2026-10-27T06:58:19.837Z",
-    "head": "8be9fba17bc35a224f16e2c89d85a84cd9f0f329"
+    "run": "b6551683-ea44-403f-954c-456abf24ec34",
+    "inspection": "sha256:9d9ff7f988d286d3482beecff7945c155c75bdfa185869e6b164fb070ca48062",
+    "completedAt": "2026-11-17T11:55:50.971Z",
+    "head": "37c1f2c7917c5bce547b4b52ab7b3052e0bb142e"
   },
   "baselines": {
     "docs/agents/README.md": {
-      "sha256": "6d85984e4f6ae21c5d08f58bc37e260e11661beb7da481696483e635d5c9b502",
+      "sha256": "ec642abe47a6e67e2d7a6d030a7daf762f97e1b39a655b415f5905514d37f8f9",
       "executable": false
     },
     "AGENTS.md": {
-      "sha256": "ce8ce2aab4a2f6895fda86daf17e2e6cb60e25a053ca8329acb167f47718adb0",
+      "sha256": "5ca7e2b78cedb385fe2e06b9c1bb46fc5204f66399b38c46f1dc4ed2f9ded32d",
       "executable": false
     },
     ".github/ISSUE_TEMPLATE/bug-report.yml": {
-      "sha256": "5fca3bab67073fdb827cd5eb88d9c413ac1e1df2891a85c7938420dcb1e3dfed",
+      "sha256": "640ba23f2f36bf471b4a2fca372ebc59a284336d80a3a7c7cb235cb49e4a3517",
+      "executable": false
+    },
+    "operations/lib/canonical-labels.mjs": {
+      "sha256": "811395a0625754735c2b2e9533d335f769d7610d24fb9dcf19ff0c95a8facf6a",
       "executable": false
     },
     "CONTRIBUTING.md": {
-      "sha256": "a6d00639d75f1ca9c1040be7cd7349bc11715397c71ef8a817e44312191d9226",
+      "sha256": "1827dc79bef54fc21abec1a44adde1946683e1299de82809a20718d9f0641156",
       "executable": false
     },
     "docs/agents/domain.md": {
       "sha256": "593a7042218689f1d24df89df14eaf0a20e19e0d0a7d479a01947ac78f0784b9",
       "executable": false
     },
-    ".factory/config.json": {
-      "sha256": "46b2ccd9b9bb783111d2e64d07e43337061681673dfbbed832ca04c1af90fba9",
+    ".scriptorium/config.json": {
+      "sha256": "5229d7eb8c3077471691aae4ed0a1fba8ac6910553d67754cfcfdd2e4c1293c8",
+      "executable": false
+    },
+    "operations/lib/factory-labels.mjs": {
+      "sha256": "5205c0558cab9568a910ad34621eae4d80871a4c2cd994134364b88d56924cec",
       "executable": false
     },
     ".github/workflows/sandbox-image.yml": {
-      "sha256": "598ab9931a8cfc63a3e1d2487fb151eca9b134a5e9a4e3bfa20d4b87b96399b3",
+      "sha256": "0078387a573507d5c8b97adb5d53c5fd13e33fd2c640ab8870c06bf02c5dff69",
       "executable": false
     },
     ".github/ISSUE_TEMPLATE/feature-request.yml": {
-      "sha256": "d3df4f5c27dd7b7a22d0baec1a52a1dc3301c002549f8634392a3abd26566505",
+      "sha256": "c965084796f10393fe0fb7ee3b3507b16b383949b59d328194aac62778cdecee",
       "executable": false
     },
     ".github/scripts/validate.mjs": {
-      "sha256": "bab5f39ee6e1fdb423d90b19dec73b1226ed68ab90a804442a7503e9e9bd6bdc",
+      "sha256": "ba298cfed877e125c274808a16aa33d3ab8939a7a96c6a8a50acb366a34d4a56",
       "executable": false
     },
     ".agents/skills/LICENSE.humanlayer-skills": {
@@ -791,19 +924,31 @@
       "executable": false
     },
     ".github/ISSUE_TEMPLATE/implementation-ticket.yml": {
-      "sha256": "d452da0ad9e39173f681b699d3848a00ab3466b55be508cc3f36d7731083bff6",
+      "sha256": "357a7458d2747c52388f483312968203e3bee05c180d1092dc8059225a896628",
       "executable": false
     },
-    "scripts/validate-issue-contract.mjs": {
-      "sha256": "725b1494370348a99dc153f6833541014d5f2c70c80688046cc3219fa11a0a64",
+    "scripts/issue-contract-cutoff.mjs": {
+      "sha256": "66544ba7309a2139ef5d2d55fefa40304b987a3873b779e83b6fe21b9712b13a",
+      "executable": false
+    },
+    "scripts/issue-contract-sources.mjs": {
+      "sha256": "c42a91c91491bb74a6053aa290f73aba67a4768b6048a0d056b1c22c523473fd",
+      "executable": false
+    },
+    "scripts/issue-contract-store.mjs": {
+      "sha256": "1e15c9b40cfcbfcbd2186e7ec3d080bbf2fa10e576bcd8ee43a01b5adb1fb49e",
+      "executable": false
+    },
+    "vendor/repo-canon/validate-issue-contract.mjs": {
+      "sha256": "8269294034982636fe70ae352e4066074d27f31f2c25f6062a11f449d342fd8a",
       "executable": false
     },
     ".github/workflows/issue-contracts.yml": {
-      "sha256": "1734fd905c48e75b80c7a4db7518799c4ae5dbd0eecfef73b6025b0b777ad4f6",
+      "sha256": "12259993d462dc9e0f7915a4142b68ab16dcbef0b70e8de2b47d2a650d42ae8a",
       "executable": false
     },
     "docs/agents/issue-tracker.md": {
-      "sha256": "afd6852a80185217bd28aa5cbe456bef1e85be25be7bd1fba382d5b8ee428325",
+      "sha256": "5b850cbe40cf2f4493c87b559a8c1f7aadaac000dcccae55409307d0ff9df57c",
       "executable": false
     },
     "vendor/marked/LICENSE": {
@@ -835,7 +980,7 @@
       "executable": false
     },
     "vendor/parse5/README.md": {
-      "sha256": "8f285afdb9d5eca93648d2ffbea58ea0cea94485f18c3eec6f5825ef1e0446bf",
+      "sha256": "bb5904a74bace3cfbcf0f7f817f2a3f808a21f4d60c1b1b118e1464d6d096855",
       "executable": false
     },
     "vendor/postern/postern.mjs": {
@@ -851,7 +996,7 @@
       "executable": false
     },
     ".github/scripts/validate-pr-metadata.mjs": {
-      "sha256": "1f6eca3d133a6d08b1ed7b56d043218ebf4b159720ae1ae9c6a0707f25a9a71c",
+      "sha256": "a32f66c1652ca938b67da552e8e424e830be305e66c3b6d154925a597aa94dcc",
       "executable": false
     },
     ".github/workflows/pr-metadata.yml": {
@@ -866,24 +1011,44 @@
       "sha256": "b89f24c60f8ad3ad1ed45590629e87661337931e858b84acfac5296a057430c2",
       "executable": false
     },
+    ".agents/skills/babysit/CREDITS.md": {
+      "sha256": "407cbf3f51699040bf0006e3c9722a8a2b9a867bedf52f60c2d734db5103d09e",
+      "executable": false
+    },
     ".agents/skills/babysit/SKILL.md": {
-      "sha256": "8a3d71320daf4d5a681243e13b70075a42062b8e587382fd81dac04aa9c5a8f7",
+      "sha256": "eacf6fe48d52cb49562e9302e822f13b95694793766d40fb767fca9052e38fe8",
+      "executable": false
+    },
+    ".agents/skills/babysit/body-links.mjs": {
+      "sha256": "01c984d07a0e1395daa6a111634f8a222b498c5dcb75ce20969699a0f0f7641e",
       "executable": false
     },
     ".agents/skills/babysit/merge.mjs": {
-      "sha256": "81daa7d5838e5e9b8854f74d3daf8d2b995b4d14abb2bc173939035c9c28017d",
+      "sha256": "6bc63ad548d5360554280b1e31c7c1e746a630e7ef68c29831f1b1a0fe6ca540",
+      "executable": false
+    },
+    ".agents/skills/babysit/owner-gates.mjs": {
+      "sha256": "2d0beceaf2c1a39c52f9dc046240483a2383941fac0e14ec528d9e9d52f344e1",
       "executable": false
     },
     ".agents/skills/babysit/platform.mjs": {
-      "sha256": "dccb0f3e7c2f89563ed25ca0e4bf1a479af5b65732ad08fbed38304263bc8b47",
+      "sha256": "dc7f37a59b6ce753871a4423a9e2a9e00d577cc15024f4203c0764f87d97dc34",
       "executable": false
     },
     ".agents/skills/babysit/pull-request-reviewer.mjs": {
-      "sha256": "77fb9197a4365dde57cba91cd4ff4c3c52eb55a275d9eb6b3fa494bac4cc3809",
+      "sha256": "2d22280d01d2835b8e0a47bfc3fa50c507b74aee6b0aa047d4f106f98871a5dd",
       "executable": false
     },
     ".agents/skills/babysit/request.mjs": {
-      "sha256": "54760df3ef658781331b776b141d3992315cc304b6fb4bbc5103b11cc7175ca6",
+      "sha256": "859748cea839f995d20f31886818f7ca5176f916fd992bb9b3d5a9afa94e9535",
+      "executable": false
+    },
+    ".agents/skills/babysit/required-checks.mjs": {
+      "sha256": "bde82ec3b4520fe625bb61401436dce526fe8e04914baf5ffbe4aa6ddd914bf1",
+      "executable": false
+    },
+    ".agents/skills/babysit/review-outcome.mjs": {
+      "sha256": "a3213bb3983f56a1df1b498157105cfd591b4e6a4afbcf9d47b6bf2429feceba",
       "executable": false
     },
     ".agents/skills/babysit/review-policy.mjs": {
@@ -891,23 +1056,35 @@
       "executable": false
     },
     ".agents/skills/babysit/reviewer.mjs": {
-      "sha256": "580098ac88a2be873d271dd7107cfcb8b0ab1ab059ccb39236f73e4f4eec3508",
+      "sha256": "1bb1964291f043d5eea4f54247bfaa12f05201458ef5a1fdac38ded3efde3564",
       "executable": false
     },
     ".agents/skills/babysit/trusted-review-config.mjs": {
-      "sha256": "071cfe9e3dfb9bd9acdc8469272a8f859a0e65bef677c6d0f9326c1a9a46aa71",
+      "sha256": "0ac7daa9f12cc8d646849e7f550730d83ecbda2beac6106ee4545f756a04705e",
       "executable": false
     },
     ".agents/skills/babysit/wait.mjs": {
-      "sha256": "abb938c0df67cb490a92171718fd1131d48c25427f22f2d3ef0be5cd220c3f1d",
+      "sha256": "c4aa0514411a924001d9c4d28f242256db8d3d61e3ff543bf79fd542a7697681",
+      "executable": false
+    },
+    ".agents/skills/code-review/CREDITS.md": {
+      "sha256": "34b37f6a6bf25894a3f87ec1bbaf332f2947dcc3d88488fdd3c275a531c1d244",
       "executable": false
     },
     ".agents/skills/code-review/SKILL.md": {
-      "sha256": "47f4e52c21694def9c7c11cbfbf891ca35eac7a93e395797515be3c8a409ae50",
+      "sha256": "77eae9f8d2bd383c1decfd8aab8b902e2b258915a60b4f86755610e8c91e8a2c",
       "executable": false
     },
     ".agents/skills/code-review/agents/openai.yaml": {
       "sha256": "8229ca854e11dc8e6aef2131ee03f31fb1561cf905fab9ccc325180cf3331352",
+      "executable": false
+    },
+    ".agents/skills/code-review/ownership-facts.mjs": {
+      "sha256": "906fdcf6301db6188c79c550d9f2e43c704a9bdda0bcb9eb67d5e1f5ea353b1f",
+      "executable": false
+    },
+    ".agents/skills/codebase-design/CREDITS.md": {
+      "sha256": "8b96c332a632287d74a45715680b1683da910e2e219bd15a7af4fd375161190e",
       "executable": false
     },
     ".agents/skills/codebase-design/DEEPENING.md": {
@@ -919,15 +1096,19 @@
       "executable": false
     },
     ".agents/skills/codebase-design/SKILL.md": {
-      "sha256": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+      "sha256": "b44990fe0a3e4c2c911908c95602deb85032b24293295092d241688820e71c94",
       "executable": false
     },
     ".agents/skills/codebase-design/agents/openai.yaml": {
       "sha256": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f",
       "executable": false
     },
+    ".agents/skills/diagnosing-bugs/CREDITS.md": {
+      "sha256": "23f6645261d3397183fa2aa8078e950447dc209c550ccff764519e100183290f",
+      "executable": false
+    },
     ".agents/skills/diagnosing-bugs/SKILL.md": {
-      "sha256": "9168404abda0967a5d32977e3498cd95fda6807018852f3de736a78357c82b40",
+      "sha256": "a621ef3ea8a515ac253d1784246a773dc437b164b9e6f4d8a17ae03d2ca35af2",
       "executable": false
     },
     ".agents/skills/diagnosing-bugs/agents/openai.yaml": {
@@ -939,7 +1120,11 @@
       "executable": false
     },
     ".agents/skills/domain-modeling/ADR-FORMAT.md": {
-      "sha256": "944c92aa790e8fbdc9199640b170979abb8a34ba8d0fe18c2a01a63bce140ca0",
+      "sha256": "2e88f5a78472481b3dddac68707686867eb4270bdbaca9a9458d70b039157b65",
+      "executable": false
+    },
+    ".agents/skills/domain-modeling/CREDITS.md": {
+      "sha256": "724e6da4dd9f84bbf1a3f3ca74904784a2778e303b305fb8ba6206462f905c59",
       "executable": false
     },
     ".agents/skills/domain-modeling/GLOSSARY-FORMAT.md": {
@@ -947,35 +1132,59 @@
       "executable": false
     },
     ".agents/skills/domain-modeling/SKILL.md": {
-      "sha256": "7b925d7b1e341a2eeae33ad68a8a8c0ab889a38ddd22a7598e4c240e5a7556a3",
+      "sha256": "f7515e306cdb182678b6968bcc52f83dfa4a21db661538f4df30b7ee2bbef904",
       "executable": false
     },
     ".agents/skills/domain-modeling/agents/openai.yaml": {
       "sha256": "f6bf2aa996c6e6f53fdd0708e18a0d16a56aed8322cca59fedbe3c0d2c75f06b",
       "executable": false
     },
+    ".agents/skills/factory/CREDITS.md": {
+      "sha256": "84f85448b6dbe4baeb6ff2761a1069c598dfba5fddab41ece9acd4bab74fab5d",
+      "executable": false
+    },
+    ".agents/skills/factory/SKILL.md": {
+      "sha256": "8631c2e2c100b6e2bb842a7c70cc2990b55e7c1982a1e92e4df9c423615ffbb9",
+      "executable": false
+    },
+    ".agents/skills/grill-with-docs/CREDITS.md": {
+      "sha256": "5beab341239f89a8e49b9e82f0b39856c4d3cd2d3d5cd9ea136bd25d4e6574b0",
+      "executable": false
+    },
     ".agents/skills/grill-with-docs/SKILL.md": {
-      "sha256": "7de372c13488f1ee96cc11cd8907b56b6809cc93eef776eeddd37de6b6cbe3fe",
+      "sha256": "4e2d5978170c5cf499ce063a7ea4fea657779268f7677681fb575862613ce866",
       "executable": false
     },
     ".agents/skills/grill-with-docs/agents/openai.yaml": {
       "sha256": "94cd0ab161fb468a836349f5ed482ba58ce8e709a05c57ce533d739dbd35cca9",
       "executable": false
     },
+    ".agents/skills/grilling/CREDITS.md": {
+      "sha256": "fe3846dbb144a20a941c89b2d81282ff15b41b82c7bb4848fa12f99e26024e84",
+      "executable": false
+    },
     ".agents/skills/grilling/SKILL.md": {
-      "sha256": "10ff989e7498b23b5acb49d5048f11dcd906757d2f79c5cdf8a00001381296f2",
+      "sha256": "760732f8269c80cda86d4ec977bcb99564e7728924b07a19ce94d7e43cd940e7",
       "executable": false
     },
     ".agents/skills/grilling/agents/openai.yaml": {
       "sha256": "1411d7df7d99b7e621a1ff8283c8133cc2464be63d064e52d8ce169c6800ee9b",
       "executable": false
     },
+    ".agents/skills/implement/CREDITS.md": {
+      "sha256": "b6b3df15545ee616281f80b2fde9c8eb96354491059ba13e23bf13c8373958fb",
+      "executable": false
+    },
     ".agents/skills/implement/SKILL.md": {
-      "sha256": "6d3fd9e83b8f36e5213854779db49b256a457a7ebb4a503e53fa7dcff696adc3",
+      "sha256": "4d10c26aa5c87054db9eb6abca3471a7babf4e3561ea2c16f67ed22d0d106be5",
       "executable": false
     },
     ".agents/skills/implement/agents/openai.yaml": {
-      "sha256": "8970a8596ade0c28ab427f41a4ea242d6bdf6186c59ebf55e1238dbecaab79dc",
+      "sha256": "7d531e17370288bdf5eabb7a586d7c2de16c21db12afb91873685b6165c88db6",
+      "executable": false
+    },
+    ".agents/skills/improve-codebase-architecture/CREDITS.md": {
+      "sha256": "f6a40012a71c8efaf53119c4a0a4adb7b40a0dad9e898e0103d86e76b17e56b1",
       "executable": false
     },
     ".agents/skills/improve-codebase-architecture/HTML-REPORT.md": {
@@ -983,35 +1192,27 @@
       "executable": false
     },
     ".agents/skills/improve-codebase-architecture/SKILL.md": {
-      "sha256": "552240a5ab5cec6b67c15dd1ad6e9f6962b1bca6ce870059a8c2713760c20392",
+      "sha256": "05178cd78133cd251d1051bc699ea7f8c38aed31f8cf24d584d7f2320d3823c5",
       "executable": false
     },
     ".agents/skills/improve-codebase-architecture/agents/openai.yaml": {
       "sha256": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1",
       "executable": false
     },
-    ".agents/skills/orchestrate/CREDITS.md": {
-      "sha256": "2761d0a558ac5fb535af4933b813a4deb40bc3849937deb01441a0e56a994dfd",
-      "executable": false
-    },
-    ".agents/skills/orchestrate/SKILL.md": {
-      "sha256": "3c19d4dabec8537b928b380f2fbd5edce565a2dfa0c761592b1eef30677dc83e",
-      "executable": false
-    },
-    ".agents/skills/orchestrate/agents/openai.yaml": {
-      "sha256": "8fa9f8f0710336e9e9a32915436647c3f5c3bfa9a2acdbdcaf613daba800bf6c",
-      "executable": false
-    },
     ".agents/skills/pr/CREDITS.md": {
-      "sha256": "a7a087127665d7298a72280ef6e19c41ad8404523712a788c8dc3ab414bc2497",
+      "sha256": "d1f1e6a3639bab2a9a8b009ed61d0ad20322746e24490376114fd79161ad92aa",
       "executable": false
     },
     ".agents/skills/pr/SKILL.md": {
-      "sha256": "ab63f1cf78647389edcd386c9427c5dfca27ed2836930c24773ffee834c19bcd",
+      "sha256": "c0b0ea622c08c919435be7fe5462549b761e8f06704d2cbac207ced6a989a7f5",
       "executable": false
     },
     ".agents/skills/pr/agents/openai.yaml": {
       "sha256": "2295b586624db4ef546f3fd4695492f039d941a46d8a1593a702ce3ca511b8ad",
+      "executable": false
+    },
+    ".agents/skills/prototype/CREDITS.md": {
+      "sha256": "d7127e14cbad9655d701b88cb2343317b07ab65360a9193092b874b6f9c8c699",
       "executable": false
     },
     ".agents/skills/prototype/LOGIC.md": {
@@ -1019,7 +1220,7 @@
       "executable": false
     },
     ".agents/skills/prototype/SKILL.md": {
-      "sha256": "714de632d116bb73f65cdb5a882db15b9369a6713b9a47c0fad827848f0bfbe3",
+      "sha256": "4b33a0a2f568f9518f58bfc0c2d62781801d33235cd88ba3eba26d5123daa703",
       "executable": false
     },
     ".agents/skills/prototype/UI.md": {
@@ -1030,16 +1231,36 @@
       "sha256": "5af65e43ab41a350436697b81e27b7f848d36782043b73c322bb2c9fa9cc55dc",
       "executable": false
     },
+    ".agents/skills/research/CREDITS.md": {
+      "sha256": "beb53571788b6df7c22fe251b9a23099c6e8102a896bf3e92ee12dfee194486b",
+      "executable": false
+    },
     ".agents/skills/research/SKILL.md": {
-      "sha256": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4",
+      "sha256": "5e63fce1b54edbb1179be9e2d493131ef8b7194cc8560774b2d6daab2c4291fe",
       "executable": false
     },
     ".agents/skills/research/agents/openai.yaml": {
       "sha256": "9b4c470d63221c1f68f22df70b83e2f12401b317babe0d1b7b5f24a974474d0d",
       "executable": false
     },
+    ".agents/skills/review/CREDITS.md": {
+      "sha256": "84f85448b6dbe4baeb6ff2761a1069c598dfba5fddab41ece9acd4bab74fab5d",
+      "executable": false
+    },
+    ".agents/skills/review/SKILL.md": {
+      "sha256": "a459001f1f52246dc4233c4220a719a7115468df7cdb9c57d19cc188d8e987be",
+      "executable": false
+    },
+    ".agents/skills/review/round.mjs": {
+      "sha256": "471a5f3a382cdef765454deda61f2b472ace58244678b5e2ff82a9812e0baddc",
+      "executable": false
+    },
+    ".agents/skills/tdd/CREDITS.md": {
+      "sha256": "e8fae429588f9cc4099a9a1fcbb3d2be2443b5d1ddbd999a76f4092db14c2c38",
+      "executable": false
+    },
     ".agents/skills/tdd/SKILL.md": {
-      "sha256": "93ea419b76e9caaf26153b828e984f7c3fb136f4caa67b14af95f32ea965a1cc",
+      "sha256": "afcc4328e87a9e77a2447c90e25b976af4086163b7affaa2fa4efa2d8baef2b9",
       "executable": false
     },
     ".agents/skills/tdd/agents/openai.yaml": {
@@ -1054,16 +1275,24 @@
       "sha256": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a",
       "executable": false
     },
+    ".agents/skills/to-spec/CREDITS.md": {
+      "sha256": "ae7522625cbe55c09ff06187833c882a8b13c448f590957cc0ff707deb3c9fac",
+      "executable": false
+    },
     ".agents/skills/to-spec/SKILL.md": {
-      "sha256": "43ad9cf318e5e7d3d1fa360253a37021796dc87a0c2e595ad262661a10f85088",
+      "sha256": "b1dcebf4e4928e042c2aef15e562c41973769ca90d0be16948586cced1a840dd",
       "executable": false
     },
     ".agents/skills/to-spec/agents/openai.yaml": {
       "sha256": "1c5b4d1e3d8e52287ef19cc2742fdbbfae1914ac75d33af3e4c8174f08cc55bb",
       "executable": false
     },
+    ".agents/skills/to-tickets/CREDITS.md": {
+      "sha256": "ddb3ec22b0de7c4e071a890fa72e7abc17145c49c48c4bf2724a212c9663e79b",
+      "executable": false
+    },
     ".agents/skills/to-tickets/SKILL.md": {
-      "sha256": "5c9fba69845c2519b9b35b9af42ae5142c21f8ca15ac2123dc2722002c8058ae",
+      "sha256": "e07e532190ec55a7749238e0f2b66b48f8e9dd7f315b4f11e3961ad45e052d66",
       "executable": false
     },
     ".agents/skills/to-tickets/agents/openai.yaml": {
@@ -1071,11 +1300,11 @@
       "executable": false
     },
     ".agents/skills/triage/AGENT-BRIEF.md": {
-      "sha256": "5bb3ebf5573ad4c6a1b1e96003d6f042e4c7396ec7f57a0a54bfea802bcd6686",
+      "sha256": "3e3f4fcc784acc1d8de456eda8d39f603ebf7997d6d27284d13c14a0d6398aa1",
       "executable": false
     },
     ".agents/skills/triage/CREDITS.md": {
-      "sha256": "b5c9d6514746fdfa842447874c09b9b49bf575b8e258f6d7b36280df76be1320",
+      "sha256": "2a81c614cc02b8e600ffce05364c486caaaab31684c3cb02ae049782d0fa7709",
       "executable": false
     },
     ".agents/skills/triage/OUT-OF-SCOPE.md": {
@@ -1083,7 +1312,7 @@
       "executable": false
     },
     ".agents/skills/triage/SKILL.md": {
-      "sha256": "d65139901abd42d69e981905b46749c0c835abf6e2717ba13ed7c622cf45a551",
+      "sha256": "8c4e192ee30957283a3b5453c290023c4c0dcc98ef9aee5dcf0a072260431ba2",
       "executable": false
     },
     ".agents/skills/triage/agents/openai.yaml": {
@@ -1091,15 +1320,23 @@
       "executable": false
     },
     ".agents/skills/triage/ready.mjs": {
-      "sha256": "24d95b6b4ec650a9abd220ede70dc0086b0c3df261193b0fc79399f8812a5386",
+      "sha256": "884a09c9dd9381c88e1a53c505171aa0eaa42f87b77e7f5730711616b289cdb9",
+      "executable": false
+    },
+    ".agents/skills/wayfinder/CREDITS.md": {
+      "sha256": "c6f847b8083f4a16ab087fda8d18ff19e29e56e9078274599f2ba4cfbb6ec90b",
       "executable": false
     },
     ".agents/skills/wayfinder/SKILL.md": {
-      "sha256": "fee6e1d0c50f0e736b4ef8a599060c959afae904c9a97d82c97f049fcc3aa0f1",
+      "sha256": "801037381f3aed3fe09e69eb3f27d1d0d85660ee57e72c5022b14c413fed00b0",
       "executable": false
     },
     ".agents/skills/wayfinder/agents/openai.yaml": {
       "sha256": "88bc81a11a6d52ac67aeaa76b8b619e387020d47c5133a4dd4927fd15c4ad073",
+      "executable": false
+    },
+    ".agents/skills/writing-for-agents/CREDITS.md": {
+      "sha256": "1653c6d6471ab2a5f674c8f4813c81d7bd2325c069db8d21b3442c01b67f43b3",
       "executable": false
     },
     ".agents/skills/writing-for-agents/SKILL-MECHANICS.md": {
@@ -1107,7 +1344,7 @@
       "executable": false
     },
     ".agents/skills/writing-for-agents/SKILL.md": {
-      "sha256": "551adca942227b44192edba88acd4e8db911f0121ce58ad16944ccf6a896a74a",
+      "sha256": "1fc09f935cc73c873ee164d400517a182c5c51b187716758993aaf3b66fc09af",
       "executable": false
     },
     ".agents/skills/writing-for-agents/agents/openai.yaml": {
@@ -1115,7 +1352,7 @@
       "executable": false
     },
     ".github/ISSUE_TEMPLATE/specification.yml": {
-      "sha256": "77b6359750ff03695a1dc19ee121e664787f4a6954cd9847277ab40fb6b22dfd",
+      "sha256": "0ca007476479bfe674d477826c706b71cc1baac4608c19b0e16e3d2b10d7a206",
       "executable": false
     },
     ".github/workflows/standards-update.yml": {
@@ -1123,11 +1360,11 @@
       "executable": false
     },
     "docs/agents/triage-labels.md": {
-      "sha256": "4f53c9b40ce2651e3611aa090eaedbd6dbc9b71ef8c5f7e65eac0d8263190d0d",
+      "sha256": "6dcd641788dcf3fba088e082d2ced46fb0731befb071f3c3a572a7e9f8257998",
       "executable": false
     },
-    "scripts/validate.mjs": {
-      "sha256": "daeedb8713e64e0334ede3825297ec6338a85ee8051c0dc0385f5533373ecc32",
+    "vendor/repo-canon/validate.mjs": {
+      "sha256": "4e200a90252579cad398b74cbe56e3588f98dcdc36e71de59c38941cfeba986e",
       "executable": false
     },
     ".agents/skills/repository-standards/SKILL.md": {
@@ -1141,56 +1378,69 @@
   },
   "skills": {
     ".agents/skills/babysit": [
+      "CREDITS.md",
       "SKILL.md",
+      "body-links.mjs",
       "merge.mjs",
+      "owner-gates.mjs",
       "platform.mjs",
       "pull-request-reviewer.mjs",
       "request.mjs",
+      "required-checks.mjs",
+      "review-outcome.mjs",
       "review-policy.mjs",
       "reviewer.mjs",
       "trusted-review-config.mjs",
       "wait.mjs"
     ],
     ".agents/skills/code-review": [
+      "CREDITS.md",
       "SKILL.md",
-      "agents/openai.yaml"
+      "agents/openai.yaml",
+      "ownership-facts.mjs"
     ],
     ".agents/skills/codebase-design": [
+      "CREDITS.md",
       "DEEPENING.md",
       "DESIGN-IT-TWICE.md",
       "SKILL.md",
       "agents/openai.yaml"
     ],
     ".agents/skills/diagnosing-bugs": [
+      "CREDITS.md",
       "SKILL.md",
       "agents/openai.yaml",
       "scripts/hitl-loop.template.sh"
     ],
     ".agents/skills/domain-modeling": [
       "ADR-FORMAT.md",
+      "CREDITS.md",
       "GLOSSARY-FORMAT.md",
       "SKILL.md",
       "agents/openai.yaml"
     ],
+    ".agents/skills/factory": [
+      "CREDITS.md",
+      "SKILL.md"
+    ],
     ".agents/skills/grill-with-docs": [
+      "CREDITS.md",
       "SKILL.md",
       "agents/openai.yaml"
     ],
     ".agents/skills/grilling": [
+      "CREDITS.md",
       "SKILL.md",
       "agents/openai.yaml"
     ],
     ".agents/skills/implement": [
+      "CREDITS.md",
       "SKILL.md",
       "agents/openai.yaml"
     ],
     ".agents/skills/improve-codebase-architecture": [
-      "HTML-REPORT.md",
-      "SKILL.md",
-      "agents/openai.yaml"
-    ],
-    ".agents/skills/orchestrate": [
       "CREDITS.md",
+      "HTML-REPORT.md",
       "SKILL.md",
       "agents/openai.yaml"
     ],
@@ -1200,26 +1450,36 @@
       "agents/openai.yaml"
     ],
     ".agents/skills/prototype": [
+      "CREDITS.md",
       "LOGIC.md",
       "SKILL.md",
       "UI.md",
       "agents/openai.yaml"
     ],
     ".agents/skills/research": [
+      "CREDITS.md",
       "SKILL.md",
       "agents/openai.yaml"
     ],
+    ".agents/skills/review": [
+      "CREDITS.md",
+      "SKILL.md",
+      "round.mjs"
+    ],
     ".agents/skills/tdd": [
+      "CREDITS.md",
       "SKILL.md",
       "agents/openai.yaml",
       "mocking.md",
       "tests.md"
     ],
     ".agents/skills/to-spec": [
+      "CREDITS.md",
       "SKILL.md",
       "agents/openai.yaml"
     ],
     ".agents/skills/to-tickets": [
+      "CREDITS.md",
       "SKILL.md",
       "agents/openai.yaml"
     ],
@@ -1232,10 +1492,12 @@
       "ready.mjs"
     ],
     ".agents/skills/wayfinder": [
+      "CREDITS.md",
       "SKILL.md",
       "agents/openai.yaml"
     ],
     ".agents/skills/writing-for-agents": [
+      "CREDITS.md",
       "SKILL-MECHANICS.md",
       "SKILL.md",
       "agents/openai.yaml"
@@ -1252,14 +1514,15 @@
     ".claude/skills/codebase-design": "../../.agents/skills/codebase-design",
     ".claude/skills/diagnosing-bugs": "../../.agents/skills/diagnosing-bugs",
     ".claude/skills/domain-modeling": "../../.agents/skills/domain-modeling",
+    ".claude/skills/factory": "../../.agents/skills/factory",
     ".claude/skills/grill-with-docs": "../../.agents/skills/grill-with-docs",
     ".claude/skills/grilling": "../../.agents/skills/grilling",
     ".claude/skills/implement": "../../.agents/skills/implement",
     ".claude/skills/improve-codebase-architecture": "../../.agents/skills/improve-codebase-architecture",
-    ".claude/skills/orchestrate": "../../.agents/skills/orchestrate",
     ".claude/skills/pr": "../../.agents/skills/pr",
     ".claude/skills/prototype": "../../.agents/skills/prototype",
     ".claude/skills/research": "../../.agents/skills/research",
+    ".claude/skills/review": "../../.agents/skills/review",
     ".claude/skills/tdd": "../../.agents/skills/tdd",
     ".claude/skills/to-spec": "../../.agents/skills/to-spec",
     ".claude/skills/to-tickets": "../../.agents/skills/to-tickets",
@@ -1286,8 +1549,29 @@
         "message": "Documentation navigation is valid; content placement and usefulness still require maintainer or agent review."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/2.stdout",
-      "stderr": ".repo-standards/local/operations/2.stderr"
+      "stdout": ".repo-standards/local/operations/0.stdout",
+      "stderr": ".repo-standards/local/operations/0.stderr"
+    },
+    {
+      "operation": {
+        "declaration": "github-repository-configuration",
+        "phase": "checks",
+        "id": "required-checks"
+      },
+      "process": {
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "timedOut": false
+      },
+      "result": {
+        "format": "repo-standards/result/v2",
+        "status": "passed",
+        "message": ".github/required-checks.json is valid."
+      },
+      "error": null,
+      "stdout": ".repo-standards/local/operations/1.stdout",
+      "stderr": ".repo-standards/local/operations/1.stderr"
     },
     {
       "operation": {
@@ -1307,8 +1591,8 @@
         "message": ".github/pull-request-reviewer.json is valid."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/3.stdout",
-      "stderr": ".repo-standards/local/operations/3.stderr"
+      "stdout": ".repo-standards/local/operations/2.stdout",
+      "stderr": ".repo-standards/local/operations/2.stderr"
     },
     {
       "operation": {
@@ -1328,8 +1612,8 @@
         "message": ".github/factory-review-policy.json is valid."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/4.stdout",
-      "stderr": ".repo-standards/local/operations/4.stderr"
+      "stdout": ".repo-standards/local/operations/3.stdout",
+      "stderr": ".repo-standards/local/operations/3.stderr"
     },
     {
       "operation": {
@@ -1349,8 +1633,8 @@
         "message": "Project README structure and shared setup and contribution links are valid for 0 concrete targets; Project membership, purpose, commands, configuration, documentation, and duplication of shared instructions still require maintainer or agent review."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/5.stdout",
-      "stderr": ".repo-standards/local/operations/5.stderr"
+      "stdout": ".repo-standards/local/operations/4.stdout",
+      "stderr": ".repo-standards/local/operations/4.stderr"
     },
     {
       "operation": {
@@ -1367,11 +1651,11 @@
       "result": {
         "format": "repo-standards/result/v2",
         "status": "passed",
-        "message": "Repository README structure is valid; factual content still requires maintainer or agent review."
+        "message": "Repository README structure is valid; factual content still requires maintainer or agent review. The GitHub About description was not compared: Repository README check could not verify lutzseverino/repo-canon: GitHub returned HTTP 403. Retry later. For full details, run gh api --hostname github.com repos/lutzseverino/repo-canon."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/6.stdout",
-      "stderr": ".repo-standards/local/operations/6.stderr"
+      "stdout": ".repo-standards/local/operations/5.stdout",
+      "stderr": ".repo-standards/local/operations/5.stderr"
     },
     {
       "operation": {
@@ -1391,48 +1675,81 @@
         "message": "The pnpm, lockfile, Node.js, oxlint, Prettier and validate script facts of the typescript-node stack are valid for 1 Project; TypeScript 7, node --test, required pull request checks running validate, and each Project's Setup and validation section still require the contextual assessment."
       },
       "error": null,
-      "stdout": ".repo-standards/local/operations/7.stdout",
-      "stderr": ".repo-standards/local/operations/7.stderr"
+      "stdout": ".repo-standards/local/operations/6.stdout",
+      "stderr": ".repo-standards/local/operations/6.stderr"
     }
   ],
   "assessments": [
     {
       "format": "repo-standards/assessment/v3",
       "scope": {
-        "inspection": "sha256:944e5ac8996aad34db762f62b0ad2914cc72accede6e0d54ca0d2e22a5c044fc",
-        "afterFixes": "sha256:7b8e9d824d8cea052273524dd2797021abf8f38552830790b55d3671bb6b2b8c"
+        "inspection": "sha256:9d9ff7f988d286d3482beecff7945c155c75bdfa185869e6b164fb070ca48062",
+        "afterFixes": "sha256:f74caf8e67461285cdb9853ba5e6da17af1f3d9f098bc823e5fa3c0a47f1e196"
       },
-      "run": "2beda45a-edab-4e06-8f68-1185a7f8a4d0",
-      "selection": "sha256:e8bd504a312b8020db7dd68167ba1239a74a3bc8e15e66b0f3f817c004687d41",
-      "snapshot": "sha256:7b8e9d824d8cea052273524dd2797021abf8f38552830790b55d3671bb6b2b8c",
+      "run": "b6551683-ea44-403f-954c-456abf24ec34",
+      "selection": "sha256:20378caa8b8e08f33480069dab3c381fe27a17a42fdc0f03c1abbd421c1d0000",
+      "snapshot": "sha256:f74caf8e67461285cdb9853ba5e6da17af1f3d9f098bc823e5fa3c0a47f1e196",
       "declarations": [
         {
-          "id": "documentation",
+          "id": "comments",
           "status": "satisfied",
-          "explanation": "The confirmed documentation scope covers every maintained document under docs (except the exact docs/agents files and project.md), the root GLOSSARY.md and authoring-notes.md, including ADR 0025 and the three development pages added since v0.17.0. The documentation already follows the rules: categories under docs/ with directory indexes, the development guide's Setup and validation section first, current pnpm 11 commands, and no point-in-time records. No contextual edit was needed; the navigation check runs after this assessment.",
+          "explanation": "The newly installed comment rules equal the authored rules/comments.md that this repository's tracker work already follows, and the contribution guide's links to them now resolve. Tracker practice agrees: agent comments carry the AI disclaimer, factory runs post their result through the factory frame, and owner questions and stop notes follow the rules' sections, as on #1059. No reconciliation was needed: CONTRIBUTING.md is the exact v0.29.0 guide, which already points every comment rule to the installed rules. No open pull request relies on an earlier-shape internal review comment that this update changes.",
           "changedPaths": [],
           "evidence": [
-            "docs/README.md lists usage, development, agents and adr; each directory has a README.md index",
-            "docs/adr/README.md lists ADRs 0001-0025, including 0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md",
-            "docs/development/README.md lists standards-update-workflow.md, typescript-node-stack-check.md and typescript-node-stack-scope-drafter.md",
-            "docs/development/README.md Setup and validation names Node.js 24 or 26, pnpm 11, TypeScript 7, oxlint 1, Prettier 3, node --test and pnpm validate"
+            ".repo-standards/rules/comments.md is byte-identical to rules/comments.md (diff exit 0)",
+            "CONTRIBUTING.md links .repo-standards/rules/comments.md, including #owner-questions, which now exists",
+            "#1059 comments: owner and agent comments open with '> _This was generated by AI._'; the factory run result, stop note and owner answer follow Owner questions, Stop notes and Factory comments",
+            "gh pr list --state open: #1170, #1108 and #1089 are ready; the rest are drafts; none is merged by this run"
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "After fixes and contextual work the confirmed paths still exist and every Markdown document under docs is either in scope or owned by another declaration; no move or link repair needs another path.",
+              "explanation": "Intentionally empty scope: the comment rules govern what agents post on issues and pull requests across the repository, not project content.",
               "evidence": [
-                "git ls-files docs: every file is a confirmed candidate or an exact docs/agents file",
-                "Fixes changed only GitHub label descriptions, no project file"
+                "git status after fixes: the run changed no tracked file outside .repo-standards/ and added only the .claude/skills/factory skill link",
+                "No contextual edit was made"
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "After fixes and contextual work the confirmed paths still exist and every Markdown document under docs is either in scope or owned by another declaration; no move or link repair needs another path.",
+              "explanation": "Intentionally empty scope: the comment rules govern what agents post on issues and pull requests across the repository, not project content.",
+              "evidence": [
+                "git status after fixes: the run changed no tracked file outside .repo-standards/ and added only the .claude/skills/factory skill link",
+                "No contextual edit was made"
+              ],
+              "additionalPaths": []
+            }
+          }
+        },
+        {
+          "id": "documentation",
+          "status": "satisfied",
+          "explanation": "The confirmed scope carries the previous decisions: every maintained document under docs except the paths other declarations own, the root GLOSSARY.md and authoring-notes.md. Source-authoring Markdown under .agents/skills, discovery, guidance, rules, scripts/support and vendor stays excluded and in place. The documents already follow the rules because this repository authored them at the adopted release commit: docs/ has its usage, development, agents and adr categories with indexes, the development guide opens with Setup and validation, and the ADR index lists every ADR file. Nothing was moved, deleted or edited, and no CONTEXT.md or CONTEXT-MAP.md exists to rename. The documentation-navigation check runs after this assessment.",
+          "changedPaths": [],
+          "evidence": [
+            "docs/README.md, docs/adr/README.md, docs/development/README.md and docs/usage/README.md index their directories",
+            "docs/development/README.md: first section '## Setup and validation'",
+            "docs/adr/README.md links each docs/adr file, 0001 through 0052, with no 0049 file in the tree",
+            "HEAD is v0.29.0's commit 37c1f2c, so every scoped document is the source's own current text",
+            "No CONTEXT.md or CONTEXT-MAP.md exists"
+          ],
+          "scopeValidity": {
+            "afterFixes": {
+              "status": "valid",
+              "explanation": "The confirmed paths still exist, and every Markdown file under docs is either in scope or owned by an exact docs/agents declaration or project-agent-guidance. No move or link repair needs another path.",
               "evidence": [
                 "git ls-files docs: every file is a confirmed candidate or an exact docs/agents file",
-                "Fixes changed only GitHub label descriptions, no project file"
+                "Fixes and contextual work changed no file under docs/, GLOSSARY.md or authoring-notes.md"
+              ],
+              "additionalPaths": []
+            },
+            "current": {
+              "status": "valid",
+              "explanation": "The confirmed paths still exist, and every Markdown file under docs is either in scope or owned by an exact docs/agents declaration or project-agent-guidance. No move or link repair needs another path.",
+              "evidence": [
+                "git ls-files docs: every file is a confirmed candidate or an exact docs/agents file",
+                "Fixes and contextual work changed no file under docs/, GLOSSARY.md or authoring-notes.md"
               ],
               "additionalPaths": []
             }
@@ -1441,42 +1758,44 @@
         {
           "id": "factory-sandbox-image",
           "status": "satisfied",
-          "explanation": "The image provides the toolchain the development guide's Setup and validation section names: Node.js 24 from a Debian base, pnpm 11 (which switches to the exact packageManager version, pnpm@11.28.8) and public Repository Standards CLI 10.0.0 for source validation. TypeScript 7, oxlint 1 and Prettier 3 are pinned development dependencies the run installs with pnpm install --frozen-lockfile, so the image leaves them to the worktree. It installs with RUN from package sources only, adds no user, agent tooling, ENTRYPOINT or CMD, and keeps the pnpm store outside the checkout.",
+          "explanation": "The canonical .scriptorium/Dockerfile exists and keeps its bytes, and no legacy .factory/ directory or .sandcastle/Dockerfile exists, so no migration was needed. The image provides the toolchain that the development guide's Setup and validation section names: Node.js 24 from a Debian base, pnpm 11 (which switches to the packageManager pin), and public Repository Standards CLI 10.0.0 for source validation. TypeScript 7, oxlint 1 and Prettier 3 are pinned development dependencies that the run installs. It uses only RUN from package sources, adds no user, agent tooling, ENTRYPOINT or CMD, and keeps the pnpm store outside the checkout. There is no legacy config, so no legacy hold label applies.",
           "changedPaths": [],
           "evidence": [
-            ".factory/Dockerfile: FROM node:24-bookworm; RUN npm install --global --ignore-scripts pnpm@11 @lutzseverino/repo-standards@10.0.0; ENV pnpm_config_store_dir=/home/agent/.local/share/pnpm/store",
-            "docs/development/README.md Setup and validation: Node.js 24 or 26 with pnpm 11 at the packageManager version; public Repository Standards CLI 10.0.0 for source validation; factory image store at /home/agent/.local/share/pnpm/store",
-            "package.json packageManager pnpm@11.28.8; devDependencies typescript 7.0.2, oxlint 1.86.0, prettier 3.9.9",
-            ".agents/skills/babysit/SKILL.md supports Node.js 24 or 26"
+            ".scriptorium/Dockerfile: FROM node:24-bookworm; RUN npm install --global --ignore-scripts pnpm@11 @lutzseverino/repo-standards@10.0.0; ENV pnpm_config_store_dir=/home/agent/.local/share/pnpm/store",
+            "ls .factory .sandcastle: neither exists",
+            "docs/development/README.md Setup and validation: Node.js 24 or 26 with pnpm 11 at the packageManager version; public Repository Standards CLI 10.0.0; the factory image's store at /home/agent/.local/share/pnpm/store",
+            "package.json devDependencies: typescript 7.0.2, oxlint 1.86.0, prettier 3.9.9",
+            ".agents/skills/babysit/SKILL.md: the bundled scripts require Node.js 24 or 26"
           ]
         },
         {
           "id": "factory-workflow",
           "status": "satisfied",
-          "explanation": "The installed v0.19.0 factory workflow rules agree with the repository's tracker workflow. .factory/config.json names factory:skip alongside the other state labels; ready-for-human carries the narrowed description, confirmed in this run's label fix; parents, model labels and needs-input handling follow the rules. Reconciliation: the one open ready-for-human issue, #559, was accepted on 2026-10-21, before #603 narrowed the label. It is agent work that edits .github/workflows/ci.yml, so under the installed State labels rule it would now carry ready-for-agent, its model label (it already has model:claude-opus-5-5) and factory:skip, as #603's Migration describes for existing agent-work issues. It is already delivered as skip-style work: an owner-account worker implements it, and the orchestrating agent merges. This adoption's pull request finishes it, so it is not relabelled. #603 itself relabelled no existing issue. The factory:skip label does not exist yet; under the rules whoever first applies it creates it.",
+          "explanation": "The installed factory workflow rules equal the authored rules/factory-workflow.md, which now adds the Triage run section to the installed copy. The shipped .scriptorium/config.json is configuration version 3 with runKinds triage, implement and review, and this factory run itself is served by Scriptorium v4. The previous adoption already selected factory, so the app-author policy question is not asked again, and the existing .github/factory-review-policy.json is left untouched. Model selection follows the v0.29.0 rule (fit first, then narrower, then cheaper): the repository has no .github/factory-model-policy.json to preserve, and tracker issues carry chosen model: labels, as #1059 carries model:claude-opus-5-5. The contribution guide is the exact current guide, so no factory policy needs to move into project guidance.",
           "changedPaths": [],
           "evidence": [
-            ".factory/config.json labels: ready-for-agent, factory:skip, factory:running, factory:failed, factory:needs-input, factory:paused; modelLabelPrefix model:",
-            "gh label list: ready-for-human description 'Reviewed; needs the owner's accounts, credentials or a reserved taste call'",
-            "gh issue list --label ready-for-human --state open: only #559",
-            ".repo-standards/rules/factory-workflow.md State labels and Owner handoff and recovery read"
+            ".repo-standards/rules/factory-workflow.md is byte-identical to rules/factory-workflow.md and contains '## Triage run'",
+            ".scriptorium/config.json: version 3; runKinds triage, implement, review; $schema scriptorium-v4.1.0",
+            ".repo-standards/selection.yaml before the run: profile factory",
+            "git ls-files: no factory-model-policy.json",
+            ".github/factory-review-policy.json unchanged by the run"
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Intentionally empty content scope: the rules govern repository and tracker work, not files; .factory/config.json stays a separate exact declaration.",
+              "explanation": "Intentionally empty scope: the factory workflow rules govern work across the repository and its tracker. .scriptorium/config.json remains a separate exact declaration.",
               "evidence": [
-                ".factory/config.json is the exact factory-configuration file",
-                "discovery/factory-workflow.md proposes no content paths"
+                "git status after fixes: the run changed no tracked file outside .repo-standards/ and added only the .claude/skills/factory skill link",
+                "No contextual edit was made"
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Intentionally empty content scope: the rules govern repository and tracker work, not files; .factory/config.json stays a separate exact declaration.",
+              "explanation": "Intentionally empty scope: the factory workflow rules govern work across the repository and its tracker. .scriptorium/config.json remains a separate exact declaration.",
               "evidence": [
-                ".factory/config.json is the exact factory-configuration file",
-                "discovery/factory-workflow.md proposes no content paths"
+                "git status after fixes: the run changed no tracked file outside .repo-standards/ and added only the .claude/skills/factory skill link",
+                "No contextual edit was made"
               ],
               "additionalPaths": []
             }
@@ -1485,42 +1804,44 @@
         {
           "id": "git-attributes",
           "status": "satisfied",
-          "explanation": "The self-adoption exception applies. The counted installed files in this selection are the issue-contract validator, the common validator command, the rendered-Markdown runtime, the babysit .mjs files, the triage skill's ready.mjs and the diagnosing-bugs shell template. In Repo Canon each is its own source (for example, skill-triage's source is .agents/skills/triage itself), so the rules mark none of them vendored. No .gitattributes exists or is needed, none was created, and no entry targets .repo-standards/.",
+          "explanation": "The self-adoption exception applies. This selection's counted installed files (the issue-contract source, store and cutoff commands, the rendered-Markdown runtime, the factory and canonical label metadata, the babysit .mjs files including owner-gates.mjs, the code-review skill's ownership-facts.mjs, the review skill's round.mjs, the triage skill's ready.mjs and the diagnosing-bugs shell template) are each Repo Canon's own source. The newly selected factory skill holds only Markdown. The rules therefore mark none of them vendored. No .gitattributes exists or is needed, and none was created.",
           "changedPaths": [],
           "evidence": [
-            "git check-attr linguist-vendored reports unspecified for scripts/validate-issue-contract.mjs, scripts/validate.mjs, operations/lib/rendered-markdown.mjs, all eight .agents/skills/babysit/*.mjs, .agents/skills/triage/ready.mjs and .agents/skills/diagnosing-bugs/scripts/hitl-loop.template.sh",
-            "standards.yaml skill-triage source: .agents/skills/triage",
-            "test/repository-conformance.test.mjs 'self-adoption leaves Repo Canon's own installed source unvendored' asserts unspecified for these paths",
+            "git check-attr linguist-vendored reports unspecified for scripts/issue-contract-sources.mjs, scripts/issue-contract-store.mjs, scripts/issue-contract-cutoff.mjs, operations/lib/rendered-markdown.mjs, operations/lib/factory-labels.mjs, operations/lib/canonical-labels.mjs, .agents/skills/babysit/merge.mjs, .agents/skills/babysit/owner-gates.mjs, .agents/skills/code-review/ownership-facts.mjs, .agents/skills/review/round.mjs, .agents/skills/triage/ready.mjs and .agents/skills/diagnosing-bugs/scripts/hitl-loop.template.sh",
+            ".agents/skills/factory contains only SKILL.md and CREDITS.md",
+            "standards.yaml declares each skill's source at its own installed path",
             "No root .gitattributes in HEAD or the working tree"
           ]
         },
         {
           "id": "github-repository-configuration",
           "status": "satisfied",
-          "explanation": "Both remote setup probes were ready. The needs-info and ready-for-human descriptions were overwritten with the standard's values earlier on 2026-10-27, after the maintainer's orchestrating agent confirmed the overwrite. That happened in this update's first run, whose local result was discarded and redone to correct two recorded answers. In this run both fixes found GitHub matching the canonical configuration. The public personal repository has no repository-level REPO_CANON_RUNS_ON, so runner selection is unset (the hosted default); a personal account has no organization-level variable to inherit. The optional .github/pull-request-reviewer.json and .github/factory-review-policy.json are repository-owned and left untouched.",
+          "explanation": "Both remote setup fixes are deferred: this unattended run writes nothing to GitHub settings or labels. The inspection's readiness probes reported HTTP 403 for the run's App credential, and the adoption record lists both deferrals. .github/required-checks.json is repository-owned and names PR metadata, Test and Read set. The optional .github/pull-request-reviewer.json, which sets an explicit reviewRequests bound of 4, and .github/factory-review-policy.json stay untouched. The repository is public lutzseverino/repo-canon. The repository-level REPO_CANON_RUNS_ON could not be read: GET /repos/lutzseverino/repo-canon/actions/variables was refused with HTTP 403 (Resource not accessible by integration). Installed jobs run on a hosted ubuntu-latest runner, so the effective value selects the hosted default. Whether the variable is absent (unset) or holds a falsy JSON value (invalid), and whether an organization-level value exists, remain undisclosed. The run sets, changes and deletes no variable.",
           "changedPaths": [],
           "evidence": [
-            "gh repo view: lutzseverino/repo-canon, PUBLIC; gh variable list: []; GET orgs/lutzseverino/actions/variables: 404 (user account)",
-            "gh label list after the fix: needs-info 'Missing information; the orchestrating agent answers or routes it', ready-for-human 'Reviewed; needs the owner's accounts, credentials or a reserved taste call'",
-            "Ruleset 'Repo Canon required PR checks' (active) requires PR metadata and Test",
-            ".github/pull-request-reviewer.json and .github/factory-review-policy.json unchanged by the run"
+            "gh repo view: lutzseverino/repo-canon, PUBLIC",
+            "gh variable list: HTTP 403 Resource not accessible by integration",
+            "Latest Issue contracts run on main: job 'Validate issue contract' labels [ubuntu-latest], hosted runner",
+            "Run record deferred: canonical-labels and pull-request-integration",
+            ".github/required-checks.json: version 1, checks PR metadata, Test, Read set",
+            ".github/pull-request-reviewer.json bounds.reviewRequests 4; both optional files unchanged by the run"
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "Intentionally empty content scope: remote settings change only through the fixes, and the checks read repository-owned reviewer and policy data without writing it.",
+              "explanation": "Intentionally empty content scope: remote settings change only through the deferred fixes, and the checks read repository-owned configuration without writing it.",
               "evidence": [
-                "discovery/github-repository-configuration.md proposes no content paths",
-                "git status shows no change under .github/"
+                "git status after fixes: the run changed no tracked file outside .repo-standards/ and added only the .claude/skills/factory skill link",
+                "No contextual edit was made"
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "Intentionally empty content scope: remote settings change only through the fixes, and the checks read repository-owned reviewer and policy data without writing it.",
+              "explanation": "Intentionally empty content scope: remote settings change only through the deferred fixes, and the checks read repository-owned configuration without writing it.",
               "evidence": [
-                "discovery/github-repository-configuration.md proposes no content paths",
-                "git status shows no change under .github/"
+                "git status after fixes: the run changed no tracked file outside .repo-standards/ and added only the .claude/skills/factory skill link",
+                "No contextual edit was made"
               ],
               "additionalPaths": []
             }
@@ -1529,11 +1850,11 @@
         {
           "id": "project-agent-guidance",
           "status": "satisfied",
-          "explanation": "The installed AGENTS.md is unchanged from HEAD and links docs/agents/project.md. project.md keeps only Repo Canon's own constraints (authoring notes, adoption compatibility, release procedure and third-party notices), which remain accurate and don't contradict the standard. There was nothing to recover.",
+          "explanation": "The installed AGENTS.md is unchanged from HEAD, so no replaced instructions need recovering. docs/agents/project.md keeps only Repo Canon's own constraints: authoring notes, adoption compatibility, the release procedure, the unedited vendored upstream snapshot and third-party notices. They remain accurate and do not restate shared requirements.",
           "changedPaths": [],
           "evidence": [
             "git diff HEAD -- AGENTS.md: no change",
-            "docs/agents/project.md links authoring-notes.md, docs/development/adoption-compatibility.md, docs/development/release.md and THIRD_PARTY_NOTICES.md"
+            "docs/agents/project.md links authoring-notes.md, docs/development/adoption-compatibility.md, docs/development/release.md, docs/development/upstream-compatibility.md and THIRD_PARTY_NOTICES.md"
           ]
         },
         {
@@ -1578,42 +1899,103 @@
         {
           "id": "repository-readme",
           "status": "satisfied",
-          "explanation": "The README follows the updated rules: a centered header with title, a one-sentence description free of glossary terms, and badges for JavaScript and Node.js 24 or 26. Then come Installation, Features, Usage, Documentation, Contributing and License, in order, with link-only pointer sections. The JavaScript badge stays accurate: authored code is JavaScript (.mjs), and TypeScript 7 only type-checks it with checkJs as a development dependency, so the 'TypeScript package needs a TypeScript badge' case doesn't apply. User installation names Node.js 24 or 26, npm (for npx) and Git, distinct from contributor setup. No contextual edit was needed.",
+          "explanation": "The README already follows the rules. It opens with a centered header: the title, a one-sentence description and badges for JavaScript and Node.js 24 or 26. Then come Installation, Features, Usage, Documentation, Contributing and License, in order. The description matches the GitHub About description word for word. The JavaScript badge is accurate because authored code is .mjs that TypeScript 7 only type-checks with checkJs. The project has no icon. No contextual edit was needed; the structural check runs after this assessment.",
           "changedPaths": [],
           "evidence": [
-            "README.md header: <div align=\"center\"> with h1 Repo Canon, description p, badges JavaScript and Node.js 24 | 26",
-            "package.json engines.node >=24 <25 || >=26 <27; tsconfig.json allowJs/checkJs with no .ts sources",
-            "README.md sections: Installation, Features, Usage, Documentation, Contributing, License; pointers link docs/README.md, CONTRIBUTING.md and LICENSE"
+            "README.md header: div align=center, h1 Repo Canon, description paragraph, JavaScript and 'Node.js 24 | 26' badges",
+            "gh repo view description equals the README description sentence",
+            "README.md sections: Installation, Features, Usage, Documentation, Contributing, License",
+            "package.json engines.node >=24 <25 || >=26 <27; tsconfig.json allowJs and checkJs, with no .ts sources"
           ]
         },
         {
-          "id": "typescript-node-stack",
+          "id": "typescript-astro-stack",
           "status": "satisfied",
-          "explanation": "The root package, the repository's one Project, meets the stack's rules, so package.json needed no edit. The manifest facts hold: packageManager pnpm@11.28.8, pnpm-lock.yaml at the root, engines.node >=24 <25 || >=26 <27, oxlint 1.86.0 and Prettier 3.9.9 as devDependencies, and a validate script. For what the check cannot see: TypeScript 7.0.2 type-checks the JavaScript through tsconfig.json checkJs, via the typecheck script that validate runs. Tests run with node --test. The required Test check passes only when the Node.js 24 and 26 jobs, each running pnpm validate on pull requests, both pass. The development guide's Setup and validation section names pnpm 11, Node.js 24 or 26, TypeScript 7, oxlint 1, Prettier 3, node --test and pnpm validate. No other stack applies.",
+          "explanation": "No scope: the repository has no Site, App or shared web package. Its single Project, the root package, is a Node tooling package with no Astro dependency or configuration.",
           "changedPaths": [],
           "evidence": [
-            "package.json: packageManager pnpm@11.28.8; validate = format:check, lint, check, typecheck, test; test = node --test test/*.test.mjs; devDependencies typescript 7.0.2, oxlint 1.86.0, prettier 3.9.9",
-            "tsconfig.json: allowJs true, checkJs true, noEmit true; scripts/typecheck.mjs runs tsc",
-            ".github/workflows/ci.yml: job 'Node.js ${{ matrix.node }}' for [24, 26] runs pnpm install --frozen-lockfile and pnpm validate on pull_request; job 'Test' needs it and fails unless the result is success",
-            "Ruleset 'Repo Canon required PR checks' requires Test and PR metadata",
-            "docs/development/README.md Setup and validation names the tools"
+            "package.json devDependencies: @types/node, oxlint, prettier, typescript, yaml; no astro",
+            "No astro.config.* in the repository"
           ],
           "scopeValidity": {
             "afterFixes": {
               "status": "valid",
-              "explanation": "package.json remains the one Project's manifest after fixes and contextual work; no workspace members or other Node.js Projects exist.",
+              "explanation": "No project file belongs in the typescript-astro scope.",
               "evidence": [
-                "No pnpm-workspace.yaml and no workspaces field in package.json",
-                "git ls-files '*package.json': otherwise only .repo-standards/runtime/package.json, Repository Standards state"
+                "The drafter excluded package.json with no evidence of typescript-astro membership",
+                "No astro.config.* or Astro dependency exists"
               ],
               "additionalPaths": []
             },
             "current": {
               "status": "valid",
-              "explanation": "package.json remains the one Project's manifest after fixes and contextual work; no workspace members or other Node.js Projects exist.",
+              "explanation": "No project file belongs in the typescript-astro scope.",
               "evidence": [
-                "No pnpm-workspace.yaml and no workspaces field in package.json",
-                "git ls-files '*package.json': otherwise only .repo-standards/runtime/package.json, Repository Standards state"
+                "The drafter excluded package.json with no evidence of typescript-astro membership",
+                "No astro.config.* or Astro dependency exists"
+              ],
+              "additionalPaths": []
+            }
+          }
+        },
+        {
+          "id": "typescript-node-stack",
+          "status": "satisfied",
+          "explanation": "The root package is the repository's one Project and meets the stack's rules, so package.json needed no edit. The check's facts hold: packageManager pnpm@11.28.8, pnpm-lock.yaml at the root, engines.node limited to 24 or 26, oxlint 1.86.0 and Prettier 3.9.9, and a validate script. For what the check cannot see: TypeScript 7.0.2 type-checks the JavaScript through tsconfig.json's checkJs, run by the typecheck script that validate runs. Tests run with node --test. CI runs pnpm validate on Node.js 24 and 26, and the required Test check passes only when both pass. The development guide's Setup and validation section names these tools, and no other stack applies.",
+          "changedPaths": [],
+          "evidence": [
+            "package.json: packageManager pnpm@11.28.8; validate runs format:check, lint, check, typecheck and test; test = node --test test/*.test.mjs",
+            "tsconfig.json: allowJs, checkJs, noEmit; scripts/typecheck.mjs runs TypeScript 7",
+            ".github/workflows/ci.yml: job 'Node.js ${{ matrix.node }}' over [24, 26] runs pnpm validate; job Test needs it",
+            ".github/required-checks.json names Test",
+            "docs/development/README.md Setup and validation names Node.js 24 or 26, pnpm 11, TypeScript 7, oxlint 1, Prettier 3, node --test and pnpm validate"
+          ],
+          "scopeValidity": {
+            "afterFixes": {
+              "status": "valid",
+              "explanation": "The root package.json remains the only maintained Project manifest and stays in scope; no other Project exists.",
+              "evidence": [
+                "git ls-files '*package.json': package.json, plus .repo-standards/runtime/package.json, which is Repository Standards state",
+                "No pnpm-workspace.yaml"
+              ],
+              "additionalPaths": []
+            },
+            "current": {
+              "status": "valid",
+              "explanation": "The root package.json remains the only maintained Project manifest and stays in scope; no other Project exists.",
+              "evidence": [
+                "git ls-files '*package.json': package.json, plus .repo-standards/runtime/package.json, which is Repository Standards state",
+                "No pnpm-workspace.yaml"
+              ],
+              "additionalPaths": []
+            }
+          }
+        },
+        {
+          "id": "typescript-vite-stack",
+          "status": "satisfied",
+          "explanation": "No scope: the repository has no Site, App or shared web package. Its single Project, the root package, is a Node tooling package with no Vite dependency or configuration.",
+          "changedPaths": [],
+          "evidence": [
+            "package.json devDependencies: @types/node, oxlint, prettier, typescript, yaml; no vite",
+            "No vite.config.* in the repository"
+          ],
+          "scopeValidity": {
+            "afterFixes": {
+              "status": "valid",
+              "explanation": "No project file belongs in the typescript-vite scope.",
+              "evidence": [
+                "The drafter excluded package.json with no evidence of typescript-vite membership",
+                "No vite.config.* or Vite dependency exists"
+              ],
+              "additionalPaths": []
+            },
+            "current": {
+              "status": "valid",
+              "explanation": "No project file belongs in the typescript-vite scope.",
+              "evidence": [
+                "The drafter excluded package.json with no evidence of typescript-vite membership",
+                "No vite.config.* or Vite dependency exists"
               ],
               "additionalPaths": []
             }
@@ -1622,45 +2004,122 @@
       ]
     }
   ],
-  "deferred": [],
+  "deferred": [
+    {
+      "declaration": "github-repository-configuration",
+      "id": "canonical-labels",
+      "reason": "GitHub label setup could not verify lutzseverino/repo-canon: GitHub returned HTTP 403. Retry later. For full details, run gh api --hostname github.com repos/lutzseverino/repo-canon."
+    },
+    {
+      "declaration": "github-repository-configuration",
+      "id": "pull-request-integration",
+      "reason": "GitHub PR integration setup could not verify lutzseverino/repo-canon: GitHub returned HTTP 403. Retry later. For full details, run gh api --hostname github.com repos/lutzseverino/repo-canon."
+    }
+  ],
   "reused": [
     {
-      "id": "scope:project-readmes",
-      "kind": "scope",
+      "id": "assessment:project-readmes",
+      "kind": "assessment",
       "evidence": {
-        "discovery": "a2cf9e7206712b7b169ebcf901d40ded7fa655100b3afbcf825296e46291b47a",
-        "rules": "6cc1cbca7a629ab74c4e93b83f400cade77159aeb1bd2502463eafedb63a24fc",
-        "draft": "none",
-        "paths": []
+        "judgedAgainst": {
+          "kind": "rules",
+          "sha256": "6cc1cbca7a629ab74c4e93b83f400cade77159aeb1bd2502463eafedb63a24fc"
+        },
+        "scope": {
+          "basis": "declaration",
+          "snapshot": "sha256:f61bb6b747466f440a7bfe1ad8ac8d9c6cc81dd9a69aeeaef10fd61e5e7cfe89"
+        }
+      }
+    },
+    {
+      "id": "assessment:repository-license",
+      "kind": "assessment",
+      "evidence": {
+        "judgedAgainst": {
+          "kind": "rules",
+          "sha256": "0cae423be028b626f046212c2c7d6432a26ea454fa9917f8b37acdcf8601af2a"
+        },
+        "scope": {
+          "basis": "declaration",
+          "snapshot": "sha256:fb816d84f8490f401fed9da0509dfee09760d5dde05b314b1c9ea7cd706529c4"
+        }
       }
     }
   ],
   "assessedScopes": {
-    "documentation": "sha256:4b226f4aca242595854a3614ca34227b1ee1fa94a6eaebed346e37b3e51b4de8",
-    "factory-sandbox-image": "sha256:248defdeaadbf8c3bba162557dcf1b938dfd53c49884aa1af8ca9a1dc6f029c6",
+    "comments": "sha256:f61bb6b747466f440a7bfe1ad8ac8d9c6cc81dd9a69aeeaef10fd61e5e7cfe89",
+    "documentation": "sha256:030babf5df039f48192cae7da3dabbcee6477f0e3898f09a95135b497c744015",
+    "factory-sandbox-image": "sha256:8bb8c278add7eb977507edd115d523cc7751603220778b98df801ebcd766f392",
     "factory-workflow": "sha256:f61bb6b747466f440a7bfe1ad8ac8d9c6cc81dd9a69aeeaef10fd61e5e7cfe89",
     "git-attributes": "sha256:57eba5a501e5772008422ce2a8169d425a25f274529701ea80d93dcae7a4455d",
     "github-repository-configuration": "sha256:f61bb6b747466f440a7bfe1ad8ac8d9c6cc81dd9a69aeeaef10fd61e5e7cfe89",
-    "project-agent-guidance": "sha256:fd6b151b92e3bc5f12e432eb74789e3621db9c95bfd305213bbb0012a939fc52",
+    "project-agent-guidance": "sha256:2307675fa4e0543a70c616b4dd3a09642679ef81c1f7f5bb8341cda4caba612c",
     "project-readmes": "sha256:f61bb6b747466f440a7bfe1ad8ac8d9c6cc81dd9a69aeeaef10fd61e5e7cfe89",
     "repository-license": "sha256:fb816d84f8490f401fed9da0509dfee09760d5dde05b314b1c9ea7cd706529c4",
-    "repository-readme": "sha256:1739b917ed68267d4c2d8045493cb8bc4d6dd8ee8ec55ea8064555acdeebe7a9",
-    "typescript-node-stack": "sha256:35df74c516299f770953e4a9c89e25eabae58bca4f057d6d91ba7e10617e0a70"
+    "repository-readme": "sha256:1bde04fb06dce1f95c74ff0b987b82483e8a96fea26584a467fb4de41a884786",
+    "typescript-astro-stack": "sha256:f61bb6b747466f440a7bfe1ad8ac8d9c6cc81dd9a69aeeaef10fd61e5e7cfe89",
+    "typescript-node-stack": "sha256:e3dcc6310fa69c39a1ce7c57b2193cc409eb2bc48ecfc0410606651f45062441",
+    "typescript-vite-stack": "sha256:f61bb6b747466f440a7bfe1ad8ac8d9c6cc81dd9a69aeeaef10fd61e5e7cfe89"
   },
   "impact": {
-    "derived": "Contextual update: the run asks for contextual work on documentation, factory-sandbox-image, factory-workflow, git-attributes, github-repository-configuration, project-agent-guidance, project-readmes, repository-license, repository-readme, typescript-node-stack, which needs review before it is committed.",
+    "derived": "Contextual update: the run asks for contextual work on comments, documentation, factory-sandbox-image, factory-workflow, git-attributes, github-repository-configuration, project-agent-guidance, repository-readme, typescript-astro-stack, typescript-node-stack, typescript-vite-stack, which needs review before it is committed. Remote setup was deferred for github-repository-configuration/canonical-labels, github-repository-configuration/pull-request-integration: resolve it and run adopt again to apply it.",
     "releases": [
       {
-        "version": "v0.18.0",
+        "version": "v0.19.1",
         "action": null
       },
       {
-        "version": "v0.19.0",
+        "version": "v0.20.0",
+        "action": null
+      },
+      {
+        "version": "v0.21.0",
+        "action": null
+      },
+      {
+        "version": "v0.22.0",
+        "action": null
+      },
+      {
+        "version": "v0.22.1",
+        "action": null
+      },
+      {
+        "version": "v0.23.0",
+        "action": null
+      },
+      {
+        "version": "v0.23.1",
+        "action": null
+      },
+      {
+        "version": "v0.24.0",
+        "action": null
+      },
+      {
+        "version": "v0.25.0",
+        "action": null
+      },
+      {
+        "version": "v0.26.0",
+        "action": null
+      },
+      {
+        "version": "v0.27.0",
+        "action": null
+      },
+      {
+        "version": "v0.28.0",
+        "action": null
+      },
+      {
+        "version": "v0.29.0",
         "action": null
       }
     ],
     "steps": [
-      "Review the contextual work on documentation, factory-sandbox-image, factory-workflow, git-attributes, github-repository-configuration, project-agent-guidance, project-readmes, repository-license, repository-readme, typescript-node-stack.",
+      "Review the contextual work on comments, documentation, factory-sandbox-image, factory-workflow, git-attributes, github-repository-configuration, project-agent-guidance, repository-readme, typescript-astro-stack, typescript-node-stack, typescript-vite-stack.",
+      "Resolve the remote setup for github-repository-configuration/canonical-labels, github-repository-configuration/pull-request-integration, then run adopt again to apply it.",
       "Review and commit the update."
     ]
   }

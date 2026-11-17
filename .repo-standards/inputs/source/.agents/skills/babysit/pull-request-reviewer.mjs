@@ -1,8 +1,6 @@
 // Reads and validates the optional pull request reviewer file against the
-// schema the `github-repository-configuration` rules state. The reviewer check
-// runs this module from operations/lib, and babysit's directory carries a
-// byte-identical copy so its scripts run where only the skill is installed; a
-// repository conformance test keeps the two copies identical.
+// schema the `github-repository-configuration` rules state. Babysit and the
+// reviewer check share this module, retained at its source-relative path.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -27,6 +25,11 @@ export const parseReviewer = (text) => {
     throw new Error(`${reviewerTarget}: ${error.message}`, { cause: error });
   }
   validateReviewer(reviewer);
+  // Resolve the public schema once for both request and wait enforcement.
+  reviewer.bounds.reviewRequests =
+    reviewer.bounds.reviewRequests === "unbounded"
+      ? Infinity
+      : (reviewer.bounds.reviewRequests ?? 4);
   return reviewer;
 };
 
@@ -77,11 +80,12 @@ const validateReviewer = (reviewer) => {
   }
   if (
     Object.hasOwn(reviewer.bounds, "reviewRequests") &&
+    reviewer.bounds.reviewRequests !== "unbounded" &&
     (!Number.isInteger(reviewer.bounds.reviewRequests) ||
       reviewer.bounds.reviewRequests <= 0)
   )
     throw new Error(
-      "reviewer.bounds.reviewRequests must be a positive integer.",
+      'reviewer.bounds.reviewRequests must be a positive integer or "unbounded".',
     );
   if (Object.hasOwn(reviewer, "finished")) {
     objectFields(
@@ -97,6 +101,8 @@ const validateReviewer = (reviewer) => {
     textField(reviewer.finished.line, "reviewer.finished.line");
     let groups;
     try {
+      // Validate the standalone pattern exactly as completion matching uses it.
+      new RegExp(reviewer.finished.line, "u");
       // The empty alternative exposes every named group even without a match.
       groups = new RegExp(`(?:${reviewer.finished.line})|`, "u").exec(
         "",

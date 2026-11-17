@@ -16,6 +16,26 @@ Until the PR metadata validation workflow is on the default branch, requiring
 the check is deferred, and the next adoption or update after the workflow
 merges requires it.
 
+For a first adoption that installs the workflow absent from default, deliver
+through the owner, including when both protection mechanisms are proven
+unavailable on the private plan. After separate review, leave the PR open and
+stop with its exact reviewed head, pre-commit ready-to-commit summary and
+verdict, validation outcomes, missing prerequisites and owner action. Record
+absent hosted checks as absent, not passed. This bootstrap step grants no agent
+merge exception and changes no wait or merge refusal. Once owner delivery or
+correction is confirmed, continue from clean updated default with the next
+full adoption, preserving its own pre-commit evidence and ordinary gates.
+
+The fix establishes and reads back strict required-check freshness through
+classic protection or its managed ruleset when it establishes the required
+check, preserving other checks, rules and bypass settings. Changes to existing
+policy require confirmation. Adoption deferrals do not authorize unattended
+merging. Only positively established private-plan limitations covering both
+classic protection and rulesets permit immediate merging-agent freshness
+verification under the rules, with the accepted residual concurrent-base race.
+Strict GitHub enforcement remains required wherever available; ordinary
+permission refusals, unreadable evidence and unconfirmed freshness stop delivery.
+
 ## Remote setup
 
 The `canonical-labels` and `pull-request-integration` fixes are remote setup:
@@ -41,6 +61,25 @@ remote setup once its probe is ready. A probe changes nothing, locally or on
 GitHub, and does not read the labels, rules, or settings its fix reconciles,
 so a ready fix can still return `confirmation-required` or `blocked`.
 
+`canonical-labels` renames each workflow state or category label the rules'
+families replace in place, so its issues keep it. Readiness approved before the
+rename names the former label, so the issue-contract workflow removes it on
+its next run; review each such issue's current revision again before applying
+`state:ready`. Issues left with a former label that has no single successor
+get `state:triage` and go back to triage.
+
+## Required checks
+
+The required repository-owned `.github/required-checks.json` follows the rules'
+Required-check authority and merge gate schema. The declaration owns no file or
+names and adoption never creates or rewrites it. Its read-only check fails on
+absence, malformed data or an empty list. Establish repository-chosen names before starting adoption, in
+a separate repository-policy change outside the adoption commit and PR.
+An absent trusted declaration stops wait and merge: correct it on the destination
+default branch through the applicable owner procedure, then invoke again.
+Do not infer names from observed results or GitHub settings, or bypass the gate
+to bootstrap a declaration present only locally or on the PR branch.
+
 ## Pull request reviewer
 
 The optional `.github/pull-request-reviewer.json` is the repository's own
@@ -54,6 +93,15 @@ the file in a separate commit after the run completes, following the schema in
 the rules, never in the adoption commit or pull request. The check validates it
 on the next `check` or update.
 
+For existing reviewer configurations, omission of `bounds.reviewRequests` now
+means a total bound of **4**, where it previously meant unbounded requests.
+Explicit positive-integer bounds keep their value. To deliberately retain
+unbounded requests, set `bounds.reviewRequests` to the exact JSON string
+`"unbounded"` in repository-owned configuration after the run, outside its
+adoption commit and adoption PR. Explain this migration without rewriting the
+reviewer file during adoption. An absent file still means no reviewer, request
+or reviewer wait, and the factory host remains independent of this file.
+
 ## Factory app-author review policy
 
 The optional `.github/factory-review-policy.json` is the repository's own
@@ -63,8 +111,14 @@ enable a review exemption. Deliberate configuration belongs in a separate
 commit after the run completes, following the schema in the rules, never in
 the adoption commit or pull request.
 
+Only a run first selecting the factory profile asks about opting in, as the
+[factory workflow guidance](factory-workflow.md#app-author-policy-opt-in)
+specifies. Standard-only runs do not ask; routine updates whose previous
+adoption record already selected factory do not ask again.
+
 The read-only `factory-review-policy` check passes without the file; absence
-is supported and requires no policy or owner question. When present, it
+is supported and requires no policy. Outside that first factory selection,
+absence requires no owner question. When present, it
 validates the version-1 schema with the same reader as the installed request
 and wait commands, without account lookup or GitHub access. Valid declarations
 using REST `<slug>[bot]` or CLI `app/<slug>` identities pass unchanged. Invalid
