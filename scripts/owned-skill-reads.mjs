@@ -109,7 +109,7 @@ export function readsSection(skill) {
     ),
     rules: [
       ...text.matchAll(
-        /`[\w-]+`(?:\s*(?:,\s*(?:and\s+|or\s+)?|and\s+|or\s+)(?:the\s+)?`[\w-]+`)*\s+rules\b/gi,
+        /`[\w-]+`(?:\s*(?:,\s*(?:and\s+|or\s+)?|and\s+|or\s+)(?:the\s+)?`[\w-]+`)*\s+rules?\b/gi,
       ),
     ].flatMap(([names]) =>
       [...names.matchAll(/`([\w-]+)`/g)].map(([, name]) => name),

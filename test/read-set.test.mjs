@@ -136,6 +136,22 @@ test("named rules extend the Reads parser without changing its paths or skills",
   assert.deepEqual(item.paths, [".scriptorium/config.json"]);
 });
 
+test("a rule named in the singular is counted at its source", () => {
+  const [item] = readsSection("## Reads\n- The installed `single` rule.\n");
+  assert.deepEqual(item.rules, ["single"]);
+  assert.deepEqual(
+    readSet(
+      tree({
+        ".agents/skills/start/SKILL.md":
+          "## Reads\n- The installed `single` rule.\n",
+        "rules/single.md": "single",
+      }),
+      "start",
+    ).members,
+    [".agents/skills/start/SKILL.md", "rules/single.md"],
+  );
+});
+
 // The five repository-owned entry points, settled in ADR 0048.
 test("the comparison covers exactly the five decided entry points", () => {
   assert.deepEqual(entryPoints, [

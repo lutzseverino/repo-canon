@@ -18,6 +18,9 @@ export const entryPoints = [
   "review",
 ];
 
+// The entry documents a reached Reads item can name as members.
+const entryDocuments = ["CONTRIBUTING.md", "AGENTS.md"];
+
 /** @typedef {{ paths: string[], read: (path: string) => Buffer }} Tree */
 
 /** A working tree, including newly authored, untracked skill documents. */
@@ -28,9 +31,7 @@ export function directoryTree(root) {
         (path) => `.agents/skills/${path}`,
       ),
       ...files(join(root, "rules")).map((path) => `rules/${path}`),
-      ...["CONTRIBUTING.md", "AGENTS.md"].filter((path) =>
-        existsSync(join(root, path)),
-      ),
+      ...entryDocuments.filter((path) => existsSync(join(root, path))),
     ],
     read: (path) => readFileSync(join(root, path)),
   };
@@ -76,7 +77,7 @@ export function gitTree(root, ref) {
 
 /**
  * Compute one entry point's Markdown and named source rules, once per member.
- * Value owners and consumers: ADR 0048 / #1058; #1045 reuses this interface.
+ * Value owner: ADR 0048 / #1058; consumers: this comparison and the conformance suite.
  * @param {Tree} tree
  * @param {string} entryPoint
  */
@@ -114,8 +115,7 @@ export function readSet(tree, entryPoint) {
       for (const path of item.paths) {
         const rule = /^\.repo-standards\/rules\/([\w-]+)\.md$/.exec(path);
         if (rule) requireMember(`rules/${rule[1]}.md`, name);
-        else if (path === "CONTRIBUTING.md" || path === "AGENTS.md")
-          requireMember(path, name);
+        else if (entryDocuments.includes(path)) requireMember(path, name);
       }
     }
   }
