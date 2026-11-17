@@ -141,10 +141,10 @@ checks documented in the development guide before requesting review.
 
 ## Findings
 
-Every run records findings. Filing follows factory rules'
-[environment-performed step rule](.repo-standards/rules/factory-workflow.md#run-kinds).
-A finding is an observed defect, gap or stale instruction outside the run's work.
-Fix defects inside it in the change; adoption's contextual work is not a finding.
+Implementation, release, review, adoption and update runs record findings, filed
+under the factory rules' [environment-performed step rule](.repo-standards/rules/factory-workflow.md#run-kinds).
+A run's change fixes defects within its work; findings are defects, gaps or stale
+instructions observed outside it, except adoption's contextual work.
 
 A factory run cites its filing run in each finding it files, and never opens a
 separate unticketed pull request: out-of-scope work, however small, is a
