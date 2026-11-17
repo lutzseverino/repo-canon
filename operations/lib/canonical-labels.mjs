@@ -41,6 +41,11 @@ export const canonicalLabels = [
     ],
   },
   {
+    name: "state:carried",
+    color: "ededed",
+    description: "Carried by another record or ticket; the factory leaves it",
+  },
+  {
     name: "state:ready",
     color: "0e8a16",
     description: "Reviewed; waits on an agent to implement it",

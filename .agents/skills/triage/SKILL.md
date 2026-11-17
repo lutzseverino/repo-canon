@@ -165,6 +165,7 @@ The factory starts this run for one issue, read-only, and the installed factory 
    - `state:reporter`: the [reporter template](#reporter-template).
    - `state:owner`: the question and what you found.
    - `state:grill`: the facts gathered (current behavior, constraints, the records you read, the options and what each would cost) and the open questions, numbered.
+   - `state:carried`: the carrier the Triage run section names, linked, and how it settles the request.
 4. **Write the run result** to the path the factory gives, in the format its run-result interface defines: the state and labels you ask for, and the body, with no disclaimer, as `.repo-standards/rules/comments.md#disclaimers` says. When you cannot finish, write a failed result with the reason.
 5. **Write nothing else**, as the Triage run section says, even where a credential would allow it: a reproduction stays in your sandbox, and `ready.mjs` never runs.
 

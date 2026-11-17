@@ -3498,6 +3498,77 @@ decisionTable("workflow states are ordered against the review", [
   },
 ]);
 
+// An approved direct ticket that a factory stop left in `state:owner`: the
+// factory's App applied the stop at 17:05, which superseded the review's
+// readiness, and the validator removed `state:ready`. A person answers the
+// stop at 17:10 by applying the issue's next state.
+function answeredStop(state) {
+  const stop = supersessionSnapshot({
+    labels: ["state:ready", "state:owner"],
+    issueEvents: [
+      readinessReview,
+      {
+        id: 102,
+        event: "labeled",
+        label: { name: "state:owner" },
+        actor: { login: "factory[bot]" },
+        created_at: "2026-09-14T17:05:00Z",
+      },
+    ],
+    event: labeledBy("factory[bot]", "state:owner", { body: ticketBody }),
+  });
+  const superseded = decideIssueContract(snapshotFor(stop));
+  assertDecision(superseded, supersededBy("state:owner"));
+  const stopped = afterWrites(stop, superseded);
+  return {
+    ...stopped,
+    issue: {
+      ...stopped.issue,
+      labels: [...stopped.issue.labels, { name: state }],
+    },
+    issueEvents: [
+      ...stopped.issueEvents,
+      {
+        id: 110,
+        event: "labeled",
+        label: { name: state },
+        actor: { login: "maintainer" },
+        created_at: "2026-09-14T18:10:00Z",
+      },
+    ],
+    event: labeledBy("maintainer", state, {
+      body: ticketBody,
+      updated_at: "2026-09-14T18:10:00Z",
+    }),
+  };
+}
+
+decisionTable("a person answers a stop by applying the issue's next state", [
+  {
+    name: "state:carried replaces state:owner and is no readiness",
+    snapshot: answeredStop("state:carried"),
+    expected: {
+      exitCode: 0,
+      remove: ["state:owner"],
+      message: /awaiting authorized review/i,
+    },
+  },
+  {
+    name: "state:ready at the unchanged approved revision replaces the stop and records the new review",
+    snapshot: answeredStop("state:ready"),
+    expected: {
+      exitCode: 0,
+      remove: ["state:owner"],
+      feedback: 13,
+      message: /valid implementation ticket with state:ready bound/i,
+      feedbackBody: [
+        /## Issue contract readiness recorded/,
+        /"reviewEventId":"110"/,
+      ],
+    },
+  },
+]);
+
 // A triaged bug whose Agent Brief awaits review at its published revision, as
 // on #353: `bug` and `state:triage` applied at creation, and `labels` and
 // `events` since. `maintainer` holds the admin role and `writer` the write
