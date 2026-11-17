@@ -843,6 +843,8 @@ test("source and installed merge reject holding reviews contradicted by task-lis
     for (const task of [
       "- [ ] merge.mjs:1 A visible finding.",
       "- [x] A visible invalid finding.",
+      "- [ ] <!-- hidden -->",
+      "- [x] <!-- hidden -->",
     ]) {
       const body = outcome
         .replace(/^Findings:.*$/m, "Findings: None")

@@ -421,6 +421,8 @@ test("source and installed rounds post and track reviews with separate verificat
       `~~~markdown\n${reviewBody(head)}\n~~~`,
       `${reviewBody(head)}\n- [ ] src/ledger.mjs:12 A visible finding.`,
       `${reviewBody(head)}\n- [x] A visible invalid finding.`,
+      `${reviewBody(head)}\n- [ ] <!-- hidden -->`,
+      `${reviewBody(head)}\n- [x] <!-- hidden -->`,
       `<!--\n${reviewBody(head)}\n-->`,
       `<pre>\n${reviewBody(head)}\n</pre>`,
       reviewBody(head).replace(/^Spec:.*$/m, "<!-- Spec: Passed -->"),

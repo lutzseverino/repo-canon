@@ -81,6 +81,7 @@ test("task-list findings retain their visible checkbox and cannot become holding
     for (const text of [
       "src/ledger.mjs:12 Refunds are missing.",
       "An invalid finding.",
+      "<!-- hidden -->",
     ]) {
       for (const findings of ["None", ""]) {
         const body =
