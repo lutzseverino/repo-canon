@@ -160,11 +160,12 @@ The factory starts this run for one issue, read-only, and the installed factory 
 
 1. **Gather context** as [Triage a specific issue or PR](#triage-a-specific-issue-or-pr) step 1 says, and run its two checks first, yourself. Read the repository's ADRs, its glossary, and the issues the request links, with their decisions: the records the Triage run section lets you cite.
 2. **Sort** the request as [Sort by uncertainty](#sort-by-uncertainty) says. Answer each intent question the inference test lets you answer from those records, and list it with the record and its date under **Inferred intent** in the triage notes.
-3. **Choose the outcome** the Triage run section names, with the labels it lists, and write its body:
+3. **Choose the outcome** the Triage run section names, with the labels it lists, and write its body. A stop's body names the exact next state that answers it, as Questions and stops says:
    - `state:ready`: write the Agent Brief and its triage notes as [AGENT-BRIEF.md](AGENT-BRIEF.md) says, review them as the [code-bound path](#code-bound-path)'s step 2 says, and correct them until they hold. Choose the `model:` label under the installed Model selection rule, within the host capabilities the factory supplies, and record its reason in the triage notes.
    - `state:reporter`: the [reporter template](#reporter-template).
    - `state:owner`: the question and what you found.
    - `state:grill`: the facts gathered (current behavior, constraints, the records you read, the options and what each would cost) and the open questions, numbered.
+   - `state:carried`: the carrier the Triage run section names, linked, and how it settles the request.
 4. **Write the run result** to the path the factory gives, in the format its run-result interface defines: the state and labels you ask for, and the body, with no disclaimer, as `.repo-standards/rules/comments.md#disclaimers` says. When you cannot finish, write a failed result with the reason.
 5. **Write nothing else**, as the Triage run section says, even where a credential would allow it: a reproduction stays in your sandbox, and `ready.mjs` never runs.
 
@@ -184,7 +185,7 @@ Every question reaches you first, whoever raises it: a research run, a grill, or
 - **An answer you can give**, from code, logs, or a reproduction, or under the inference test: post it on the issue as `.repo-standards/rules/comments.md#disclaimers` says.
 - **A fact only an outside reporter holds**: ask them with the reporter template below, and move the issue to `state:reporter`.
 - **An owner-only question**: put it in your decision inbox with your recommendation, and move the issue to the state the guide names.
-- **An agent's question to the owner**, posted as `.repo-standards/rules/comments.md#owner-questions` says: read it first. When you can answer it, answer on the issue, and return the issue to the state the installed rules name for an answered question, such as `state:ready` through [Apply and confirm readiness](#accept-a-brief-that-holds). Otherwise put it in your decision inbox.
+- **An agent's question to the owner**, posted as `.repo-standards/rules/comments.md#owner-questions` says: read it first. When you can answer it, answer on the issue, and apply the next state the stop names, as the installed Questions and stops rule says, such as `state:ready` through [Apply and confirm readiness](#accept-a-brief-that-holds). Otherwise put it in your decision inbox.
 
 When an answer changes the implementation contract, follow the contribution guide's Owner questions section: a separate writer edits it.
 

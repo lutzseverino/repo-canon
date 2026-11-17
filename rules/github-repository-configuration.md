@@ -20,6 +20,7 @@ descriptions:
 | `state:reporter`      | `d4c5f9` | Waits on its outside reporter for a fact only they hold    |
 | `state:grill`         | `d876e3` | Waits on a grilling session for the owner's intent         |
 | `state:owner`         | `1d76db` | Waits on the owner's answer or work only the owner can do  |
+| `state:carried`       | `ededed` | Carried by another record or ticket; the factory leaves it |
 | `state:ready`         | `0e8a16` | Reviewed; waits on an agent to implement it                |
 | `type:bug`            | `d73a4a` | Something isn't working                                    |
 | `type:enhancement`    | `a2eeef` | New feature or request                                     |
@@ -37,7 +38,9 @@ An open issue carries exactly one `state:` label naming whom it waits on;
 the contribution guide's Readiness section governs its maintenance.
 `state:reporter` is only for a fact the outside reporter holds. Facts the
 owner or filing agent lacks wait in `state:owner`, or `state:grill` for the
-owner's intent. Follow the guide's Triage section for question routing and
+owner's intent. `state:carried` waits on no one: another record or ticket
+carries the request's fate, the factory leaves it, and removing it starts
+nothing. Follow the guide's Triage section for question routing and
 inference. The repository owns `state:ready` readiness; `wontfix` marks an
 issue closed as will not be actioned.
 
