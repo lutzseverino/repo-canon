@@ -2430,13 +2430,13 @@ test("a pull request whose deletions are gone passes and shows its footprint", (
     closes: [5],
     bodies: {
       5: footprint(
-        'skill `retired`; reference "launches" (`orchestrate`); rule section "Repository model policy" (factory workflow rules)',
+        "skill `retired`; reference `model choice` (`orchestrate`); rule section `Repository model policy` (`factory workflow` rules)",
       ),
     },
     files: {
       [mergeBase]: tree({
         ".agents/skills/retired/SKILL.md": null,
-        ".agents/skills/orchestrate/references/launches.md": null,
+        ".agents/skills/orchestrate/references/model-choice.md": null,
         "rules/factory-workflow.md": rules("Policy."),
       }),
       [head]: tree({

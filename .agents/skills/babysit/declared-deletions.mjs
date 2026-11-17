@@ -88,7 +88,8 @@ async function openContracts(connection) {
 const slug = (words) => words.trim().toLowerCase().replace(/\s+/g, "-");
 
 // The surface a `Deletes:` item names in a form the check resolves, or null.
-// The issue-contract protocol lists these forms; backticks are already gone.
+// The issue-contract protocol lists these forms. The parser has already removed
+// backticks, so a backticked name arrives unquoted.
 export function surfaceOf(item) {
   const skill = /^skill\s+"?([\w.-]+)"?$/i.exec(item)?.[1];
   if (skill)
@@ -97,7 +98,7 @@ export function surfaceOf(item) {
       holds: (path) => path.startsWith(`.agents/skills/${skill}/`),
     };
   const reference =
-    /^reference\s+(?:"([^"]+)"|([\w.-]+))\s*\(\s*(?:skill\s+)?([\w.-]+)(?:\s+skill)?\s*\)$/i.exec(
+    /^reference\s+(?:"([^"]+)"|([^"()]+?))\s*\(\s*(?:skill\s+)?([\w.-]+)(?:\s+skill)?\s*\)$/i.exec(
       item,
     );
   if (reference) {
@@ -116,11 +117,13 @@ export function surfaceOf(item) {
     };
   }
   const section =
-    /^rule section\s+"([^"]+)"\s*\(\s*([^()]+?)\s+rules\s*\)$/i.exec(item);
+    /^rule section\s+(?:"([^"]+)"|([^"()]+?))\s*\(\s*([^()]+?)\s+rules\s*\)$/i.exec(
+      item,
+    );
   if (section) {
-    const name = slug(section[2]);
+    const name = slug(section[3]);
     const path = `rules/${name}.md`;
-    const heading = section[1].trim().toLowerCase();
+    const heading = (section[1] ?? section[2]).trim().toLowerCase();
     return {
       key: `rule section:${path}#${heading}`.toLowerCase(),
       rules: path,
