@@ -2360,3 +2360,216 @@ test("canonical holds ignore conflicting legacy labels and legacy-only config su
     assert.equal(result.state.merge, undefined);
   }
 });
+
+// Declared deletions (ADR 0045): the merge base is "b" and the head is "a".
+const mergeBase = "b".repeat(40);
+const rules = (body) => `# Factory workflow rules
+
+## Run kinds
+
+Kinds.
+
+## Repository model policy
+
+${body}
+
+## Later section
+
+Text.
+`;
+const footprint = (deletes) =>
+  `## What to build\n\nWork.\n\nSupersedes: none\nAdds: none\nDeletes: ${deletes}\n`;
+const tree = (paths) =>
+  Object.fromEntries(
+    Object.entries(paths).map(([path, text]) => [path, text ?? "text"]),
+  );
+
+test("a pull request leaving a declared deletion present fails", (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const target of [undefined, installed]) {
+    const result = run(
+      t,
+      {
+        closes: [5],
+        bodies: {
+          5: footprint(
+            '`skill` `retired`; rule section "Repository model policy" (factory workflow rules)',
+          ),
+        },
+        files: {
+          [mergeBase]: tree({
+            ".agents/skills/retired/SKILL.md": null,
+            "rules/factory-workflow.md": rules("Policy."),
+          }),
+          [head]: tree({
+            ".agents/skills/retired/SKILL.md": null,
+            ".agents/skills/retired/script.mjs": null,
+            "rules/factory-workflow.md": rules("Policy, edited."),
+          }),
+        },
+      },
+      undefined,
+      target,
+    );
+    assert.equal(result.status, 3, result.stderr);
+    assert.match(
+      result.stderr,
+      /#5 declares skill retired deleted, but \.agents\/skills\/retired\/SKILL\.md, \.agents\/skills\/retired\/script\.mjs still hold it\./,
+    );
+    assert.match(
+      result.stderr,
+      /#5 declares rule section "Repository model policy" \(factory workflow rules\) deleted, but rules\/factory-workflow\.md still holds it\./,
+    );
+    assert.equal(result.state.merge, undefined);
+    assert.equal(result.stdout, "");
+  }
+});
+
+test("a pull request whose deletions are gone passes and shows its footprint", (t) => {
+  const result = run(t, {
+    closes: [5],
+    bodies: {
+      5: footprint(
+        "skill `retired`; reference `model choice` (`orchestrate`); rule section `Repository model policy` (`factory workflow` rules)",
+      ),
+    },
+    files: {
+      [mergeBase]: tree({
+        ".agents/skills/retired/SKILL.md": null,
+        ".agents/skills/orchestrate/references/model-choice.md": null,
+        "rules/factory-workflow.md": rules("Policy."),
+      }),
+      [head]: tree({
+        ".agents/skills/orchestrate/SKILL.md": null,
+        "rules/factory-workflow.md": rules("Policy.").replace(
+          "## Repository model policy",
+          "Former policy, now prose.",
+        ),
+      }),
+    },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(result.state.merge);
+  assert.match(
+    result.stderr,
+    /#5 footprint: 0 adds against 3 deletes, shown and never gated\./,
+  );
+  assert.doesNotMatch(result.stderr, /not checked|refuse/);
+});
+
+test("a pull request editing a surface another open ticket deletes fails and names that ticket", (t) => {
+  const files = {
+    [mergeBase]: tree({
+      ".agents/skills/orchestrate/references/launches.md": null,
+      "rules/factory-workflow.md": rules("Policy."),
+    }),
+    [head]: tree({
+      ".agents/skills/orchestrate/references/launches.md": null,
+      "rules/factory-workflow.md": rules("Policy."),
+    }),
+  };
+  const bodies = {
+    9: footprint('reference "launches" (`orchestrate`)'),
+    11: footprint(
+      'rule section "Repository model policy" (factory workflow rules)',
+    ),
+  };
+  const reference = run(t, {
+    bodies,
+    files,
+    changedFiles: [
+      {
+        filename: ".agents/skills/orchestrate/references/launches.md",
+        status: "modified",
+        patch: "@@ -1 +1 @@\n-old\n+new",
+      },
+    ],
+  });
+  assert.equal(reference.status, 3, reference.stderr);
+  assert.match(
+    reference.stderr,
+    /This change edits reference "launches" \(orchestrate\) in \.agents\/skills\/orchestrate\/references\/launches\.md, which open #9 deletes; wait for #9\./,
+  );
+  assert.doesNotMatch(reference.stderr, /#11/);
+  assert.equal(reference.state.merge, undefined);
+
+  // Line 9 holds the policy body at both revisions; line 3 is another section.
+  const edit = (line) => ({
+    filename: "rules/factory-workflow.md",
+    status: "modified",
+    patch: `@@ -${line},1 +${line},1 @@\n-old\n+new`,
+  });
+  const inside = run(t, { bodies, files, changedFiles: [edit(9)] });
+  assert.equal(inside.status, 3, inside.stderr);
+  assert.match(
+    inside.stderr,
+    /edits rule section "Repository model policy" \(factory workflow rules\) in rules\/factory-workflow\.md, which open #11 deletes; wait for #11\./,
+  );
+  const outside = run(t, { bodies, files, changedFiles: [edit(3)] });
+  assert.equal(outside.status, 0, outside.stderr);
+  assert.ok(outside.state.merge);
+
+  // The change's own ticket deleting the same surface is the declared work.
+  const declared = run(t, {
+    closes: [5],
+    bodies: { ...bodies, 5: footprint('reference "launches" (orchestrate)') },
+    files: {
+      ...files,
+      [head]: tree({ "rules/factory-workflow.md": rules("Policy.") }),
+    },
+    changedFiles: [
+      {
+        filename: ".agents/skills/orchestrate/references/launches.md",
+        status: "removed",
+        patch: "@@ -1 +0,0 @@\n-old",
+      },
+    ],
+  });
+  assert.equal(declared.status, 0, declared.stderr);
+});
+
+test("an unresolvable surface is reported, never passed silently", (t) => {
+  const result = run(t, {
+    closes: [5],
+    bodies: {
+      5: footprint("label `state:carried`; skill `never-existed`"),
+      9: footprint("wakes for head/check churn"),
+    },
+    files: { [mergeBase]: {}, [head]: {} },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(
+    result.stderr,
+    /Declared deletions not resolved to files, so not checked: #5 "label state:carried"; #9 "wakes for head\/check churn"; #5 "skill never-existed"\./,
+  );
+  const unknown = run(t, { closes: [5], bodies: { 5: "## What to build\n" } });
+  assert.equal(unknown.status, 0, unknown.stderr);
+  assert.match(
+    unknown.stderr,
+    /#5 footprint: unknown, without Supersedes:, Adds: and Deletes: lines\./,
+  );
+});
+
+test("unreadable declared-deletion evidence never permits a merge", (t) => {
+  const state = {
+    closes: [5],
+    bodies: { 5: footprint("skill `retired`") },
+    files: { [mergeBase]: {}, [head]: {} },
+  };
+  for (const failure of [
+    { failContracts: 502 },
+    { truncatedTree: true },
+    { failTree: 502 },
+    { comparison: { status: "ahead", behind_by: 0 } },
+  ]) {
+    const result = run(t, { ...state, ...failure });
+    assert.equal(result.status, 3, result.stderr);
+    assert.match(result.stderr, /Could not check declared deletions/);
+    assert.equal(result.state.merge, undefined);
+  }
+  for (const failure of [{ failContracts: 403 }, { failTree: 403 }]) {
+    const result = run(t, { ...state, ...failure, traceRequests: true });
+    assert.equal(result.status, 1, result.stderr);
+    assert.equal(result.state.merge, undefined);
+  }
+});

@@ -155,7 +155,8 @@ It then writes the merge result (the squash commit SHA) to stdout, followed by
 a newline. Failed or unconfirmed merges write no success output.
 
 Exit `0` means merged. Exit `3` means not merged and needs the owner: an active
-owner gate or unreadable/incomplete gate evidence, or
+owner gate or unreadable/incomplete gate evidence, or a declared-deletions
+failure or unreadable evidence for that check, or
 an inconsistent, unreadable or invalid merge-hold read, or the base branch requires a merge queue, or a successful merge call left the
 PR in a state other than `merged`, or neither freshness enforcement nor the proven private-plan path can be confirmed, or required-check/reviewer-thread evidence cannot be established. The skill hands off with a question under
 [the comment rules' owner questions](../../rules/comments.md#owner-questions),
@@ -248,7 +249,11 @@ changes or a moving default branch, and unreadable or invalid reads. Own-label
 fixtures return unfiltered collections with REST label objects and strings:
 exact repository and release holds, stale filter results alone and alongside
 real holds, exempt items with mismatched labels, and unreadable candidate
-labels. The freshness fixtures model two green PRs sharing one base, a base
+labels. Declared-deletion fixtures cover a closing issue's skill and rule
+section still present, deletions gone with the tally shown, edits to another
+open issue's reference and rule section inside and outside its lines, an edit
+the closing issue also declares, unresolvable and unknown footprints reported,
+and unreadable issues, trees and merge base. The freshness fixtures model two green PRs sharing one base, a base
 advance after preflight refused at the platform boundary, replacement heads
 with pending or failed checks, classic and ruleset enforcement, explicit caller
 non-bypass evidence with absent, empty or nonempty global lists, other or missing
@@ -288,6 +293,34 @@ Access supplement reads reject incomplete or unknown check, workflow, push and
 review-comment facts. Check contexts paginate at the immutable head SHA, so a
 subsequent PR update cannot replace the checks for the head being considered.
 A missing `reviewCommits` capability fails the configured-reviewer wait.
+
+## Declared deletions
+
+After the first hold check, merge checks declared deletions
+([ADR 0045](../adr/0045-check-supersession-and-footprint-at-readiness.md))
+through `declared-deletions.mjs`. It reads the PR's closing issues and every
+other open issue in the repository, and parses each body's `Deletes:` line with
+the issue-contract validator's exported `contractFootprint`. Each item in a form
+the [issue-contract protocol](issue-contract-validation.md#footprint-and-supersession)
+lists resolves to the files that hold it at the merge base and at the head,
+read from the complete Git trees and, for a rule section, the rules file at
+both revisions. Exit `3` names each failure:
+
+- a closing issue declares a surface deleted that the head still holds, with
+  the files that hold it;
+- the PR edits a surface another open issue deletes, naming that issue for
+  this change to wait for. A skill or reference is edited when one of its files
+  changes, and a rule section when a patch adds lines inside its head section
+  or removes lines inside its base section. A surface a closing issue deletes
+  too is the declared work.
+
+The check prints each closing issue's tally of adds against deletes,
+or that its footprint is unknown, and one line naming every `Deletes:` item it
+could not resolve: another form, a surface held at neither revision, or a
+rule-section edit whose patch GitHub omits. These are reported, never passed
+silently, and do not block the merge. Incomplete issue reads, a truncated tree
+or a missing merge base return `3` without a merge; permission refusals stop
+with `1`.
 
 ## Adoption owner-review example
 
