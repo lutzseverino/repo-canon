@@ -210,7 +210,7 @@ async function exercise(options = {}, command = main) {
               fullDatabaseId: "42",
               id: "ISSUE_42",
               url: "https://github.com/owner/repo/issues/42",
-              state: "OPEN",
+              state: options.closed ? "CLOSED" : "OPEN",
               title: "Fixture request",
               body: options.body ?? "Intake",
               createdAt: time,
@@ -1301,19 +1301,7 @@ test("source and installed commands record approved readiness again after adding
       undefined,
       [{ name: model, color: "abcdef", description: "Model" }],
     ]) {
-      const result = await exercise(
-        approved({
-          repositoryLabels,
-          onWait({ phase, state, requests }) {
-            // Readiness returns only after the removal's awaiting result.
-            if (requests.some(({ body }) => body?.labels?.includes(label)))
-              assert.equal(phase, "applied");
-            if (phase === "removed")
-              assert.equal(state.status, "awaiting-review");
-          },
-        }),
-        command,
-      );
+      const result = await exercise(approved({ repositoryLabels }), command);
       assert.equal(result.error, undefined);
       assert.equal(result.code, 0);
       assert.deepEqual(writes(result), [
@@ -1451,7 +1439,7 @@ test("source and installed commands record readiness again for an earlier review
   }
 });
 
-test("source and installed commands still refuse approved readiness with nothing to add", async (t) => {
+test("source and installed commands keep their refusals for approved readiness", async (t) => {
   for (const command of await readinessCommands(t)) {
     for (const { options, refusal } of [
       {
@@ -1465,6 +1453,14 @@ test("source and installed commands still refuse approved readiness with nothing
       {
         options: { labels: [label, "model:other"] },
         refusal: /exactly one model:/,
+      },
+      {
+        options: { labels: [label], argv: ["42", revision, skip.name] },
+        refusal: /exactly one model:/,
+      },
+      {
+        options: { closed: true },
+        refusal: /open issue/,
       },
       {
         options: { state: { revision: `sha256:${"b".repeat(64)}` } },
