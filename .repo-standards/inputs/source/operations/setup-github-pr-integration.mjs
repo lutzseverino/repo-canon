@@ -213,7 +213,7 @@ function canonicalRuleset() {
       {
         type: "required_status_checks",
         parameters: {
-          strict_required_status_checks_policy: false,
+          strict_required_status_checks_policy: true,
           required_status_checks: [{ context: checkName }],
         },
       },
@@ -333,6 +333,10 @@ function managedRulesetPlan(rulesets, defaultBranch) {
     ) {
       return { error: `${rulesetName} has invalid required status checks` };
     }
+    if (parameters.strict_required_status_checks_policy !== true) {
+      parameters.strict_required_status_checks_policy = true;
+      changed = true;
+    }
     if (
       !parameters.required_status_checks.some(
         (check) => check.context === checkName,
@@ -378,6 +382,7 @@ function rulesetMatches(rulesets, id, defaultBranch) {
   return existing.rules?.some(
     (rule) =>
       rule.type === "required_status_checks" &&
+      rule.parameters?.strict_required_status_checks_policy === true &&
       rule.parameters?.required_status_checks?.some(
         (check) => check.context === checkName,
       ),
@@ -467,8 +472,15 @@ async function setupMergeSettingsOnly(
   );
 }
 
-function unavailableRequirement(identity) {
-  const offered = `matches what GitHub offers this repository: squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is unavailable because GitHub offers neither branch protection nor rulesets for this private repository on its current plan. Upgrade the plan or make the repository public; the next adoption or update then requires the check.`;
+function workflowBootstrap(defaultBranch) {
+  return `The default branch \`${defaultBranch}\` does not carry the PR metadata validation workflow yet, so GitHub cannot report the check. Merge this adoption through the owner; after confirmed delivery, run the next adoption or update from updated default. Missing workflow evidence grants no freshness exception; unattended merging stops.`;
+}
+
+function unavailableRequirement(identity, defaultBranch, workflowPresent) {
+  const delivery = workflowPresent
+    ? "On this proven private-plan limitation, babysit verifies current-head validation and default-branch freshness immediately before merging; a concurrent base advance after that check can still merge, an accepted residual race."
+    : workflowBootstrap(defaultBranch);
+  const offered = `matches what GitHub offers this repository: squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is unavailable because GitHub offers neither branch protection nor rulesets for this private repository on its current plan. Upgrade the plan or make the repository public; the next adoption or update then requires the check. ${delivery} Strict GitHub enforcement remains required wherever available.`;
   return {
     unchanged: `GitHub PR integration for ${identity} ${offered}`,
     changed: `GitHub PR integration ${offered}`,
@@ -476,7 +488,7 @@ function unavailableRequirement(identity) {
 }
 
 function deferredRequirement(identity, defaultBranch) {
-  const deferred = `GitHub PR integration for ${identity} applies squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is deferred because the default branch \`${defaultBranch}\` does not carry the PR metadata validation workflow yet, so GitHub cannot report the check. Merge this adoption; the next adoption or update then requires the check.`;
+  const deferred = `GitHub PR integration for ${identity} applies squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is deferred because the default branch \`${defaultBranch}\` does not carry the PR metadata validation workflow yet, so GitHub cannot report the check. Merge this adoption through the owner; the next adoption or update then requires the check. Strict freshness is unconfirmed; unattended merging stops until GitHub enforcement is confirmed.`;
   return { unchanged: deferred, changed: deferred };
 }
 
@@ -509,28 +521,18 @@ async function setupIntegration(request) {
     prepared.access,
   );
   const rulesetsBefore = await readRulesets(inferred.identity, prepared.access);
-  if (
+  const planLimited =
     repository.private === true &&
     branchBefore.planLimited &&
-    rulesetsBefore.planLimited
-  ) {
-    await setupMergeSettingsOnly(
-      inferred.identity,
-      repository,
-      request,
-      unavailableRequirement(inferred.identity),
-      prepared.access,
-    );
-    return;
-  }
-  if (branchBefore.error) {
+    rulesetsBefore.planLimited;
+  if (branchBefore.error && !planLimited) {
     result(
       "blocked",
       `${operationName} could not inspect required checks on ${repository.default_branch} (${branchBefore.error}).`,
     );
     return;
   }
-  if (rulesetsBefore.error) {
+  if (rulesetsBefore.error && !planLimited) {
     result(
       "blocked",
       `${operationName} could not inspect repository rulesets for ${inferred.identity} (${rulesetsBefore.error}).`,
@@ -546,6 +548,20 @@ async function setupIntegration(request) {
     result(
       "blocked",
       `${operationName} could not read ${workflowPath} on ${repository.default_branch} (${workflow.error}).`,
+    );
+    return;
+  }
+  if (planLimited) {
+    await setupMergeSettingsOnly(
+      inferred.identity,
+      repository,
+      request,
+      unavailableRequirement(
+        inferred.identity,
+        repository.default_branch,
+        workflow.value,
+      ),
+      prepared.access,
     );
     return;
   }
@@ -565,7 +581,10 @@ async function setupIntegration(request) {
   let managedRulesetId;
   if (branchBefore.value?.statusChecks) {
     checkLocation = "branch";
-    if (!hasRequiredCheck(branchBefore.value.statusChecks))
+    if (
+      !hasRequiredCheck(branchBefore.value.statusChecks) ||
+      branchBefore.value.statusChecks.strict !== true
+    )
       checkAction = { type: "branch" };
   } else {
     const plan = managedRulesetPlan(
@@ -586,11 +605,16 @@ async function setupIntegration(request) {
   const settingsNeedUpdate = !matchingMergeSettings(repository);
   const changes = mergeSettingChanges(repository);
   if (checkAction?.type === "branch") {
-    const contexts = branchBefore.value.statusChecks.contexts;
+    const { contexts, strict } = branchBefore.value.statusChecks;
     changes.push(
       ...describeSettingChanges(
-        { contexts },
-        { contexts: [...contexts, checkName] },
+        { contexts, strict },
+        {
+          contexts: hasRequiredCheck(branchBefore.value.statusChecks)
+            ? contexts
+            : [...contexts, checkName],
+          strict: true,
+        },
         `branch ${repository.default_branch} protection.required_status_checks`,
       ),
     );
@@ -615,19 +639,37 @@ async function setupIntegration(request) {
       inferred.identity,
       `/branches/${encodeURIComponent(repository.default_branch)}/protection/required_status_checks/contexts`,
     );
-    const mutation = await githubRequest(prepared.access, endpoint, {
-      method: "POST",
-      body: { contexts: [checkName] },
-    });
-    if (!mutation.ok) {
+    const statusChecks = branchBefore.value.statusChecks;
+    const mutation = !hasRequiredCheck(statusChecks)
+      ? await githubRequest(prepared.access, endpoint, {
+          method: "POST",
+          body: { contexts: [checkName] },
+        })
+      : { ok: true };
+    const freshness =
+      mutation.ok && statusChecks.strict !== true
+        ? await githubRequest(
+            prepared.access,
+            endpoint.replace(/\/contexts$/, ""),
+            {
+              method: "PATCH",
+              body: { strict: true },
+            },
+          )
+        : mutation;
+    if (!freshness.ok) {
+      if (mutation.ok && !hasRequiredCheck(statusChecks))
+        effects.push(
+          `required ${checkName} through ${repository.default_branch} branch protection`,
+        );
       result(
         "blocked",
-        `${operationName} is incomplete for ${inferred.identity}; adding ${checkName} to ${repository.default_branch} branch protection failed (${mutation.detail}). ${effectSummary(effects)} Required-check enforcement${settingsNeedUpdate ? " and squash merge settings remain" : " remains"}; inspect remote state and retry.`,
+        `${operationName} is incomplete for ${inferred.identity}; configuring ${checkName} and strict freshness on ${repository.default_branch} branch protection failed (${freshness.detail}). ${effectSummary(effects)} Required-check enforcement${settingsNeedUpdate ? " and squash merge settings remain" : " remains"}; inspect remote state and retry.`,
       );
       return;
     }
     effects.push(
-      `required ${checkName} through ${repository.default_branch} branch protection`,
+      `required ${checkName} through ${repository.default_branch} branch protection with strict freshness`,
     );
   }
 
@@ -699,14 +741,18 @@ async function setupIntegration(request) {
       )
     ) {
       mismatches.push(
-        mismatch(`${checkName} ruleset enforcement`, rulesetsAfter),
+        mismatch(
+          `${checkName} ruleset enforcement with strict freshness`,
+          rulesetsAfter,
+        ),
       );
     }
   } else if (
     !branchAfter.error &&
-    !hasRequiredCheck(branchAfter.value?.statusChecks ?? null)
+    (!hasRequiredCheck(branchAfter.value?.statusChecks ?? null) ||
+      branchAfter.value?.statusChecks?.strict !== true)
   ) {
-    mismatches.push(`${checkName} branch enforcement`);
+    mismatches.push(`${checkName} branch enforcement with strict freshness`);
   }
   if (rulesetsAfter.error && checkLocation !== "ruleset") {
     mismatches.push(mismatch("repository ruleset readback", rulesetsAfter));
@@ -725,7 +771,7 @@ async function setupIntegration(request) {
   }
   result(
     "changed",
-    `${operationName} changed ${inferred.identity}: ${effects.join(" and ")}. Final readback confirmed ${checkName}, squash-only integration, PR-title subjects, and PR-body messages; unrelated settings and rules were preserved.${atStockMergeSettings(repository) ? stockNote : ""}`,
+    `${operationName} changed ${inferred.identity}: ${effects.join(" and ")}. Final readback confirmed ${checkName} with strict freshness, squash-only integration, PR-title subjects, and PR-body messages; unrelated settings and rules were preserved.${atStockMergeSettings(repository) ? stockNote : ""}`,
   );
 }
 

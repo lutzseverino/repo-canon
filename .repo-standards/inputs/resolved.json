@@ -26,6 +26,26 @@
       "exact": ".github/ISSUE_TEMPLATE/bug-report.yml"
     },
     {
+      "id": "canonical-label-metadata",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "operations/lib/canonical-labels.mjs",
+      "exact": "operations/lib/canonical-labels.mjs"
+    },
+    {
+      "id": "comments",
+      "checks": [],
+      "fixes": [],
+      "kind": "repository",
+      "guidance": "guidance/comments.md",
+      "rules": "rules/comments.md",
+      "targets": {
+        "paths": [],
+        "directories": []
+      }
+    },
+    {
       "id": "contribution-guidance",
       "checks": [],
       "fixes": [],
@@ -94,6 +114,32 @@
           "docs/adr/0023-reach-the-hosting-platform-through-postern.md",
           "docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md",
           "docs/adr/0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md",
+          "docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md",
+          "docs/adr/0027-give-the-workbench-its-own-profile.md",
+          "docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md",
+          "docs/adr/0029-make-the-validators-posted-result-the-only-contract-decision.md",
+          "docs/adr/0030-let-factory-triage-accept-its-own-brief.md",
+          "docs/adr/0031-name-labels-by-family.md",
+          "docs/adr/0032-test-behaviour-and-structure-not-wording.md",
+          "docs/adr/0033-give-every-value-one-value-owner.md",
+          "docs/adr/0034-choose-where-checks-run-at-adoption.md",
+          "docs/adr/0035-keep-the-implementation-contract-in-the-issue-body.md",
+          "docs/adr/0036-launch-hand-stages-with-identifiers-only.md",
+          "docs/adr/0037-act-in-repositories-only-through-launches.md",
+          "docs/adr/0038-exempt-genuine-dependabot-pull-requests-from-body-sections.md",
+          "docs/adr/0039-own-pull-request-text-checks-and-retire-others-before-adoption.md",
+          "docs/adr/0040-watch-instead-of-launching.md",
+          "docs/adr/0041-answer-in-the-owners-place-except-reserved-decisions.md",
+          "docs/adr/0042-keep-agent-guidance-a-stable-map.md",
+          "docs/adr/0043-keep-the-contribution-guide-for-contributors.md",
+          "docs/adr/0044-lead-every-message-with-its-outcome.md",
+          "docs/adr/0045-check-supersession-and-footprint-at-readiness.md",
+          "docs/adr/0046-start-owner-facing-work-and-bridge-factory-gaps.md",
+          "docs/adr/0047-read-nothing-scriptorium-owns.md",
+          "docs/adr/0048-budget-the-computed-read-set.md",
+          "docs/adr/0050-answer-a-stop-by-applying-the-issues-next-state.md",
+          "docs/adr/0051-carry-a-request-whose-fate-a-record-settles.md",
+          "docs/adr/0052-update-a-non-overlapping-stale-base-within-the-attempt.md",
           "docs/adr/README.md",
           "docs/development/README.md",
           "docs/development/adoption-compatibility.md",
@@ -103,6 +149,7 @@
           "docs/development/documentation-scope-drafter.md",
           "docs/development/github-label-setup.md",
           "docs/development/github-pr-integration-setup.md",
+          "docs/development/issue-contract-v2.md",
           "docs/development/issue-contract-validation.md",
           "docs/development/pr-metadata-validation.md",
           "docs/development/release.md",
@@ -113,9 +160,13 @@
           "docs/development/standards-update-workflow.md",
           "docs/development/typescript-node-stack-check.md",
           "docs/development/typescript-node-stack-scope-drafter.md",
+          "docs/development/typescript-web-stack-check.md",
+          "docs/development/typescript-web-stack-scope-drafter.md",
           "docs/development/upstream-compatibility.md",
           "docs/usage/README.md",
           "docs/usage/adopt-repo-canon.md",
+          "docs/usage/create-repository.md",
+          "docs/usage/install-skills.md",
           "docs/usage/stacks.md",
           "docs/usage/versioning.md"
         ],
@@ -128,24 +179,39 @@
       "fixes": [],
       "kind": "file",
       "target": "docs/agents/domain.md",
-      "exact": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/domain.md"
+      "exact": "docs/agents/domain.md"
     },
     {
       "id": "factory-configuration",
       "checks": [],
       "fixes": [],
       "kind": "file",
-      "target": ".factory/config.json",
-      "exact": ".factory/config.json"
+      "target": ".scriptorium/config.json",
+      "exact": ".scriptorium/config.json"
+    },
+    {
+      "id": "factory-label-metadata",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "operations/lib/factory-labels.mjs",
+      "exact": "operations/lib/factory-labels.mjs"
     },
     {
       "id": "factory-sandbox-image",
       "checks": [],
       "fixes": [],
-      "kind": "file",
-      "target": ".factory/Dockerfile",
+      "kind": "repository",
       "guidance": "guidance/factory-sandbox-image.md",
-      "rules": "rules/factory-sandbox-image.md"
+      "rules": "rules/factory-sandbox-image.md",
+      "targets": {
+        "paths": [
+          ".scriptorium/Dockerfile",
+          ".factory/Dockerfile",
+          ".factory/config.json"
+        ],
+        "directories": []
+      }
     },
     {
       "id": "factory-sandbox-image-workflow",
@@ -188,12 +254,30 @@
       "id": "github-repository-configuration",
       "checks": [
         {
+          "id": "required-checks",
+          "run": {
+            "executable": "node",
+            "script": "operations/check-required-checks.mjs",
+            "resources": [
+              ".agents/skills/babysit/required-checks.mjs"
+            ],
+            "arguments": []
+          },
+          "prerequisite": {
+            "version-arguments": [
+              "--version"
+            ],
+            "version": ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0"
+          },
+          "timeout-seconds": 30
+        },
+        {
           "id": "pull-request-reviewer",
           "run": {
             "executable": "node",
             "script": "operations/check-pull-request-reviewer.mjs",
             "resources": [
-              "operations/lib/pull-request-reviewer.mjs"
+              ".agents/skills/babysit/pull-request-reviewer.mjs"
             ],
             "arguments": []
           },
@@ -211,7 +295,7 @@
             "executable": "node",
             "script": "operations/check-factory-review-policy.mjs",
             "resources": [
-              "operations/lib/review-policy.mjs"
+              ".agents/skills/babysit/review-policy.mjs"
             ],
             "arguments": []
           },
@@ -231,6 +315,8 @@
             "executable": "node",
             "script": "operations/setup-github-labels.mjs",
             "resources": [
+              "operations/lib/canonical-labels.mjs",
+              "operations/lib/factory-labels.mjs",
               "operations/lib/github-operation.mjs",
               "vendor/postern/postern.mjs",
               "vendor/postern/LICENSE",
@@ -352,12 +438,36 @@
       "exact": ".github/ISSUE_TEMPLATE/implementation-ticket.yml"
     },
     {
+      "id": "issue-contract-cutoff",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "scripts/issue-contract-cutoff.mjs",
+      "exact": "scripts/issue-contract-cutoff.mjs"
+    },
+    {
+      "id": "issue-contract-sources",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "scripts/issue-contract-sources.mjs",
+      "exact": "scripts/issue-contract-sources.mjs"
+    },
+    {
+      "id": "issue-contract-store",
+      "checks": [],
+      "fixes": [],
+      "kind": "file",
+      "target": "scripts/issue-contract-store.mjs",
+      "exact": "scripts/issue-contract-store.mjs"
+    },
+    {
       "id": "issue-contract-validator",
       "checks": [],
       "fixes": [],
       "kind": "file",
-      "target": "scripts/validate-issue-contract.mjs",
-      "exact": "scripts/validate-issue-contract.mjs"
+      "target": "vendor/repo-canon/validate-issue-contract.mjs",
+      "exact": "vendor/repo-canon/validate-issue-contract.mjs"
     },
     {
       "id": "issue-contract-workflow",
@@ -373,7 +483,7 @@
       "fixes": [],
       "kind": "file",
       "target": "docs/agents/issue-tracker.md",
-      "exact": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md"
+      "exact": "docs/agents/issue-tracker.md"
     },
     {
       "id": "marked-license",
@@ -559,8 +669,12 @@
               "operations/lib/entry-document.mjs",
               "operations/lib/rendered-markdown.mjs",
               "operations/lib/local-markdown-links.mjs",
+              "operations/lib/github-operation.mjs",
               "vendor/marked",
-              "vendor/parse5"
+              "vendor/parse5",
+              "vendor/postern/postern.mjs",
+              "vendor/postern/LICENSE",
+              "vendor/postern/README.md"
             ],
             "arguments": []
           },
@@ -593,7 +707,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "code-review",
-      "source": "vendor/mattpocock-skills/skills/engineering/code-review"
+      "source": ".agents/skills/code-review"
     },
     {
       "id": "skill-codebase-design",
@@ -601,7 +715,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "codebase-design",
-      "source": "vendor/mattpocock-skills/skills/engineering/codebase-design"
+      "source": ".agents/skills/codebase-design"
     },
     {
       "id": "skill-diagnosing-bugs",
@@ -609,7 +723,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "diagnosing-bugs",
-      "source": "vendor/mattpocock-skills/skills/engineering/diagnosing-bugs"
+      "source": ".agents/skills/diagnosing-bugs"
     },
     {
       "id": "skill-domain-modeling",
@@ -617,7 +731,15 @@
       "fixes": [],
       "kind": "skill",
       "name": "domain-modeling",
-      "source": "vendor/mattpocock-skills/skills/engineering/domain-modeling"
+      "source": ".agents/skills/domain-modeling"
+    },
+    {
+      "id": "skill-factory",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "factory",
+      "source": ".agents/skills/factory"
     },
     {
       "id": "skill-grill-with-docs",
@@ -625,7 +747,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "grill-with-docs",
-      "source": "vendor/mattpocock-skills/skills/engineering/grill-with-docs"
+      "source": ".agents/skills/grill-with-docs"
     },
     {
       "id": "skill-grilling",
@@ -633,7 +755,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "grilling",
-      "source": "vendor/mattpocock-skills/skills/productivity/grilling"
+      "source": ".agents/skills/grilling"
     },
     {
       "id": "skill-implement",
@@ -641,7 +763,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "implement",
-      "source": "vendor/mattpocock-skills/skills/engineering/implement"
+      "source": ".agents/skills/implement"
     },
     {
       "id": "skill-improve-codebase-architecture",
@@ -649,15 +771,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "improve-codebase-architecture",
-      "source": "vendor/mattpocock-skills/skills/engineering/improve-codebase-architecture"
-    },
-    {
-      "id": "skill-orchestrate",
-      "checks": [],
-      "fixes": [],
-      "kind": "skill",
-      "name": "orchestrate",
-      "source": ".agents/skills/orchestrate"
+      "source": ".agents/skills/improve-codebase-architecture"
     },
     {
       "id": "skill-pr",
@@ -665,7 +779,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "pr",
-      "source": "vendor/mattpocock-skills/skills/engineering/pr"
+      "source": ".agents/skills/pr"
     },
     {
       "id": "skill-prototype",
@@ -673,7 +787,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "prototype",
-      "source": "vendor/mattpocock-skills/skills/engineering/prototype"
+      "source": ".agents/skills/prototype"
     },
     {
       "id": "skill-research",
@@ -681,7 +795,15 @@
       "fixes": [],
       "kind": "skill",
       "name": "research",
-      "source": "vendor/mattpocock-skills/skills/engineering/research"
+      "source": ".agents/skills/research"
+    },
+    {
+      "id": "skill-review",
+      "checks": [],
+      "fixes": [],
+      "kind": "skill",
+      "name": "review",
+      "source": ".agents/skills/review"
     },
     {
       "id": "skill-tdd",
@@ -689,7 +811,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "tdd",
-      "source": "vendor/mattpocock-skills/skills/engineering/tdd"
+      "source": ".agents/skills/tdd"
     },
     {
       "id": "skill-to-spec",
@@ -697,7 +819,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "to-spec",
-      "source": "vendor/mattpocock-skills/skills/engineering/to-spec"
+      "source": ".agents/skills/to-spec"
     },
     {
       "id": "skill-to-tickets",
@@ -705,7 +827,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "to-tickets",
-      "source": "vendor/mattpocock-skills/skills/engineering/to-tickets"
+      "source": ".agents/skills/to-tickets"
     },
     {
       "id": "skill-triage",
@@ -721,7 +843,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "wayfinder",
-      "source": "vendor/mattpocock-skills/skills/engineering/wayfinder"
+      "source": ".agents/skills/wayfinder"
     },
     {
       "id": "skill-writing-for-agents",
@@ -729,7 +851,7 @@
       "fixes": [],
       "kind": "skill",
       "name": "writing-for-agents",
-      "source": "vendor/mattpocock-skills/skills/productivity/writing-for-agents"
+      "source": ".agents/skills/writing-for-agents"
     },
     {
       "id": "specification-template",
@@ -753,7 +875,19 @@
       "fixes": [],
       "kind": "file",
       "target": "docs/agents/triage-labels.md",
-      "exact": "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/triage-labels.md"
+      "exact": "docs/agents/triage-labels.md"
+    },
+    {
+      "id": "typescript-astro-stack",
+      "checks": [],
+      "fixes": [],
+      "kind": "repository",
+      "guidance": "guidance/typescript-astro-stack.md",
+      "targets": {
+        "paths": [],
+        "directories": []
+      },
+      "no-scope": true
     },
     {
       "id": "typescript-node-stack",
@@ -790,12 +924,24 @@
       }
     },
     {
+      "id": "typescript-vite-stack",
+      "checks": [],
+      "fixes": [],
+      "kind": "repository",
+      "guidance": "guidance/typescript-vite-stack.md",
+      "targets": {
+        "paths": [],
+        "directories": []
+      },
+      "no-scope": true
+    },
+    {
       "id": "validator-command",
       "checks": [],
       "fixes": [],
       "kind": "file",
-      "target": "scripts/validate.mjs",
-      "exact": "scripts/validate.mjs"
+      "target": "vendor/repo-canon/validate.mjs",
+      "exact": "vendor/repo-canon/validate.mjs"
     }
   ]
 }

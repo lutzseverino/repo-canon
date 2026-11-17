@@ -1,43 +1,102 @@
 #!/usr/bin/env node
 
 import { setTimeout as wait } from "node:timers/promises";
+import { factorySkipLabel } from "../../../operations/lib/factory-labels.mjs";
+import {
+  issueContractResult,
+  isSpecification,
+  noticePrecedes,
+  observedChangeId,
+  readyLabels,
+  readIssueContractObservation,
+} from "../../../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   connectionFor,
   executedAsScript,
+  pinnedFiles,
   requestData,
 } from "../babysit/platform.mjs";
 
-const readiness = new Set(["ready-for-agent", "ready-for-human"]);
-const marker = "<!-- repo-canon:issue-contract-feedback -->";
+// The validator binds one ready label; a companion carries no other state.
+const [readyLabel] = readyLabels;
+
+// Seam (deferred): Scriptorium configuration reads; consumers: 6; extraction proposed in https://github.com/lutzseverino/repo-canon/issues/967.
+// The model label prefix this readiness needs, or null: only where the
+// destination's installed factory rules apply and its factory configuration
+// names this ready label. Both come from one pinned default-branch commit,
+// independently of the checkout that supplies this command.
+async function modelPolicy(connection) {
+  try {
+    const { files, evidence } = await pinnedFiles(connection, {
+      rules: ".repo-standards/rules/factory-workflow.md",
+      configuration: ".scriptorium/config.json",
+    });
+    if (files.rules === null) return null;
+    const { labels, modelLabelPrefix } =
+      JSON.parse(files.configuration ?? "null") ?? {};
+    if (typeof labels?.ready !== "string" || !modelLabelPrefix?.trim?.())
+      throw new Error(
+        `${evidence}: .scriptorium/config.json names no ready label and model label prefix.`,
+      );
+    return labels.ready === readyLabel ? modelLabelPrefix : null;
+  } catch (error) {
+    throw new Error(
+      `Could not establish factory applicability: ${error.message}`,
+      { cause: error },
+    );
+  }
+}
+
+// The authenticated login, whose own readiness event the validator's verdict
+// must approve. /user excludes installation tokens, so ask GraphQL.
+async function actingLogin(connection) {
+  const identity = await requestData(connection, {
+    method: "POST",
+    path: "/graphql",
+    body: {
+      query: "query TriageActingAccount { viewer { __typename login } }",
+    },
+  });
+  const viewer = identity?.data?.viewer;
+  if (
+    identity?.errors?.length ||
+    !["User", "Bot"].includes(viewer?.__typename) ||
+    typeof viewer.login !== "string" ||
+    !viewer.login.trim()
+  )
+    throw new Error("Could not identify the readiness acting account.");
+  // GraphQL omits the "[bot]" suffix that REST logins and events carry.
+  return viewer.__typename === "Bot" && !viewer.login.endsWith("[bot]")
+    ? `${viewer.login}[bot]`
+    : viewer.login;
+}
 
 async function snapshot(connection, number) {
   const tracker = connection.issueTracker;
   const issue = await tracker.issue(number);
   const comments = await tracker.comments(number);
   const events = await tracker.labelChanges(number);
-  const feedback = comments.findLast(
-    (comment) =>
-      comment.author?.login === "github-actions[bot]" &&
-      comment.body.includes(marker),
-  );
-  const encoded = /<!-- repo-canon:issue-contract-state (.+) -->/.exec(
-    feedback?.body ?? "",
-  );
-  const state = encoded ? JSON.parse(encoded[1]) : null;
-  const latest = events.findLast(
-    (event) =>
-      readiness.has(event.label) &&
-      !(
-        event.action === "removed" &&
-        event.actor?.login === "github-actions[bot]"
-      ),
-  );
-  return { issue, events, feedback, state, latest };
+  // The validator's own reader interprets its published result.
+  const result = issueContractResult(comments);
+  const current =
+    (result.state?.format === "repo-canon/issue-contract-state/v2" ||
+     result.state?.baseFormat === "repo-canon/issue-contract-state/v2")
+      ? result.state.observation ===
+        (await readIssueContractObservation(
+          connection,
+          issue,
+          comments,
+          events,
+        ))
+      : true;
+  return { issue, events, current, ...result };
 }
 
-const processed = ({ state, latest }) =>
+// Whether the result has observed the latest readiness change.
+const processed = ({ state, events, current }) =>
+  current &&
   (state?.observedEventId ?? state?.reviewEventId ?? null) ===
-  (latest ? String(latest.id) : null);
+    observedChangeId(events);
 
 function parentNeedsReapply({ issue, events }, label) {
   if (
@@ -53,10 +112,18 @@ function parentNeedsReapply({ issue, events }, label) {
 }
 
 function checkContract(current, revision) {
-  if (current.feedback?.body.includes("## Issue contract needs attention"))
-    throw new Error(`Incomplete contract.\n${current.feedback.body}`);
+  if (current.state?.status === "needs-attention")
+    throw new Error(`Incomplete contract.\n${current.comment.body}`);
   if (!current.state)
-    throw new Error("The validator's contract revision notice is missing.");
+    throw new Error(
+      current.comment
+        ? "The validator's contract result has an unknown format; update this command."
+        : "The validator's contract revision notice is missing.",
+    );
+  if (!["awaiting-review", "approved"].includes(current.state.status))
+    throw new Error(
+      "The feedback does not report a complete contract awaiting review.",
+    );
   if (current.state.revision !== revision)
     throw new Error(
       "The reviewed revision differs from the current revision; review the current notice again.",
@@ -71,24 +138,23 @@ function argumentsFor(argv) {
     repository = args[flag + 1];
     args.splice(flag, 2);
   }
-  const [issue, label, revision, ...companions] = args;
+  const [issue, revision, ...companions] = args;
   const number = Number(issue);
   if (
     !/^[1-9]\d*$/.test(issue ?? "") ||
     !Number.isSafeInteger(number) ||
-    !readiness.has(label) ||
     !/^sha256:[a-f0-9]{64}$/.test(revision ?? "") ||
     companions.some(
-      (name) => !name.trim() || name.startsWith("--") || readiness.has(name),
+      (name) =>
+        !name.trim() || name.startsWith("--") || name.startsWith("state:"),
     ) ||
     (flag !== -1 && (!repository || repository.startsWith("--")))
   )
     throw new Error(
-      "Usage: node ready.mjs <issue> <ready-for-agent|ready-for-human> <sha256:reviewed-revision> [companion-label ...] [--repo owner/name]",
+      "Usage: node ready.mjs <issue> <sha256:reviewed-revision> [companion-label ...] [--repo owner/name]",
     );
   return {
     number,
-    label,
     revision,
     companions: [...new Set(companions)],
     repository,
@@ -109,27 +175,23 @@ export async function main(
   pause = wait,
   now = Date.now,
 ) {
-  const { number, label, revision, companions, repository } =
-    argumentsFor(argv);
+  const { number, revision, companions, repository } = argumentsFor(argv);
   connection ??= connectionFor(repository);
-  // The neutral account port loses the distinction between App and User.
-  const actor = await requestData(connection, { path: "/user" });
-  if (actor?.type !== "User" || !actor.login || actor.login.endsWith("[bot]"))
-    throw new Error(
-      "Readiness requires a person acting account; bot and App accounts cannot start factory work.",
-    );
+  const login = await actingLogin(connection);
+  const prefix = await modelPolicy(connection);
+  const isModel = (name) => prefix !== null && name.startsWith(prefix);
   let before;
   for (;;) {
     before = await snapshot(connection, number);
-    const models = companions.filter((name) => name.startsWith("model:"));
     if (
-      models.length > 1 ||
-      before.issue.labels.some(
-        (name) => name.startsWith("model:") && !models.includes(name),
-      )
+      prefix !== null &&
+      !before.issue.subIssues.length &&
+      !isSpecification(before.issue) &&
+      new Set([...before.issue.labels, ...companions].filter(isModel)).size !==
+        1
     )
       throw new Error(
-        "A different model: label already exists, or multiple model: labels were given.",
+        `Factory agent readiness requires exactly one ${prefix} label in the resulting issue state; choose one and remove conflicting labels before retrying.`,
       );
     checkContract(before, revision);
     if (before.issue.state !== "open")
@@ -138,17 +200,10 @@ export async function main(
       await pause(2000);
       continue;
     }
-    const staleParent = parentNeedsReapply(before, label);
+    const staleParent = parentNeedsReapply(before, readyLabel);
     if (
-      !(
-        before.state.status === "awaiting-review" &&
-        before.feedback.body.includes("## Issue contract awaiting review")
-      ) &&
-      !(
-        staleParent &&
-        before.state.status === "approved" &&
-        before.feedback.body.includes("## Issue contract readiness recorded")
-      )
+      before.state.status !== "awaiting-review" &&
+      !(staleParent && before.state.status === "approved")
     )
       throw new Error(
         "The feedback does not report a complete contract awaiting review.",
@@ -158,34 +213,50 @@ export async function main(
       continue;
     }
     if (staleParent) {
-      await connection.issueTracker.removeLabel(number, label);
+      await connection.issueTracker.removeLabel(number, readyLabel);
       await pause(2000);
       continue;
     }
-    if (before.issue.labels.some((name) => readiness.has(name)))
+    if (before.issue.labels.includes(readyLabel))
       throw new Error(
         "Readiness is already present; remove the stale attempt and review the revision notice again.",
       );
-    // The validator requires its revision notice in a strictly earlier second.
-    const barrier = Math.max(
-      Date.parse(before.feedback.updatedAt),
-      Date.parse(before.issue.linkTime) || 0,
-    );
-    if (Math.floor(now() / 1000) <= Math.floor(barrier / 1000)) {
-      await pause(2000);
-      continue;
-    }
-    break;
+    // Readiness follows the revision notice, and a parent's latest link, in a
+    // strictly later second.
+    const second = Math.floor(now() / 1000) * 1000;
+    if (
+      noticePrecedes(
+        before,
+        new Date(second).toISOString().replace(".000Z", "Z"),
+      ) &&
+      !(Date.parse(before.issue.linkTime) >= second)
+    )
+      break;
+    await pause(2000);
   }
-  await connection.issueTracker.addLabels(number, [...companions, label]);
+  const requiredLabels = companions.filter(isModel).map((name) => ({
+    name,
+    color: "5319e7",
+    description: `Factory model: ${name.slice(prefix.length)}`,
+  }));
+  if (prefix !== null && companions.includes(factorySkipLabel.name))
+    requiredLabels.push(factorySkipLabel);
+  if (requiredLabels.length) {
+    const existing = await connection.issueTracker.labels();
+    for (const definition of requiredLabels) {
+      if (!existing.some((entry) => entry.name === definition.name))
+        await connection.issueTracker.createLabel(definition);
+    }
+  }
+  await connection.issueTracker.addLabels(number, [...companions, readyLabel]);
   for (;;) {
     const current = await snapshot(connection, number);
     checkContract(current, revision);
     const own = current.events.findLast(
       (event) =>
         event.action === "added" &&
-        event.label === label &&
-        event.actor?.login === actor.login &&
+        event.label === readyLabel &&
+        event.actor?.login === login &&
         !before.events.some((previous) => previous.id === event.id),
     );
     if (own && processed(current)) {
@@ -193,21 +264,21 @@ export async function main(
         throw new Error(current.state.rejectionReason);
       if (
         current.state.status !== "approved" ||
-        current.state.reviewer !== actor.login ||
-        current.state.label !== label ||
+        current.state.reviewer !== login ||
+        current.state.label !== readyLabel ||
         current.state.reviewEventId !== String(own.id) ||
-        !current.issue.labels.includes(label)
+        !current.issue.labels.includes(readyLabel)
       )
         throw new Error(
           "The validator did not approve this account's readiness event.",
         );
-      if (parentNeedsReapply(current, label)) {
-        await connection.issueTracker.removeLabel(number, label);
+      if (parentNeedsReapply(current, readyLabel)) {
+        await connection.issueTracker.removeLabel(number, readyLabel);
         await pause(2000);
         return main(argv, connection, pause, now);
       }
       console.log(
-        `Issue #${number}: ${label} approved at ${revision} by @${actor.login}.`,
+        `Issue #${number}: ${readyLabel} approved at ${revision} by @${login}.`,
       );
       return 0;
     }

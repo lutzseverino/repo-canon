@@ -1,9 +1,10 @@
 # Installed rules
 
-These rules come from https://github.com/lutzseverino/repo-canon v0.19.0, profile factory.
-Repository Standards installs and verifies them; adopt again to change them.
+These rules come from https://github.com/lutzseverino/repo-canon v0.29.0, profile factory.
+Repo Standards installs and verifies them; adopt again to change them.
 Run `repo-standards rules <path>` to print the rules that cover a path.
 
+- [`comments`](comments.md) covers the whole repository.
 - [`documentation`](documentation.md) covers:
   - `GLOSSARY.md`
   - `authoring-notes.md`
@@ -33,6 +34,32 @@ Run `repo-standards rules <path>` to print the rules that cover a path.
   - `docs/adr/0023-reach-the-hosting-platform-through-postern.md`
   - `docs/adr/0024-scope-each-stack-to-the-projects-that-use-it.md`
   - `docs/adr/0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md`
+  - `docs/adr/0026-add-the-typescript-astro-and-typescript-vite-stacks.md`
+  - `docs/adr/0027-give-the-workbench-its-own-profile.md`
+  - `docs/adr/0028-own-every-workflow-skill-reconciled-with-its-upstream-base.md`
+  - `docs/adr/0029-make-the-validators-posted-result-the-only-contract-decision.md`
+  - `docs/adr/0030-let-factory-triage-accept-its-own-brief.md`
+  - `docs/adr/0031-name-labels-by-family.md`
+  - `docs/adr/0032-test-behaviour-and-structure-not-wording.md`
+  - `docs/adr/0033-give-every-value-one-value-owner.md`
+  - `docs/adr/0034-choose-where-checks-run-at-adoption.md`
+  - `docs/adr/0035-keep-the-implementation-contract-in-the-issue-body.md`
+  - `docs/adr/0036-launch-hand-stages-with-identifiers-only.md`
+  - `docs/adr/0037-act-in-repositories-only-through-launches.md`
+  - `docs/adr/0038-exempt-genuine-dependabot-pull-requests-from-body-sections.md`
+  - `docs/adr/0039-own-pull-request-text-checks-and-retire-others-before-adoption.md`
+  - `docs/adr/0040-watch-instead-of-launching.md`
+  - `docs/adr/0041-answer-in-the-owners-place-except-reserved-decisions.md`
+  - `docs/adr/0042-keep-agent-guidance-a-stable-map.md`
+  - `docs/adr/0043-keep-the-contribution-guide-for-contributors.md`
+  - `docs/adr/0044-lead-every-message-with-its-outcome.md`
+  - `docs/adr/0045-check-supersession-and-footprint-at-readiness.md`
+  - `docs/adr/0046-start-owner-facing-work-and-bridge-factory-gaps.md`
+  - `docs/adr/0047-read-nothing-scriptorium-owns.md`
+  - `docs/adr/0048-budget-the-computed-read-set.md`
+  - `docs/adr/0050-answer-a-stop-by-applying-the-issues-next-state.md`
+  - `docs/adr/0051-carry-a-request-whose-fate-a-record-settles.md`
+  - `docs/adr/0052-update-a-non-overlapping-stale-base-within-the-attempt.md`
   - `docs/adr/README.md`
   - `docs/development/README.md`
   - `docs/development/adoption-compatibility.md`
@@ -42,6 +69,7 @@ Run `repo-standards rules <path>` to print the rules that cover a path.
   - `docs/development/documentation-scope-drafter.md`
   - `docs/development/github-label-setup.md`
   - `docs/development/github-pr-integration-setup.md`
+  - `docs/development/issue-contract-v2.md`
   - `docs/development/issue-contract-validation.md`
   - `docs/development/pr-metadata-validation.md`
   - `docs/development/release.md`
@@ -52,13 +80,19 @@ Run `repo-standards rules <path>` to print the rules that cover a path.
   - `docs/development/standards-update-workflow.md`
   - `docs/development/typescript-node-stack-check.md`
   - `docs/development/typescript-node-stack-scope-drafter.md`
+  - `docs/development/typescript-web-stack-check.md`
+  - `docs/development/typescript-web-stack-scope-drafter.md`
   - `docs/development/upstream-compatibility.md`
   - `docs/usage/README.md`
   - `docs/usage/adopt-repo-canon.md`
+  - `docs/usage/create-repository.md`
+  - `docs/usage/install-skills.md`
   - `docs/usage/stacks.md`
   - `docs/usage/versioning.md`
 - [`factory-sandbox-image`](factory-sandbox-image.md) covers:
+  - `.scriptorium/Dockerfile`
   - `.factory/Dockerfile`
+  - `.factory/config.json`
 - [`factory-workflow`](factory-workflow.md) covers the whole repository.
 - [`git-attributes`](git-attributes.md) covers:
   - `.gitattributes`

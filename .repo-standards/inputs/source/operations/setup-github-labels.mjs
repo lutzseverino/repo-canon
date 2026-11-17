@@ -1,3 +1,5 @@
+import { canonicalLabels } from "./lib/canonical-labels.mjs";
+import { factorySkipLabel } from "./lib/factory-labels.mjs";
 import {
   apiEndpoint,
   describeSettingChanges,
@@ -10,79 +12,66 @@ import {
 } from "./lib/github-operation.mjs";
 
 const operationName = "GitHub label setup";
-const canonicalLabels = [
+// The factory profile's owner gates and factory labels. The factory creates
+// running, failed and paused with its own values when they are missing; the
+// repository never chose those.
+const factoryLabels = [
   {
-    name: "needs-triage",
-    color: "fbca04",
-    description: "Requires review or renewed review",
+    name: "gate:owner-review",
+    color: "e99695",
+    description: "Waits on the owner's review before its pull request merges",
   },
   {
-    name: "needs-info",
-    color: "d4c5f9",
-    description:
-      "Missing information; the orchestrating agent answers or routes it",
+    name: "gate:major-release",
+    color: "e99695",
+    description: "Waits on the owner's go-ahead for a major release",
   },
   {
-    name: "ready-for-agent",
-    color: "0e8a16",
-    description: "Reviewed and sufficiently specified for agent implementation",
+    name: "factory:running",
+    color: "0052cc",
+    description: "Waits on the factory run that holds it",
+    formerly: [
+      {
+        name: "factory:running",
+        color: "0052cc",
+        description: "Factory state: running",
+      },
+    ],
   },
   {
-    name: "ready-for-human",
-    color: "1d76db",
-    description:
-      "Reviewed; needs the owner's accounts, credentials or a reserved taste call",
-  },
-  { name: "wontfix", color: "ffffff", description: "Will not be actioned" },
-  { name: "bug", color: "d73a4a", description: "Something isn't working" },
-  {
-    name: "enhancement",
-    color: "a2eeef",
-    description: "New feature or request",
-  },
-  {
-    name: "wayfinder:map",
-    color: "5319e7",
-    description: "Planning map for related work",
+    name: "factory:paused",
+    color: "c5def5",
+    description: "Waits on the factory to resume the run it paused",
+    formerly: [
+      {
+        name: "factory:paused",
+        color: "c5def5",
+        description: "Factory state: paused",
+      },
+    ],
   },
   {
-    name: "wayfinder:research",
-    color: "bfd4f2",
-    description: "Research question in a planning map",
+    name: "factory:failed",
+    color: "b60205",
+    description: "Waits on a person to deal with the failed run",
+    formerly: [
+      {
+        name: "factory:failed",
+        color: "b60205",
+        description: "Factory state: failed",
+      },
+    ],
+  },
+  factorySkipLabel,
+  {
+    name: "factory:release-hold",
+    color: "c5def5",
+    description: "Hold other merges while a release PR is open",
   },
   {
-    name: "wayfinder:prototype",
-    color: "bfd4f2",
-    description: "Prototype question in a planning map",
-  },
-  {
-    name: "wayfinder:grilling",
-    color: "bfd4f2",
-    description: "Design decision requiring discussion",
-  },
-  {
-    name: "wayfinder:task",
-    color: "bfd4f2",
-    description: "Task in a planning map",
-  },
-];
-
-// GitHub's documented default labels that the canonical table also names. A
-// label still at both stock values was never chosen by the repository, so the
-// fix updates it without confirmation. The other default labels, and any
-// custom default of an owner or organization, are not canonical names.
-// https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/managing-labels#about-default-labels
-const stockLabels = [
-  { name: "bug", color: "d73a4a", description: "Something isn't working" },
-  {
-    name: "enhancement",
-    color: "a2eeef",
-    description: "New feature or request",
-  },
-  {
-    name: "wontfix",
-    color: "ffffff",
-    description: "This will not be worked on",
+    name: "factory:hold",
+    color: "c5def5",
+    description: "Pause factory pickups and other merges in this repository",
   },
 ];
 
@@ -112,16 +101,33 @@ function sameLabel(actual, expected) {
   );
 }
 
-function isStockLabel(actual) {
-  return stockLabels.some((stock) => sameLabel(actual, stock));
+function isUnchosen(actual, desired) {
+  return (desired.formerly ?? []).some((former) => sameLabel(actual, former));
 }
 
-function describeEffects(created, updated) {
+// The repository's label for a canonical one: the label itself, matched
+// case-insensitively, or else the first former name the repository carries.
+function existingLabel(existing, desired) {
+  for (const name of [
+    desired.name,
+    ...(desired.formerly ?? []).map((former) => former.name),
+  ]) {
+    const actual = existing.get(name.toLowerCase());
+    if (actual) return actual;
+  }
+  return null;
+}
+
+function describeEffects(created, updated, renamed) {
   const effects = [];
-  if (created.length === 1) effects.push(`created ${created[0]}`);
-  else if (created.length > 1) effects.push(`created ${created.length} labels`);
-  if (updated.length === 1) effects.push(`updated ${updated[0]}`);
-  else if (updated.length > 1) effects.push(`updated ${updated.length} labels`);
+  for (const [verb, names] of [
+    ["created", created],
+    ["updated", updated],
+    ["renamed", renamed],
+  ]) {
+    if (names.length === 1) effects.push(`${verb} ${names[0]}`);
+    else if (names.length > 1) effects.push(`${verb} ${names.length} labels`);
+  }
   return effects.join(" and ");
 }
 
@@ -154,6 +160,10 @@ async function setupLabels(request) {
     return;
   }
   const inferred = { identity: prepared.identity };
+  const labels =
+    request.profile === "factory"
+      ? [...canonicalLabels, ...factoryLabels]
+      : canonicalLabels;
 
   const before = await readLabels(inferred.identity, prepared.access);
   if (before.error) {
@@ -167,8 +177,8 @@ async function setupLabels(request) {
     before.value.map((label) => [label.name.toLowerCase(), label]),
   );
   /** @type {{ kind: string, actual?: any, desired: any }[]} */
-  const actions = canonicalLabels.flatMap((desired) => {
-    const actual = existing.get(desired.name.toLowerCase());
+  const actions = labels.flatMap((desired) => {
+    const actual = existingLabel(existing, desired);
     if (!actual) return [{ kind: "create", desired }];
     return sameLabel(actual, desired)
       ? []
@@ -176,7 +186,7 @@ async function setupLabels(request) {
   });
 
   const changes = actions.flatMap((action) =>
-    action.kind === "update" && !isStockLabel(action.actual)
+    action.kind === "update" && !isUnchosen(action.actual, action.desired)
       ? describeSettingChanges(
           {
             ...action.actual,
@@ -192,6 +202,7 @@ async function setupLabels(request) {
 
   const created = [];
   const updated = [];
+  const renamed = [];
   for (let index = 0; index < actions.length; index += 1) {
     const action = actions[index];
     const mutation = await mutateLabel(
@@ -200,7 +211,7 @@ async function setupLabels(request) {
       prepared.access,
     );
     if (!mutation.ok) {
-      const effects = describeEffects(created, updated);
+      const effects = describeEffects(created, updated, renamed);
       const effectMessage = effects
         ? ` Confirmed partial effects: ${effects}.`
         : " No changes were confirmed.";
@@ -211,11 +222,16 @@ async function setupLabels(request) {
       );
       return;
     }
-    (action.kind === "create" ? created : updated).push(action.desired.name);
+    if (action.kind === "create") created.push(action.desired.name);
+    else if (
+      action.actual.name.toLowerCase() === action.desired.name.toLowerCase()
+    )
+      updated.push(action.desired.name);
+    else renamed.push(`${action.actual.name} to ${action.desired.name}`);
   }
 
   const after = await readLabels(inferred.identity, prepared.access);
-  const effects = describeEffects(created, updated);
+  const effects = describeEffects(created, updated, renamed);
   if (after.error) {
     const effectMessage = effects ? ` Applied changes: ${effects}.` : "";
     result(
@@ -227,7 +243,7 @@ async function setupLabels(request) {
   const verified = new Map(
     after.value.map((label) => [label.name.toLowerCase(), label]),
   );
-  const mismatches = canonicalLabels.filter((desired) => {
+  const mismatches = labels.filter((desired) => {
     const actual = verified.get(desired.name.toLowerCase());
     return !actual || !sameLabel(actual, desired);
   });
@@ -251,7 +267,7 @@ async function setupLabels(request) {
   }
   result(
     "changed",
-    `GitHub label setup changed ${inferred.identity}: ${effects}. Readback confirmed all ${canonicalLabels.length} canonical labels; unrelated labels were preserved.`,
+    `GitHub label setup changed ${inferred.identity}: ${effects}. Readback confirmed all ${labels.length} canonical labels; unrelated labels were preserved.`,
   );
 }
 
