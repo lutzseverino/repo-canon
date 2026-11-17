@@ -246,6 +246,10 @@ including independent trusted-policy selection and the current-head internal
 review gate. A missing or incomplete current-head review returns merge exit
 `5`: post the completed review, then rerun. Wait exit `6` prints its full-head
 template; an unfilled template never counts as completed review evidence.
+Owner-gate fixtures in both suites share the gate reader: source and installed
+merge invocations refuse PR or closing-issue `gate:` labels and resume after
+all are removed. They cover final-preflight additions, malformed or incomplete
+connections/labels, pagination refusal and permission failures without writes.
 The merge fixtures also cover the repository- and release-hold exit `9`,
 labelled issues and PRs, the shipped configuration, self-exemption,
 multiple holds, closed PRs, removed labels, absent configuration and keys,

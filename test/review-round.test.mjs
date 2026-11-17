@@ -483,3 +483,49 @@ test("the installed command imports only what adoption installs", async (t) => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(facts(result.stdout).round, "1");
 });
+
+test("source and installed review refuse incomplete gate facts before any review write", async (t) => {
+  const target = installedValidator(t, ".agents/skills/review/round.mjs");
+  const { main: installed } = await import(pathToFileURL(target).href);
+  const connection = (nodes) => ({ nodes, pageInfo: { hasNextPage: false } });
+  const pull = {
+    labels: connection([]),
+    closingIssuesReferences: connection([]),
+  };
+  for (const entry of [main, installed]) {
+    for (const invalid of [
+      { ...pull, labels: { nodes: [], pageInfo: { hasNextPage: true } } },
+      {
+        ...pull,
+        closingIssuesReferences: { nodes: [], pageInfo: { hasNextPage: true } },
+      },
+      {
+        ...pull,
+        closingIssuesReferences: connection([
+          { number: 5, labels: { nodes: [], pageInfo: { hasNextPage: true } } },
+        ]),
+      },
+      { ...pull, labels: connection([{}]) },
+      { ...pull, closingIssuesReferences: connection([null]) },
+    ]) {
+      const state = pullState(
+        {},
+        {
+          ownerGatesResponse: {
+            data: { repository: { pullRequest: invalid } },
+          },
+        },
+      );
+      const result = await run(
+        t,
+        ["12", "--post", file(t, reviewBody(head))],
+        state,
+        entry,
+      );
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(result.stderr, /owner.gate|closing issue/i);
+      assert.equal(state.posted, undefined);
+      assert.equal(state.readied, undefined);
+    }
+  }
+});

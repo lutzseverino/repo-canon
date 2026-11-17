@@ -77,26 +77,32 @@ export function roundConnection(state, connectTo = connect) {
       url.pathname === "/graphql" &&
       /closingIssuesReferences/.test(body.query)
     )
-      return json({
-        data: {
-          repository: {
-            pullRequest: {
-              closingIssuesReferences: {
-                nodes: (pull.closes ?? []).map((number) => ({
-                  number,
-                  labels: {
-                    nodes: (state.issues?.[number] ?? []).map((name) => ({
-                      name,
-                    })),
-                    pageInfo: { hasNextPage: false },
-                  },
-                })),
-                pageInfo: { hasNextPage: Boolean(state.moreIssues) },
+      return json(
+        state.ownerGatesResponse ?? {
+          data: {
+            repository: {
+              pullRequest: {
+                labels: {
+                  nodes: (pull.labels ?? []).map((name) => ({ name })),
+                  pageInfo: { hasNextPage: false },
+                },
+                closingIssuesReferences: {
+                  nodes: (pull.closes ?? []).map((number) => ({
+                    number,
+                    labels: {
+                      nodes: (state.issues?.[number] ?? []).map((name) => ({
+                        name,
+                      })),
+                      pageInfo: { hasNextPage: false },
+                    },
+                  })),
+                  pageInfo: { hasNextPage: Boolean(state.moreIssues) },
+                },
               },
             },
           },
         },
-      });
+      );
     if (url.pathname === "/graphql" && /viewer/.test(body.query))
       return json({
         data: {

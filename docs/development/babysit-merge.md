@@ -29,6 +29,29 @@ record without `Fixed:` and `Findings:` do not count. Proposed local or PR-branc
 configuration and caller claims about a previous wait cannot bypass this check.
 Nonmatching and absent policies keep their existing applicability.
 
+Every invocation also reads owner gates independently through `owner-gates.mjs`,
+the internal interface shared with review's round reporting. Access reads the
+current PR labels and platform closing-issue relationships with each issue's
+labels. Any `gate:` label returns the existing owner-needed exit `3`, naming
+the label and whether it belongs to the PR or a closing issue. This applies to
+issue-less PRs, absent factory configuration and every author/reviewer policy.
+Gates on unrelated issues and unrelated labels do not block delivery. Review
+retains its explicitly named issue reporting; merge adds no issue flag.
+
+The reader requires complete, well-formed GraphQL connections and labels. It
+explicitly refuses a result needing another page (more than 50 closing issues
+or 100 labels on the PR or any closing issue), rather than declaring it ungated.
+GraphQL errors, missing data and failed reads permit no merge. Non-permission
+read failures return `3`; permission refusals stop immediately with `1`.
+
+Merge reads gates before slow validation and again in final preflight after
+checks, reviewer threads and repository/release holds. A gate added during that
+work therefore blocks the merge write. Refusal leaves the PR open and changes
+no labels, issue states or review records. The delivery workflow records the
+existing owner handoff. Approval comments and passing reviews do not override
+remaining labels. After the owner removes every applicable gate, a fresh
+invocation can proceed only when all other merge conditions pass.
+
 Wait exit `6` prints that review's template for the full current head. Follow
 the shared internal-review workflow in the `github-repository-configuration`
 rules and replace every placeholder with actual results before posting it as a
@@ -118,7 +141,8 @@ After a successful merge call, the script reads the PR's `state` through
 It then writes the merge result (the squash commit SHA) to stdout, followed by
 a newline. Failed or unconfirmed merges write no success output.
 
-Exit `0` means merged. Exit `3` means not merged and needs the owner: either
+Exit `0` means merged. Exit `3` means not merged and needs the owner: an active
+owner gate or unreadable/incomplete gate evidence, or
 the base branch requires a merge queue, or a successful merge call left the
 PR in a state other than `merged`, or neither freshness enforcement nor the proven private-plan path can be confirmed, or required-check/reviewer-thread evidence cannot be established. The skill hands off with a question under
 [the comment rules' owner questions](../../rules/comments.md#owner-questions),
@@ -168,7 +192,12 @@ merge refusals, merge queue refusal, and successful calls that leave the PR
 unmerged. Outcome fixtures cover direct and installed invocation, missing,
 stale, abbreviated, incomplete and placeholder evidence, policy changes since
 wait, proposed local policy, invalid/unreadable trusted declarations, and all
-remaining gates after a complete record. Release-hold fixtures cover installed
+remaining gates after a complete record. Owner-gate fixtures cover source and installed
+refusal and resumption, PR and multiple closing-issue labels, arbitrary `gate:`
+labels, partial removal, unrelated issues, author-policy combinations, gates
+added during checks/threads, malformed/truncated evidence and permission
+refusals. Shared review reporting retains its explicit issue support and fails
+before writes on incomplete gate evidence. Release-hold fixtures cover installed
 execution, multiple holds, self-exemption, closed PRs, label removal, issues,
 absent configuration and keys, pinned configuration despite proposed local
 changes or a moving default branch, and unreadable or invalid reads. The freshness fixtures model two green PRs sharing one base, a base

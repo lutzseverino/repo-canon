@@ -2,7 +2,7 @@
 
 // Usage: node merge.mjs <number> <head SHA>, from the repository root.
 // Exit codes: 0 merged, 1 usage or platform error, 2 head changed or validation not successful; wait again,
-// 3 not merged; needs the owner, 4 stale base; update and validate,
+// 3 not merged; owner gate or other owner need, 4 stale base; update and validate,
 // 5 missing review outcome; post the completed record and rerun,
 // 6 unresolved configured-reviewer threads; resolve and rerun,
 // 9 repository or release hold; leave open and resume after the hold ends.
@@ -22,6 +22,8 @@ import {
 } from "./trusted-review-config.mjs";
 import { skipsExternalReview } from "./review-policy.mjs";
 import { completeReview, reviewsSection } from "./review-outcome.mjs";
+
+import { ownerGates } from "./owner-gates.mjs";
 
 import { decide } from "./wait.mjs";
 import { validationCheckStates } from "./required-checks.mjs";
@@ -236,6 +238,25 @@ async function held(connection, revision, number) {
   return false;
 }
 
+async function gated(connection, number) {
+  try {
+    const { gates } = await ownerGates(connection, number);
+    if (gates.length) {
+      needsOwner(
+        `Owner gate: ${gates.join(", ")}. Leave the PR open; resume after all applicable gates are removed.`,
+      );
+      return true;
+    }
+  } catch (error) {
+    if (["forbidden", "unauthenticated"].includes(error.reason)) throw error;
+    needsOwner(
+      `Could not confirm owner gates for PR #${number}: ${error.message}`,
+    );
+    return true;
+  }
+  return false;
+}
+
 export async function main(argv = process.argv.slice(2), connection) {
   const [number, head, ...extra] = argv;
   if (
@@ -248,6 +269,7 @@ export async function main(argv = process.argv.slice(2), connection) {
   connection ??= connectionFor();
   const pullRequest = await connection.pullRequests.pullRequest(Number(number));
   if (pullRequest.headCommit !== head) return retry();
+  if (await gated(connection, Number(number))) return;
   let configuration;
   try {
     configuration = await trustedReviewConfiguration(connection, {
@@ -379,6 +401,7 @@ export async function main(argv = process.argv.slice(2), connection) {
     );
   }
   if (await held(connection, configuration.revision, Number(number))) return;
+  if (await gated(connection, Number(number))) return;
   // All slow gates precede this final head, live destination and ancestry read.
   try {
     const finalPull = await connection.pullRequests.pullRequest(Number(number));

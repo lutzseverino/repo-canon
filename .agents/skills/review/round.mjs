@@ -36,20 +36,11 @@ import {
   reviewsSection,
 } from "../babysit/review-outcome.mjs";
 
+import { ownerGates } from "../babysit/owner-gates.mjs";
+
 const usage =
   "Usage: round.mjs <number> [--issue <number>]... [--post <file> | --reassess <file> | --ready] [--repo <owner/name>]";
 const positive = /^[1-9]\d*$/;
-
-const closingIssuesQuery = `query ReviewRoundIssues($owner: String!, $name: String!, $number: Int!) {
-  repository(owner: $owner, name: $name) {
-    pullRequest(number: $number) {
-      closingIssuesReferences(first: 50) {
-        nodes { number labels(first: 100) { nodes { name } pageInfo { hasNextPage } } }
-        pageInfo { hasNextPage }
-      }
-    }
-  }
-}`;
 
 // The account this command runs as, the identity whose holding review it
 // trusts. GraphQL's viewer serves App installation tokens too; it names a Bot
@@ -99,34 +90,6 @@ export function completedReviews(reviews) {
   });
 }
 
-const labelNames = (labels) => labels.map((label) => label.name);
-
-async function closingIssues(connection, number) {
-  const [owner, name] = connection.repository.path.split("/");
-  const response = await requestData(connection, {
-    method: "POST",
-    path: "/graphql",
-    body: { query: closingIssuesQuery, variables: { owner, name, number } },
-  });
-  const references =
-    response?.data?.repository?.pullRequest?.closingIssuesReferences;
-  if (response?.errors?.length || !references)
-    throw new Error(
-      `Could not read the issues pull request #${number} closes.`,
-    );
-  if (
-    references.pageInfo.hasNextPage ||
-    references.nodes.some((issue) => issue.labels.pageInfo.hasNextPage)
-  )
-    throw new Error(
-      `Pull request #${number} closes more issues or labels than one read holds.`,
-    );
-  return references.nodes.map((issue) => ({
-    number: issue.number,
-    labels: labelNames(issue.labels.nodes),
-  }));
-}
-
 async function viewerLogin(connection) {
   const response = await requestData(connection, {
     method: "POST",
@@ -156,24 +119,7 @@ async function round(connection, { number, issues: extra }) {
     throw new Error(
       `Pull request #${number} is not open with a readable head.`,
     );
-  const issues = await closingIssues(connection, number);
-  for (const issue of extra.filter(
-    (candidate) => !issues.some(({ number }) => number === candidate),
-  )) {
-    const read = await requestData(connection, {
-      method: "GET",
-      path: `/repos/${repository}/issues/${issue}`,
-    });
-    issues.push({ number: issue, labels: labelNames(read.labels ?? []) });
-  }
-  const gates = [
-    ...labelNames(pull.labels ?? []).map((label) => [label, "the PR"]),
-    ...issues.flatMap(({ number, labels }) =>
-      labels.map((label) => [label, `#${number}`]),
-    ),
-  ]
-    .filter(([label]) => label.startsWith("gate:"))
-    .map(([label, where]) => `${label} on ${where}`);
+  const { issues, gates } = await ownerGates(connection, number, extra);
   // Only this account's standing reviews record rounds, oldest first. Each
   // reviewed head is one round; the current head's round is the next one until
   // its review is posted. The review held when the latest one is a holding

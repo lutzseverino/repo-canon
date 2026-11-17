@@ -107,7 +107,7 @@ body was checked. Link-free bodies need no reconstruction.
    | --- | --- |
    | `0` | Merged. Record any installed-rule-required outcome under `.repo-standards/rules/comments.md#delivery-records`: delivered head, validation/review results and printed merge commit SHA. |
    | `2` | Head changed or current-head validation has not succeeded. Return to step 1. |
-   | `3` | Not merged; owner needed. Hand off under `.repo-standards/rules/comments.md#owner-questions`, without retrying merge. |
+   | `3` | Not merged; owner needed, including a `gate:` label on the PR or any closing issue. Leave it open and hand off under `.repo-standards/rules/comments.md#owner-questions`, without retrying merge. |
    | `4` | Stale base. Enter Branch-update recovery if this invocation has not used its branch update; otherwise record the owner handoff and stop. |
    | `5` | Current-head policy-skip review missing/incomplete. Complete both internal reviews, post under `.repo-standards/rules/comments.md#reviews` using wait's full-head template, verify other merge conditions and rerun merge. No owner handoff. |
    | `6` | Configured-reviewer threads remain unresolved. Resolve them on the platform, verify the other gates and rerun merge. Replies alone do not resolve threads. |
@@ -123,6 +123,15 @@ Merge independently checks every declared name for positive current-head success
 and all configured-reviewer threads for resolution, on both freshness paths.
 Unreadable or incomplete check/thread evidence permits no merge. After slow
 gates it rechecks the head, live destination and current-base ancestry.
+
+The merge command independently checks current `gate:` labels on the PR and
+all platform closing issues, including without factory configuration or a prior
+review step. It checks again after slow validation before merging. Any gate
+returns `3`, naming its label and source; approval comments or reviews do not
+clear labels. Incomplete, malformed or unreadable gate evidence permits no
+merge. The helper changes no labels, workflow states or review records; the
+caller performs the owner handoff. After all applicable gates are removed, a
+fresh invocation rechecks every merge condition.
 
 The merge command independently resolves trusted review configuration and checks
 the platform PR author on every invocation, even without a prior wait. Invalid

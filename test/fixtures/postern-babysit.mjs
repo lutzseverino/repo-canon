@@ -146,6 +146,28 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
       );
     }
     if (path === "/graphql") {
+      if (body.query.includes("closingIssuesReferences")) {
+        if (state.failOwnerGates)
+          return json({ message: "gate read failed" }, state.failOwnerGates);
+        const labels = (names) => connection(names.map((name) => ({ name })));
+        return json(
+          state.ownerGatesResponse ?? {
+            data: {
+              repository: {
+                pullRequest: {
+                  labels: labels(state.labels ?? []),
+                  closingIssuesReferences: connection(
+                    (state.closes ?? []).map((number) => ({
+                      number,
+                      labels: labels(state.issues?.[number] ?? []),
+                    })),
+                  ),
+                },
+              },
+            },
+          },
+        );
+      }
       if (
         body.query.includes("query PinnedFiles(") &&
         "factory" in body.variables
