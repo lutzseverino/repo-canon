@@ -2206,7 +2206,9 @@ function isReadinessTransition(candidate) {
 // has recorded both events. A carried label whose application it has not
 // recorded follows every recorded event only when its latest recorded change
 // is a removal or nothing. A label the issue was opened with is the exception.
-// Timestamps are used only for what has no timeline position (the feedback
+// A non-readiness workflow state's recorded changes include those recorded
+// under a former name that is no longer a live label, before the first change
+// recorded under its current name. Timestamps are used only for what has no timeline position (the feedback
 // comment and Agent Brief comments) and to recognize labels applied at creation.
 // The creation snapshot (this issue's own `opened:` review ID and the labels it
 // was opened with) is at position zero and the Nth event at position N. Agent
