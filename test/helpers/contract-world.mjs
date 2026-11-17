@@ -3,7 +3,9 @@
 // both programs on the same state. Each person's writes queue the event that
 // GitHub would deliver to the workflow; `deliver` runs the validator for every
 // queued event in order, as the workflow's per-issue serialization does. The
-// validator's own writes queue nothing, as with `GITHUB_TOKEN`.
+// validator's own writes queue nothing, as with `GITHUB_TOKEN`. `others` are
+// further issues of the repository, `{ number, body, state, comments }`, that
+// a specification's supersession reads; their comments are `{ author, body }`.
 import { connect } from "../../vendor/postern/postern.mjs";
 import { runIssueContractValidation } from "../../vendor/repo-canon/validate-issue-contract.mjs";
 
@@ -32,6 +34,7 @@ export function contractWorld({
   factory = false,
   triageResult = null,
   start = "2026-10-25T12:00:00Z",
+  others = [],
 } = {}) {
   let clock = Date.parse(start);
   let frozen = false;
@@ -178,30 +181,62 @@ export function contractWorld({
               },
             },
           });
+        const node = (number, { body, state = "open", labels = [] }) => ({
+          number,
+          fullDatabaseId: String(number),
+          id: `ISSUE_${number}`,
+          url: `https://github.com/${worldRepository}/issues/${number}`,
+          state: state.toUpperCase(),
+          title: "Fixture request",
+          body,
+          createdAt: issue.createdAt,
+          lastEditedAt: number === 42 ? issue.lastEditedAt : null,
+          author: { __typename: "User", login: "reporter" },
+          labels: page(labels.map((name) => ({ name }))),
+          parent: null,
+          subIssues: page([]),
+          blockedBy: page([]),
+          timelineItems: { nodes: [] },
+        });
+        if (query.includes("query PosternIssues("))
+          return json({
+            data: {
+              repository: {
+                issues: page([
+                  node(42, issue),
+                  ...others
+                    .filter(({ state = "open" }) => state === "open")
+                    .map((other) => node(other.number, other)),
+                ]),
+              },
+            },
+          });
+        const other = others.find(
+          ({ number }) => number === request.variables?.number,
+        );
         return json({
           data: {
             repository: {
-              issue: {
-                number: 42,
-                fullDatabaseId: "42",
-                id: "ISSUE_42",
-                url: `https://github.com/${worldRepository}/issues/42`,
-                state: "OPEN",
-                title: "Fixture request",
-                body: issue.body,
-                createdAt: issue.createdAt,
-                lastEditedAt: issue.lastEditedAt,
-                author: { __typename: "User", login: "reporter" },
-                labels: page(issue.labels.map((name) => ({ name }))),
-                parent: null,
-                subIssues: page([]),
-                blockedBy: page([]),
-                timelineItems: { nodes: [] },
-              },
+              issue: other ? node(other.number, other) : node(42, issue),
             },
           },
         });
       }
+      const commented = others.find(
+        ({ number }) => path === `${repo}/issues/${number}/comments`,
+      );
+      if (commented && method === "GET")
+        return json(
+          (commented.comments ?? []).map((entry, index) =>
+            restComment({
+              id: 9000 + index,
+              author: entry.author,
+              body: entry.body,
+              createdAt: issue.createdAt,
+              updatedAt: issue.createdAt,
+            }),
+          ),
+        );
       if (path === `${repo}/issues/42/comments` && method === "GET")
         return json(comments.map(restComment));
       if (path === `${repo}/issues/42/comments` && method === "POST")
