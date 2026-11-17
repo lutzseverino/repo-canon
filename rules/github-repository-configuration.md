@@ -116,15 +116,32 @@ no alternate credential is permitted.
 A stale PR returns to branch update and validation. Preserve its work, rebase
 or replay only its changes onto the refreshed default branch, and repeat
 required checks and applicable internal and external review on the replacement
-head. Checks from the old head never qualify the replacement. GitHub remains
+head, subject to the unchanged-patch exception below. Checks from the old head never qualify the replacement. GitHub remains
 the final guard wherever enforcement is available; the plan-limited path repeats
 its final verification with the accepted race.
 
-Each delivery attempt, such as one `babysit` invocation, gets one branch
-update. Never merge the default branch into the PR branch, and never use
+Each delivery attempt, such as one `babysit` invocation, gets an unconditional
+first branch update, then at most 2 further updates for a non-overlapping advance; the next stale base goes to the owner
+with the reason "base did not settle". A non-overlapping advance means both:
+the base commits added since the previous update change none of the paths the PR
+changes, and `git merge-tree` of its head and the new base is clean. The bundled
+`babysit/branch-update.mjs` script decides this from Git evidence. Touching a PR
+path is an overlap even when it merges cleanly; after the first update, an overlap
+requires the existing owner handoff.
+
+When the script verifies a non-overlapping update and `git patch-id --stable`
+of the PR's full diff is unchanged, the replacement repeats only required checks.
+Carry completed internal and external reviews, recording the previous review,
+base/head SHAs and verified patch identity in a current-head internal review
+record. Findings and unresolved threads retain their normal disposition. Any
+other replacement repeats applicable internal and external review. Designated
+owner approval always remains a current-head requirement. The script reads Git
+evidence only; host-owned configuration and state supply no decision.
+
+Never merge the default branch into the PR branch, and never use
 GitHub's update-branch.
 
-Within that one update, a run resolves a reconstruction conflict itself when,
+Within each allowed update, a run resolves a reconstruction conflict itself when,
 and only when, it is in the keep-both class. All four conditions must hold:
 
 - Ownership is certain: only this PR's own work is replayed onto the refreshed
@@ -146,8 +163,8 @@ with a changed generated hash qualify when both explanations are kept and the
 hash is regenerated once. Rewrites of the same glossary definitions do not
 qualify.
 
-An in-class resolution is part of the attempt's one branch update, not a failed
-update, and never starts another update. It keeps every recovery step:
+An in-class resolution is part of the current branch update, not a failed
+update, and consumes no extra update. It keeps every recovery step:
 work and PR-context preservation, required local validation before pushing,
 history and diff inspection against the refreshed base before the delivery push,
 and applicable replacement-head reviews, owner approval and review requests.
@@ -156,10 +173,9 @@ record under the `comments` rules.
 
 Conflicts outside the class and uncertain ownership require the contribution
 guide's owner handoff. Name the conflicting files and why each conflict is
-outside the class, including any ownership uncertainty. A failed branch update,
-or a stale base again after it, leaves the PR unmerged and requires the
-contribution guide's owner handoff with its reason; it never starts another
-update.
+outside the class, including any ownership uncertainty. A failed branch update
+leaves the PR unmerged and requires the contribution guide's owner handoff with
+its reason. A later stale base follows the overlap decision and bound above.
 
 ## Designated owner review
 

@@ -184,18 +184,49 @@ Exit `6` means configured-reviewer threads remain unresolved, naming their IDs
 and trusted revision. Resolve them on the platform and rerun with all other
 gates enforced; a reply alone cannot clear them.
 
-For exit `4`, the skill permits one branch-update recovery per invocation,
-preserving all work and PR context before rebasing or replaying only the PR's
+For exit `4`, the first branch update is unconditional, then there are
+at most 2 further updates for a non-overlapping advance; the next stale base goes to the owner
+with "base did not settle". Recovery preserves all work and PR context before rebasing or replaying only the PR's
 changes onto the refreshed default branch. It validates the integrated change,
 refreshes and inspects history and diff before pushing, then applies review
 policy, checks, applicable reviews and merge authorization to the replacement
 head. Old checks never qualify that head. Conflicts in the
 [Required-check freshness rules' keep-both class](../../rules/github-repository-configuration.md#required-check-freshness)
-are resolved within that one update and are not failed updates. The skill posts
+are resolved within the current update and are not failed updates. The skill posts
 a conflict-resolution delivery record before the replacement head's review.
-A second stale-base result, uncertain ownership or a conflict outside that class
+After the first update, an overlapping advance, uncertain ownership or a conflict outside that class
 goes to the owner, naming conflicting files and why each conflict is outside the
 class. The skill carries the complete recovery instructions.
+
+`branch-update.mjs <previous-base> <previous-head> <new-base> <updates-used> [<replacement-head>]`
+accepts full commit SHAs, checks their ancestry and returns JSON with the update
+decision, overlapping paths, merge cleanliness and stable full-diff patch identity.
+Exit `0` permits update, `3` names the owner handoff reason and `1` reports invalid
+or unavailable evidence, which blocks only further updates: the first update
+stays unconditional and repeats review. The count is updates already used in this attempt;
+wait/merge retries retain it. Git 2.38 or newer is needed for `merge-tree --write-tree`.
+All paths touched by added base commits count, including reverts, renames and
+merge parents; directory/file conflicts are caught by merge-tree even when the
+path sets are disjoint. The script changes no branch or worktree.
+
+After a non-overlapping replay, compare `git patch-id --stable` of the complete
+old and replacement diffs. An unchanged patch repeats only required checks;
+every other replacement repeats internal and external review too. The current-head
+internal review record cites the carried outcomes and the verified SHAs; designated
+owner approval and unresolved threads still apply to the current head.
+Request and wait accept `--updated-from <previous-base>:<previous-head>:<new-base>`
+and independently recompute the Git proof against the live head. Request suppresses
+a new review request only with completed previous-head review; wait can recognize that review
+while reading checks and workflow attempts exclusively for the replacement.
+An overlapping or changed patch with that flag fails, rather than waiving review.
+Without completed old-head review, normal reviewer handling remains. For multiple
+carried updates, the proof spans from the reviewed base/head pair to the newest
+base, while recovery uses the immediately previous update to decide the next advance.
+These decisions read no host-owned configuration or state.
+
+Run `node --test test/babysit-branch-update.test.mjs` for disposable Git repositories
+and installed-command fixtures covering the overlap decision, update bound,
+stable patch comparison and review carry with fresh required checks.
 
 Run `node --test test/babysit-merge.test.mjs` for the executable fixtures. They
 use the same injected Postern fetch transport as the wait tests and cover the explicit message,
