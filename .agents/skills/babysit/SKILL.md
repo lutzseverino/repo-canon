@@ -181,8 +181,9 @@ Preserve the full base SHA integrated by the previous update and its head SHA.
 After fetching, run `node <this skill's directory>/branch-update.mjs <previous-base> <previous-head> <new-base> <updates-used>`.
 Before the first update use the PR's merge-base and current head, with count `0`.
 Exit `0` permits the update; `3` requires the owner handoff with its printed
-reason; `1` means missing or invalid Git evidence, which permits no update until
-resolved. The script checks all paths touched by added base commits, including
+reason; `1` means missing or invalid Git evidence, which permits no further update
+until resolved. At count `0`, exit `1` still permits the unconditional first
+update and carries no review. The script checks all paths touched by added base commits, including
 reverts and merge parents, and `git merge-tree --write-tree` (Git 2.38 or newer).
 A clean merge that touches a PR path is still an overlap. Prose grants no override.
 

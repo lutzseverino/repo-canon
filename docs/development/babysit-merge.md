@@ -202,7 +202,8 @@ class. The skill carries the complete recovery instructions.
 accepts full commit SHAs, checks their ancestry and returns JSON with the update
 decision, overlapping paths, merge cleanliness and stable full-diff patch identity.
 Exit `0` permits update, `3` names the owner handoff reason and `1` reports invalid
-or unavailable evidence. The count is updates already used in this attempt;
+or unavailable evidence, which blocks only further updates: the first update
+stays unconditional and repeats review. The count is updates already used in this attempt;
 wait/merge retries retain it. Git 2.38 or newer is needed for `merge-tree --write-tree`.
 All paths touched by added base commits count, including reverts, renames and
 merge parents; directory/file conflicts are caught by merge-tree even when the
