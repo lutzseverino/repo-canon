@@ -671,7 +671,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "fields",
     "outcomes",
   ]);
-  assert.equal(runFacts.runs.length, 3);
+  assert.equal(runFacts.runs.length, 6);
   assert.equal(
     new Set(runFacts.runs.map(({ result }) => result)).size,
     runFacts.runs.length,
@@ -701,6 +701,62 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   );
   assert.equal(outside.length, 1);
   assert.doesNotMatch(outside[0], /^Labels: .*type:/m);
+  // Three direct tickets carry their contract in the body and no category
+  // label; the tracker holds no Agent Brief for any run to start from. The
+  // holding and correction cases each carry the notice of their exact body
+  // revision, and the third has none.
+  assert.equal(
+    intakes.filter((text) => /^## Agent Brief$/m.test(text)).length,
+    0,
+  );
+  const direct = runFacts.runs
+    .map(({ issue }, index) => ({ issue, text: intakes[index] }))
+    .filter(({ text }) => /^Contract: issue body$/m.test(text));
+  assert.deepEqual(
+    direct.map(({ issue }) => issue.split("/").pop().slice(0, 2)),
+    ["04", "05", "06"],
+  );
+  const noticed = [];
+  for (const [index, { issue, text }] of direct.entries()) {
+    assert.match(text, /^Labels: none$/m);
+    const id = `FACTORY_TRIAGE_${index + 4}`;
+    const body = readFileSync(
+      join(
+        factoryTriage.path,
+        `.scratch/factory-triage/contracts/${issue.split("/").pop()}`,
+      ),
+      "utf8",
+    );
+    assert.ok(text.includes(body), issue);
+    for (const line of ["Supersedes:", "Adds:", "Deletes:"])
+      assert.match(body, new RegExp(`^${line} `, "m"));
+    const decision = decideIssueContract({
+      repository: contractRepository,
+      event: { issue: { number: index + 4 } },
+      issue: {
+        number: index + 4,
+        node_id: id,
+        body,
+        labels: [{ name: "state:triage" }],
+        state: "open",
+      },
+      bodyRevision: { id, lastEditedAt: null },
+      comments: [],
+      issueEvents: [],
+      blockedBy: [],
+      parent: null,
+      relatedIssues: {},
+      permissions: {},
+    });
+    assert.equal(decision.exitCode, 0, decision.message);
+    assert.match(decision.message, /valid implementation ticket/i);
+    const exact = /sha256:[0-9a-f]{64}/.exec(decision.feedback.body)?.[0];
+    assert.ok(exact);
+    const notices = text.match(/sha256:[0-9a-f]{64}/g) ?? [];
+    if (notices.length) assert.deepEqual(notices, [exact], issue);
+    noticed.push(notices.length > 0);
+  }
+  assert.deepEqual(noticed, [true, true, false]);
   for (const record of ["CHANGELOG.md", "docs/adr/README.md"])
     assert.ok(statSync(join(factoryTriage.path, record)).isFile(), record);
 

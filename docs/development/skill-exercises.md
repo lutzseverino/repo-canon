@@ -318,18 +318,24 @@ documentation. Fixture regression checks verify these inputs and their
 revision associations; they do not establish that an agent performed the
 exercise.
 
-The `factory-triage` scenario runs `triage` as the factory's triage run three
+The `factory-triage` scenario runs `triage` as the factory's triage run six
 times, each in a fresh session given only one entry of
 `.scratch/factory-triage/run-facts.json`: its issue, run, run-result path, the
 allowed models and the run-result interface. That interface is a local
 stand-in for Scriptorium's, not its definition. No orchestrating agent,
-research run, grill or person takes part. Observe three outcomes in the
+research run, grill or person takes part. Observe six outcomes in the
 written run results: a code-bound bug, whose documentation states the
 expected result, asking for `state:ready` with a brief, one allowed model and
 the owner's priority kept; a feature whose customer-facing look no dated ADR
 settles, asking for `state:grill` with facts and numbered questions; and an
 outside reporter's bug that names neither its version nor how it opens the
-export, asking for `state:reporter` with the reporter's questions. Check that `git status` shows only the run
+export, asking for `state:reporter` with the reporter's questions. Three
+directly authored tickets, each an issue-body contract with no category label,
+get no Agent Brief and no `type:` label, and each ends in a `state:owner`
+stop: one that holds names `state:ready` at the exact `sha256:` revision of
+its validator notice with its model and priority labels; one whose settled
+defects need correction names each correction for a separate writer; and one
+without a validator notice says the notice is missing. Check that `git status` shows only the run
 results: no tracker file changed, no label or comment was written, and no run
 ran `ready.mjs`.
 
