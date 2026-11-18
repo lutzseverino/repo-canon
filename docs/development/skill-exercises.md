@@ -58,6 +58,15 @@ codex exec --json -c 'model_reasoning_effort="high"' \
   -C <fixture-repository> <scenario-prompt>
 ```
 
+Every bounded exercise records each session's elapsed time on the harness
+clock, from the session's start to its final report, relay waits included, and
+reports it per session as observed. A separate session, such as the orchestrate
+retro, is its own session with its own elapsed time. A scenario's time bound is
+a safety stop, not a pass criterion: the exercise establishes behavior, not
+model latency, and finishing within the stop is no evidence that a checkpoint
+passed. Reaching the stop, or an unavailable session, is a recorded exercise
+limit, never a pass.
+
 A scenario establishes only the path it exercises, not every behavior of the
 skill. Report each outcome in the pull request that needs it, such as the
 release pull request. Session output, transcripts, and produced artifacts are
@@ -231,8 +240,7 @@ readiness and workflow state. No factory model suggestion is required.
 Report the observed checkpoints, retained text identities, review verdicts and
 rule sections separately from builder/test success. All participant relays,
 notices, reviews and tracker artifacts are local simulations, with no remote
-publication, real authority or factory launch. A timeout or unavailable session
-is an exercise limit, never a pass.
+publication, real authority or factory launch.
 
 The factory-planning scenario exposes both rule sets and runs in stages. First, invoke
 `triage` as the orchestrating agent on the unresolved export request. Its
@@ -264,8 +272,7 @@ contracts; it does not grant the unresolved intake approval. It covers the
 parent never running, same-second and later-ticket parent readiness, each
 ticket's own readiness/model, and an open blocker becoming closed. No factory
 is launched. Run this scenario within 20 minutes, with fresh research and grill
-sessions and verbatim operator relays if the harness cannot nest them. A timeout
-or unavailable session is a recorded exercise limit, never a pass.
+sessions and verbatim operator relays if the harness cannot nest them.
 
 The `triage-routing` scenario has the agent act as the orchestrating agent on
 three requests: a bug whose documentation states the expected result, a bug
@@ -408,9 +415,10 @@ message, schedule or factory operation is authorized. Report checkpoints and
 wait for the next controlled turn.
 ```
 
-Allow at most 10 minutes per session, 20 minutes total. The operator reads
-`docs/participant-inputs.md` and relays turns 1–7 to session one at their stated
-checkpoints, including 1a–1c and 6a–6e. Before approval, observe registration
+Stop each session, the separate retro included, at 45 minutes, with no total
+bound; the full lifecycle remains required at any elapsed time. The operator
+reads `docs/participant-inputs.md` and relays turns 1–7 to session one at their
+stated checkpoints, including 1a–1c and 6a–6e. Before approval, observe registration
 of the proposal, filing without readiness, and wake-up coverage of the filed
 factory ticket and its recorded blocker without a PR or directly launched
 worker. The operator's wake-ups stand for wait exits; start no live wait or
