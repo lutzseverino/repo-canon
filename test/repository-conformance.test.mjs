@@ -284,6 +284,7 @@ test("the standard profile installs no factory file, and the factory profile add
       {
         id: "factory-sandbox-image-workflow",
         kind: "file",
+        "check-locations": ["github"],
         target: ".github/workflows/sandbox-image.yml",
         exact: ".github/workflows/sandbox-image.yml",
       },
@@ -291,7 +292,7 @@ test("the standard profile installs no factory file, and the factory profile add
   );
 });
 
-test("both profiles inherit the exact standards update workflow from defaults", () => {
+test("both profiles inherit the exact standards update workflow, installed only at github, from defaults", () => {
   for (const profile of ["standard", "factory"])
     assert.deepEqual(
       declarations(root)[profile].find(
@@ -300,6 +301,7 @@ test("both profiles inherit the exact standards update workflow from defaults", 
       {
         id: "standards-update-workflow",
         kind: "file",
+        "check-locations": ["github"],
         target: ".github/workflows/standards-update.yml",
         exact: ".github/workflows/standards-update.yml",
       },

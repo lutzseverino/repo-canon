@@ -252,7 +252,7 @@ export const assessments = {
       "The fixture has no Git remote, so its GitHub configuration is the deferred remote setup, and it keeps no pull request reviewer file.",
     evidence: [
       "The fixture repository has no Git remote.",
-      "Without a GitHub repository, no visibility or REPO_CANON_RUNS_ON variable exists to read, so the variable is unset.",
+      "Without a GitHub repository, no visibility exists to read.",
       "No .github/pull-request-reviewer.json exists in the fixture.",
     ],
     scopeValidity: {

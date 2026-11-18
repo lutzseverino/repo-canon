@@ -7,7 +7,12 @@ import { parseStandards } from "../standards-declarations.mjs";
 // update to verify, so its check is skipped.
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { adoptFixture, checkStatus, fixtureAnswer } from "./adoption.mjs";
+import {
+  adoptFixture,
+  adoptFormats,
+  checkStatus,
+  fixtureAnswer,
+} from "./adoption.mjs";
 import { cliFloor } from "./named-versions.mjs";
 import {
   ReleaseCheckFailure,
@@ -89,12 +94,7 @@ function update(cli, project, version, args = []) {
     child.stdout || child.stderr,
     "the update adopt output",
   );
-  // Seam (deferred): published adopt report variants; consumers: 1; broader readers in #962.
-  if (
-    !["repo-standards/adopt/v2", "repo-standards/adopt/v3"].includes(
-      report.format,
-    )
-  )
+  if (!adoptFormats.includes(report.format))
     fail(
       `the update returned an unsupported adopt report: ${child.stdout || child.stderr}`,
     );
@@ -154,7 +154,7 @@ function checkUpdate({
       directory,
       {
         initialArgs: ["--standards-version", previous, "--profile", profile],
-        formats: ["repo-standards/adopt/v1", "repo-standards/adopt/v2"],
+        formats: ["repo-standards/adopt/v1", ...adoptFormats],
       },
     );
     git(["-C", project, "add", "--all"]);

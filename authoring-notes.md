@@ -135,7 +135,7 @@ repeated.
   [adoption guide](docs/usage/adopt-repo-canon.md#recommended-personal-skills)
   names the recommended ones.
 - Delivery belongs to standards sources under
-  [Repository Standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/adr/0015-leave-delivery-to-standards-sources.md).
+  [Repository Standards ADR 0015](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/adr/0015-leave-delivery-to-standards-sources.md).
   [ADR 0010](docs/adr/0010-carry-delivery-rules-in-the-environment.md)
   records the environment-carried decision. Current requirements live in
   [Pull requests](CONTRIBUTING.md#pull-requests) and the
@@ -233,7 +233,7 @@ repeated.
   [base records](upstream-bases.json) distinguish unchanged and owned edits;
   [project guidance rules](rules/project-agent-guidance.md) keep local constraints
   separate. Repository Standards owns update notices under its
-  [ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v10.0.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md).
+  [ADR 0014](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/adr/0014-leave-available-updates-to-the-maintainer.md).
 - GitHub automation and plan-gated enforcement live in the
   [GitHub rules](rules/github-repository-configuration.md), with mechanisms in
   [PR metadata validation](docs/development/pr-metadata-validation.md) and

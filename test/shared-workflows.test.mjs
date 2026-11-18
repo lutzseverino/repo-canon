@@ -27,9 +27,8 @@ function actionPins(workflow, action) {
   );
 }
 
-test("every installed workflow job selects repository runner labels with the hosted default", () => {
-  const expected =
-    "${{ vars.REPO_CANON_RUNS_ON && fromJSON(vars.REPO_CANON_RUNS_ON) || 'ubuntu-latest' }}";
+test("every installed workflow job runs on literal ubuntu-latest", () => {
+  const expected = "ubuntu-latest";
   for (const path of sharedWorkflows()) {
     const jobs = workflow(path).match(
       /^jobs:\n([\s\S]*?)(?=^\S|$(?![\s\S]))/m,

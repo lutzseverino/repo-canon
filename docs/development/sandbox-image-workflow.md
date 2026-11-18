@@ -10,13 +10,10 @@ needs it.
 ## Pull request behavior
 
 Every `pull_request` run has one `Sandbox image` job (`build`) on
-`ubuntu-latest` unless the `REPO_CANON_RUNS_ON` variable names other runner
-labels as a JSON array. Unset or empty keeps the hosted default; the
-[runner rules](../../rules/github-repository-configuration.md#installed-workflow-runners)
-describes prerequisites, inheritance, and fallback, including the Docker CLI
-and daemon this job needs.
-Repositories accepting untrusted pull requests keep hosted compute or use
-isolated, ephemeral self-hosted runners, as the runner rules describe.
+`ubuntu-latest`, GitHub's hosted runners, which supply the Docker CLI and
+daemon this job needs. The workflow installs only at the `github` check
+location; the [runner rules](../../rules/github-repository-configuration.md#installed-workflow-runners)
+describe the location and the retired runner variable.
 There is no event path filter: pull requests with unrelated changes report
 success without invoking Docker. The job checks out the pull request's head
 with full history and compares its head with the merge base of its base and

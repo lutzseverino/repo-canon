@@ -8,8 +8,9 @@ import { execFixtureGit } from "../../scripts/support/fixture-git.mjs";
 // (a remote setup that is ready, so not offered for deferral),
 // `confirmation` (a confirmation-required change), or `failed-checks`. The
 // workbench profile has no discovery, remote setup or contextual work, so its
-// run starts on the inspection and completes. Each call's answers are appended
-// to `FAKE_ADOPT_LOG` when it is set.
+// run starts on the inspection and completes. As CLI 11 does, a fresh adoption
+// of a project profile asks for its `checks` location once the profile is
+// chosen. Each call's answers are appended to `FAKE_ADOPT_LOG` when it is set.
 import {
   appendFileSync,
   existsSync,
@@ -145,7 +146,12 @@ const submitted = answersPath
   ? JSON.parse(readFileSync(answersPath, "utf8"))
   : null;
 const questions = submitted?.questions ?? [];
-if (submitted && state?.version === "v1.0.0" && updateCli) {
+if (
+  submitted &&
+  state?.version === "v1.0.0" &&
+  state.phase.startsWith("update-") &&
+  updateCli
+) {
   if (submitted.format !== answersFormat || submitted.source !== source)
     reject("The update answers must retain their protocol and source.");
   if (option("--standards-version") !== "v1.0.0")
@@ -460,7 +466,22 @@ if (state === null) {
       answer: given.get("profile") ?? null,
     },
   ];
-  if (!answersPath || profile === null)
+  if (cli11 && profile !== null && !workbench) {
+    const checks = given.get("checks") ?? null;
+    if (checks !== null && checks !== "github")
+      reject(`The fixture must select github, not ${checks}.`);
+    asked.push({
+      id: "checks",
+      question: "Where does the project run its checks?",
+      choices: ["github", "runner", "self-reported"],
+      answer: checks,
+    });
+  }
+  if (
+    !answersPath ||
+    profile === null ||
+    asked.some((question) => question.answer === null)
+  )
     print(report("answers-required", asked), answersPath ? 1 : 0);
 
   const missing = [];
