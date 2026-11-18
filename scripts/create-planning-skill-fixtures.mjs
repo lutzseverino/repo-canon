@@ -993,13 +993,13 @@ Record the new simulated decisions as Owner, 2026-10-26, .scratch/routing/owner-
       "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Signer name**:\nThe name of the person who signed for a Parcel, as the carrier reports it.\n_Avoid_: Recipient\n",
     exercise: `## Task
 
-Run the triage skill as the factory's triage run, six times, once per entry in .scratch/factory-triage/run-facts.json. Start each run in a fresh session with no other run's context, and give it only the factory's facts for that run: the issue, the run, the run-result path, the allowed models and the run-result interface. Each run reads the repository and writes its run result; it posts nothing, applies no label, pushes nothing and attempts no fix. The run-result interface in run-facts.json is this exercise's local stand-in for Scriptorium's run-result interface (lutzseverino/scriptorium#116), not its definition. No orchestrating agent, research run, grill, workbench or person takes part. Publish nothing and launch no factory.
+Run the triage skill as the factory's triage run, six times, once per entry in .scratch/factory-triage/run-facts.json. Start each run in a fresh session with no other run's context, and give it only the factory's facts for that run: the issue, the run, the run-result path, the host's models with their Model guidance, narrower-model declarations and default, and the run-result interface. Each run reads the repository and writes its run result; it posts nothing, applies no label, pushes nothing and attempts no fix. The model facts in run-facts.json simulate the host's, and its run-result interface is this exercise's local stand-in for Scriptorium's run-result interface (lutzseverino/scriptorium#116); neither is their definition. No orchestrating agent, research run, grill, workbench or person takes part. Publish nothing and launch no factory.
 
 ## Expected outcome
 
 Lookup exposes both GitHub repository configuration and factory workflow rules, including the factory rules' Triage run section.
 
-01 is a code-bound bug: the receipt export documentation states the expected result, and the run reproduces the failure from the code. Its result asks for state:ready with exactly one model label from the allowed models, and its body holds an Agent Brief in the GitHub rules' shape followed by its triage notes. It keeps the owner's priority:low and asks for no other priority label, asks for no gate: label and no factory:skip, and the issue keeps its type:bug.
+01 is a code-bound bug: the receipt export documentation states the expected result, and the run reproduces the failure from the code. Its result asks for state:ready with exactly one model label, chosen from the host's models under the Model selection rule, and its body holds an Agent Brief in the GitHub rules' shape followed by its triage notes, whose one-line model reason names the Model guidance used. It keeps the owner's priority:low and asks for no other priority label, asks for no gate: label and no factory:skip, and the issue keeps its type:bug.
 
 02 is an intent-bound feature: what a customer-facing PDF receipt shows and how it looks is the owner's taste and intent. ADR 0001, dated 2026-09-01, covers dispatcher CSV exports only, so no repository record settles it. Its result asks for state:grill, with the facts gathered and numbered open questions, and holds no Agent Brief and no model label.
 
@@ -1007,7 +1007,7 @@ Lookup exposes both GitHub repository configuration and factory workflow rules, 
 
 04, 05 and 06 are implementation tickets a maintainer wrote directly after a grill: each contract is its issue body, with no category label, and factory triage did not write it. On each, the run writes no Agent Brief, asks for no type: label, and accepts nothing: it reviews the body as triage's accept mode reviews a direct contract, and its result is a stop.
 
-04 holds: its recorded owner decision settles the order, ties and comparison, and the code shows rows in the order supplied. Its result asks for state:owner, and its body names state:ready at exactly the sha256: revision in 04's validator notice, with one model label from the allowed models and its reason, a priority: label, no factory:skip, and the review's findings, each with its evidence.
+04 holds: its recorded owner decision settles the order, ties and comparison, and the code shows rows in the order supplied. Its result asks for state:owner, and its body names state:ready at exactly the sha256: revision in 04's validator notice, with one model label chosen from the host's models under the Model selection rule and a reason naming the Model guidance used, a priority: label, no factory:skip, and the review's findings, each with its evidence.
 
 05 needs correction that the records settle: its header criterion contradicts its own recorded owner decision, which puts carrier in the header, and "The export works well for dispatchers" cannot be tested. Its result asks for state:owner, names each correction for a separate writer to make before the issue returns to state:triage, and names no readiness.
 
@@ -1229,12 +1229,33 @@ ${notice}`;
     ".scratch/factory-triage/run-facts.json",
     `${JSON.stringify(
       {
-        note: "Simulated factory run facts for this local exercise. The run-result interface is a stand-in for Scriptorium's (lutzseverino/scriptorium#116), not its definition.",
-        allowedModels: [
-          "anthropic/claude-opus-5-5",
-          "anthropic/claude-sonnet-5-5",
-          "openai/gpt-6.1-sol",
-        ],
+        note: "Simulated factory run facts for this local exercise. The model facts simulate the host's, and the run-result interface is a stand-in for Scriptorium's (lutzseverino/scriptorium#116); neither is their definition.",
+        models: {
+          catalog: [
+            {
+              model: "anthropic/claude-opus-5-5",
+              guidance:
+                "Suits design, writing-heavy work and implementing settled designs of any size.",
+            },
+            {
+              model: "anthropic/claude-sonnet-5-5",
+              guidance:
+                "Suits small, well-specified code changes: bug fixes and implementation tickets whose contract settles the change.",
+            },
+            {
+              model: "openai/gpt-6.1-sol",
+              guidance:
+                "Suits long-running performance and concurrency investigations.",
+            },
+          ],
+          narrower: [
+            {
+              model: "anthropic/claude-sonnet-5-5",
+              than: "anthropic/claude-opus-5-5",
+            },
+          ],
+          default: "anthropic/claude-opus-5-5",
+        },
         runResult: {
           fields: {
             outcome: "One of the outcomes below.",
