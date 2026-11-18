@@ -151,7 +151,7 @@ When your credentials cannot apply readiness, or the destination's factory workf
 
 1. **Read the revision** in the validator's current notice; without one, stop as [Accept a brief that holds](#accept-a-brief-that-holds) step 1 says. If this session published it, refuse: post nothing, and report that another session must review it.
 2. **Review it** as the [code-bound path](#code-bound-path)'s step 2 says, or the [intent-bound path](#intent-bound-path)'s step 6 for a direct contract, running each read-only check of live facts the contract names.
-3. **Post one verdict comment**: `**Verdict:**` holds or does not hold, `**Revision:**` the exact `sha256:` reviewed, and `**Findings:**`, one bullet each with its evidence, live checks' results included. A failing verdict is the writer's correction list.
+3. **Post one verdict comment**: `**Verdict:**` holds or does not hold, `**Revision:**` the exact `sha256:` reviewed, and `**Findings:**`, one bullet each with its evidence, live checks' results included. Start it with the triage disclaimer, as `.repo-standards/rules/comments.md#disclaimers` says. A failing verdict is the writer's correction list.
 4. **Accept** a holding revision as [Accept a brief that holds](#accept-a-brief-that-holds) says.
 
 ## Factory triage run

@@ -21,6 +21,7 @@ arises; these rules say what the post holds:
 | Agent Brief, triage notes and reporter questions       | The issue or external PR being triaged            | [Disclaimers](#disclaimers)                           |
 | A question only the owner can answer                   | Its issue, or its PR for work without one         | [Owner questions](#owner-questions)                   |
 | An answer, or a recorded owner decision                | The issue the question or decision concerns       | [Disclaimers](#disclaimers)                           |
+| A contract-review verdict                              | The contract's issue                              | [Disclaimers](#disclaimers)                           |
 | A stop without a pull request or question              | Its issue                                         | [Stop notes](#stop-notes)                             |
 | A superseded issue's fate                              | The superseded issue                              | [Fates](#fates)                                       |
 | New evidence on an existing finding                    | The finding's issue                               | [Fates](#fates)                                       |
@@ -182,7 +183,8 @@ In a repository a factory serves, issues stay clean. Beyond its contract and
 triage notes, an issue carries the factory's run comment and action comments,
 and a parent its close notice. An agent posts on an issue only when a person
 must act or has acted: a question for the owner, a reporter or a grill, its
-answer or recorded decision, a stop note, or a [fate or new evidence](#fates).
+answer or recorded decision, a contract-review verdict, a stop note, or a
+[fate or new evidence](#fates).
 Findings, reviews, delivery records and fix discussion go on the pull request;
 a run without one links its findings where the contribution guide's Findings
 section says.
