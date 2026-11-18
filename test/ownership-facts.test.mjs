@@ -1,9 +1,16 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
 import {
   execFixtureGit,
@@ -41,6 +48,101 @@ function fixture(t) {
   };
   return { root, git, write, commit, run };
 }
+
+test("prints the same facts through a symlinked skill directory as through its real path", (t) => {
+  const { root, write, commit, run } = fixture(t);
+  write("vendor/value.mjs");
+  const base = commit();
+  write("vendor/value.mjs", "changed\n");
+  const head = commit();
+  const linked = join(root, "linked-skill");
+  symlinkSync(dirname(source), linked, "dir");
+  const expected = [
+    { kind: "vendored", path: "vendor/value.mjs", sources: ["vendor"] },
+  ];
+  assert.deepEqual(run(base, head), expected);
+  assert.deepEqual(
+    run(base, head, join(linked, "ownership-facts.mjs")),
+    expected,
+  );
+  assert.deepEqual(run(head, head, join(linked, "ownership-facts.mjs")), []);
+});
+
+test("prints the same facts through a file symlink as through its real path", (t) => {
+  const { root, write, commit, run } = fixture(t);
+  write("vendor/value.mjs");
+  const base = commit();
+  write("vendor/value.mjs", "changed\n");
+  const head = commit();
+  const linked = join(root, "linked-facts.mjs");
+  symlinkSync(source, linked);
+  const expected = [
+    { kind: "vendored", path: "vendor/value.mjs", sources: ["vendor"] },
+  ];
+  assert.deepEqual(run(base, head), expected);
+  assert.deepEqual(run(base, head, linked), expected);
+  assert.deepEqual(run(head, head, linked), []);
+});
+
+test("symlinked commands report usage and Git failures", (t) => {
+  const { root } = fixture(t);
+  const directory = join(root, "linked-skill");
+  const file = join(root, "linked-facts.mjs");
+  symlinkSync(dirname(source), directory, "dir");
+  symlinkSync(source, file);
+  for (const script of [source, join(directory, "ownership-facts.mjs"), file]) {
+    for (const args of [[], ["HEAD"], ["HEAD", "HEAD", "extra"]]) {
+      const child = spawnSync(process.execPath, [script, ...args], {
+        cwd: root,
+        encoding: "utf8",
+        env: fixtureGitEnvironment(),
+      });
+      assert.equal(child.status, 1);
+      assert.equal(child.stdout, "");
+      assert.equal(
+        child.stderr,
+        "Usage: node ownership-facts.mjs <comparison-base> <head>\n",
+      );
+    }
+    const child = spawnSync(process.execPath, [script, "missing", "HEAD"], {
+      cwd: root,
+      encoding: "utf8",
+      env: fixtureGitEnvironment(),
+    });
+    assert.equal(child.status, 1);
+    assert.equal(child.stdout, "");
+    assert.match(child.stderr, /Command failed: git rev-parse/);
+  }
+});
+
+test("imports stay silent and run no Git command, with or without argv[1]", (t) => {
+  const { root } = fixture(t);
+  const importer = join(root, "importer.mjs");
+  const code = `
+    import assert from "node:assert/strict";
+    import childProcess from "node:child_process";
+    import { syncBuiltinESMExports } from "node:module";
+    let commands = 0;
+    childProcess.execFileSync = () => { commands++; throw new Error("unexpected command"); };
+    syncBuiltinESMExports();
+    await import(${JSON.stringify(pathToFileURL(source).href)});
+    assert.equal(commands, 0);
+  `;
+  writeFileSync(importer, code);
+  for (const args of [
+    [importer, "HEAD", "HEAD"],
+    ["--input-type=module", "--eval", `delete process.argv[1]; ${code}`],
+  ]) {
+    const child = spawnSync(process.execPath, args, {
+      cwd: root,
+      encoding: "utf8",
+      env: fixtureGitEnvironment(),
+    });
+    assert.equal(child.status, 0, child.stderr);
+    assert.equal(child.stdout, "");
+    assert.equal(child.stderr, "");
+  }
+});
 
 test("reports vendored paths by location or Git attribute, never package-like names", (t) => {
   const { write, commit, run } = fixture(t);
