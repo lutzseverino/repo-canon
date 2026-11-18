@@ -379,6 +379,97 @@ test("installed reassessment retains later round counts, App identity and owner 
   assert.equal((await run(t, ["12", "--ready"], state, entry)).status, 2);
 });
 
+test("source and installed rounds post and track reviews with separate verification material", async (t) => {
+  const target = installedValidator(t, ".agents/skills/review/round.mjs");
+  const installed = await import(pathToFileURL(target).href);
+  const fields = reviewBody(head).split("\n\n")[1];
+  const inlineExamples = [
+    `prefix <code><code>inner</code>\n${fields}\n</code>`,
+    ...["script", "style", "title", "pre"].map(
+      (tag) => `prefix <${tag}>\n${fields}\n</${tag}>`,
+    ),
+    `[label](/target "title\n${fields}\nend")`,
+    `![label](/target "title\n${fields}\nend")`,
+    `![label\n${fields}\nend](/target)`,
+    `<span title="title\n${fields}\nend">label</span>`,
+    `\`\`example\n${fields}\nend\`\``,
+  ].map((source) => `- ${source.replaceAll("\n", "\n  ")}`);
+  for (const entry of [main, installed.main]) {
+    for (const body of [
+      ...inlineExamples.map((example) => `${example}\n\n${reviewBody(head)}`),
+      `- prefix <script>\n\n  <div>inner</script></div>\n\n${reviewBody(head)}`,
+      `> prefix <script>\n\n${fields}\n\n</script></blockquote>\n\n${reviewBody(head)}`,
+      `- [label\n${fields.replace(/^/gm, "  ")}\n  end](/target "title")`,
+      `${reviewBody(head)}\n\n\`\`\`text\npnpm check passed\n\`\`\``,
+      `~~~text\npnpm check passed\n~~~\n\n${reviewBody(head)}`,
+      `${reviewBody(head)}\n\n<!-- verification marker -->`,
+      `${reviewBody(head)}\n\n\`\`\`markdown\n${handBack(earlier)}\n\`\`\``,
+      `${handBack(head)}\n\n<!--\n${reviewBody(earlier)}\n-->`,
+      `- example:\n  \`\`\`text\n  <!-- unclosed\n  \`\`\`\n\n${reviewBody(head)}`,
+      `${reviewBody(head)}\n\n- > Example\n  > ${handBack(earlier).replaceAll("\n", "\n  > ")}`,
+      `<pre>\n${handBack(earlier)}\n</pre>\n\n${reviewBody(head)}`,
+      reviewBody(head).replace(
+        /^Spec: .*$/m,
+        "$& The parser keeps `<!--` as text.",
+      ),
+    ]) {
+      const state = pullState();
+      const result = await run(
+        t,
+        ["12", "--post", file(t, body)],
+        state,
+        entry,
+      );
+      assert.equal(result.status, 0, `${body}\n${result.stderr}`);
+      assert.deepEqual(state.posted, [
+        { commit_id: head, body, event: "COMMENT" },
+      ]);
+      const tracked = await run(t, ["12"], state, entry);
+      assert.equal(tracked.status, 0, tracked.stderr);
+      assert.equal(facts(tracked.stdout).round, "1");
+      assert.equal(facts(tracked.stdout).reviewed, "yes");
+      assert.equal(
+        facts(tracked.stdout).held,
+        body.startsWith(handBack(head)) ? "no" : "yes",
+      );
+    }
+    for (const body of [
+      ...inlineExamples,
+      reviewBody(head).replace(
+        /^Standards:.*$/m,
+        "Standards: **<!-- no outcome -->**",
+      ),
+      `> prefix <code>\n\n- wrapper\n${fields.replace(/^/gm, "  ")}\n\n</code>`,
+      `prefix [<code>](/target)\n\n${fields}\n\n</code>`,
+      `~~~markdown\n${reviewBody(head)}\n~~~`,
+      `${reviewBody(head)}\n- [ ] src/ledger.mjs:12 A visible finding.`,
+      `${reviewBody(head)}\n- [x] A visible invalid finding.`,
+      `${reviewBody(head)}\n- [ ] <!-- hidden -->`,
+      `${reviewBody(head)}\n- [x] <!-- hidden -->`,
+      `<!--\n${reviewBody(head)}\n-->`,
+      `<pre>\n${reviewBody(head)}\n</pre>`,
+      reviewBody(head).replace(/^Spec:.*$/m, "<!-- Spec: Passed -->"),
+      `- > Example\n${reviewBody(head).split("\n\n")[1]}`,
+      `- - > Example\n${reviewBody(head).split("\n\n")[1]}`,
+      `- example:\n\n  [r]: /a\n\n  [r]: /b\n  "${"title\n  ".repeat(4)}end"\n\n  > Example\n${reviewBody(head).split("\n\n")[1]}`,
+      `- \`\`\`markdown\n${reviewBody(head).replace(/^/gm, "  ")}\n  \`\`\``,
+    ]) {
+      const state = pullState({}, { reviews: [restReview(body)] });
+      const tracked = await run(t, ["12"], state, entry);
+      assert.equal(facts(tracked.stdout).reviewed, "no", body);
+      assert.equal(facts(tracked.stdout).held, "no", body);
+      const posted = await run(
+        t,
+        ["12", "--post", file(t, body)],
+        state,
+        entry,
+      );
+      assert.equal(posted.status, 2, body);
+      assert.equal(state.posted, undefined);
+    }
+  }
+});
+
 test("only this account's latest holding review of the current head has held", async (t) => {
   const other = { user: { login: "implementer", type: "User" } };
   const holdEarlier = restReview(reviewBody(earlier), { commit_id: earlier });

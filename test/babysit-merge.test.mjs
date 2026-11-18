@@ -801,7 +801,17 @@ No external reviewer runs on app-authored PRs.`;
       "Findings: <None, or one list item per finding below>",
     ),
     `\`\`\`markdown\n${outcome}\n\`\`\``,
+    `~~~markdown\n${outcome}\n~~~`,
+    outcome.replace(/^/gm, "> "),
+    outcome.replace(/^/gm, "    "),
+    `- > Example\n${outcome.split("\n\n")[1]}`,
+    `- - > Example\n${outcome.split("\n\n")[1]}`,
+    `- example:\n\n  [r]: /a\n\n  [r]: /b\n  "${"title\n  ".repeat(4)}end"\n\n  > Example\n${outcome.split("\n\n")[1]}`,
+    `- \`\`\`markdown\n${outcome.replace(/^/gm, "  ")}\n  \`\`\``,
     `<!--\n${outcome}\n-->`,
+    `<pre>\n${outcome}\n</pre>`,
+    outcome.replace(/^Spec:.*$/m, "<!-- Spec: Passed -->"),
+    outcome.replace(/^- .*$/m, "<!-- - `merge.mjs:1` hidden finding -->"),
   ].map((body) => review(body));
   for (const body of reviews) {
     const result = run(t, {
@@ -824,6 +834,121 @@ No external reviewer runs on app-authored PRs.`;
     });
     assert.equal(result.status, 5, result.stderr);
     assert.equal(result.state.merge, undefined);
+  }
+});
+
+test("source and installed merge reject holding reviews contradicted by task-list findings", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const entry of [undefined, target]) {
+    for (const task of [
+      "- [ ] merge.mjs:1 A visible finding.",
+      "- [x] A visible invalid finding.",
+      "- [ ] <!-- hidden -->",
+      "- [x] <!-- hidden -->",
+    ]) {
+      const body = outcome
+        .replace(/^Findings:.*$/m, "Findings: None")
+        .replace(/^- .*$/m, task);
+      const result = run(
+        t,
+        {
+          author: "factory-app[bot]",
+          reviewConfiguration: { policy },
+          reviews: [review(body)],
+        },
+        undefined,
+        entry,
+      );
+      assert.equal(result.status, 5, `${body}\n${result.stderr}`);
+      assert.equal(result.state.merge, undefined);
+    }
+  }
+});
+
+test("source and installed merge reject hidden outcomes and code opened in quotes", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const holding = outcome
+    .replace(/^Findings:.*$/m, "Findings: None")
+    .replace(/^- .*$/m, "");
+  const fields = holding.split("\n\n")[1].trimEnd();
+  for (const entry of [undefined, target]) {
+    for (const body of [
+      holding.replace(/^Standards:.*$/m, "Standards: **<!-- no outcome -->**"),
+      `> prefix <code>\n\n- wrapper\n${fields.replace(/^/gm, "  ")}\n\n</code>`,
+      `prefix [<code>](/target)\n\n${fields}\n\n</code>`,
+    ]) {
+      const result = run(
+        t,
+        {
+          author: "factory-app[bot]",
+          reviewConfiguration: { policy },
+          reviews: [review(body)],
+        },
+        undefined,
+        entry,
+      );
+      assert.equal(result.status, 5, `${body}\n${result.stderr}`);
+      assert.equal(result.state.merge, undefined);
+    }
+  }
+});
+
+test("source and installed merge exclude inline metadata and code examples from reviews", (t) => {
+  const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  const fields = outcome
+    .split("\n\n")[1]
+    .replace(/^Findings:.*$/m, "Findings: None")
+    .replace(/^- .*$/m, "")
+    .trimEnd();
+  const inlineExamples = [
+    `prefix <code><code>inner</code>\n${fields}\n</code>`,
+    ...["script", "style", "title", "pre"].map(
+      (tag) => `prefix <${tag}>\n${fields}\n</${tag}>`,
+    ),
+    `[label](/target "title\n${fields}\nend")`,
+    `![label](/target "title\n${fields}\nend")`,
+    `![label\n${fields}\nend](/target)`,
+    `<span title="title\n${fields}\nend">label</span>`,
+    `\`\`example\n${fields}\nend\`\``,
+  ].map((source) => `- ${source.replaceAll("\n", "\n  ")}`);
+  for (const entry of [undefined, target]) {
+    for (const hidden of inlineExamples) {
+      for (const visible of [false, true]) {
+        const body = visible ? `${hidden}\n\n${outcome}` : hidden;
+        const result = run(
+          t,
+          {
+            author: "factory-app[bot]",
+            reviewConfiguration: { policy },
+            reviews: [review(body)],
+          },
+          undefined,
+          entry,
+        );
+        assert.equal(
+          result.status,
+          visible ? 0 : 5,
+          `${body}\n${result.stderr}`,
+        );
+        assert.equal(Boolean(result.state.merge), visible);
+      }
+    }
+    const result = run(
+      t,
+      {
+        author: "factory-app[bot]",
+        reviewConfiguration: { policy },
+        reviews: [
+          review(
+            `- prefix <script>\n\n  <div>inner</script></div>\n\n${outcome}`,
+          ),
+        ],
+      },
+      undefined,
+      entry,
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.state.merge);
   }
 });
 
@@ -917,6 +1042,15 @@ test("a reassessed round is accepted by merge while required checks and threads 
 test("a complete installed current-head review permits only the remaining merge gates", (t) => {
   const target = installedValidator(t, ".agents/skills/babysit/merge.mjs");
   const complete = [
+    `${outcome}\n\n\`\`\`text\npnpm check passed\n\`\`\``,
+    `~~~text\npnpm check passed\n~~~\n\n${outcome}`,
+    `<!-- verification marker -->\n\n${outcome}`,
+    `${outcome}\n\n<!-- verification marker -->`,
+    `${outcome}\n\n\`\`\`markdown\n${outcome}\n- an invalid example finding\n\`\`\``,
+    `- example:\n  \`\`\`text\n  <!-- unclosed\n  \`\`\`\n\n${outcome}`,
+    `${outcome}\n\n- > Example\n  > ${outcome.replaceAll("\n", "\n  > ")}`,
+    `<details>\n${outcome.split("\n\n")[1]}\n</details>\n\n${outcome}`,
+    outcome.replace(/^Spec: .*$/m, "$& The parser keeps `<!--` as text."),
     outcome
       .replace(
         "Passed; documented repository rules checked, no findings remain.",
