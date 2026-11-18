@@ -63,10 +63,11 @@ Runs hand off through the issue's workflow state and pull request:
 2. **Triage** ends with `state:ready` and the labels readiness needs, or in a
    `state:` stop.
 3. **Readiness** starts implement when applied by a person or the factory's
-   own triage run under the GitHub rules' Readiness roles. Other bot/App
-   readiness never starts a run, even if validator-approved. An orchestrating
-   agent on such an account applies no readiness: it stops at acceptance under
-   `triage` and never reports factory work started.
+   own triage run under the GitHub rules' Readiness roles, for its own brief or
+   a direct contract it reviewed. Other bot/App readiness never starts a run,
+   even if validator-approved. An orchestrating agent on such an account
+   applies no readiness: it stops at acceptance under `triage` and never
+   reports factory work started.
 4. **Implement** ends at a draft pull request, which starts review on it.
 5. **Review** ends in a merge, a hand-back to implement on the same pull
    request, a stop at an owner gate, or a `state:grill` stop for a wrong or

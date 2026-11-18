@@ -178,11 +178,35 @@ triageResult, facts, issue?, edits?, writerProof?)` comes from the host's
    alone decides structure and authority; independent authorized-person review
    remains available when factory proof is absent.
 
+## Host review attestation
+
+A host accepts a direct specification or implementation ticket that its
+factory triage run reviewed and did not write through the factory review
+attestation, in prepared and body mode alike
+([ADR 0053](../adr/0053-let-factory-triage-accept-a-direct-contract-it-reviewed.md)).
+It needs no ledger record, intake capture or dispatch:
+
+1. Read the validator's current notice for the issue and take its `revision`
+   and `source`.
+2. Build the line with `reviewAttestationLine({repository, issue, run,
+revision, source})` from `scripts/issue-contract-sources.mjs`, passing the
+   issue's node ID. Post it as the configured triage author, beside the run's
+   one marked line. Never edit it; a new acceptance posts a new attestation.
+3. Wait for a notice whose `factoryReview.attestation.id` is that comment. With
+   `refusal: null` and the attested `revision` as the result's `revision`,
+   apply readiness as the configured author. A refusal, or a notice naming
+   another revision, applies none.
+4. Wait for `approved` bound to that ready event before implement admission.
+
+The validator decides every refusal, as the
+[validation document](issue-contract-validation.md#factory-review-attestation)
+lists them; the host parses no contract Markdown.
+
 ## Exact v2 wire interface
 
 The feedback marker/author remain `repo-canon:issue-contract-state` and
 `github-actions[bot]`. The JSON line uses
-`format: "repo-canon/issue-contract-state/v2"`. Preparation emits the v1 base; exempt Seams revisions use its documented v3 wrapper.
+`format: "repo-canon/issue-contract-state/v2"`. Preparation emits the v1 base; exempt Seams revisions use its documented v3 wrapper, and a direct contract whose notice names a factory review attestation uses the documented [v4 wrapper](issue-contract-validation.md#review-attestation-result-v4).
 The machine schema is [issue-contract-v2.schema.json](../../test/fixtures/issue-contract-v2.schema.json);
 shared positive/negative platform snapshots and literal decisions are
 [issue-contract-v2.json](../../test/fixtures/issue-contract-v2.json).

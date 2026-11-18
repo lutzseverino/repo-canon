@@ -144,6 +144,29 @@ export function contractWorld({
                 : { __typename: "User", login },
             },
           });
+        if (query.includes("ContractSourceEdits"))
+          return json({
+            data: {
+              nodes: request.variables.ids.map((id) => {
+                const target =
+                  id === "ISSUE_42"
+                    ? issue
+                    : comments.find((entry) => `COMMENT_${entry.id}` === id);
+                const editedAt = target?.lastEditedAt ?? null;
+                return target
+                  ? {
+                      id,
+                      lastEditedAt: editedAt,
+                      userContentEdits: {
+                        nodes: editedAt
+                          ? [{ id: `EDIT_${id}_${editedAt}`, editedAt }]
+                          : [],
+                      },
+                    }
+                  : null;
+              }),
+            },
+          });
         if (query.includes("PinnedFilesRevision"))
           return json({
             data: {
@@ -246,7 +269,7 @@ export function contractWorld({
           ({ id }) => id === Number(path.split("/").at(-1)),
         );
         target.body = request.body;
-        target.updatedAt = at();
+        target.updatedAt = target.lastEditedAt = at();
         return json(restComment(target));
       }
       if (path === `${repo}/issues/42/events`)
@@ -348,6 +371,7 @@ export function contractWorld({
     editComment(target, text, login, time = at()) {
       target.body = text;
       target.updatedAt = time;
+      target.lastEditedAt = time;
       pending.push(
         neutral("commentEdited", login, {
           comment: {

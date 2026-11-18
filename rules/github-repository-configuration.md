@@ -642,8 +642,18 @@ The factory's own triage run is the one exception. Where `.scriptorium/config.js
 names the factory's triage result under `triageResult`, readiness its `author`
 account applies counts without a role when the current Agent Brief is the
 triage result that account posted, naming its run, and that run did not write
-the issue. Without that configuration, readiness comes only from the roles
-above.
+the issue. On a directly authored specification or implementation ticket, that
+readiness counts without a role when all of these hold:
+
+- a factory review attestation by that account names its triage run and the
+  exact current body revision;
+- the run did not write the issue;
+- the issue-contract workflow's notice for that revision was evaluated after
+  the attestation.
+
+An edited or deleted attestation backs no readiness, and a review attestation
+backs none on an Agent Brief. Without that configuration, readiness comes only
+from the roles above.
 
 An orchestrating agent that accepts an Agent Brief applies its readiness only
 when the credentials it was given hold one of these roles, and only after the
