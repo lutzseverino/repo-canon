@@ -126,8 +126,9 @@ and rejection of source validation when its authoritative source is missing.
 
 Node.js 24 remains the default toolchain and installed automation runtime.
 CI plans parallel hosted test jobs on each of Node.js 24 and 26. The grouping
-lives only in `.github/workflows/ci.yml`: seven parts select the independent
-`repository-wide-rules` adoption/update cases, and `validator-layout`,
+lives only in `.github/workflows/ci.yml`: seven parts divide the independent
+`repository-wide-rules` cases by name, one of them running every case the
+other six do not select, including cases added later, and `validator-layout`,
 `check-locations` and `check-location-updates` each run separately. The remaining
 job discovers every other `test/*.test.mjs` file automatically and also runs
 format, lint, syntax check, typecheck and all-profile source validation. Every

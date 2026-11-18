@@ -26,14 +26,18 @@ jobs:
           import { appendFileSync, readdirSync } from "node:fs";
           // Seam (deferred): repository-owned CI grouping; consumers: 1; extract at 3.
           const repository = "test/repository-wide-rules.test.mjs";
-          const suites = [
-            { name: "fresh profiles", files: [repository], pattern: "^the (guidance|release)|: (standard|factory|factory-policy|node)$" },
+          const parts = [
             { name: "fresh web stacks", files: [repository], pattern: ": (astro|vite)-(standard|factory)$" },
             { name: "web stack updates", files: [repository], pattern: ": (astro|vite)-(standard|factory)-update$" },
             { name: "legacy updates", files: [repository], pattern: ": (standard|factory)-update$" },
             { name: "source updates", files: [repository], pattern: ": (source-update|factory-both-update|source-unknown-update)$" },
             { name: "orchestrate updates", files: [repository], pattern: ": (edited-update|standard-orchestrate-update|factory-orchestrate-update)$" },
             { name: "release updates", files: [repository], pattern: ": (standard|factory)-release-update$" },
+          ];
+          const suites = [
+            // Every repository-wide case no part selects, including cases added later.
+            { name: "fresh profiles and other cases", files: [repository], pattern: ".", skip: parts.map(part => part.pattern).join("|") },
+            ...parts,
             ...["validator-layout", "check-locations", "check-location-updates"].map(name => ({
               name, files: [`test/${name}.test.mjs`], pattern: ".",
             })),
@@ -44,7 +48,7 @@ jobs:
             files: readdirSync("test").filter(name => name.endsWith(".test.mjs"))
               .map(name => `test/${name}`).filter(file => !assigned.has(file)).sort(),
           });
-          for (const suite of suites) console.log(`${suite.name}: ${suite.files.join(" ")} [${suite.pattern}]`);
+          for (const suite of suites) console.log(`${suite.name}: ${suite.files.join(" ")} [${suite.pattern}] [skip: ${suite.skip ?? ""}]`);
           appendFileSync(process.env.GITHUB_OUTPUT, `suites=${JSON.stringify(suites)}\n`);
           NODE
 
@@ -87,10 +91,12 @@ jobs:
         env:
           TEST_FILES: ${{ join(matrix.suite.files, ' ') }}
           TEST_PATTERN: ${{ matrix.suite.pattern }}
+          TEST_SKIP: ${{ matrix.suite.skip }}
         run: |
           read -r -a files <<< "$TEST_FILES"
           printf 'Selected test file: %s\n' "${files[@]}"
-          node --test --test-name-pattern="$TEST_PATTERN" "${files[@]}"
+          node --test --test-name-pattern="$TEST_PATTERN" \
+            ${TEST_SKIP:+"--test-skip-pattern=$TEST_SKIP"} "${files[@]}"
       - name: Validate the complete standards source
         if: matrix.suite.name == 'remaining tests'
         run: |
