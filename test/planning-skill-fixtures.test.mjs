@@ -699,6 +699,14 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   );
   for (const record of ["pr.md", "published.md"])
     assert.ok(!existsSync(join(releaseScratch, record)), record);
+  // The operator's turns cover the three cases: an open blocker, and a
+  // default branch moving before and after the release pull request merges.
+  const releaseInputs = readFileSync(
+    join(release.path, "docs/participant-inputs.md"),
+    "utf8",
+  );
+  for (const turn of ["A1", "B1", "B2", "C1", "C2"])
+    assert.match(releaseInputs, new RegExp(`^${turn}\\. `, "m"), turn);
   // The procedure's gate passes on the starting commit.
   execFileSync(process.execPath, ["--test"], {
     cwd: release.path,

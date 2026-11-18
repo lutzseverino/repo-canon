@@ -43,7 +43,7 @@ agent, it prints an answers file to fill in with you and its next steps.
 - Ship a `triage` skill, taken from his and reworked, that routes each request by where its uncertainty lies: an independent review of its researched issue contract, or the owner's answers before one is written.
 - Ship a `babysit` skill that takes an opened pull request through review to its merge.
 - Ship a `review` skill with which an agent that did not write a pull request reviews it, fixes or hands it back, and takes it to its merge.
-- Ship a `release` skill that runs a release from its planning issue by the repository's own release procedure, holding while a blocker is open and stopping if the default branch moves.
+- Ship a `release` skill that runs a release from its planning issue by the repository's own release procedure, holding while a blocker is open and stopping if the default branch moves before its release pull request merges or, without one, before publication.
 - Ship an `orchestrate` skill that turns a feature or problem into a plan the owner approves, keeps it in a workbench of plain Markdown, and runs it to an announced close.
 - Offer a `factory` profile that adds factory workflow rules, configuration and the toolchain image a host-installed factory, an unattended ticket-running service, needs to serve the repository.
 - Offer a `workbench` profile that installs only the workflow skills into the orchestrating agent's private workbench, with no rules, CI or branch requirements.

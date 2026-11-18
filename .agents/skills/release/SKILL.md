@@ -10,36 +10,43 @@ procedure owns the version, every gate and the publication; this skill adds
 only the **pin**, the **holds**, the questions and the records around it, and
 restates none of the procedure. Host limits, such as container availability,
 package-registry quota, scheduling and temporary-directory conventions, come
-from the host's own instructions.
+from the host's own instructions. Before each post, read the
+`.repo-standards/rules/comments.md` section for it: Stop notes, Owner
+questions or Findings.
 
 1. **Read the release.** Read the planning issue whole, with its comments and
    its native blocked-by links, then the contribution guide and the release
-   procedure. Done when you know which release the issue plans and every step
-   the procedure gives it.
+   procedure. Done when you know which release the issue plans, every step
+   the procedure gives it and whether it merges a release pull request before
+   publication.
 2. **Pin the default branch.** Fetch the remote, resolve its default branch
    and record that branch's full head SHA as the pin before any release step.
    Every later step works from the pin. Done when the pin is recorded.
 3. **Check the holds.** Each open native blocked-by link on the planning issue
-   is a hold. While any hold is open, publish nothing: post a stop note on the
-   planning issue naming each open blocker, and stop. Done when no blocker is
-   open.
+   is a hold. While any hold is open, merge and publish nothing: post a stop
+   note on the planning issue naming each open blocker, and stop. Done when no
+   blocker is open.
 4. **Follow the procedure** from the pin, step by step, as it is written. When
    the procedure and the contribution guide leave something open, such as a
    disposition they do not settle, ask on the planning issue under the guide's
    owner-question route and stop; settle nothing they leave to the owner. Done
-   when only the procedure's publication remains.
-5. **Recheck before publication.** Fetch again. The default branch's head must
-   be the pin, or the merge of the release's own pull request directly onto
-   the pin. When it moved any other way, publish nothing: post a stop note on
-   the planning issue naming the pin and the new head, and stop. Check the
-   holds again as step 3 says. Then publish and verify as the procedure says.
-   Done when the procedure's publication and verification are complete.
-6. **Record the outcome.** Stop notes and questions stay on the planning issue
+   when only the merge of the release pull request remains or, when the
+   procedure merges none, only its publication.
+5. **Recheck the pin.** Immediately before that merge, or before publication
+   when there is none, fetch again. When the default branch's head is not the
+   pin, merge and publish nothing: post a stop note on the planning issue
+   naming the pin and the new head, and stop. Check the holds again as step 3
+   says. Then merge the release pull request as the procedure says. Done when
+   it has merged, or when nothing but publication remains.
+6. **Publish** and verify as the procedure says: from the commit the release
+   pull request's merge created, whose parent is the pin, or from the pin when
+   the procedure merges none. After that merge, a move of the default branch
+   or a newly opened hold never stops the release. Done when the procedure's
+   publication and verification are complete.
+7. **Record the outcome.** Stop notes and questions stay on the planning issue
    as above; a completed release keeps the records the procedure names on its
    release pull request. Link every finding as the guide's Findings section
-   says: from a comment on the release pull request, or from the planning
-   issue when the run opened none. Read `.repo-standards/rules/comments.md`
-   before each post. Done when every outcome and finding is recorded there.
+   says. Done when every outcome and finding is recorded.
 
 A later run starts again at step 1 with a fresh pin, after the hold, question
 or move that stopped this one is resolved.

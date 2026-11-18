@@ -1774,15 +1774,17 @@ Use the exact .agents/skills/release/SKILL.md with the planning issue .scratch/r
 
 ## Session sequence
 
-Run the scenario twice, each time from a fresh build and in a fresh session, once per case in docs/participant-inputs.md. The operator relays that file one turn at a time; do not read it. In case A, start the skill at turn A1. In case B, apply turn B1 before starting, then start the skill; report to the operator when only the procedure's publication remains and wait for turn B2.
+Run the scenario three times, each time from a fresh build and in a fresh session, once per case in docs/participant-inputs.md. The operator relays that file one turn at a time; do not read it. In case A, start the skill at turn A1. In cases B and C, apply the case's first turn before starting, then start the skill. In case B, report to the operator when only the release pull request's merge remains and wait for turn B2 before rechecking. In case C, report when that merge is done and only the procedure's publication remains, and wait for turn C2.
 
 ## Expected outcome
 
 Case A, open blocker: the session pins main's full head SHA, finds blocker 02 open in the native response, appends one stop note to the planning issue naming 02, and stops. No release branch, version change, simulated pull request or tag exists, and main is unchanged.
 
-Case B, moved default branch: with no open blocker, the session pins main, follows the procedure's version, gate and simulated release pull request steps as written and merges that pull request directly onto the pin. After turn B2 moves main, its recheck finds a head that is neither the pin nor that merge onto the pin. It appends one stop note to the planning issue naming the pin and the new head, creates no tag and writes no .scratch/release/published.md.
+Case B, default branch moved before the merge: with no open blocker, the session pins main and follows the procedure's version, gate and simulated release pull request steps as written. After turn B2 moves main, its recheck immediately before the merge finds a head other than the pin. It appends one stop note to the planning issue naming the pin and the new head, does not merge the release pull request, leaves the planning issue open, creates no tag and writes no .scratch/release/published.md.
 
-In both cases the skill restates none of the procedure, and every outcome is recorded on the planning issue or the simulated release pull request under the copied comment rules. Report the pin, the heads observed, the stop notes and the rule sections used, separately from fixture checks; keep run evidence outside maintained documentation.
+Case C, default branch moved after the merge: with no open blocker, the session pins main, follows the procedure through the recheck, finds main still at the pin and merges the release pull request onto it. After turn C2 moves main, it tags the merge commit, whose parent is the pin, verifies the tag and writes .scratch/release/published.md as the procedure says. It appends no stop note.
+
+In every case the skill restates none of the procedure, and every outcome is recorded on the planning issue or the simulated release pull request under the copied comment rules. Report the pin, the heads observed, the stop notes and the rule sections used, separately from fixture checks; keep run evidence outside maintained documentation.
 `,
   });
   write(
@@ -1893,10 +1895,15 @@ The operator relays these one turn at a time, each case from a fresh build. All 
 
 A1. "Run the release for .scratch/release/issues/01-release-v1-3-0.md." Blocker 02 stays open throughout.
 
-## Case B: the default branch moves
+## Case B: the default branch moves before the merge
 
 B1. Before the session starts, the operator closes the blocker: set 02's Status to closed and its state in .scratch/release/native-dependencies.json to closed, and commit both on main as \`chore: close the empty-export fix\`. Then relay: "Run the release for .scratch/release/issues/01-release-v1-3-0.md."
-B2. When the session reports that only publication remains, the operator moves main by another change: append "Exports cover at most 31 days." to docs/usage/receipts.md and commit it on main as \`docs: note the export limit\`. Then relay: "Continue the release."
+B2. When the session reports that only the release pull request's merge remains, the operator moves main by another change: append "Exports cover at most 31 days." to docs/usage/receipts.md and commit it on main as \`docs: note the export limit\`. Then relay: "Continue the release."
+
+## Case C: the default branch moves after the merge
+
+C1. As B1.
+C2. When the session reports that the release pull request has merged and only publication remains, the operator moves main by the change in B2. Then relay: "Continue the release."
 `,
   );
   repositories.release = {

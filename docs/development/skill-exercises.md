@@ -617,25 +617,31 @@ workbench commits with the pull request that needs them.
 Use the planning builder above from the candidate checkout. Its manifest entry
 `repositories.release` names a disposable repository on the `standard`
 profile that links the exact candidate `release` skill. It has a small release
-procedure at `docs/development/release.md`, a planning issue for the next
-minor version, and that issue's native blocked-by links as a simulated
-platform response in `.scratch/release/native-dependencies.json`, where one
-blocker is open. The repository has no remote; its local `main` stands for the
-remote default branch. Prerequisites are Node.js 24 or 26, Git and an
-operator who relays `docs/participant-inputs.md` one turn at a time.
+procedure at `docs/development/release.md` that merges one release pull
+request before publication, a planning issue for the next minor version, and
+that issue's native blocked-by links as a simulated platform response in
+`.scratch/release/native-dependencies.json`, where one blocker is open. The
+repository has no remote; its local `main` stands for the remote default
+branch. Prerequisites are Node.js 24 or 26, Git and an operator who relays
+`docs/participant-inputs.md` one turn at a time.
 
-Run two cases, each from a fresh build and in a fresh session that invokes
+Run three cases, each from a fresh build and in a fresh session that invokes
 `release` with only the planning issue:
 
 - **Open blocker.** With the blocker open, observe the pin recorded, one stop
   note on the planning issue naming the blocker, and no release branch,
   version change, simulated pull request or tag.
-- **Moved default branch.** The operator first closes the blocker. Observe the
-  session follow the procedure as written through the simulated release pull
-  request and its merge onto the pin, then report that only publication
-  remains. The operator then commits another change on `main`. Observe the
-  recheck finding a head that is neither the pin nor that merge, one stop note
-  naming both heads, and no tag or publication record.
+- **Moved before the merge.** The operator first closes the blocker. Observe
+  the session follow the procedure as written up to the simulated release
+  pull request, then report that only its merge remains. The operator then
+  commits another change on `main`. Observe the recheck finding a head other
+  than the pin, one stop note naming both heads, no merge and no tag or
+  publication record.
+- **Moved after the merge.** The operator first closes the blocker. Observe
+  the recheck finding the pin, the release pull request merged onto it, and a
+  report that only publication remains. The operator then commits another
+  change on `main`. Observe the tag on the merge commit, whose parent is the
+  pin, the publication record and no stop note.
 
 Report the pin, the heads observed, the stop notes, session references and
 the rule sections used with the pull request that needs the exercise. Builder
