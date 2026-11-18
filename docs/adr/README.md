@@ -180,6 +180,11 @@ involve real alternatives.
 - [Budget the computed read set, not files' lines](0048-budget-the-computed-read-set.md):
   bytes over what each entry-point skill makes an agent read, against the
   base branch.
+- [Show one-way changes as animatics in the pull request body](0049-show-one-way-changes-as-animatics.md):
+  a one-way change's pull request body carries a narrated video made with the
+  owned `animatic` skill, enforced by the pull request metadata check; the
+  voice stays at upstream's defaults and the upload credential comes from
+  whoever runs the work.
 - [Answer a stop by applying the issue's next state](0050-answer-a-stop-by-applying-the-issues-next-state.md):
   one act returns every factory stop, and a comment alone starts nothing.
 - [Carry a request whose fate a record settles](0051-carry-a-request-whose-fate-a-record-settles.md):
