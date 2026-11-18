@@ -98,7 +98,7 @@
     },
     "docs/agents/issue-tracker.md": {
       "path": "skills/engineering/setup-matt-pocock-skills/issue-tracker-github.md",
-      "edits": "Creating an issue writes the body in the matching issue form's sections and passes it as a body file. Reading an issue names the latest Agent Brief comment as its implementation contract. Readiness labels are applied only through the triage skill's readiness command. Wayfinding child and blocking links are native only: the task list, `Part of` and `Blocked by` body fallbacks are removed, an uncreatable link is reported, and the frontier query reads native sub-issues and dependencies."
+      "edits": "Creating an issue writes the body in the matching issue form's sections and passes it as a body file. Reading an issue names the latest Agent Brief comment as its implementation contract. Readiness labels are applied only through the triage skill's readiness command. The Wayfinding map entry names the Destination, Notes, Decisions so far, Not yet specified and Out of scope sections the Wayfinder rules enforce, in place of the upstream Notes / Decisions-so-far / Fog body. Wayfinding child and blocking links are native only: the task list, `Part of` and `Blocked by` body fallbacks are removed, an uncreatable link is reported, and the frontier query reads native sub-issues and dependencies."
     },
     "docs/agents/triage-labels.md": {
       "path": "skills/engineering/setup-matt-pocock-skills/triage-labels.md",
