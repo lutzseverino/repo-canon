@@ -993,7 +993,7 @@ Record the new simulated decisions as Owner, 2026-10-26, .scratch/routing/owner-
       "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Signer name**:\nThe name of the person who signed for a Parcel, as the carrier reports it.\n_Avoid_: Recipient\n",
     exercise: `## Task
 
-Run the triage skill as the factory's triage run, three times, once per entry in .scratch/factory-triage/run-facts.json. Start each run in a fresh session with no other run's context, and give it only the factory's facts for that run: the issue, the run, the run-result path, the allowed models and the run-result interface. Each run reads the repository and writes its run result; it posts nothing, applies no label, pushes nothing and attempts no fix. The run-result interface in run-facts.json is this exercise's local stand-in for Scriptorium's run-result interface (lutzseverino/scriptorium#116), not its definition. No orchestrating agent, research run, grill, workbench or person takes part. Publish nothing and launch no factory.
+Run the triage skill as the factory's triage run, six times, once per entry in .scratch/factory-triage/run-facts.json. Start each run in a fresh session with no other run's context, and give it only the factory's facts for that run: the issue, the run, the run-result path, the allowed models and the run-result interface. Each run reads the repository and writes its run result; it posts nothing, applies no label, pushes nothing and attempts no fix. The run-result interface in run-facts.json is this exercise's local stand-in for Scriptorium's run-result interface (lutzseverino/scriptorium#116), not its definition. No orchestrating agent, research run, grill, workbench or person takes part. Publish nothing and launch no factory.
 
 ## Expected outcome
 
@@ -1005,7 +1005,15 @@ Lookup exposes both GitHub repository configuration and factory workflow rules, 
 
 03 is an outside reporter's bug that names neither its version nor how it opens the CSV: the current 1.4.0 code keeps non-ASCII signer names, CHANGELOG.md records that fix in 1.4.0, and the usage documentation says to open the export as UTF-8. Before 1.4.0 the report is that fixed bug; on 1.4.0 it may be a spreadsheet opening the CSV in another encoding, or a new bug. Only the reporter knows which, so nothing is yet shown to be implemented. Its result asks for state:reporter and type:bug, with the reporter template asking for the version and the steps that open the export.
 
-After all three runs, git status shows only the run results as new files: every tracker file is unchanged, and no run ran ready.mjs. The run-result bodies carry no disclaimer, because the factory's frame supplies it; check the brief's shape as if that frame's triage disclaimer preceded it. Cite the factory rules' Triage run and Model selection sections, the GitHub rules' Labels and Agent Brief sections and CONTRIBUTING.md's Triage section in the outcome.
+04, 05 and 06 are implementation tickets a maintainer wrote directly after a grill: each contract is its issue body, with no category label, and factory triage did not write it. On each, the run writes no Agent Brief, asks for no type: label, and accepts nothing: it reviews the body as triage's accept mode reviews a direct contract, and its result is a stop.
+
+04 holds: its recorded owner decision settles the order, ties and comparison, and the code shows rows in the order supplied. Its result asks for state:owner, and its body names state:ready at exactly the sha256: revision in 04's validator notice, with one model label from the allowed models and its reason, a priority: label, no factory:skip, and the review's findings, each with its evidence.
+
+05 needs correction that the records settle: its header criterion contradicts its own recorded owner decision, which puts carrier in the header, and "The export works well for dispatchers" cannot be tested. Its result asks for state:owner, names each correction for a separate writer to make before the issue returns to state:triage, and names no readiness.
+
+06 has no validator notice. Its result asks for state:owner, says the notice is missing and names state:triage for when it arrives, and names no revision and no readiness.
+
+After all six runs, git status shows only the run results as new files: every tracker file is unchanged, and no run ran ready.mjs. The run-result bodies carry no disclaimer, because the factory's frame supplies it; check the brief's shape as if that frame's triage disclaimer preceded it. Cite the factory rules' Triage run and Model selection sections, the GitHub rules' Labels and Agent Brief sections and CONTRIBUTING.md's Triage, Implementation contracts and Owner questions sections in the outcome.
 `,
   });
   write(
@@ -1091,6 +1099,129 @@ Blocked by: None
 Signer names with accents, such as José, come out garbled in the CSV export. Please fix.
 `,
   };
+  // Directly authored tickets: the body is the contract, with no category
+  // label. 04 holds, 05 needs a settled correction, and 06 has no notice.
+  const directTickets = {
+    "04-order-receipts-by-reference.md": {
+      title: "Order exported Delivery receipts by Parcel reference",
+      notice: true,
+      body: `## What to build
+
+The Delivery receipt export lists its rows in ascending Parcel reference order, compared as plain text, so dispatchers can reconcile a day's receipts against their Parcel list without sorting the spreadsheet first. Plain text order puts P-10 before P-2. Receipts with the same Parcel reference keep the order the caller supplied them in. The header and every column stay as the receipt export documentation describes.
+
+Supersedes: none
+Adds: Delivery receipt export row order by Parcel reference
+Deletes: none
+
+Ownership check: No trigger.
+
+### Recorded decisions
+
+- **Owner, 2026-10-20**, in the dispatcher review: "Dispatchers reconcile by Parcel reference, so the export should already be in that order. Plain text order is fine, their spreadsheets sort the same way. Keep duplicates as they came."
+
+## Acceptance criteria
+
+- [ ] An export of receipts supplied as P-3, P-1, P-2 lists P-1, P-2, P-3 under the unchanged header.
+- [ ] An export of P-2 and P-10 lists P-10 first.
+- [ ] Two receipts with the same Parcel reference appear in the order they were supplied.
+- [ ] Receipts from other dates stay out of the export, as today.
+
+## Blocked by
+
+None (readiness still required).
+`,
+    },
+    "05-carrier-column.md": {
+      title: "Include the carrier in each exported Delivery receipt",
+      notice: true,
+      body: `## What to build
+
+Each exported Delivery receipt row ends with the carrier that delivered the Parcel, so dispatchers can see which carrier to ask about a receipt. Each receipt the caller supplies carries its carrier's name.
+
+Supersedes: none
+Adds: Delivery receipt export carrier column
+Deletes: none
+
+Ownership check: No trigger.
+
+### Recorded decisions
+
+- **Owner, 2026-10-22**, in the dispatcher review: "Add the carrier as the last column, named carrier, and put it in the header too."
+
+## Acceptance criteria
+
+- [ ] The header stays \`parcel_reference,delivered_at,signer_name\`.
+- [ ] Each row ends with its receipt's carrier name.
+- [ ] The export works well for dispatchers.
+
+## Blocked by
+
+None (readiness still required).
+`,
+    },
+    "06-reject-malformed-dates.md": {
+      title: "Reject an export date that is not in YYYY-MM-DD form",
+      notice: false,
+      body: `## What to build
+
+An export date that is not in \`YYYY-MM-DD\` form, four digits, two and two, is rejected with an error naming the date it was given, instead of matching no receipts or a whole month of them. A date in that form exports as today.
+
+Supersedes: none
+Adds: Delivery receipt export date validation
+Deletes: none
+
+Ownership check: No trigger.
+
+### Recorded decisions
+
+- **Owner, 2026-10-24**, in the dispatcher review: "An export date must be YYYY-MM-DD. Reject anything else with an error that names the date."
+
+## Acceptance criteria
+
+- [ ] Exporting for \`2026-10-4\` fails with an error naming \`2026-10-4\`.
+- [ ] Exporting for \`2026-10\` fails with an error naming \`2026-10\`, instead of exporting the month.
+- [ ] Exporting for \`2026-10-04\` returns that date's receipts, as today.
+
+## Blocked by
+
+None (readiness still required).
+`,
+    },
+  };
+  for (const [index, [name, ticket]] of Object.entries(
+    directTickets,
+  ).entries()) {
+    const contract = `.scratch/factory-triage/contracts/${name}`;
+    write(root, contract, ticket.body);
+    const id = `FACTORY_TRIAGE_${index + 4}`;
+    const notice = ticket.notice
+      ? `### Validator notice (simulated)\n\nKind: implementation ticket, from the issue body, source \`${id}\`, never edited.\n\n${execFileSync(
+          process.execPath,
+          [
+            join(sourceRoot, "scripts/support/planning-revision-notice.mjs"),
+            contract,
+            id,
+            "null",
+            "implementation ticket",
+          ],
+          { cwd: root, encoding: "utf8" },
+        )}`
+      : "None.\n";
+    issues[name] = `# ${ticket.title}
+
+Author: a maintainer, who wrote this ticket after a grill
+Status: state:triage
+Labels: none
+Contract: issue body
+Blocked by: None
+
+## Body
+
+${ticket.body}
+## Comments
+
+${notice}`;
+  }
   for (const [name, text] of Object.entries(issues))
     write(root, `.scratch/factory-triage/issues/${name}`, text);
   write(

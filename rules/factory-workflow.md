@@ -195,6 +195,20 @@ needs: one `model:` label it chooses under Model selection, any
 `factory:skip` that Skipped work requires, and a `priority:` label as the
 GitHub rules' Labels section says.
 
+A directly authored specification or implementation ticket, an issue-body
+contract with no category label, gets no Agent Brief, and the run does not
+accept it. The run reviews the revision the validator's current notice names,
+as `triage`'s accept mode reviews a direct contract, and stops. A body that
+holds stops in `state:owner`, naming `state:ready` at that exact `sha256:`
+revision with the labels a brief it accepts asks for, and recording the
+review's findings. A body that needs correction stops in `state:owner`, naming
+the correction a separate writer makes before the issue returns to
+`state:triage`, as the contribution guide's Owner questions section says. An
+open intent question stops in `state:grill`. Without a notice naming the
+revision, the run stops in `state:owner` and says the notice is missing. A
+person or orchestrating agent the GitHub rules' Readiness roles authorize then
+applies readiness to a holding revision.
+
 ## Gates
 
 An owner gate holds work only for what the owner alone can do: a credential or
