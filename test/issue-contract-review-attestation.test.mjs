@@ -202,6 +202,7 @@ test("the module produces a review attestation and verifies it", () => {
     ...facts(),
   });
   assert.equal(verifyReviewAttestation(`Notes.\n${line}`, facts()), null);
+  assert.equal(verifyReviewAttestation(`Notes.\r\n${line}\r\n`, facts()), null);
   for (const [changes, reason] of /** @type {[any, RegExp][]} */ ([
     [{ repository: "other/repository" }, /another repository/],
     [{ issue: "ISSUE_43" }, /another issue/],

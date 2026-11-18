@@ -23,8 +23,9 @@ acceptance. On 2026-11-16 at 19:15 UTC the owner answered "let's follow your
 suggestions" to the recommendation "1b, 2c, 3a". Q1 b reads: "Extend ADR 0030.
 Factory triage may accept a direct specification or ticket it reviewed and did
 not write, at the exact body revision it reviewed. Readiness stays bound to
-that revision, and an edit removes it." Repo Canon owns the rule and the
-validator check, and owns the attestation's format. A host such as Scriptorium
+that revision, and an edit removes it." Repo Canon owns the rule, the triage
+skill's factory step and the validator check, and owns the attestation's
+format. A host such as Scriptorium
 posts the attestation through Canon's installed issue-contract module, waits
 for the validator's notice naming that revision, then applies readiness. Canon
 releases and is adopted first.

@@ -227,6 +227,7 @@ export function markedRun(markdown, marker) {
 export function attestationPayload(markdown, marker) {
   const prefix = `<!-- ${marker} `;
   const lines = (markdown ?? "")
+    .replace(/\r\n?/g, "\n")
     .split("\n")
     .filter((line) => line.includes(`<!-- ${marker}`));
   if (
