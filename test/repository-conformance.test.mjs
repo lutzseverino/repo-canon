@@ -13,6 +13,7 @@ import { test } from "node:test";
 import { basePaths, snapshotIdentity } from "../scripts/upstream-bases.mjs";
 import { decideIssueContract } from "./helpers/contract-decision.mjs";
 import { completeReview } from "../.agents/skills/babysit/review-outcome.mjs";
+import { statusMarkers } from "../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   completeAgentBrief,
   featureBody,
@@ -1679,6 +1680,57 @@ test("the comment rules' review template is the review merge accepts", () => {
   assert.equal(completeReview(filled, head), true);
 });
 
+test("the comment rules' status-marker table is the validator's marker set", () => {
+  const section = interpretMarkdown(read("rules/comments.md"))
+    .sections(["Status markers"])
+    .values()
+    .next().value[0];
+  const table = marked
+    .lexer(section.source)
+    .find(({ type }) => type === "table");
+  assert.deepEqual(
+    table.rows.map(([marker]) => marker.text.trim()),
+    statusMarkers,
+  );
+});
+
+test("the comment rules' lead-line examples start an accepted Agent Brief", () => {
+  const section = interpretMarkdown(read("rules/comments.md"))
+    .sections(["Lead line"])
+    .values()
+    .next().value[0];
+  const leadLines = marked
+    .lexer(section.source)
+    .filter(({ type }) => type === "code")
+    .flatMap(({ text }) => text.split("\n"));
+  assert.ok(leadLines.length > 0);
+  for (const leadLine of leadLines) {
+    const decision = decideIssueContract({
+      repository,
+      event: { issue: { number: 42 } },
+      issue: {
+        number: 42,
+        body: featureBody,
+        labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
+        state: "open",
+      },
+      comments: [
+        {
+          id: 12,
+          user: { login: "maintainer" },
+          body: completeAgentBrief.replace(/^[^\n]+/, leadLine),
+        },
+      ],
+      issueEvents: [],
+      blockedBy: [],
+      parent: null,
+      relatedIssues: {},
+      permissions: {},
+    });
+    assert.equal(decision.exitCode, 0, decision.message);
+  }
+});
+
 test("the comment rules' triage disclaimer example passes the issue-contract check", () => {
   const document = interpretMarkdown(read("rules/comments.md"));
   const policy = document.sections(["Disclaimers"]).values().next().value[0];
@@ -1687,7 +1739,7 @@ test("the comment rules' triage disclaimer example passes the issue-contract che
     .filter(({ type }) => type === "code");
   const triageLine = examples
     .map(({ text }) => text)
-    .find((text) => text.includes("during triage"));
+    .find((text) => text.startsWith(">") && text.includes("during triage"));
   assert.ok(triageLine);
   const decision = decideIssueContract({
     repository,
