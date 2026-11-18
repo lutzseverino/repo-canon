@@ -229,196 +229,197 @@ for (const [name, attributes] of [
     for (const pattern of entries) assert.ok(owned.has(pattern), pattern);
   });
 
-test("public CLI 11.0.0 adopts and updates the standard and factory profiles with vendored installed code, repository-wide rules and stack rules only for a confirmed Project", (t) => {
-  const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
-  t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const cli = publicCli(directory);
-  const validation = JSON.parse(
-    execFileSync(cli, ["source", "validate", root, "--json"], {
-      encoding: "utf8",
-    }),
-  );
-  assert.equal(validation.valid, true);
-  assert.deepEqual(Object.keys(validation.profiles).sort(), [
+for (const [
+  label,
+  profile,
+  extraFiles,
+] of /** @type {[string, string, object][]} */ ([
+  ["standard", "standard", {}],
+  ["factory", "factory", {}],
+  ["source-update", "factory", {}],
+  ["factory-both-update", "factory", {}],
+  ["source-unknown-update", "factory", {}],
+  ["edited-update", "standard", {}],
+  ["standard-orchestrate-update", "standard", {}],
+  ["factory-orchestrate-update", "factory", {}],
+  ["node", "standard", nodeProject],
+  ...["astro", "vite"].flatMap((stack) =>
+    ["standard", "factory"].flatMap((profile) => [
+      [`${stack}-${profile}`, profile, webProject(stack)],
+      [`${stack}-${profile}-update`, profile, webProject(stack)],
+    ]),
+  ),
+  ["standard-update", "standard", {}],
+  ["standard-release-update", "standard", {}],
+  ["factory-release-update", "factory", {}],
+  [
+    "factory-policy",
     "factory",
-    "standard",
-    "workbench",
-  ]);
-  // The workbench profile has its own test; these two select every default.
-  for (const name of ["standard", "factory"]) {
-    const profile = validation.profiles[name];
-    assert.equal(
-      profile.declarations.length,
-      { standard: 66, factory: 71 }[name],
+    {
+      ".github/factory-model-policy.json": "repository-owned policy bytes\r\n",
+    },
+  ],
+  [
+    "factory-update",
+    "factory",
+    {
+      ".github/factory-model-policy.json":
+        '{ "repository-owned": "opaque to Repo Canon" }\n',
+    },
+  ],
+])) {
+  test(`public CLI 11.0.0 adopts and updates with repository-wide and stack rules: ${label}`, (t) => {
+    const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
+    t.after(() => rmSync(directory, { recursive: true, force: true }));
+    const cli = publicCli(directory);
+    const validation = JSON.parse(
+      execFileSync(cli, ["source", "validate", root, "--json"], {
+        encoding: "utf8",
+      }),
     );
-    assert.deepEqual(
-      profile.declarations.find(({ id }) => id === "standards-update-workflow"),
-      {
-        id: "standards-update-workflow",
-        kind: "file",
-        "check-locations": ["github"],
-        target: ".github/workflows/standards-update.yml",
-        exact: ".github/workflows/standards-update.yml",
-        checks: [],
-        fixes: [],
-      },
-      `${name} selects the exact opt-in update caller`,
-    );
-    const attributes = profile.declarations.find(
-      (declaration) => declaration.id === "git-attributes",
-    );
-    assert.ok(attributes, "both profiles select git-attributes");
-    assert.equal(attributes.kind, "file");
-    assert.equal(attributes.target, ".gitattributes");
-    assert.equal(attributes.rules, "rules/git-attributes.md");
-    assert.equal(attributes.guidance, "guidance/git-attributes.md");
-    assert.equal(attributes.exact, undefined);
-    assert.deepEqual(attributes.checks, []);
-    assert.deepEqual(attributes.fixes, []);
-    const github = profile.declarations.find(
-      (declaration) => declaration.id === "github-repository-configuration",
-    );
-    assert.deepEqual(
-      github.checks.map(({ id }) => id),
-      ["required-checks", "pull-request-reviewer", "factory-review-policy"],
-      `${name} validates required check names and both optional review configurations`,
-    );
-  }
-  // Every authored Node prerequisite must retain the same stable-major union,
-  // including discovery and the two nested remote-setup probes.
-  const prerequisites = new Map();
-  for (const profile of Object.values(validation.profiles))
-    for (const declaration of profile.declarations) {
-      const fixes = declaration.fixes ?? [];
-      for (const operation of [
-        ...(declaration.checks ?? []),
-        ...fixes,
-        ...fixes.map((fix) => fix["remote-setup"]?.probe),
-        declaration["discovery-script"],
-      ].filter(Boolean))
-        if (operation.run.executable === "node")
-          prerequisites.set(
-            operation.run.script,
-            operation.prerequisite.version,
-          );
+    assert.equal(validation.valid, true);
+    assert.deepEqual(Object.keys(validation.profiles).sort(), [
+      "factory",
+      "standard",
+      "workbench",
+    ]);
+    // The workbench profile has its own test; these two select every default.
+    for (const name of ["standard", "factory"]) {
+      const profile = validation.profiles[name];
+      assert.equal(
+        profile.declarations.length,
+        { standard: 66, factory: 71 }[name],
+      );
+      assert.deepEqual(
+        profile.declarations.find(
+          ({ id }) => id === "standards-update-workflow",
+        ),
+        {
+          id: "standards-update-workflow",
+          kind: "file",
+          "check-locations": ["github"],
+          target: ".github/workflows/standards-update.yml",
+          exact: ".github/workflows/standards-update.yml",
+          checks: [],
+          fixes: [],
+        },
+        `${name} selects the exact opt-in update caller`,
+      );
+      const attributes = profile.declarations.find(
+        (declaration) => declaration.id === "git-attributes",
+      );
+      assert.ok(attributes, "both profiles select git-attributes");
+      assert.equal(attributes.kind, "file");
+      assert.equal(attributes.target, ".gitattributes");
+      assert.equal(attributes.rules, "rules/git-attributes.md");
+      assert.equal(attributes.guidance, "guidance/git-attributes.md");
+      assert.equal(attributes.exact, undefined);
+      assert.deepEqual(attributes.checks, []);
+      assert.deepEqual(attributes.fixes, []);
+      const github = profile.declarations.find(
+        (declaration) => declaration.id === "github-repository-configuration",
+      );
+      assert.deepEqual(
+        github.checks.map(({ id }) => id),
+        ["required-checks", "pull-request-reviewer", "factory-review-policy"],
+        `${name} validates required check names and both optional review configurations`,
+      );
     }
-  assert.equal(prerequisites.size, 17);
-  for (const [script, range] of prerequisites)
-    assert.equal(range, ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0", script);
+    // Every authored Node prerequisite must retain the same stable-major union,
+    // including discovery and the two nested remote-setup probes.
+    const prerequisites = new Map();
+    for (const profile of Object.values(validation.profiles))
+      for (const declaration of profile.declarations) {
+        const fixes = declaration.fixes ?? [];
+        for (const operation of [
+          ...(declaration.checks ?? []),
+          ...fixes,
+          ...fixes.map((fix) => fix["remote-setup"]?.probe),
+          declaration["discovery-script"],
+        ].filter(Boolean))
+          if (operation.run.executable === "node")
+            prerequisites.set(
+              operation.run.script,
+              operation.prerequisite.version,
+            );
+      }
+    assert.equal(prerequisites.size, 17);
+    for (const [script, range] of prerequisites)
+      assert.equal(range, ">=24.0.0 <25.0.0 || >=26.0.0 <27.0.0", script);
 
-  const { source, env, git, publish } = fixtureSource(directory, validation);
-  // A preceding local release selects today's complete orchestrate from
-  // defaults, so removal exercises its executable and reference inventory.
-  const candidateManifest = readFileSync(
-    join(source, "standards.yaml"),
-    "utf8",
-  );
-  const legacy = parseStandards(candidateManifest);
-  const attributesPath = join(source, "guidance/git-attributes.md");
-  const candidateAttributes = readFileSync(attributesPath, "utf8");
-  writeFileSync(
-    attributesPath,
-    candidateAttributes.replace(
-      "   .agents/skills/babysit/** linguist-vendored\n",
-      "   .agents/skills/babysit/** linguist-vendored\n   .agents/skills/orchestrate/** linguist-vendored\n",
-    ),
-  );
-  legacy.defaults.declarations["skill-orchestrate"] =
-    legacy.profiles.workbench.declarations["skill-orchestrate"];
-  delete legacy.profiles.workbench.declarations["skill-orchestrate"];
-  writeFileSync(join(source, "standards.yaml"), stringify(legacy));
-  git(
-    source,
-    "-c",
-    "commit.gpgsign=false",
-    "commit",
-    "--quiet",
-    "-am",
-    "Legacy selection",
-  );
-  git(source, "-c", "tag.gpgsign=false", "tag", orchestrateVersion);
-  writeFileSync(join(source, "standards.yaml"), candidateManifest);
-  writeFileSync(attributesPath, candidateAttributes);
-  git(
-    source,
-    "-c",
-    "commit.gpgsign=false",
-    "commit",
-    "--quiet",
-    "-am",
-    "Workbench-only selection",
-  );
-  git(source, "-c", "tag.gpgsign=false", "tag", version);
-  // Fetch the actual previous release even in a shallow CI checkout, then
-  // serve its objects alongside the candidate through the local fixture.
-  git(
-    source,
-    "fetch",
-    "--quiet",
-    "https://github.com/lutzseverino/repo-canon",
-    `refs/tags/${previousVersion}:refs/tags/${previousVersion}`,
-  );
-  git(
-    source,
-    "fetch",
-    "--quiet",
-    "https://github.com/lutzseverino/repo-canon",
-    `refs/tags/${sourceVersion}:refs/tags/${sourceVersion}`,
-  );
-  git(
-    source,
-    "fetch",
-    "--quiet",
-    "https://github.com/lutzseverino/repo-canon",
-    `refs/tags/${latestRelease}:refs/tags/${latestRelease}`,
-  );
-  publish([
-    version,
-    orchestrateVersion,
-    sourceVersion,
-    previousVersion,
-    latestRelease,
-  ]);
-  for (const [
-    label,
-    profile,
-    extraFiles,
-  ] of /** @type {[string, string, object][]} */ ([
-    ["standard", "standard", {}],
-    ["factory", "factory", {}],
-    ["source-update", "factory", {}],
-    ["factory-both-update", "factory", {}],
-    ["source-unknown-update", "factory", {}],
-    ["edited-update", "standard", {}],
-    ["standard-orchestrate-update", "standard", {}],
-    ["factory-orchestrate-update", "factory", {}],
-    ["node", "standard", nodeProject],
-    ...["astro", "vite"].flatMap((stack) =>
-      ["standard", "factory"].flatMap((profile) => [
-        [`${stack}-${profile}`, profile, webProject(stack)],
-        [`${stack}-${profile}-update`, profile, webProject(stack)],
-      ]),
-    ),
-    ["standard-update", "standard", {}],
-    ["standard-release-update", "standard", {}],
-    ["factory-release-update", "factory", {}],
-    [
-      "factory-policy",
-      "factory",
-      {
-        ".github/factory-model-policy.json":
-          "repository-owned policy bytes\r\n",
-      },
-    ],
-    [
-      "factory-update",
-      "factory",
-      {
-        ".github/factory-model-policy.json":
-          '{ "repository-owned": "opaque to Repo Canon" }\n',
-      },
-    ],
-  ])) {
+    const { source, env, git, publish } = fixtureSource(directory, validation);
+    // A preceding local release selects today's complete orchestrate from
+    // defaults, so removal exercises its executable and reference inventory.
+    const candidateManifest = readFileSync(
+      join(source, "standards.yaml"),
+      "utf8",
+    );
+    const legacy = parseStandards(candidateManifest);
+    const attributesPath = join(source, "guidance/git-attributes.md");
+    const candidateAttributes = readFileSync(attributesPath, "utf8");
+    writeFileSync(
+      attributesPath,
+      candidateAttributes.replace(
+        "   .agents/skills/babysit/** linguist-vendored\n",
+        "   .agents/skills/babysit/** linguist-vendored\n   .agents/skills/orchestrate/** linguist-vendored\n",
+      ),
+    );
+    legacy.defaults.declarations["skill-orchestrate"] =
+      legacy.profiles.workbench.declarations["skill-orchestrate"];
+    delete legacy.profiles.workbench.declarations["skill-orchestrate"];
+    writeFileSync(join(source, "standards.yaml"), stringify(legacy));
+    git(
+      source,
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "--quiet",
+      "-am",
+      "Legacy selection",
+    );
+    git(source, "-c", "tag.gpgsign=false", "tag", orchestrateVersion);
+    writeFileSync(join(source, "standards.yaml"), candidateManifest);
+    writeFileSync(attributesPath, candidateAttributes);
+    git(
+      source,
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "--quiet",
+      "-am",
+      "Workbench-only selection",
+    );
+    git(source, "-c", "tag.gpgsign=false", "tag", version);
+    // Fetch the actual previous release even in a shallow CI checkout, then
+    // serve its objects alongside the candidate through the local fixture.
+    git(
+      source,
+      "fetch",
+      "--quiet",
+      "https://github.com/lutzseverino/repo-canon",
+      `refs/tags/${previousVersion}:refs/tags/${previousVersion}`,
+    );
+    git(
+      source,
+      "fetch",
+      "--quiet",
+      "https://github.com/lutzseverino/repo-canon",
+      `refs/tags/${sourceVersion}:refs/tags/${sourceVersion}`,
+    );
+    git(
+      source,
+      "fetch",
+      "--quiet",
+      "https://github.com/lutzseverino/repo-canon",
+      `refs/tags/${latestRelease}:refs/tags/${latestRelease}`,
+    );
+    publish([
+      version,
+      orchestrateVersion,
+      sourceVersion,
+      previousVersion,
+      latestRelease,
+    ]);
     const web = label.startsWith("astro-")
       ? "astro"
       : label.startsWith("vite-")
@@ -897,7 +898,7 @@ test("public CLI 11.0.0 adopts and updates the standard and factory profiles wit
         readFileSync(join(project, ".factory/extra.txt"), "utf8"),
         "unknown repository content\n",
       );
-      continue;
+      return;
     }
     // The local preceding release has identical contextual rules, so the CLI
     // reuses its assessment; the historical release requires a new one.
@@ -1264,12 +1265,12 @@ test("public CLI 11.0.0 adopts and updates the standard and factory profiles wit
         ),
       );
     }
-  }
-  const configuration = validation.profiles.factory.declarations.find(
-    (declaration) => declaration.id === "factory-configuration",
-  );
-  assert.equal(configuration.kind, "file");
-  assert.equal(configuration.target, ".scriptorium/config.json");
-  assert.equal(configuration.exact, ".scriptorium/config.json");
-  assert.equal(configuration.rules, undefined);
-});
+    const configuration = validation.profiles.factory.declarations.find(
+      (declaration) => declaration.id === "factory-configuration",
+    );
+    assert.equal(configuration.kind, "file");
+    assert.equal(configuration.target, ".scriptorium/config.json");
+    assert.equal(configuration.exact, ".scriptorium/config.json");
+    assert.equal(configuration.rules, undefined);
+  });
+}

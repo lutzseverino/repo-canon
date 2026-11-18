@@ -125,9 +125,18 @@ runtime dependencies and notices in the workbench and standalone tag bundle,
 and rejection of source validation when its authoritative source is missing.
 
 Node.js 24 remains the default toolchain and installed automation runtime.
-CI runs one job on each of Node.js 24 and 26 that installs the development
-dependencies and runs `pnpm validate` and all-profile source validation. The
-required `Test` check passes only when both jobs pass. Lint uses oxlint's
+CI plans parallel hosted test jobs on each of Node.js 24 and 26. The grouping
+lives only in `.github/workflows/ci.yml`: seven parts select the independent
+`repository-wide-rules` adoption/update cases, and `validator-layout`,
+`check-locations` and `check-location-updates` each run separately. The remaining
+job discovers every other `test/*.test.mjs` file automatically and also runs
+format, lint, syntax check, typecheck and all-profile source validation. Every
+job installs the public CLI once and reuses it through `REPO_STANDARDS_PREFIX`.
+The required `Test` check passes only when planning and every matrix job succeed;
+a failure, cancellation or skip fails it. `pnpm validate` and `pnpm test` still
+run the complete suite locally. This trades more hosted jobs and minutes for
+a shorter required check, accepted because Repo Canon is public and hosted
+minutes cost nothing. Lint uses oxlint's
 defaults plus
 ESLint's `recommended` rules that oxlint does not enable by default, with Node
 globals, as named in `.oxlintrc.json`. It excludes `vendor/`, `.repo-standards/`,
