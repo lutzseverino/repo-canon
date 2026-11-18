@@ -27,7 +27,7 @@ jobs:
           // Seam (deferred): repository-owned CI grouping; consumers: 1; extract at 3.
           const repository = "test/repository-wide-rules.test.mjs";
           const suites = [
-            { name: "fresh profiles", files: [repository], pattern: "^(?!public CLI)|: (standard|factory|factory-policy|node)$" },
+            { name: "fresh profiles", files: [repository], pattern: "^the (guidance|release)|: (standard|factory|factory-policy|node)$" },
             { name: "fresh web stacks", files: [repository], pattern: ": (astro|vite)-(standard|factory)$" },
             { name: "web stack updates", files: [repository], pattern: ": (astro|vite)-(standard|factory)-update$" },
             { name: "legacy updates", files: [repository], pattern: ": (standard|factory)-update$" },
