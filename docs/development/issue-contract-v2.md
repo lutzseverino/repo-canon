@@ -146,7 +146,8 @@ triageResult, facts, issue?, edits?, writerProof?)` comes from the host's
    the factory exception. Optional issue/edit arguments are authenticated
    platform snapshots only. Existing stored original intake is immutable; a recovered Original request supplies no writer
    proof. Use `bodyWithOriginal(brief, original)` to append the exact original
-   once after disclaimer, complete Brief (including required Seams) and notes.
+   once after the preamble, complete Brief (including required Seams), notes
+   and any disclosure footer.
 3. Publish the body; refetch its exact validator revision/source. Publish a
    separate configured-author attestation comment, with exactly one configured
    run line and one payload line:

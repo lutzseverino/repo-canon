@@ -207,7 +207,7 @@ as the contribution guide's Merging section requires.
 
 Write the configured reviewer's request phrase only in a comment that requests
 a review. That comment holds exactly the `request.comment` of the reviewer file
-that the `github-repository-configuration` rules describe, with no disclaimer.
+that the `github-repository-configuration` rules describe, with no disclosure.
 The phrase never appears in prose, quotations, or code spans in any other
 comment, issue or pull request title, or body. To mention the request, describe
 it as "the review request comment".
