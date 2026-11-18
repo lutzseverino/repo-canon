@@ -498,6 +498,31 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     assert.ok(text.includes(`Status: ${status}\n`));
     assert.doesNotMatch(text, /state:ready|state:triage|model:/);
   }
+  // Grills that publish after the owner's answers need a plan approval the
+  // operator can release on its own, after the numbered answers.
+  for (const [scenario, path] of [
+    ["factory-planning", ".scratch/receipts/owner-inputs.md"],
+    ["triage-routing", ".scratch/routing/owner-inputs.md"],
+    ["triage-wayfinder", ".scratch/triage/owner-inputs.md"],
+  ]) {
+    const lines = readFileSync(
+      join(manifest.repositories[scenario].path, path),
+      "utf8",
+    ).split("\n");
+    const sections = lines.filter((line) => line.startsWith("## "));
+    assert.deepEqual(sections, ["## Plan approval"], path);
+    const start = lines.indexOf("## Plan approval");
+    const answers = lines.slice(0, start);
+    const approval = lines.slice(start + 1).join("\n");
+    assert.ok(
+      answers.some((line) => line.startsWith("1. ")),
+      `${path} lists its numbered answers before the approval`,
+    );
+    assert.doesNotMatch(approval, /^\d+\. /m, path);
+    assert.match(approval, /\b\d{4}-\d{2}-\d{2}\b/, path);
+    assert.ok(approval.includes(path), `${path} cites itself as the source`);
+    assert.match(approval, /“[^”]+”/, `${path} carries quotable words`);
+  }
   const routing = manifest.repositories["triage-routing"];
   const routingResearch = join(routing.path, ".agents/skills/research");
   assert.equal(

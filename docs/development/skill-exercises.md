@@ -219,8 +219,15 @@ and `review-inputs.md`; the agent must not read ahead. Begin with the unresolved
 CSV intake and a separate research session gathering facts without a brief.
 Observe the orchestrating agent's local decision inbox, the three missing
 header/interface/source choices, and `state:owner` with no brief or readiness.
-Only then relay the controlled owner answers to a separate grill. These dated,
-cited answers settle exercise behavior only; the grill records them and invokes `to-spec`, then `to-tickets`, publishing
+Only then relay the controlled owner answers to a separate grill. Relay the
+file's separate simulated plan approval, which covers only the export request
+and not the Wayfinder map or its children, when the grill asks for agreement,
+approval or the go-ahead to publish, never before it has asked its numbered
+questions; if it asks for the go-ahead in the same round as those questions,
+relay the approval with the answers. It approves only the plan, never a
+contract revision or readiness. These dated, cited inputs settle exercise
+behavior only; the grill records them and, without asking for a further
+approval, invokes `to-spec`, then `to-tickets`, publishing
 one specification and direct ticket bodies in the simulated tracker. The accepting reviewer must be a different session from its writer.
 When the harness cannot nest sessions, start fresh research and grill sessions
 and relay their outputs verbatim to the orchestrating reviewer.
@@ -247,9 +254,14 @@ The factory-planning scenario exposes both rule sets and runs in stages. First, 
 public CSV headers, invocation interface and receipt source are missing:
 research gathers facts, and the questions reach a separate grill through the
 orchestrating agent's decision inbox. Expect no brief or readiness at this
-checkpoint. Only then relay `.scratch/receipts/owner-inputs.md` as controlled
-participant answers. The grill copies the dated answers and quoted words into a specification and
-direct ticket bodies through `to-spec` and `to-tickets`; the orchestrating
+checkpoint. Only then relay `.scratch/receipts/owner-inputs.md`'s numbered
+answers as controlled participant answers. Relay its separate simulated plan
+approval for 01 when the grill asks for agreement, approval or the go-ahead to
+publish, never before it has asked its numbered questions, or with the answers
+if it asks for the go-ahead in the same round. It approves only the plan,
+never a contract revision, model or readiness. The grill copies the dated answers, approval and quoted words into a specification and
+direct ticket bodies through `to-spec` and then `to-tickets`, without asking
+for a further approval; the orchestrating
 agent reviews them independently and never authors a contract it accepts. The answers choose only simulated exercise behavior.
 
 Next relay `.scratch/receipts/review-inputs.md` one checkpoint step at a time.
@@ -285,8 +297,14 @@ Start with turn 1 only. Release request 02's controlled owner answers in turn 2
 only after its separate grill asks the numbered questions. They choose a
 synthetic 60-minute Retry window measured from the first transient failure,
 allow retries strictly before that boundary, and retain the recorded
-transient-failure decision. The grill cites the supplied date and answer source;
-these simulation values establish no policy for real software.
+transient-failure decision. Relay the file's separate simulated plan approval
+for 02 when the grill asks for agreement, approval or the go-ahead to publish,
+never before it has asked its numbered questions, or with the answers if it
+asks for the go-ahead in the same round. It approves only the plan, never a
+contract revision, model or readiness. The grill cites the supplied date and
+answer source and, without asking for a further approval, publishes through
+`to-spec` and then `to-tickets`; these simulation values establish no policy
+for real software.
 
 The bug's seeded first brief revision passes the Agent Brief shape but
 not review, so its outcomes cover the challenge, the research run's
