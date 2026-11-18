@@ -51,8 +51,6 @@ jobs:
   node:
     name: Node.js ${{ matrix.node }} / ${{ matrix.suite.name }}
     needs: plan
-    env:
-      REPO_STANDARDS_PREFIX: ${{ runner.temp }}/repo-standards-cli-11.0.0
     strategy:
       fail-fast: false
       matrix:
@@ -74,7 +72,10 @@ jobs:
       - name: Install development dependencies
         run: pnpm install --frozen-lockfile
       - name: Install the public CLI once for this job
+        env:
+          REPO_STANDARDS_PREFIX: ${{ runner.temp }}/repo-standards-cli-11.0.0
         run: |
+          echo "REPO_STANDARDS_PREFIX=$REPO_STANDARDS_PREFIX" >> "$GITHUB_ENV"
           npm install --prefix "$REPO_STANDARDS_PREFIX" --ignore-scripts \
             --registry=https://registry.npmjs.org \
             @lutzseverino/repo-standards@11.0.0
