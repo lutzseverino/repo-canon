@@ -13,6 +13,8 @@ const operationName = "GitHub PR integration setup";
 const checkName = "PR metadata";
 const rulesetName = "Repo Canon required PR checks";
 const workflowPath = ".github/workflows/pr-metadata.yml";
+const policyName = "Repo Canon PR metadata events";
+const workflowEvent = "pull_request_target";
 const mergeSettings = {
   allow_squash_merge: true,
   allow_merge_commit: false,
@@ -389,6 +391,149 @@ function rulesetMatches(rulesets, id, defaultBranch) {
   );
 }
 
+// Seam (deferred): managed Actions event policies; consumers: 1; extract at 3.
+function canonicalPolicy() {
+  return {
+    name: policyName,
+    enforcement: "active",
+    conditions: { workflow_path: { include: [workflowPath], exclude: [] } },
+    rules: [
+      {
+        type: "restrict_action_events",
+        parameters: { allowed_events: [workflowEvent] },
+      },
+    ],
+  };
+}
+
+async function readManagedPolicy(identity, access) {
+  const response = await githubRequest(
+    access,
+    `${apiEndpoint(identity, "/actions/policies")}?has_parents=false&per_page=100`,
+    { paginate: true },
+  );
+  if (response.error) return response;
+  if (
+    !Array.isArray(response.value) ||
+    !response.value.every((page) => Array.isArray(page?.policies))
+  )
+    return { error: "invalid repository Actions policies response" };
+  const policies = response.value.flatMap((page) => page.policies);
+  if (
+    !policies.every(
+      (policy) =>
+        Number.isInteger(policy?.id) && typeof policy.name === "string",
+    )
+  )
+    return { error: "invalid repository Actions policy summary" };
+  const matches = policies.filter(
+    (policy) => policy.name.toLowerCase() === policyName.toLowerCase(),
+  );
+  if (matches.length > 1)
+    return {
+      error: `multiple repository Actions policies are named ${policyName}; resolve the ambiguous managed policy before setup`,
+    };
+  if (matches.length === 0) return { value: null };
+  const detail = await githubRequest(
+    access,
+    apiEndpoint(identity, `/actions/policies/${matches[0].id}`),
+  );
+  if (detail.error) return detail;
+  if (
+    detail.value?.id !== matches[0].id ||
+    typeof detail.value?.name !== "string" ||
+    detail.value.name.toLowerCase() !== policyName.toLowerCase()
+  )
+    return { error: "invalid managed Actions event policy response" };
+  return detail;
+}
+
+function matchesWorkflow(pattern) {
+  if (
+    typeof pattern !== "string" ||
+    (pattern.startsWith("~") && pattern !== "~ALL")
+  )
+    return null;
+  return matchesDefaultRef(pattern, workflowPath);
+}
+
+function managedPolicyPlan(existing) {
+  if (!existing)
+    return { kind: "create", payload: canonicalPolicy(), changes: [] };
+  const conditions = structuredClone(existing.conditions ?? {});
+  const workflow = conditions.workflow_path ?? {
+    include: [workflowPath],
+    exclude: [],
+  };
+  if (
+    !Array.isArray(workflow.include) ||
+    !Array.isArray(workflow.exclude) ||
+    !workflow.include.every((pattern) => typeof pattern === "string")
+  )
+    return { error: `${policyName} has invalid workflow conditions` };
+  if (workflow.exclude.some((pattern) => matchesWorkflow(pattern) === null))
+    return {
+      error: `${policyName} has a workflow exclusion whose applicability cannot be established safely`,
+    };
+  if (
+    workflow.include.length > 0 &&
+    !workflow.include.some((pattern) => matchesWorkflow(pattern) === true)
+  )
+    workflow.include.push(workflowPath);
+  workflow.exclude = workflow.exclude.filter(
+    (pattern) => !matchesWorkflow(pattern),
+  );
+  conditions.workflow_path = workflow;
+  const rules = structuredClone(existing.rules ?? []);
+  if (
+    !Array.isArray(rules) ||
+    !rules.every((rule) => typeof rule?.type === "string")
+  )
+    return { error: `${policyName} has invalid rules` };
+  const events = rules.filter((rule) => rule.type === "restrict_action_events");
+  if (events.length > 1)
+    return { error: `${policyName} has multiple event rules` };
+  if (events.length === 0) rules.push(canonicalPolicy().rules[0]);
+  else {
+    const allowed = events[0].parameters?.allowed_events;
+    if (
+      !Array.isArray(allowed) ||
+      !allowed.every((event) => typeof event === "string")
+    )
+      return { error: `${policyName} has invalid allowed events` };
+    if (!allowed.includes(workflowEvent)) allowed.push(workflowEvent);
+  }
+  const payload = {
+    name: existing.name,
+    enforcement: "active",
+    conditions,
+    rules,
+  };
+  // Even a missing field in an existing policy is a change to chosen policy.
+  const changes = describeSettingChanges(
+    {
+      enforcement: existing.enforcement ?? null,
+      conditions: existing.conditions ?? null,
+      rules: existing.rules ?? null,
+    },
+    { enforcement: payload.enforcement, conditions, rules },
+    `Actions event policy ${existing.name} (${existing.id})`,
+  );
+  return {
+    kind: changes.length ? "update" : "none",
+    id: existing.id,
+    payload,
+    changes,
+  };
+}
+
+function policyFailure(identity, read, effects = []) {
+  result(
+    "blocked",
+    `${operationName} is incomplete for ${identity}; managing Actions event policy ${policyName} requires repository Actions policies support and Administration write permission (${read.error}). ${effectSummary(effects)} Actions event policy and any pending required-check or squash merge settings remain; inspect remote state before retrying.`,
+  );
+}
+
 function effectSummary(effects) {
   if (effects.length === 0) return "No changes were confirmed.";
   return `Confirmed partial effects: ${effects.join(" and ")}.`;
@@ -576,6 +721,20 @@ async function setupIntegration(request) {
     return;
   }
 
+  let policyPlan;
+  if (repository.visibility === "public") {
+    const policy = await readManagedPolicy(inferred.identity, prepared.access);
+    if (policy.error) {
+      policyFailure(inferred.identity, policy);
+      return;
+    }
+    policyPlan = managedPolicyPlan(policy.value);
+    if (policyPlan.error) {
+      policyFailure(inferred.identity, policyPlan);
+      return;
+    }
+  }
+
   let checkAction;
   let checkLocation;
   let managedRulesetId;
@@ -604,6 +763,7 @@ async function setupIntegration(request) {
   }
   const settingsNeedUpdate = !matchingMergeSettings(repository);
   const changes = mergeSettingChanges(repository);
+  changes.push(...(policyPlan?.changes ?? []));
   if (checkAction?.type === "branch") {
     const { contexts, strict } = branchBefore.value.statusChecks;
     changes.push(
@@ -707,11 +867,58 @@ async function setupIntegration(request) {
     );
   }
 
+  if (policyPlan && policyPlan.kind !== "none") {
+    const suffix =
+      policyPlan.kind === "create"
+        ? "/actions/policies"
+        : `/actions/policies/${policyPlan.id}`;
+    const mutation = await githubRequest(
+      prepared.access,
+      apiEndpoint(inferred.identity, suffix),
+      {
+        method: policyPlan.kind === "create" ? "POST" : "PUT",
+        body: policyPlan.payload,
+      },
+    );
+    if (mutation.error) {
+      policyFailure(inferred.identity, mutation, effects);
+      return;
+    }
+    effects.push(
+      `${policyPlan.kind === "create" ? "created" : "updated"} Actions event policy ${policyName}`,
+    );
+  }
+
   if (
     settingsNeedUpdate &&
     !(await updateMergeSettings(inferred.identity, prepared.access, effects))
   ) {
     return;
+  }
+
+  if (policyPlan) {
+    const policyAfter = await readManagedPolicy(
+      inferred.identity,
+      prepared.access,
+    );
+    if (policyAfter.error) {
+      policyFailure(inferred.identity, policyAfter, effects);
+      return;
+    }
+    const afterPlan = managedPolicyPlan(policyAfter.value);
+    if (afterPlan.error || afterPlan.kind !== "none") {
+      blockReadback(
+        inferred.identity,
+        [
+          mismatch(
+            `Actions event policy ${policyName} active workflow targeting and ${workflowEvent} allowance`,
+            afterPlan,
+          ),
+        ],
+        effects,
+      );
+      return;
+    }
   }
 
   const repositoryAfter = await githubRequest(

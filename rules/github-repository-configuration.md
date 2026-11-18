@@ -69,6 +69,31 @@ requirement is unavailable, not optional, and applies once GitHub offers
 either. GitHub runs the PR metadata validation workflow only from the default
 branch, so the check is required once the workflow is on the default branch.
 
+On a public repository requiring that check, the PR integration setup also
+manages one repository Actions event policy, `Repo Canon PR metadata events`,
+to allow `pull_request_target` after GitHub's default block. It is active,
+targets `.github/workflows/pr-metadata.yml` through
+`conditions.workflow_path.include`, and has a `restrict_action_events` rule
+whose `allowed_events` includes `pull_request_target`. Keep the workflow's
+base checkout, lack of persisted credentials and `contents: read` permission.
+
+Match the policy name case-insensitively; duplicate matches block without
+mutation. Create a missing policy freely. Changes to existing enforcement,
+workflow conditions or event rules require confirmation with current and
+proposed values before any mutation. Confirmed reconciliation preserves other
+conditions, rules and allowed events, and leaves other policies untouched.
+Read back active workflow targeting and the event allowance before reporting
+`changed`; matching policy, check and merge settings are `unchanged`.
+
+Unsupported or refused policy operations return `blocked`, name the capability
+or permission and credential-redacted platform status and message, retain
+confirmed partial effects and remaining work, and stop further mutation.
+Never fall back to another trigger. Private and internal repositories receive
+no Actions policy requests; an absent workflow on default defers policy setup
+with the check until the next adoption or update. An enterprise or organization
+Actions policy can still block the event; repository-level readback cannot
+detect this.
+
 ## Pull request asset branches
 
 Keep `pr-assets/*` branches permanently so pull request screenshots remain
@@ -255,7 +280,7 @@ and its accepted concurrent-base race.
 ## Preserved settings
 
 The GitHub configuration changes only the labels, merge settings, required check,
-and freshness these rules name. Unrelated labels, rules, checks, and repository
+Actions event policy and freshness these rules name. Unrelated labels, rules, checks, and repository
 settings stay as the repository has them.
 
 ## Installed workflow runners
