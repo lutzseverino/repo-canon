@@ -442,6 +442,23 @@ test("includes the pending policy when required-check enforcement fails", async 
       });
 });
 
+test("keeps the private invalid-ruleset-response message unchanged", (t) => {
+  const scenario = setup(t, {
+    state: { private: true, nextRulesetId: "invalid" },
+  });
+  const outcome = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(outcome.result.status, "blocked");
+  assert.equal(
+    outcome.result.message,
+    "GitHub PR integration setup is incomplete for acme/widgets; the required-check ruleset mutation returned an invalid response. No changes were confirmed. Inspect remote state and retry.",
+  );
+  assert.ok(
+    scenario
+      .readState()
+      .requests.every((request) => !request.includes("/actions/policies")),
+  );
+});
+
 test("leaves policy creation pending when another setting requires confirmation", (t) => {
   const scenario = setup(t, {
     state: {

@@ -878,7 +878,7 @@ async function setupIntegration(request) {
     if (parsed.error || !Number.isInteger(parsed.value?.id)) {
       result(
         "blocked",
-        `${operationName} is incomplete for ${inferred.identity}; the required-check ruleset mutation returned an invalid response. ${effectSummary(effects)} ${remainingWork(pendingEnforcement)}`,
+        `${operationName} is incomplete for ${inferred.identity}; the required-check ruleset mutation returned an invalid response. ${effectSummary(effects)} ${policyPlan ? remainingWork(pendingEnforcement) : "Inspect remote state and retry."}`,
       );
       return;
     }
