@@ -160,8 +160,9 @@ from what it only read in code. Leave the issues to triage.
 
 Link filed or existing issues in this order, counting the environment's issue report as the links' home:
 
-1. A run with a pull request links them from a comment on that pull request.
-   For adoption, use its check-outcomes comment.
+1. A run with a pull request links them from a comment on that pull request;
+   the implementing worker links them in the body's Delivery subsection
+   instead. For adoption, use its check-outcomes comment.
 2. A run without a pull request links them from the issue it was working on,
    if there is one, such as a release run's planning issue.
 3. Only a run with neither a pull request nor an issue lists them in its final
@@ -267,8 +268,11 @@ follow blocked/failure delivery rules, naming checks and reasons. Add no timeout
 fallback or bypass.
 
 Record the full head SHA, trusted declaration revision, location, required command,
-names and outcomes. Draft-to-separate-review and no-review handoffs both retain
-review/merge ownership and gates.
+names and outcomes in the body's Evidence section as its `### Delivery`
+subsection, under the comment rules'
+[delivery records](.repo-standards/rules/comments.md#delivery-records), and
+keep it current on each push. Draft-to-separate-review and no-review handoffs
+both retain review/merge ownership and gates.
 
 Self-reported success requires the independent review run, another agent and
 sandbox, to rerun the same command on the current head before merging. The
@@ -315,9 +319,9 @@ For adoption or update findings, use these target repositories:
 
 Before delivery, read applicable installed rules for merge ownership and
 owner review. When they assign the merge to another agent, the worker records
-the prescribed PR handoff and stops without merging. The designated merging
-agent resumes delivery from that handoff, enforcing those rules on the current
-head alongside the conditions below.
+the prescribed handoff in the body's Delivery subsection and stops without
+merging. The designated merging agent resumes delivery from that subsection,
+enforcing those rules on the current head alongside the conditions below.
 
 Merge a pull request once every required check passes on its latest head and
 every review thread is answered with its fix or a reasoned decline under the

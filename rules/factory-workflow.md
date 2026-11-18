@@ -286,7 +286,7 @@ removes it.
 For every skip-labelled PR and every PR opened by a directly launched worker,
 including a PR without a skip label, the implementing worker delivers an open PR
 and hands it to the orchestrating agent without merging. Worker completion is
-the recorded PR handoff, a delivery record under the `comments` rules; the issue
+the recorded PR handoff, the body's delivery record under the `comments` rules; the issue
 stays open until delivery finishes. The orchestrating agent continues `babysit`
 and owns the merge under the contribution guide and applicable review rules.
 

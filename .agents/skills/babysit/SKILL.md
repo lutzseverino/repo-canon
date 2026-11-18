@@ -11,8 +11,8 @@ Take the PR through authorized delivery under `CONTRIBUTING.md` and the
 
 Before requesting or waiting, establish your role from `CONTRIBUTING.md`'s
 Merging section and applicable installed rules. Record any prescribed worker
-handoff on the open PR under `.repo-standards/rules/comments.md#delivery-records`
-and stop. The designated merging agent resumes with its review requirements
+handoff in the open PR body's Delivery subsection under
+`.repo-standards/rules/comments.md#delivery-records` and stop. The designated merging agent resumes with its review requirements
 and outstanding findings. For an owner-question pause, follow installed
 continuation rules before request and wait. For authorized delivery of a
 stopped run's open PR, enter Branch-update recovery first, using this
@@ -93,8 +93,8 @@ body was checked. Link-free bodies need no reconstruction.
    After any push or re-request, return to step 1.
 5. Before each merge attempt, verify merge ownership and any required owner
    approval against the current head under the applicable installed rules.
-   Read the authoritative implementation contract and any worker handoff and
-   apply the `github-repository-configuration` rules' Designated owner review gate.
+   Read the authoritative implementation contract and any worker handoff in
+   the PR body's Delivery subsection, and apply the `github-repository-configuration` rules' Designated owner review gate.
    Read PR comments carrying designation provenance and current-head approval;
    record approval there under `.repo-standards/rules/comments.md#delivery-records`.
    Missing required approval means the guide's owner-question handoff under
