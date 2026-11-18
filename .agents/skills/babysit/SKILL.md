@@ -17,7 +17,7 @@ and outstanding findings. For an owner-question pause, follow installed
 continuation rules before request and wait. For authorized delivery of a
 stopped run's open PR, enter Branch-update recovery first, using this
 invocation's branch update. Carry the handoff context and follow installed
-rules for retaining its waiting marker and recording the merge outcome.
+rules for retaining its waiting marker.
 
 The bundled scripts require Node.js 24 or 26. Request and wait read optional
 `.github/pull-request-reviewer.json` and `.github/factory-review-policy.json`
@@ -249,7 +249,7 @@ Paths are relative to the repository root.
 - The installed rules the steps name, such as the
   `github-repository-configuration` rules, which the `repository-standards`
   skill looks up. When they are missing, the commands' own behavior stands, no
-  rule prescribes a worker handoff, owner approval or merge outcome record,
+  rule prescribes a worker handoff or owner approval,
   and `CONTRIBUTING.md` alone sets the merge rules.
 - `.github/required-checks.json`: the required-name authority for wait and merge.
   Missing, invalid or unreadable at the selected trusted commit stops delivery

@@ -491,8 +491,8 @@ findings retain their existing routes; a changed head follows the ordinary
 new-head review and validation path.
 
 A round with no open finding holds: mark the PR ready and deliver under the
-guide's Merging section. List only open findings in the round's review, fixes
-under `Fixed`, and answer declines in their threads. Only the reviewing
+guide's Merging section. The round's review lists its open, fixed and filed
+findings, and declines are answered in their threads. Only the reviewing
 account's undismissed standing reviews submitted on the head they name count
 as its rounds. Resume delivery, including after interruption, only while that
 account's latest review holds on the current head. Installed factory workflow
@@ -541,9 +541,10 @@ At every invocation, merge independently checks the platform PR author and the
 trusted destination policy, including without a prior wait. A caller's wait
 result or PR-branch policy never authorizes a skip. For a matching author, it
 requires a complete pull request review of the current head in the shape the
-`comments` rules' Reviews section gives; an issue comment or an earlier record
-shape does not count. Missing, incomplete or stale evidence returns merge exit
-`5` without a merge write: post the completed current-head review, then rerun.
+`comments` rules' Reviews section gives, including the former record it
+accepts for one release; an issue comment or another shape does not count.
+Missing, incomplete or stale evidence returns merge exit `5` without a merge
+write: post the completed current-head review, then rerun.
 That retry is distinct from owner handoff (`3`), head changed (`2`) and stale
 base (`4`); every other merge condition still applies.
 
