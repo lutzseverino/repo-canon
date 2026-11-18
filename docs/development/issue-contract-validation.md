@@ -210,6 +210,34 @@ renewal are needed for unchanged eligible approvals. Readiness removal does not
 restore a label: fresh authorized review follows the existing notice/event rules.
 Add Seams when a Brief is actually revised, then obtain its new notice and review.
 
+### Review attestation result v4
+
+A result that names a factory review attestation publishes
+`format: "repo-canon/issue-contract-state/v4"`, with every field and meaning
+of its `baseFormat` (`v1` prepared or `v2` body), plus `baseFormat` and
+`factoryReview`. The [machine schema](../../test/fixtures/issue-contract-v4.schema.json)
+describes the shape; the
+[review attestation fixtures](../../test/fixtures/issue-contract-review-attestation.json)
+hold literal v1, v2 and v4 lines over both bases. Results without an observed
+attestation retain their existing format, so nothing changes until a host
+posts one. A Seams exemption belongs to an Agent Brief and a review
+attestation to a direct contract, so no result carries both.
+
+`factoryReview` records `{run,revision,attestation:{id,revision,edit},refusal,
+publishedAt}` on an `approved` or `awaiting-review` direct contract. `run` and
+`revision` are the attested values, or `null` when malformed. `attestation`
+names the comment ID, the SHA-256 of its complete body and its edit identity,
+`{id,editedAt}`, whose `editedAt` is `null` for an unedited comment, or `null`
+when unread. `refusal` is `null` when the attestation backs readiness, and
+then `run` is named, `revision` equals the result's revision and the comment is
+unedited. `publishedAt` is when a notice first named this same observation,
+carried by later results, and `null` in the result that first names it, like a
+revision's `publishedAt`. A host tells from the state line alone that a notice
+followed its attestation and names its revision: `factoryReview.attestation.id`
+is its comment, `refusal` is `null` and `revision` is the attested one. Readers
+explicitly accept v4 and validate its base and review; unknown formats and
+malformed reviews read as no result.
+
 ## Published result
 
 The validator's result on an issue is its feedback comment: the latest comment
@@ -294,7 +322,8 @@ contracts itself:
   Brief, or posting a newer one, cancels it; deleting an older, superseded
   Brief does not.
 - Only the `admin`, `maintain` and `triage` roles, or the factory's
-  [triage result](#factory-triage-readiness), authorize readiness, as the
+  [triage result](#factory-triage-readiness) or
+  [review attestation](#factory-review-attestation), authorize readiness, as the
   [readiness roles](../../rules/github-repository-configuration.md#readiness-roles)
   rules state.
 - The result names the readiness label it approves.
@@ -553,6 +582,56 @@ rejection reason, and the label is removed as for any unauthorized reviewer. The
 account, `author` included when no triage result is configured, needs a role
 as before.
 
+### Factory review attestation
+
+The factory's triage run also accepts a directly authored specification or
+implementation ticket that it reviewed and did not write
+([ADR 0053](../adr/0053-let-factory-triage-accept-a-direct-contract-it-reviewed.md)).
+Its proof is a factory review attestation: a comment by the configured
+`author` with the run's marked line and one attestation line, which a host
+builds with `reviewAttestationLine` from the installed
+`scripts/issue-contract-sources.mjs`, never by restating the format:
+
+```markdown
+<!-- scriptorium:run {"run":"<run>"} -->
+<!-- repo-canon:review-attestation {"format":"repo-canon/review-attestation/v1","repository":"OWNER/REPO","issue":"ISSUE_NODE_ID","run":"<run>","revision":"sha256:...","source":{"type":"issue-body","editedAt":null}} -->
+```
+
+The host passes the repository, the issue's node ID, the run and the exact
+`revision` and `source` the validator's notice names. `reviewAttestationLine`
+refuses facts that could never verify, and `verifyReviewAttestation(markdown,
+facts)` returns `null` for the matching attestation or the reason it differs.
+`attestationPayload(markdown, marker)` is the one reader of both this
+attestation and the body-mode publication proof.
+
+The validator observes the latest attestation the configured `author` posted
+on a direct contract and reads its edit identity: in prepared mode the adapter
+reads only that comment's edit identity, and body mode already reads every
+comment's. It publishes what it observed as the result's `factoryReview`, in
+the [v4 result](#review-attestation-result-v4), with `refusal: null` when the
+attestation backs readiness of the current revision, or the reason it backs
+none:
+
+- it was edited after posting, or its edit history was not read;
+- it carries no single marked run line;
+- it names another run than its marked line, as a copied attestation does;
+- it names another repository, issue, revision or body source, as an
+  attestation of an earlier revision does after a body edit;
+- the factory opened the issue without naming the run that wrote it, or that
+  run is the attestation's run, under the triage result's writer rule.
+
+A readiness label event by `author` on a direct contract is approved, without
+a role, when the current attestation has no refusal and the event follows a
+notice that named that same attestation and revision, first published in an
+earlier second. A refusal names its cause: one of the reasons above, an
+attestation another account posted, a deleted attestation, none at all, or a
+notice that has not named the attestation yet. An approval relying on an
+attestation that is later edited or deleted, or a body edit, removes
+readiness. On a triaged Agent Brief, a review attestation authorizes nothing,
+and the refusal says so. Without a factory triage configuration no attestation
+is observed and nothing changes. A person's readiness is unchanged beside an
+attestation.
+
 Wayfinder maps and children reject readiness labels because their native
 eligibility uses open state, assignment, and blockers instead of the readiness
 workflow, and the validator never adds a workflow state to them.
@@ -769,7 +848,13 @@ that must remain inert. Run
 `node --test test/issue-contract-triage-readiness.test.mjs` for the factory
 triage path: approval with a matching result, refusal without one, for another
 revision, or for an issue the same or an unnamed run wrote, person readiness
-either way, and the configuration reader. Run `node --test test/issue-contract-footprint.test.mjs` for the footprint
+either way, and the configuration reader. Run
+`node --test test/issue-contract-review-attestation.test.mjs` for the factory
+review attestation: producing and verifying it, the shared attestation reader,
+approval of a ticket and a specification after a notice names it, each
+refusal, an approval ending with a deleted or edited attestation or a body
+edit, person readiness, no configuration, the v4 reader, the literal fixtures,
+and the platform route through the adapter and the readiness command. Run `node --test test/issue-contract-footprint.test.mjs` for the footprint
 fields, an approved contract keeping readiness with rejected items, the tally, and the supersession refusal in both the validator and the
 readiness command, with fated, unfated, closed and ADR-citing issues.
 Run `node --test test/issue-contract-result.test.mjs` for the published

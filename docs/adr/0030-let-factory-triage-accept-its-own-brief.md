@@ -15,3 +15,8 @@ intent that the repository's own records cannot answer to a grill, and when
 triage is off, readiness still comes from a person. This relaxes the
 orchestrating agent's rule that a brief's writer never accepts it, only for
 the factory's triage run.
+
+[ADR 0053](0053-let-factory-triage-accept-a-direct-contract-it-reviewed.md)
+extends this exception to a directly authored specification or implementation
+ticket that the factory's triage run reviewed and did not write, backed by a
+factory review attestation of the exact body revision.

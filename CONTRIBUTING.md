@@ -113,7 +113,8 @@ a grill must settle the owner's intent.
 
 Applying `state:ready` is the review action, and the
 `github-repository-configuration` rules name the roles it needs, the factory
-triage run's exception to them, and the labels. After revising a contract or
+triage run's exception to them for its own brief and for a direct contract it
+reviewed, and the labels. After revising a contract or
 posting an Agent Brief, wait for the issue-contract workflow's revision notice
 before applying readiness. Editing a contract removes its readiness. The workflow keeps one workflow state label on
 an issue, a `state:` label or the closing `wontfix` in its place: authorized

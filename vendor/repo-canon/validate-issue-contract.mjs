@@ -21,6 +21,10 @@ import {
   intakeOriginal,
   digest,
   isFactoryTriageAuthor,
+  attestationPayload,
+  markedRun,
+  reviewAttestationMarker,
+  verifyReviewAttestation,
 } from "../../scripts/issue-contract-sources.mjs";
 
 import {
@@ -35,6 +39,9 @@ import {
 // The annotated tag and GitHub release are the immutable public identity.
 export const seamsReleaseTag = "v0.26.0";
 export const seamsResultFormat = "repo-canon/issue-contract-state/v3";
+// The result that names a factory review attestation a direct contract's
+// notice observed, around its v1 or v2 base. Every other result keeps its base.
+export const reviewResultFormat = "repo-canon/issue-contract-state/v4";
 const seamsSource = "/repos/lutzseverino/repo-canon";
 const utcTime = (value) =>
   typeof value === "string" &&
@@ -677,7 +684,7 @@ export function decideIssueContract(snapshot) {
   if (decision.feedback) {
     const line = feedbackStateLine(decision.feedback.body);
     const state = JSON.parse(line.slice(feedbackStatePrefix.length, -4));
-    if (state.format === seamsResultFormat) state.baseFormat = bodyResultFormat;
+    if (state.baseFormat) state.baseFormat = bodyResultFormat;
     else state.format = bodyResultFormat;
     state.selection = selected.selection;
     state.observation = issueContractObservation({
@@ -844,6 +851,7 @@ function decideCurrentContract(snapshot) {
 
   const contract = contractRevision(snapshot, result);
   const revision = contract.revision;
+  const review = factoryReview(snapshot, result, contract);
   const readiness = assessReadiness({
     snapshot,
     result,
@@ -851,6 +859,7 @@ function decideCurrentContract(snapshot) {
     previousFeedback,
     revision,
     openingEligible: contract.openingEligible,
+    review,
   });
   const published = {
     ...evaluation,
@@ -860,6 +869,7 @@ function decideCurrentContract(snapshot) {
     sourceInvalidation:
       readiness.sourceInvalidation ?? evaluation.sourceInvalidation,
     footprint: footprintTally(snapshot, result),
+    factoryReview: publishedReview(review, recorded, previousFeedback),
   };
   if (!readiness.valid) {
     const writes = stateWrites();
@@ -915,6 +925,7 @@ function decideCurrentContract(snapshot) {
             reviewer: readiness.reviewer,
             reviewEventId: readiness.reviewEventId,
             triageRun: readiness.triageRun,
+            reviewAttested: readiness.reviewAttested,
           })
         : awaitingReviewFeedback(published, {
             reason: readiness.rejectionReason,
@@ -1636,6 +1647,7 @@ function assessReadiness({
   previousFeedback,
   revision,
   openingEligible,
+  review,
 }) {
   const { event: currentEvent, issue, permissions } = snapshot;
   const currentReadyLabels = [...result.labels].filter((label) =>
@@ -1761,6 +1773,30 @@ function assessReadiness({
           !authority.error && creationEvent ? grant.label : null,
       };
     }
+    // The factory's readiness on a direct contract follows a notice that named
+    // the same valid review attestation of this revision, published in an
+    // earlier second. A recorded approval already passed that barrier.
+    if (authority.reviewAttested) {
+      const noticed = recorded?.factoryReview;
+      if (
+        recorded?.revision !== revision ||
+        !noticed ||
+        noticed.refusal !== null ||
+        !same(noticed.attestation, review.attestation) ||
+        (!approval &&
+          !noticePrecedes(
+            { comment: previousFeedback, state: noticed },
+            labelEvent?.created_at,
+          ))
+      )
+        return {
+          valid: false,
+          error:
+            "Wait for the validator's notice naming the factory review attestation of this revision before applying readiness, then apply it again.",
+          observedEventId,
+          sourceInvalidation,
+        };
+    }
     // A new grant to a direct contract waits for a well-formed footprint and,
     // for a specification, for every superseded issue's fate.
     const supersession = snapshot.supersession;
@@ -1795,6 +1831,7 @@ function assessReadiness({
       reviewer: grant.reviewer,
       reviewEventId: grant.reviewEventId,
       triageRun: authority.run ?? null,
+      reviewAttested: Boolean(authority.reviewAttested),
       observedEventId,
       sourceInvalidation,
     };
@@ -1976,6 +2013,19 @@ function supersedingDeletedBrief(currentEvent, result) {
 function triageAuthority(snapshot, result, reviewer) {
   const { issue, triageResult } = snapshot;
   const { marker } = triageResult;
+  if (directContractKinds.includes(result.kind)) {
+    const contract = contractRevision(snapshot, result);
+    const review = factoryReview(snapshot, result, contract);
+    if (review && !review.refusal)
+      return { authorized: true, run: review.run, reviewAttested: true };
+    return {
+      authorized: false,
+      refusal: `@${reviewer}'s readiness on this ${result.kind} is not backed by a valid factory review attestation of revision ${contract.revision}. ${review?.refusal ?? missingReview(snapshot)} A person may review it instead.`,
+    };
+  }
+  const attestationNote = reviewAttestations(snapshot.comments).length
+    ? " A factory review attestation authorizes only a direct specification or implementation ticket."
+    : "";
   if (result.contract.type === "issue-body") {
     const association = bodyTriageAssociation(
       snapshot,
@@ -1984,7 +2034,7 @@ function triageAuthority(snapshot, result, reviewer) {
     if (association) return { authorized: true, run: association.run };
     return {
       authorized: false,
-      refusal: `@${reviewer}'s readiness lacks authenticated exact-body factory triage proof. A person must review it.`,
+      refusal: `@${reviewer}'s readiness lacks authenticated exact-body factory triage proof.${attestationNote} A person must review it.`,
     };
   }
   const brief = result.contract.comment;
@@ -1997,7 +2047,7 @@ function triageAuthority(snapshot, result, reviewer) {
   if (!run)
     return {
       authorized: false,
-      refusal: `@${reviewer}'s readiness is not backed by the factory's triage result for this revision.`,
+      refusal: `@${reviewer}'s readiness is not backed by the factory's triage result for this revision.${attestationNote}`,
     };
   if (!isFactoryTriageAuthor(issue.user?.login, triageResult))
     return { authorized: true, run };
@@ -2013,6 +2063,109 @@ function triageAuthority(snapshot, result, reviewer) {
       refusal: `The factory's triage run ${run} wrote this issue, so it cannot accept the brief. A person must review it.`,
     };
   return { authorized: true, run };
+}
+
+// The comments carrying a factory review attestation line, in posting order.
+function reviewAttestations(comments) {
+  return comments.filter((comment) =>
+    comment.body?.includes(`<!-- ${reviewAttestationMarker}`),
+  );
+}
+
+// The factory review attestation a direct contract's evaluation observes: the
+// latest one the configured triage author posted, with the reason it backs no
+// readiness of the current revision, or `refusal: null` when it does. It must
+// be unedited, carry one run marker naming the run it attests, name this
+// repository, issue, revision and body source, and come from a run that did not
+// write the issue, as the triage result's writer rule decides. `null` without a
+// factory triage configuration, for any other kind, or when the author posted
+// none. A deleted attestation is no longer observed.
+function factoryReview(snapshot, result, contract) {
+  const { issue, triageResult } = snapshot;
+  if (!triageResult || !directContractKinds.includes(result.kind)) return null;
+  const comment = reviewAttestations(snapshot.comments).findLast((candidate) =>
+    isFactoryTriageAuthor(
+      (candidate.user ?? candidate.author)?.login,
+      triageResult,
+    ),
+  );
+  if (!comment) return null;
+  const payload = attestationPayload(comment.body, reviewAttestationMarker);
+  const edit =
+    snapshot.sourceEdits?.[
+      String(comment.node_id ?? comment.nodeId ?? comment.id)
+    ] ?? null;
+  const run = markedRun(comment.body, triageResult.marker);
+  const writers = isFactoryTriageAuthor(issue.user?.login, triageResult)
+    ? markedRuns(issue.body, triageResult.marker)
+    : null;
+  const refusal = !edit
+    ? "Its edit history was not read, so it cannot be shown unedited."
+    : edit.editedAt !== null
+      ? "It was edited after posting; post a new attestation instead."
+      : !run
+        ? `It carries no single line marked \`${triageResult.marker}\` naming its run.`
+        : (verifyReviewAttestation(comment.body, {
+            repository: snapshot.repository,
+            issue: String(issue.node_id ?? issue.nodeId),
+            run,
+            revision: contract.revision,
+            source: contract.source,
+          }) ??
+          (writers && (writers.length !== 1 || !writers[0])
+            ? `The factory opened this issue without naming the run that wrote it, so its triage run ${run} cannot accept it.`
+            : writers?.[0] === run
+              ? `The factory's triage run ${run} wrote this issue, so it cannot accept it.`
+              : null));
+  return {
+    run: typeof payload?.run === "string" ? payload.run : null,
+    revision: /^sha256:[a-f0-9]{64}$/.test(payload?.revision ?? "")
+      ? payload.revision
+      : null,
+    attestation: {
+      id: String(comment.id),
+      revision: digest(comment.body),
+      edit,
+    },
+    refusal,
+  };
+}
+
+// Why no review attestation backs the factory's readiness when its author
+// posted none.
+function missingReview(snapshot) {
+  const { event, comments, triageResult } = snapshot;
+  if (
+    event?.kind === "commentDeleted" &&
+    event.comment?.body?.includes(`<!-- ${reviewAttestationMarker}`)
+  )
+    return "Its review attestation was deleted; post a new one.";
+  const other = reviewAttestations(comments).findLast(
+    (comment) =>
+      !isFactoryTriageAuthor(
+        (comment.user ?? comment.author)?.login,
+        triageResult,
+      ),
+  );
+  return other
+    ? `The review attestation @${(other.user ?? other.author)?.login} posted is not the configured triage author's.`
+    : "The configured triage author posted no review attestation.";
+}
+
+// The review attestation as a result publishes it, with `publishedAt`: when a
+// notice first named this same observation, carried by later results, or
+// `null` in the result that first names it, like a revision's `publishedAt`.
+function publishedReview(review, recorded, previousFeedback) {
+  if (!review) return null;
+  const noticed = recorded?.factoryReview;
+  const { publishedAt: _, ...previous } = noticed ?? {};
+  return {
+    ...review,
+    publishedAt:
+      noticed && same(previous, review)
+        ? firstPublication(noticed, previousFeedback)
+        : null,
+  };
 }
 
 // The run each line of `markdown` marked with the factory's triage-result
@@ -2105,6 +2258,14 @@ function feedbackState(body) {
       )
     )
       return null;
+    if (state.baseFormat === bodyResultFormat)
+      return validBodyResult(state) ? state : null;
+    return state.baseFormat === resultFormat && validResultCore(state)
+      ? state
+      : null;
+  }
+  if (state.format === reviewResultFormat) {
+    if (!validFactoryReview(state)) return null;
     if (state.baseFormat === bodyResultFormat)
       return validBodyResult(state) ? state : null;
     return state.baseFormat === resultFormat && validResultCore(state)
@@ -2504,10 +2665,21 @@ function resultLine({
   rejectionReason = null,
   rejectedCreationLabel = null,
   seamsExemption = null,
+  factoryReview = null,
 }) {
+  // A Seams exemption belongs to an Agent Brief and a review attestation to a
+  // direct contract, so a result never carries both.
   const state = JSON.stringify({
-    format: seamsExemption ? seamsResultFormat : resultFormat,
-    ...(seamsExemption ? { baseFormat: resultFormat, seamsExemption } : {}),
+    format: seamsExemption
+      ? seamsResultFormat
+      : factoryReview
+        ? reviewResultFormat
+        : resultFormat,
+    ...(seamsExemption
+      ? { baseFormat: resultFormat, seamsExemption }
+      : factoryReview
+        ? { baseFormat: resultFormat, factoryReview }
+        : {}),
     status,
     kind,
     revision,
@@ -2569,10 +2741,10 @@ function awaitingReviewFeedback(
 
 function approvedFeedback(
   published,
-  { label, reviewer, reviewEventId, triageRun },
+  { label, reviewer, reviewEventId, triageRun, reviewAttested },
 ) {
   const review = triageRun
-    ? `was accepted by the factory's triage run ${triageRun}, whose result @${reviewer} posted,`
+    ? `was accepted by the factory's triage run ${triageRun}, whose ${reviewAttested ? "review attestation" : "result"} @${reviewer} posted,`
     : `was reviewed by @${reviewer}, whose repository role authorizes triage,`;
   return `${resultLine({ ...published, status: "approved", label, reviewer, reviewEventId })}\n## Issue contract readiness recorded\n\nThe ${published.kind} at revision \`${published.revision}\` ${review} and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.${published.footprint ? `\n\n${published.footprint}` : ""}`;
 }
@@ -2782,6 +2954,18 @@ export async function runIssueContractValidation(
       selected.record,
     );
   }
+  // Body mode reads every comment's edit identity above. Otherwise only the
+  // factory's latest review attestation needs one, to show it unedited.
+  const attestation =
+    facts.mode !== "body" && triageResult
+      ? reviewAttestations(snapshot.comments).findLast((comment) =>
+          isFactoryTriageAuthor(comment.user?.login, triageResult),
+        )
+      : null;
+  if (attestation)
+    snapshot.sourceEdits = await sourceEditIdentities(connection, [
+      attestation.node_id,
+    ]);
   const readTimeline = async () =>
     (await tracker.labelChanges(issueNumber)).map(timelineEvent);
   let needs = snapshotNeeds(snapshot);
@@ -3110,5 +3294,39 @@ function validBodyResult(state) {
       typeof proof.intake?.author === "string" &&
       nullableString(proof.intake.writerRun),
     )
+  );
+}
+
+// A v4 result's review attestation: on a direct contract's revision-bearing
+// result, naming the attestation comment, its exact bytes and edit identity.
+// Without a refusal it names a run and this result's revision, unedited.
+function validFactoryReview(state) {
+  const review = state.factoryReview;
+  const hash = (value) => /^sha256:[a-f0-9]{64}$/.test(value ?? "");
+  const nullableString = (value) => value === null || typeof value === "string";
+  const edit = review?.attestation?.edit;
+  return Boolean(
+    review &&
+    typeof review === "object" &&
+    ["approved", "awaiting-review"].includes(state.status) &&
+    directContractKinds.includes(state.kind) &&
+    hash(state.revision) &&
+    state.source?.type === "issue-body" &&
+    nullableString(review.run) &&
+    (review.revision === null || hash(review.revision)) &&
+    /^\d+$/.test(review.attestation?.id ?? "") &&
+    hash(review.attestation.revision) &&
+    (edit === null ||
+      (typeof edit?.id === "string" &&
+        edit.id &&
+        nullableString(edit.editedAt))) &&
+    nullableString(review.publishedAt) &&
+    (review.refusal === null
+      ? typeof review.run === "string" &&
+        review.run.trim() === review.run &&
+        review.run.length > 0 &&
+        review.revision === state.revision &&
+        edit?.editedAt === null
+      : typeof review.refusal === "string" && review.refusal.length > 0),
   );
 }

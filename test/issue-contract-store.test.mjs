@@ -781,6 +781,24 @@ test("proof-persistence retries request evaluation even when evidence is already
       { message: "Configured-author attestation is missing." },
     );
   }
+  const attested = comments.find((comment) => comment.id === 20);
+  const { body } = attested;
+  attested.body = body.replace(/ \{"format".*\} -->$/, ' {"format": -->');
+  await assert.rejects(
+    () =>
+      recordContractPublication(
+        connection,
+        42,
+        s.contractSources,
+        s.triageResult,
+        { attestationId: "20" },
+      ),
+    {
+      message:
+        "Attestation does not match the observed exact body publication and preserved intake.",
+    },
+  );
+  attested.body = body;
   s.contractSources.record.publication.noticedAt = "2026-11-09T01:00:00Z";
   const original = connection.access.request;
   let fail = true;

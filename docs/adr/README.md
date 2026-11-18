@@ -118,7 +118,8 @@ involve real alternatives.
   interpreting the contract itself.
 - [Let the factory's triage run accept its own brief](0030-let-factory-triage-accept-its-own-brief.md):
   the factory's triage run writes and accepts the brief for an issue it did
-  not write, and the review run's Spec review is the independent check.
+  not write, and the review run's Spec review is the independent check; ADR
+  0053 extends it to a direct contract the run reviewed.
 - [Name labels by family](0031-name-labels-by-family.md): `state:`, `gate:`,
   `factory:`, `type:`, `priority:` and `model:` families, with one workflow
   state naming whom an issue waits on.
@@ -193,3 +194,7 @@ involve real alternatives.
 - [Update a non-overlapping stale base within the attempt](0052-update-a-non-overlapping-stale-base-within-the-attempt.md):
   bounded further branch updates when the advance is not overlapping, with
   checks only for an unchanged patch.
+- [Let factory triage accept a direct contract it reviewed](0053-let-factory-triage-accept-a-direct-contract-it-reviewed.md):
+  a Canon-owned factory review attestation names the run and the exact body
+  revision, and the validator approves the factory's readiness after a notice
+  names it.
