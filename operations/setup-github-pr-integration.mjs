@@ -432,6 +432,7 @@ async function readManagedPolicy(identity, access) {
   if (matches.length > 1)
     return {
       error: `multiple repository Actions policies are named ${policyName}; resolve the ambiguous managed policy before setup`,
+      reconciliation: true,
     };
   if (matches.length === 0) return { value: null };
   const detail = await githubRequest(
@@ -461,29 +462,29 @@ function managedPolicyPlan(existing) {
   if (!existing)
     return { kind: "create", payload: canonicalPolicy(), changes: [] };
   const conditions = structuredClone(existing.conditions ?? {});
-  const workflow = conditions.workflow_path ?? {
-    include: [workflowPath],
-    exclude: [],
-  };
-  if (
-    !Array.isArray(workflow.include) ||
-    !Array.isArray(workflow.exclude) ||
-    !workflow.include.every((pattern) => typeof pattern === "string")
-  )
-    return { error: `${policyName} has invalid workflow conditions` };
-  if (workflow.exclude.some((pattern) => matchesWorkflow(pattern) === null))
-    return {
-      error: `${policyName} has a workflow exclusion whose applicability cannot be established safely`,
-    };
-  if (
-    workflow.include.length > 0 &&
-    !workflow.include.some((pattern) => matchesWorkflow(pattern) === true)
-  )
-    workflow.include.push(workflowPath);
-  workflow.exclude = workflow.exclude.filter(
-    (pattern) => !matchesWorkflow(pattern),
-  );
-  conditions.workflow_path = workflow;
+  // An omitted workflow condition already targets every workflow.
+  const workflow = conditions.workflow_path;
+  if (workflow) {
+    if (
+      !Array.isArray(workflow.include) ||
+      !Array.isArray(workflow.exclude) ||
+      !workflow.include.every((pattern) => typeof pattern === "string")
+    )
+      return { error: `${policyName} has invalid workflow conditions` };
+    if (workflow.exclude.some((pattern) => matchesWorkflow(pattern) === null))
+      return {
+        error: `${policyName} has a workflow exclusion whose applicability cannot be established safely`,
+      };
+    if (
+      workflow.include.length > 0 &&
+      !workflow.include.some((pattern) => matchesWorkflow(pattern) === true)
+    )
+      workflow.include.push(workflowPath);
+    workflow.exclude = workflow.exclude.filter(
+      (pattern) => !matchesWorkflow(pattern),
+    );
+    conditions.workflow_path = workflow;
+  }
   const rules = structuredClone(existing.rules ?? []);
   if (
     !Array.isArray(rules) ||
@@ -513,7 +514,7 @@ function managedPolicyPlan(existing) {
   const changes = describeSettingChanges(
     {
       enforcement: existing.enforcement ?? null,
-      conditions: existing.conditions ?? null,
+      conditions: existing.conditions ?? {},
       rules: existing.rules ?? null,
     },
     { enforcement: payload.enforcement, conditions, rules },
@@ -527,11 +528,27 @@ function managedPolicyPlan(existing) {
   };
 }
 
-function policyFailure(identity, read, effects = []) {
+function policyFailure(
+  identity,
+  read,
+  effects = [],
+  remaining = ["Actions event policy inspection"],
+) {
+  if (read.reconciliation) {
+    result(
+      "blocked",
+      `${operationName} cannot reconcile Actions event policy for ${identity}: ${read.error}. ${effectSummary(effects)} ${remainingWork(remaining)}`,
+    );
+    return;
+  }
   result(
     "blocked",
-    `${operationName} is incomplete for ${identity}; managing Actions event policy ${policyName} requires repository Actions policies support and Administration write permission (${read.error}). ${effectSummary(effects)} Actions event policy and any pending required-check or squash merge settings remain; inspect remote state before retrying.`,
+    `${operationName} is incomplete for ${identity}; managing Actions event policy ${policyName} requires repository Actions policies support and Administration write permission (${read.error}). ${effectSummary(effects)} ${remainingWork(remaining)}`,
   );
+}
+
+function remainingWork(items) {
+  return `${items.join(" and ")} ${items.length === 1 ? "remains" : "remain"}; inspect remote state and retry.`;
 }
 
 function effectSummary(effects) {
@@ -730,7 +747,7 @@ async function setupIntegration(request) {
     }
     policyPlan = managedPolicyPlan(policy.value);
     if (policyPlan.error) {
-      policyFailure(inferred.identity, policyPlan);
+      policyFailure(inferred.identity, { ...policyPlan, reconciliation: true });
       return;
     }
   }
@@ -793,6 +810,13 @@ async function setupIntegration(request) {
   }
   if (requireOverwriteConfirmation(request, operationName, changes)) return;
   const effects = [];
+  const pendingEnforcement = [
+    "Required-check enforcement",
+    ...(policyPlan && policyPlan.kind !== "none"
+      ? ["Actions event policy"]
+      : []),
+    ...(settingsNeedUpdate ? ["squash merge settings"] : []),
+  ];
 
   if (checkAction?.type === "branch") {
     const endpoint = apiEndpoint(
@@ -824,7 +848,7 @@ async function setupIntegration(request) {
         );
       result(
         "blocked",
-        `${operationName} is incomplete for ${inferred.identity}; configuring ${checkName} and strict freshness on ${repository.default_branch} branch protection failed (${freshness.detail}). ${effectSummary(effects)} Required-check enforcement${settingsNeedUpdate ? " and squash merge settings remain" : " remains"}; inspect remote state and retry.`,
+        `${operationName} is incomplete for ${inferred.identity}; configuring ${checkName} and strict freshness on ${repository.default_branch} branch protection failed (${freshness.detail}). ${effectSummary(effects)} ${remainingWork(pendingEnforcement)}`,
       );
       return;
     }
@@ -846,7 +870,7 @@ async function setupIntegration(request) {
     if (!mutation.ok) {
       result(
         "blocked",
-        `${operationName} is incomplete for ${inferred.identity}; the required-check ruleset mutation failed (${mutation.detail}). ${effectSummary(effects)} Required-check enforcement${settingsNeedUpdate ? " and squash merge settings remain" : " remains"}; inspect remote state and retry.`,
+        `${operationName} is incomplete for ${inferred.identity}; the required-check ruleset mutation failed (${mutation.detail}). ${effectSummary(effects)} ${remainingWork(pendingEnforcement)}`,
       );
       return;
     }
@@ -854,7 +878,7 @@ async function setupIntegration(request) {
     if (parsed.error || !Number.isInteger(parsed.value?.id)) {
       result(
         "blocked",
-        `${operationName} is incomplete for ${inferred.identity}; the required-check ruleset mutation returned an invalid response. ${effectSummary(effects)} Inspect remote state and retry.`,
+        `${operationName} is incomplete for ${inferred.identity}; the required-check ruleset mutation returned an invalid response. ${effectSummary(effects)} ${remainingWork(pendingEnforcement)}`,
       );
       return;
     }
@@ -881,7 +905,10 @@ async function setupIntegration(request) {
       },
     );
     if (mutation.error) {
-      policyFailure(inferred.identity, mutation, effects);
+      policyFailure(inferred.identity, mutation, effects, [
+        "Actions event policy",
+        ...(settingsNeedUpdate ? ["squash merge settings"] : []),
+      ]);
       return;
     }
     effects.push(
@@ -902,7 +929,10 @@ async function setupIntegration(request) {
       prepared.access,
     );
     if (policyAfter.error) {
-      policyFailure(inferred.identity, policyAfter, effects);
+      policyFailure(inferred.identity, policyAfter, effects, [
+        "Actions event policy readback",
+        "required-check and squash merge settings readback",
+      ]);
       return;
     }
     const afterPlan = managedPolicyPlan(policyAfter.value);

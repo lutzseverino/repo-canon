@@ -179,7 +179,6 @@ test("confirms all policy differences before any writes and preserves unrelated 
 test("asks about each existing managed policy setting, including absent fields", async (t) => {
   for (const overrides of [
     { enforcement: "disabled" },
-    { conditions: undefined },
     { conditions: { workflow_path: { include: ["other.yml"], exclude: [] } } },
     { rules: [] },
     {
@@ -204,6 +203,38 @@ test("asks about each existing managed policy setting, including absent fields",
     });
 });
 
+test("preserves all-workflow targeting when the managed policy omits workflow conditions", async (t) => {
+  for (const conditions of [
+    undefined,
+    {},
+    { owner_condition: { include: ["existing"] } },
+  ])
+    await t.test(JSON.stringify(conditions) ?? "absent conditions", (st) => {
+      const managed = canonicalPolicy({ conditions });
+      const scenario = setup(st, {
+        state: {
+          policies: [managed],
+          settings: matchingSettings,
+          rulesets: [canonicalRuleset()],
+        },
+      });
+      assert.equal(scenario.invoke().result.status, "unchanged");
+      assert.equal(scenario.readState().mutations ?? 0, 0);
+      scenario.updateState({
+        policies: [{ ...managed, enforcement: "disabled" }],
+      });
+      assert.equal(scenario.invoke().result.status, "confirmation-required");
+      assert.equal(
+        scenario.invoke({ overwriteAllowed: true }).result.status,
+        "changed",
+      );
+      assert.deepEqual(
+        scenario.readState().policies[0].conditions,
+        conditions ?? {},
+      );
+    });
+});
+
 test("blocks ambiguous policy names even across list pages without writes", (t) => {
   const scenario = setup(t, {
     state: {
@@ -217,7 +248,33 @@ test("blocks ambiguous policy names even across list pages without writes", (t) 
   const outcome = scenario.invoke({ overwriteAllowed: true });
   assert.equal(outcome.result.status, "blocked");
   assert.match(outcome.result.message, /multiple repository Actions policies/);
+  assert.match(outcome.result.message, /cannot reconcile Actions event policy/);
+  assert.doesNotMatch(outcome.result.message, /permission/);
   assert.equal(scenario.readState().mutations ?? 0, 0);
+});
+
+test("reports invalid managed policy shapes as reconciliation problems", async (t) => {
+  for (const overrides of [
+    { conditions: { workflow_path: { include: "invalid", exclude: [] } } },
+    {
+      conditions: { workflow_path: { include: [], exclude: ["~UNRESOLVED"] } },
+    },
+    { rules: "invalid" },
+    { rules: [{ type: "restrict_action_events", parameters: {} }] },
+  ])
+    await t.test(JSON.stringify(overrides), (st) => {
+      const scenario = setup(st, {
+        state: { policies: [canonicalPolicy(overrides)] },
+      });
+      const outcome = scenario.invoke({ overwriteAllowed: true });
+      assert.equal(outcome.result.status, "blocked");
+      assert.match(
+        outcome.result.message,
+        /cannot reconcile Actions event policy/,
+      );
+      assert.doesNotMatch(outcome.result.message, /permission/);
+      assert.equal(scenario.readState().mutations ?? 0, 0);
+    });
 });
 
 test("blocks redacted policy API refusals without further writes and records partial effects", async (t) => {
@@ -280,9 +337,58 @@ test("requires readback of active targeting and event allowance", async (t) => {
     });
 });
 
+test("names only pending work after a policy write or readback failure", async (t) => {
+  for (const at of ["write", "readback"])
+    for (const settingsMatch of [false, true])
+      await t.test(`${at}, settings match: ${settingsMatch}`, (st) => {
+        const scenario = setup(st, {
+          state: {
+            policies:
+              at === "write"
+                ? []
+                : [canonicalPolicy({ enforcement: "disabled" })],
+            ...(settingsMatch ? { settings: matchingSettings } : {}),
+            policyFailure: { at, status: 403, message: "Policy access denied" },
+          },
+        });
+        const outcome = scenario.invoke({ overwriteAllowed: true });
+        assert.equal(outcome.result.status, "blocked");
+        assert.match(
+          outcome.result.message,
+          /Confirmed partial effects: created required-check ruleset/,
+        );
+        if (at === "write") {
+          assert.match(
+            outcome.result.message,
+            settingsMatch
+              ? /Actions event policy remains; inspect remote state/
+              : /Actions event policy and squash merge settings remain; inspect remote state/,
+          );
+          assert.doesNotMatch(
+            outcome.result.message,
+            /required-check[^.]*remain/,
+          );
+        } else {
+          assert.match(outcome.result.message, /updated Actions event policy/);
+          assert.match(
+            outcome.result.message,
+            /Actions event policy readback and required-check and squash merge settings readback remain/,
+          );
+          assert.doesNotMatch(
+            outcome.result.message,
+            /Actions event policy and.*settings remain/,
+          );
+        }
+      });
+});
+
 test("leaves private, internal and deferred repository policies completely alone", async (t) => {
   for (const scope of [
     { private: true },
+    {
+      private: true,
+      forbidden: { protection: planLimit, rulesets: planLimit },
+    },
     { visibility: "internal" },
     { workflow: "absent" },
   ])
@@ -297,6 +403,43 @@ test("leaves private, internal and deferred repository policies completely alone
       );
       assert.deepEqual(scenario.readState().policies, []);
     });
+});
+
+test("includes the pending policy when required-check enforcement fails", async (t) => {
+  for (const kind of ["branch", "ruleset"])
+    for (const settingsMatch of [false, true])
+      await t.test(`${kind}, settings match: ${settingsMatch}`, (st) => {
+        const scenario = setup(st, {
+          state: {
+            policies: [],
+            failAtMutation: kind === "branch" ? 2 : 1,
+            ...(settingsMatch ? { settings: matchingSettings } : {}),
+            ...(kind === "branch"
+              ? {
+                  branchProtection: classicProtection({
+                    strict: false,
+                    contexts: ["build"],
+                  }),
+                }
+              : {}),
+          },
+        });
+        const outcome = scenario.invoke({ overwriteAllowed: true });
+        assert.equal(outcome.result.status, "blocked");
+        assert.match(
+          outcome.result.message,
+          settingsMatch
+            ? /Required-check enforcement and Actions event policy remain/
+            : /Required-check enforcement and Actions event policy and squash merge settings remain/,
+        );
+        if (kind === "branch")
+          assert.match(
+            outcome.result.message,
+            /Confirmed partial effects: required PR metadata/,
+          );
+        else assert.match(outcome.result.message, /No changes were confirmed/);
+        assert.deepEqual(scenario.readState().policies, []);
+      });
 });
 
 test("leaves policy creation pending when another setting requires confirmation", (t) => {
