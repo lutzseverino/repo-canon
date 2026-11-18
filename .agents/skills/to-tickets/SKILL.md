@@ -53,6 +53,8 @@ uses the contribution guide's Readiness and installed parent-readiness rules.
 
 **Live acceptance is a ticket of its own.** When work must be shown on a live system, split it into a **source ticket**, which closes when its pull request merges, and a **live-acceptance ticket**, blocked by the source ticket, whose acceptance criteria are the recorded evidence that the deployed change behaves on the live system as its contract says. A merge never closes it: the source ticket's pull request links it without a closing reference, and it closes only once that evidence is recorded on it. Its live steps take the route the installed rules give work that needs host access.
 
+**A cross-repository switch waits on its activation steps.** A ticket **switches** one side of a cross-repository break when its change, once merged, released or adopted, activates a protocol, configuration or workflow change that a deployed producer or consumer in another repository, or a host, cannot yet handle. Each release, adopter update and host step the switch needs, and the recovery path for any repository the switch deliberately pauses, is a ticket of its own, published in the repository that owns that step. Join them to the switching ticket with blocking edges: every step that must land before the switch blocks it, so the switching ticket stays behind them on the frontier, and a step that can only follow the switch, such as recovering a paused repository, is blocked by it. The split's evidence for independent review checks that list against each intervening deployed state: who can still deliver each remaining step, the merge tooling on the destination repository's base, contracts and results that are already ready, and adopters' installed versions. A host-step ticket names the step and its outcome; host names, providers and access mechanisms stay in owner setup. A later change to that sequence is an amendment under step 1's rule, with no review trigger or session of its own.
+
 ### 4. Prepare the split for independent review
 
 Present the proposed breakdown as a numbered list. For each ticket, show:
@@ -62,7 +64,8 @@ Present the proposed breakdown as a numbered list. For each ticket, show:
 - **What it delivers**: the end-to-end behaviour this ticket makes work
 
 Attach evidence for granularity, real dependencies, independently mergeable
-slices and test seams, and identify any factual verification the independent
+slices, test seams and any cross-repository switch's intervening deployed
+states, and identify any factual verification the independent
 reviewer must finish. Reuse recorded answers and plan approval. Read and apply
 the contribution guide's Triage inference test, inferred-list and
 owner-question rules to unanswered choices.
