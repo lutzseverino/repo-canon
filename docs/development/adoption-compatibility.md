@@ -135,7 +135,7 @@ adopters receive the normal removal of unchanged installations.
 
 The factory profile installs `.scriptorium/config.json` and
 `.scriptorium/Dockerfile`. Its exact version-3 configuration links the published
-`scriptorium-v4.1.0` schema through `$schema`; that schema links matching
+`scriptorium-v4.3.0` schema through `$schema`; that schema links matching
 configuration and sandbox-image documentation. All current consumers read only
 this canonical configuration. Labels, skill/rule names and separate policy files
 retain their meanings and locations. Standard/workbench profiles install neither

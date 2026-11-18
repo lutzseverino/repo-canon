@@ -1542,7 +1542,7 @@ test("factory configuration pins the released schema", () => {
   const configuration = JSON.parse(read(".scriptorium/config.json"));
   assert.equal(
     configuration.$schema,
-    "https://raw.githubusercontent.com/lutzseverino/scriptorium/scriptorium-v4.1.0/schemas/factory-configuration.schema.json",
+    "https://raw.githubusercontent.com/lutzseverino/scriptorium/scriptorium-v4.3.0/schemas/factory-configuration.schema.json",
   );
 });
 

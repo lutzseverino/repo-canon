@@ -144,7 +144,7 @@ information; Repo Canon supplies no model ranking or task-difficulty ladder.
 The one-line model reason identifies the actual guidance used.
 
 For model resolution, fallback and provider diversity, follow
-[Scriptorium's model selection documentation](https://github.com/lutzseverino/scriptorium/blob/scriptorium-v4.1.0/docs/usage/host.md#model-selection).
+[Scriptorium's model selection documentation](https://github.com/lutzseverino/scriptorium/blob/scriptorium-v4.3.0/docs/usage/host.md#model-selection).
 
 The chosen model label uses
 `model:<slug>` or `model:<provider>/<slug>`, optionally followed by
