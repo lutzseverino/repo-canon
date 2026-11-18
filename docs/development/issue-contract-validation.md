@@ -69,9 +69,13 @@ shapes for adopters:
 - bug and feature request forms, including optional unanswered fields;
 - specification forms and native specifications;
 - implementation forms and native tickets, with an optional parent;
-- triaged requests whose selected Agent Brief uses the upstream AI preamble, with
-  the `Agent Brief` heading directly after it and any triage notes below the
-  brief;
+- triaged requests whose selected Agent Brief starts with a lead line, the
+  upstream AI preamble, or that preamble then a lead line, with the
+  `Agent Brief` heading directly after it and any triage notes below the
+  brief. A lead line is one line holding a status marker from the comment
+  rules' table, then bold text; the bare lead line carries no disclosure, and
+  no host frame or footer is read. The two disclaimer shapes stay accepted for
+  one release, as ADR 0044 decides;
 - Wayfinder maps, whose initial `Decisions so far` section alone may be empty;
   and
 - Wayfinder children with exactly one planning label and a parent map.
@@ -565,8 +569,8 @@ posts for the run. It names the run on exactly one line of its own:
 <!-- scriptorium:run {"run":"<run>"} -->
 ```
 
-The brief's shape still applies, so the line comes after the triage
-disclaimer, such as below the brief. The result names its brief revision by
+The brief's shape still applies, so the line comes after the brief's
+preamble, such as below the brief. The result names its brief revision by
 being that revision's source: an edit makes a new revision, and a newer Agent
 Brief replaces it as the contract.
 

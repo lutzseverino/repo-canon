@@ -727,8 +727,8 @@ structureTable("issue structure decides the contract and its corrections", [
     expected: {
       exitCode: 1,
       feedback: "create",
-      message: /Start the Agent Brief comment/,
-      notMessage: /directly after the triage disclaimer/,
+      message: /Start the Agent Brief with its lead line/,
+      notMessage: /directly after its lead line or triage disclaimer/,
     },
   },
   ...[
@@ -761,8 +761,8 @@ structureTable("issue structure decides the contract and its corrections", [
       exitCode: 1,
       feedback: "create",
       message:
-        /Put the `## Agent Brief` heading directly after the triage disclaimer and move other notes below the brief\./,
-      notMessage: /Start the Agent Brief comment/,
+        /Put the `## Agent Brief` heading directly after its lead line or triage disclaimer and move other notes below the brief\./,
+      notMessage: /Start the Agent Brief with/,
     },
   })),
   {

@@ -675,13 +675,18 @@ Only an exact unchanged inventoried legacy comment remains eligible, without
 expiry, until its next revision moves to the body. Follow the validator's
 selected source rather than selecting a competing comment.
 
-The selected source starts with the `comments` rules' triage disclaimer, then a blank
-line, then the `## Agent Brief` heading.
+The selected source starts with one of these preambles, then a blank line,
+then the `## Agent Brief` heading:
 
-Nothing else comes between the disclaimer and the heading; other triage notes
-follow the brief. Under the heading, each of these fields starts a line with
-its name and a colon in bold, such as `**Category:**`, and holds content that
-is not a placeholder:
+- the `comments` rules' lead line alone;
+- their former leading triage disclaimer, accepted for one release;
+- that disclaimer, a blank line, then the lead line.
+
+The workflow checks disclosure only in the disclaimer's shapes and never reads
+a host's frame or footer. Nothing else comes before the heading; triage notes
+and a hand post's disclosure footer follow the brief. Under the heading, each
+of these fields starts a line with its name and a colon in bold, such as
+`**Category:**`, and holds content that is not a placeholder:
 
 - Category
 - Summary
@@ -709,9 +714,10 @@ accepts the disclaimer emphasized with `_` or without the blank line before
 the heading. Contract syntax inside code or HTML comments is example content,
 not part of the brief.
 
-In body mode, place `## Original request` at the end, preserving the reporter's
-original text verbatim exactly once through every revision. Reuse a correctly
-preserved original; missing or ambiguous original input holds body conversion. Capture
+In body mode, place `## Original request` at the end, after any disclosure
+footer, preserving the reporter's original text verbatim exactly once through
+every revision. Reuse a correctly preserved original; missing or ambiguous
+original input holds body conversion. Capture
 intake author/writer proof before overwriting the body. A factory's configured
 author posts a separate exact-revision attestation; app authorship or a copied
 marker alone never authorizes readiness. The validator verifies durable
