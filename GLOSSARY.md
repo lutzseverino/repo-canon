@@ -75,6 +75,13 @@ The first pipeline stage, in which an owner's idea or a filed request becomes
 work. Its entry paths are defined by [Triage](CONTRIBUTING.md#triage).
 _Avoid_: Idea capture, backlog grooming
 
+**Front door**:
+Any agent session a person opens in an adopted repository, with or without a
+factory, which routes what they ask for to the right path: the hand skill of
+its stage, the running orchestrating agent if there is one, or a parked idea
+when they ask for one.
+_Avoid_: Start section, entry skill
+
 **Code-bound request**:
 An intake request whose expected result is clear and whose remaining questions
 the code, logs, or a reproduction can answer, so research writes its Agent
@@ -168,6 +175,12 @@ such as a grill's decision record; tracker-producing stages report through the
 tracker instead. Its format and completion marker live in the
 [launch method](.agents/skills/orchestrate/references/launches.md).
 _Avoid_: Hand-back message, nudge, worker report
+
+**Generated brief**:
+A launch brief whose mechanical fields a command derives from the Canonical
+stages table and the orchestrating agent's arguments; only its Context section
+is written by hand.
+_Avoid_: Launch template, hand-written brief
 
 **Stage input**:
 The identifiers a hand launch passes to its stage's hand skill: an issue, a
