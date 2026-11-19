@@ -1191,16 +1191,15 @@ None (readiness still required).
 `,
     },
   };
-  write(
-    root,
-    ".scriptorium/config.json",
-    readFileSync(join(sourceRoot, ".scriptorium/config.json")),
+  const config = readFileSync(
+    join(sourceRoot, ".scriptorium/config.json"),
+    "utf8",
   );
-  const { triageResult } = JSON.parse(
-    readFileSync(join(root, ".scriptorium/config.json"), "utf8"),
-  );
+  write(root, ".scriptorium/config.json", config);
+  const { triageResult } = JSON.parse(config);
   directTickets["07-self-authored-ticket.md"] = {
     ...directTickets["04-order-receipts-by-reference.md"],
+    author: `${triageResult.author}, written by run triage-7`,
     body: `${directTickets["04-order-receipts-by-reference.md"].body}\n<!-- ${triageResult.marker} ${JSON.stringify({ run: "triage-7" })} -->\n`,
   };
   for (const [index, [name, ticket]] of Object.entries(
@@ -1224,7 +1223,7 @@ None (readiness still required).
       : "None.\n";
     issues[name] = `# ${ticket.title}
 
-Author: ${name.startsWith("07-") ? `${triageResult.author}, written by run triage-7` : "a maintainer, who wrote this ticket after a grill"}
+Author: ${ticket.author ?? "a maintainer, who wrote this ticket after a grill"}
 Status: state:triage
 Labels: none
 Contract: issue body
