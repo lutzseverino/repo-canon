@@ -12,7 +12,10 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { basePaths, snapshotIdentity } from "../scripts/upstream-bases.mjs";
 import { decideIssueContract } from "./helpers/contract-decision.mjs";
-import { completeReview } from "../.agents/skills/babysit/review-outcome.mjs";
+import {
+  completeReview,
+  holdingReview,
+} from "../.agents/skills/babysit/review-outcome.mjs";
 import { statusMarkers } from "../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   completeAgentBrief,
@@ -1673,11 +1676,13 @@ test("the comment rules' review template is the review merge accepts", () => {
   const unfilled = template.replace("<full head SHA>", head);
   assert.equal(completeReview(unfilled, head), false);
   const filled = unfilled
-    .replace(/^(Standards|Spec): <.*>$/gm, "$1: Passed.")
-    .replace(/^Fixed: <.*>$/m, "Fixed: Nothing")
-    .replace(/^Findings: <.*>$/m, "Findings:")
-    .replace(/^- `<path>:<line>` <.*>$/m, "- `rules/comments.md:1` a finding");
+    .replace("<note>", "a gap")
+    .replaceAll("`<path>:<line>`", "`rules/comments.md:1`")
+    .replaceAll("<the finding>", "a finding")
+    .replace("<commit>", "1a2b3c4")
+    .replace("<issue>", "#1");
   assert.equal(completeReview(filled, head), true);
+  assert.equal(holdingReview(filled, head), false);
 });
 
 test("the comment rules' status-marker table is the validator's marker set", () => {

@@ -627,7 +627,7 @@ the others each have their own:
 2. **Small fix.** The change carries one small defect, such as a wrong error
    message the contract states. Observe the fix pushed to the same pull
    request, the checks passing on the new head, one review of that head naming
-   the fix under `Fixed`, and the merge.
+   the fix in a Fixed row, and the merge.
 3. **Hand-back.** The change misses an acceptance criterion. Observe one review
    listing the finding with its file and line, the pull request left a draft,
    and the run ending with a hand-back. Relaunch `implement` on the same pull
