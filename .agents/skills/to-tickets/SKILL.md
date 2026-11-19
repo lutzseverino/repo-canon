@@ -52,10 +52,11 @@ surface ahead of every ticket that edits that surface each take an edge.
 **Overlapping writes** take an edge only when both tickets will rewrite the
 same authored passage or the same shared inventory: a list, table or registry
 both edit. A shared file prompts that check and never serializes the tickets
-on its own; tickets writing different passages of one file stay parallel. The
-blocked ticket's **Blocked by** names the passage or inventory behind an
-overlap edge. Keep dependencies cycle-free. A ticket with no blockers uses the
-contribution guide's Readiness and installed parent-readiness rules.
+on its own; tickets writing different passages of one file take no overlap
+edge. The blocked ticket's **Blocked by** names the passage or inventory
+behind an overlap edge. Keep dependencies cycle-free. A ticket with no
+blockers uses the contribution guide's Readiness and installed
+parent-readiness rules.
 
 **Wide refactors are an exception to vertical slicing.** A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. Every ticket's change merges into its base branch on its own, with its checks passing: when even the batches can't stay green alone, fold the batches that can't into one ticket.
 
