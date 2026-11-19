@@ -1106,7 +1106,8 @@ for (const [
         `${profile} installs ${path}`,
       );
     // Resolve every repository-relative link in the adopter, where source-only
-    // documents do not exist. Factory-only guidance stays conditional.
+    // documents do not exist and factory-only rules install only in the factory
+    // profile, so the guide names those rules without linking them.
     assert.equal(existsSync(join(project, "rules")), false);
     assert.equal(
       existsSync(join(project, ".repo-standards/rules/factory-workflow.md")),
@@ -1120,11 +1121,6 @@ for (const [
     assert.ok(relativeLinks.length > 0, `${label} has contribution links`);
     for (const target of relativeLinks) {
       const [path, fragment] = target.split("#");
-      if (
-        profile === "standard" &&
-        path === ".repo-standards/rules/factory-workflow.md"
-      )
-        continue;
       const destination = join(project, path || "CONTRIBUTING.md");
       assert.ok(existsSync(destination), `${label} resolves file ${target}`);
       const installedDocument = readFileSync(destination, "utf8");

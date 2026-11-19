@@ -143,7 +143,7 @@ checks documented in the development guide before requesting review.
 ## Findings
 
 Implementation, release, review, adoption and update runs record findings, filed
-under the factory rules' [environment-performed step rule](.repo-standards/rules/factory-workflow.md#run-kinds).
+under the factory workflow rules' environment-performed step rule in their Run kinds section.
 A run's change fixes defects within its work; findings are defects, gaps or stale
 instructions observed outside it, except adoption's contextual work.
 
@@ -197,7 +197,7 @@ For attribution, follow [Agents on the maintainer's account](#agents-on-the-main
 An agent working on the maintainer's account may comment, file issues, open and
 merge pull requests, and apply labels as the installed
 [GitHub repository configuration rules](.repo-standards/rules/github-repository-configuration.md)
-and, where applicable, [factory workflow rules](.repo-standards/rules/factory-workflow.md) allow;
+and, where applicable, the factory workflow rules allow;
 the [readiness](#readiness), [credential](#credentials), and [merge](#merging)
 gates still apply. What it posts on issues and pull requests follows the
 [comment rules](.repo-standards/rules/comments.md), as for any account.
@@ -251,8 +251,8 @@ adoption pull request, use the adoption record as described below.
 ### Worker handoff
 
 Before worker handoff, required checks must pass on the latest pushed PR head;
-the separate-review handoff's passing-checks condition follows the factory rules'
-[environment-performed step rule](.repo-standards/rules/factory-workflow.md#run-kinds).
+the separate-review handoff's passing-checks condition follows the factory workflow
+rules' environment-performed step rule in their Run kinds section.
 Required names come from pinned trusted default-branch `.github/required-checks.json`
 under the `github-repository-configuration` rules. Each location runs the required command:
 
