@@ -71,6 +71,44 @@ message defaults remain editable in GitHub's merge flow. Reviewers must verify
 that the final squash subject and body still preserve the reviewed pull request
 title, description, issue references, and any breaking-change explanation.
 
+## Public repository Actions event policy
+
+On a public repository whose default branch carries the workflow, the fix also
+manages one repository Actions policy named `Repo Canon PR metadata events`.
+It keeps `pull_request_target` running after GitHub's default block of that
+event on public repositories. The workflow keeps its trusted base checkout,
+unpersisted credentials and `contents: read` permission.
+
+The policy has `enforcement: "active"`, a `conditions.workflow_path` condition
+whose `include` contains `.github/workflows/pr-metadata.yml` and whose `exclude`
+is empty, and one `restrict_action_events` rule whose `allowed_events` contains
+`pull_request_target`. The fix uses the repository
+[Actions policies API](https://docs.github.com/en/rest/actions/policies), listing
+all pages with `has_parents=false` and reading the matching policy's details.
+Names match case-insensitively; duplicate managed names block without writes.
+
+A missing policy is created freely. Before any writes, differences in an
+existing policy's enforcement, workflow targeting or event rule require
+confirmation, reporting current and proposed values. Confirmed reconciliation
+activates it, adds the workflow when needed, removes exclusions matching that
+workflow, and adds the event allowance. It preserves other includes, exclusions,
+conditions, rules and allowed events. Other policies stay untouched. A final
+readback must confirm active targeting and the allowance before `changed`;
+matching policy, check and merge settings return `unchanged` without writes.
+
+Private and internal repositories receive no policy reads or writes. When the
+workflow is absent from default, policy setup is deferred with the required
+check; the next adoption or update establishes both.
+
+Any failed list, detail read, create, update or readback returns `blocked`,
+names the repository Actions policies capability and Administration write
+permission, and retains the credential-redacted platform status and message.
+No further mutation follows that failure. A failure after earlier writes names
+the confirmed partial effects and remaining work. There is no trigger fallback.
+An enterprise or organization Actions policy can still block the event;
+repository-level readback cannot detect that. Live rollout and verification of
+a successful workflow run remain separate from the offline setup fixtures.
+
 ## Prerequisites and identity
 
 The operation requires Node.js 24 or 26, Git 2.18.0 or newer, and GitHub CLI 2.57.0

@@ -41,6 +41,8 @@ globalThis.fetch = async (input, options = {}) => {
   const contextsEndpoint = /\/protection\/required_status_checks\/contexts$/;
   const rulesetsEndpoint = /\/rulesets(?:\?.*)?$/;
   const rulesetMatch = /\/rulesets\/(\d+)$/.exec(endpoint);
+  const policiesEndpoint = /\/actions\/policies(?:\?.*)?$/;
+  const policyMatch = /\/actions\/policies\/(\d+)$/.exec(endpoint);
   const workflowEndpoint =
     /\/contents\/\.github\/workflows\/pr-metadata\.yml\?ref=[^&]+$/;
   const page = (items) => {
@@ -103,6 +105,7 @@ globalThis.fetch = async (input, options = {}) => {
       },
       default_branch: state.defaultBranch ?? "main",
       private: state.private ?? false,
+      visibility: state.visibility ?? (state.private ? "private" : "public"),
       ...settings,
     });
   }
@@ -188,6 +191,40 @@ globalThis.fetch = async (input, options = {}) => {
       ).parameters.strict_required_status_checks_policy = false;
     return json(value);
   }
+  if (policiesEndpoint.test(endpoint) || policyMatch) {
+    const phase = method !== "GET" ? "write" : policyMatch ? "detail" : "list";
+    if (state.policyFailure?.at === phase)
+      return error(state.policyFailure.status, state.policyFailure.message);
+    if (method === "GET" && !policyMatch) {
+      const response = page(state.policies ?? []);
+      return json(
+        {
+          total_count: (state.policies ?? []).length,
+          policies: await response.json(),
+        },
+        200,
+        response.headers,
+      );
+    }
+    if (method === "GET") {
+      state.policyReads = (state.policyReads ?? 0) + 1;
+      save();
+      if (state.policyFailure?.at === "readback" && state.policyReads > 1)
+        return error(state.policyFailure.status, state.policyFailure.message);
+      const policy = structuredClone(
+        (state.policies ?? []).find(({ id }) => id === Number(policyMatch[1])),
+      );
+      if (!policy) return error(404, "Not Found");
+      if ((state.mutations ?? 0) > 0 && state.policyReadbackMismatch) {
+        if (state.policyReadbackMismatch === "enforcement")
+          policy.enforcement = "disabled";
+        if (state.policyReadbackMismatch === "conditions")
+          policy.conditions.workflow_path.include = ["other.yml"];
+        if (state.policyReadbackMismatch === "rules") policy.rules = [];
+      }
+      return json(policy);
+    }
+  }
   if (method !== "GET") {
     const mutation = (state.mutations ?? 0) + 1;
     if (state.interruptAtMutation === mutation) {
@@ -205,6 +242,25 @@ globalThis.fetch = async (input, options = {}) => {
       state.mutationLog ??= [];
       state.mutationLog.push(action);
     };
+    if (method === "POST" && policiesEndpoint.test(endpoint)) {
+      record("create Actions event policy");
+      const created = { id: state.nextPolicyId ?? 200, ...body };
+      state.nextPolicyId = created.id + 1;
+      state.policies ??= [];
+      state.policies.push(created);
+      save();
+      return json(created, 201);
+    }
+    if (method === "PUT" && policyMatch) {
+      const index = (state.policies ?? []).findIndex(
+        ({ id }) => id === Number(policyMatch[1]),
+      );
+      if (index < 0) return error(404, "Not Found");
+      record("update Actions event policy");
+      state.policies[index] = { id: Number(policyMatch[1]), ...body };
+      save();
+      return json(state.policies[index]);
+    }
     if (method === "POST" && /\/labels(?:\?|$)/.test(endpoint)) {
       record("create label");
       state.labels ??= [];

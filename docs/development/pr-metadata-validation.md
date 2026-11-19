@@ -142,6 +142,19 @@ reports on pull requests opened after the workflow merges there; the
 [PR integration setup](github-pr-integration-setup.md) defers requiring it
 until then.
 
+On public repositories, that setup also manages the active
+`Repo Canon PR metadata events` Actions policy, allowing `pull_request_target`
+for `.github/workflows/pr-metadata.yml` after GitHub's default event block.
+It creates a missing policy, asks before changing existing enforcement,
+workflow conditions or event rules, preserves other entries and policies, and
+reads the result back. A refusal or unsupported policies API returns `blocked`
+with its redacted reason; it never changes the trigger. Private and internal
+repositories receive no policy requests, and an absent default-branch workflow
+defers the policy with the check. Enterprise or organization Actions policies
+can still block execution, which repository-level readback cannot detect.
+The setup document's [policy section](github-pr-integration-setup.md#public-repository-actions-event-policy)
+describes the shape, reconciliation and failure handling.
+
 Run the executable checks with Node.js 24 or 26:
 
 ```sh

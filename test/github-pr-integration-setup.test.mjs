@@ -9,6 +9,28 @@ import { snapshot } from "./helpers/operation.mjs";
 
 const checkName = "PR metadata";
 const rulesetName = "Repo Canon required PR checks";
+const policyName = "Repo Canon PR metadata events";
+
+function canonicalPolicy(overrides = {}) {
+  return {
+    id: 60,
+    name: policyName,
+    enforcement: "active",
+    conditions: {
+      workflow_path: {
+        include: [".github/workflows/pr-metadata.yml"],
+        exclude: [],
+      },
+    },
+    rules: [
+      {
+        type: "restrict_action_events",
+        parameters: { allowed_events: ["pull_request_target"] },
+      },
+    ],
+    ...overrides,
+  };
+}
 
 const matchingSettings = {
   allow_squash_merge: true,
@@ -51,8 +73,403 @@ function classicProtection(statusChecks, overrides = {}) {
 }
 
 function setup(t, options) {
-  return githubSetup(t, githubPrIntegrationSetup, options);
+  return githubSetup(t, githubPrIntegrationSetup, {
+    ...options,
+    state: { policies: [canonicalPolicy()], ...options?.state },
+  });
 }
+
+test("creates a missing public Actions event policy and reads it back, then repeats without writes", (t) => {
+  const scenario = setup(t, { state: { policies: [] } });
+  const before = snapshot(scenario.project.root);
+  const first = scenario.invoke();
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(first.result.status, "changed");
+  assert.match(first.result.message, /created Actions event policy/);
+  assert.deepEqual(scenario.readState().policies, [
+    canonicalPolicy({ id: 200 }),
+  ]);
+  assert.match(
+    scenario.readState().requests.join("\n"),
+    /GET repos\/acme\/widgets\/actions\/policies\/200/,
+  );
+  assert.deepEqual(scenario.readState().rulesets, [
+    canonicalRuleset({ id: 100 }),
+  ]);
+  const mutations = scenario.readState().mutations;
+  const repeat = scenario.invoke();
+  assert.equal(repeat.result.status, "unchanged");
+  assert.equal(scenario.readState().mutations, mutations);
+  assertProjectUnchanged(before, scenario);
+});
+
+test("creates only the missing policy for an existing adopter", (t) => {
+  const scenario = setup(t, {
+    state: {
+      policies: [],
+      settings: matchingSettings,
+      rulesets: [canonicalRuleset()],
+    },
+  });
+  const outcome = scenario.invoke();
+  assert.equal(outcome.result.status, "changed");
+  assert.deepEqual(scenario.readState().mutationLog, [
+    "create Actions event policy",
+  ]);
+});
+
+test("confirms all policy differences before any writes and preserves unrelated policy on reconciliation", (t) => {
+  const managed = canonicalPolicy({
+    name: policyName.toUpperCase(),
+    enforcement: "evaluate",
+    conditions: {
+      workflow_path: {
+        include: ["legacy.yml"],
+        exclude: [".github/workflows/*.yml", "other.yml"],
+      },
+    },
+    rules: [
+      {
+        type: "restrict_action_events",
+        parameters: { allowed_events: ["push"] },
+      },
+      {
+        type: "restrict_actions_actors",
+        parameters: { allowed_actors: [{ id: 7, type: "User" }] },
+      },
+    ],
+  });
+  const unrelated = canonicalPolicy({ id: 61, name: "Owner policy" });
+  const scenario = setup(t, {
+    state: { policies: [unrelated, managed], pageSize: 1 },
+  });
+  const refused = scenario.invoke();
+  assert.equal(refused.result.status, "confirmation-required");
+  for (const field of ["enforcement", "conditions", "rules"])
+    assert.match(
+      refused.result.message,
+      new RegExp(`${field} is .*; the standard sets`),
+    );
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+  const confirmed = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(confirmed.result.status, "changed");
+  assert.match(confirmed.result.message, /updated Actions event policy/);
+  assert.deepEqual(scenario.readState().policies, [
+    unrelated,
+    canonicalPolicy({
+      name: managed.name,
+      conditions: {
+        workflow_path: {
+          include: ["legacy.yml", ".github/workflows/pr-metadata.yml"],
+          exclude: ["other.yml"],
+        },
+      },
+      rules: [
+        {
+          type: "restrict_action_events",
+          parameters: { allowed_events: ["push", "pull_request_target"] },
+        },
+        managed.rules[1],
+      ],
+    }),
+  ]);
+  assert.equal(scenario.invoke().result.status, "unchanged");
+});
+
+test("asks about each existing managed policy setting, including absent fields", async (t) => {
+  for (const overrides of [
+    { enforcement: "disabled" },
+    { conditions: { workflow_path: { include: ["other.yml"], exclude: [] } } },
+    { rules: [] },
+    {
+      rules: [
+        {
+          type: "restrict_action_events",
+          parameters: { allowed_events: ["push"] },
+        },
+      ],
+    },
+  ])
+    await t.test(JSON.stringify(overrides), (st) => {
+      const scenario = setup(st, {
+        state: { policies: [canonicalPolicy(overrides)] },
+      });
+      assert.equal(scenario.invoke().result.status, "confirmation-required");
+      assert.equal(scenario.readState().mutations ?? 0, 0);
+      assert.equal(
+        scenario.invoke({ overwriteAllowed: true }).result.status,
+        "changed",
+      );
+    });
+});
+
+test("preserves all-workflow targeting when the managed policy omits workflow conditions", async (t) => {
+  for (const conditions of [
+    undefined,
+    {},
+    { owner_condition: { include: ["existing"] } },
+  ])
+    await t.test(JSON.stringify(conditions) ?? "absent conditions", (st) => {
+      const managed = canonicalPolicy({ conditions });
+      const scenario = setup(st, {
+        state: {
+          policies: [managed],
+          settings: matchingSettings,
+          rulesets: [canonicalRuleset()],
+        },
+      });
+      assert.equal(scenario.invoke().result.status, "unchanged");
+      assert.equal(scenario.readState().mutations ?? 0, 0);
+      scenario.updateState({
+        policies: [{ ...managed, enforcement: "disabled" }],
+      });
+      assert.equal(scenario.invoke().result.status, "confirmation-required");
+      assert.equal(
+        scenario.invoke({ overwriteAllowed: true }).result.status,
+        "changed",
+      );
+      assert.deepEqual(
+        scenario.readState().policies[0].conditions,
+        conditions ?? {},
+      );
+    });
+});
+
+test("blocks ambiguous policy names even across list pages without writes", (t) => {
+  const scenario = setup(t, {
+    state: {
+      pageSize: 1,
+      policies: [
+        canonicalPolicy(),
+        canonicalPolicy({ id: 61, name: policyName.toUpperCase() }),
+      ],
+    },
+  });
+  const outcome = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(outcome.result.status, "blocked");
+  assert.match(outcome.result.message, /multiple repository Actions policies/);
+  assert.match(outcome.result.message, /cannot reconcile Actions event policy/);
+  assert.doesNotMatch(outcome.result.message, /permission/);
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+});
+
+test("reports invalid managed policy shapes as reconciliation problems", async (t) => {
+  for (const overrides of [
+    { conditions: { workflow_path: { include: "invalid", exclude: [] } } },
+    {
+      conditions: { workflow_path: { include: [], exclude: ["~UNRESOLVED"] } },
+    },
+    { rules: "invalid" },
+    { rules: [{ type: "restrict_action_events", parameters: {} }] },
+  ])
+    await t.test(JSON.stringify(overrides), (st) => {
+      const scenario = setup(st, {
+        state: { policies: [canonicalPolicy(overrides)] },
+      });
+      const outcome = scenario.invoke({ overwriteAllowed: true });
+      assert.equal(outcome.result.status, "blocked");
+      assert.match(
+        outcome.result.message,
+        /cannot reconcile Actions event policy/,
+      );
+      assert.doesNotMatch(outcome.result.message, /permission/);
+      assert.equal(scenario.readState().mutations ?? 0, 0);
+    });
+});
+
+test("blocks redacted policy API refusals without further writes and records partial effects", async (t) => {
+  for (const at of ["list", "detail", "create", "update", "readback"]) {
+    for (const status of [403, 404])
+      await t.test(`${at} HTTP ${status}`, (st) => {
+        const token = "fixture-policy-secret";
+        const scenario = setup(st, {
+          state: {
+            token,
+            policies:
+              at === "create"
+                ? []
+                : [canonicalPolicy({ enforcement: "disabled" })],
+            policyFailure: {
+              at: ["create", "update"].includes(at) ? "write" : at,
+              status,
+              message: `Policy access denied: ${token}`,
+            },
+          },
+        });
+        const outcome = scenario.invoke({ overwriteAllowed: true });
+        assert.equal(outcome.status, 0, outcome.stderr);
+        assert.equal(outcome.result.status, "blocked");
+        assert.match(outcome.result.message, new RegExp(`HTTP ${status}`));
+        assert.match(
+          outcome.result.message,
+          /Actions policies support and Administration write permission/,
+        );
+        assert.ok(!JSON.stringify(outcome).includes(token));
+        if (["create", "update"].includes(at)) {
+          assert.deepEqual(scenario.readState().mutationLog, [
+            "create required-check ruleset",
+          ]);
+          assert.match(
+            outcome.result.message,
+            /Confirmed partial effects: created required-check ruleset/,
+          );
+          assert.match(outcome.result.message, /squash merge settings remain/);
+        } else if (at !== "readback")
+          assert.equal(scenario.readState().mutations ?? 0, 0);
+        const requests = scenario.readState().requests;
+        assert.match(requests.at(-1), /actions\/policies/);
+      });
+  }
+});
+
+test("requires readback of active targeting and event allowance", async (t) => {
+  for (const mismatch of ["enforcement", "conditions", "rules"])
+    await t.test(mismatch, (st) => {
+      const scenario = setup(st, {
+        state: { policies: [], policyReadbackMismatch: mismatch },
+      });
+      const outcome = scenario.invoke();
+      assert.equal(outcome.result.status, "blocked");
+      assert.match(
+        outcome.result.message,
+        /final readback did not match Actions event policy/,
+      );
+    });
+});
+
+test("names only pending work after a policy write or readback failure", async (t) => {
+  for (const at of ["write", "readback"])
+    for (const settingsMatch of [false, true])
+      await t.test(`${at}, settings match: ${settingsMatch}`, (st) => {
+        const scenario = setup(st, {
+          state: {
+            policies:
+              at === "write"
+                ? []
+                : [canonicalPolicy({ enforcement: "disabled" })],
+            ...(settingsMatch ? { settings: matchingSettings } : {}),
+            policyFailure: { at, status: 403, message: "Policy access denied" },
+          },
+        });
+        const outcome = scenario.invoke({ overwriteAllowed: true });
+        assert.equal(outcome.result.status, "blocked");
+        assert.match(
+          outcome.result.message,
+          /Confirmed partial effects: created required-check ruleset/,
+        );
+        if (at === "write") {
+          assert.match(
+            outcome.result.message,
+            settingsMatch
+              ? /Actions event policy remains; inspect remote state/
+              : /Actions event policy and squash merge settings remain; inspect remote state/,
+          );
+          assert.doesNotMatch(
+            outcome.result.message,
+            /required-check[^.]*remain/,
+          );
+        } else {
+          assert.match(outcome.result.message, /updated Actions event policy/);
+          assert.match(
+            outcome.result.message,
+            /Actions event policy readback and required-check and squash merge settings readback remain/,
+          );
+          assert.doesNotMatch(
+            outcome.result.message,
+            /Actions event policy and.*settings remain/,
+          );
+        }
+      });
+});
+
+test("leaves private, internal and deferred repository policies completely alone", async (t) => {
+  for (const scope of [
+    { private: true },
+    {
+      private: true,
+      forbidden: { protection: planLimit, rulesets: planLimit },
+    },
+    { visibility: "internal" },
+    { workflow: "absent" },
+  ])
+    await t.test(JSON.stringify(scope), (st) => {
+      const scenario = setup(st, { state: { ...scope, policies: [] } });
+      const outcome = scenario.invoke();
+      assert.equal(outcome.result.status, "changed");
+      assert.ok(
+        scenario
+          .readState()
+          .requests.every((request) => !request.includes("/actions/policies")),
+      );
+      assert.deepEqual(scenario.readState().policies, []);
+    });
+});
+
+test("includes the pending policy when required-check enforcement fails", async (t) => {
+  for (const kind of ["branch", "ruleset"])
+    for (const settingsMatch of [false, true])
+      await t.test(`${kind}, settings match: ${settingsMatch}`, (st) => {
+        const scenario = setup(st, {
+          state: {
+            policies: [],
+            failAtMutation: kind === "branch" ? 2 : 1,
+            ...(settingsMatch ? { settings: matchingSettings } : {}),
+            ...(kind === "branch"
+              ? {
+                  branchProtection: classicProtection({
+                    strict: false,
+                    contexts: ["build"],
+                  }),
+                }
+              : {}),
+          },
+        });
+        const outcome = scenario.invoke({ overwriteAllowed: true });
+        assert.equal(outcome.result.status, "blocked");
+        assert.match(
+          outcome.result.message,
+          settingsMatch
+            ? /Required-check enforcement and Actions event policy remain/
+            : /Required-check enforcement and Actions event policy and squash merge settings remain/,
+        );
+        if (kind === "branch")
+          assert.match(
+            outcome.result.message,
+            /Confirmed partial effects: required PR metadata/,
+          );
+        else assert.match(outcome.result.message, /No changes were confirmed/);
+        assert.deepEqual(scenario.readState().policies, []);
+      });
+});
+
+test("keeps the private invalid-ruleset-response message unchanged", (t) => {
+  const scenario = setup(t, {
+    state: { private: true, nextRulesetId: "invalid" },
+  });
+  const outcome = scenario.invoke({ overwriteAllowed: true });
+  assert.equal(outcome.result.status, "blocked");
+  assert.equal(
+    outcome.result.message,
+    "GitHub PR integration setup is incomplete for acme/widgets; the required-check ruleset mutation returned an invalid response. No changes were confirmed. Inspect remote state and retry.",
+  );
+  assert.ok(
+    scenario
+      .readState()
+      .requests.every((request) => !request.includes("/actions/policies")),
+  );
+});
+
+test("leaves policy creation pending when another setting requires confirmation", (t) => {
+  const scenario = setup(t, {
+    state: {
+      policies: [],
+      settings: { ...matchingSettings, allow_merge_commit: true },
+    },
+  });
+  assert.equal(scenario.invoke().result.status, "confirmation-required");
+  assert.equal(scenario.readState().mutations ?? 0, 0);
+  assert.deepEqual(scenario.readState().policies, []);
+});
 
 test("creates required-check enforcement, configures squash defaults, and is unchanged on repeat", (t) => {
   const scenario = setup(t);

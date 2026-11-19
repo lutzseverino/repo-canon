@@ -16,6 +16,28 @@ Until the PR metadata validation workflow is on the default branch, requiring
 the check is deferred, and the next adoption or update after the workflow
 merges requires it.
 
+For a public repository, the fix establishes the active
+`Repo Canon PR metadata events` repository Actions policy alongside that check,
+allowing `pull_request_target` for `.github/workflows/pr-metadata.yml` after
+GitHub's default block. The policy uses `conditions.workflow_path.include`
+and a `restrict_action_events` rule with `allowed_events` containing
+`pull_request_target`. It creates a missing policy, matches its name without
+case sensitivity, and blocks duplicate managed names. Differences in existing
+enforcement, targeting or event rules require confirmation before any writes;
+confirmed reconciliation keeps other conditions, rules and allowed events
+and leaves other policies untouched. Final readback confirms active workflow
+targeting and the event allowance. Matching configuration needs no writes.
+
+Unsupported or refused policy requests return `blocked` with the missing
+capability or permission and credential-redacted platform status and message,
+confirmed partial effects and remaining work; no further mutation follows.
+There is no trigger fallback. Private and internal repositories receive no
+policy requests. An absent workflow on default defers the policy with the
+check until the next adoption or update. Enterprise or organization Actions
+policies can still block execution; repository-level readback cannot detect
+that. See the [setup policy documentation](../docs/development/github-pr-integration-setup.md#public-repository-actions-event-policy)
+for API and reconciliation details.
+
 For a first adoption that installs the workflow absent from default, deliver
 through the owner, including when both protection mechanisms are proven
 unavailable on the private plan. After separate review, leave the PR open and
