@@ -611,9 +611,25 @@ test("a lead line, verdict line and findings table that disagree are incomplete"
     record({ leadLine: "🔁 **Round 2 hands back**" }),
     // A failing axis without an open finding.
     record({ verdictLine: "**Standards** ✅ Pass · **Spec** ❌ Fail, a note" }),
-    // No lead line first, or a lead line outside the marker set.
+    // A failing axis whose open finding belongs to the other axis, or an
+    // outcome that contradicts its marker.
+    handBack.replace(
+      "**Standards** ✅ Pass · **Spec** ❌ Fail",
+      "**Standards** ❌ Fail · **Spec** ✅ Pass",
+    ),
+    record({ verdictLine: "**Standards** ✅ Fail · **Spec** ✅ Pass" }),
+    // No lead line first, a lead line outside the review's markers, or one
+    // whose round is not the footer's.
     record({ leadLine: "Round 2 holds: no findings." }),
     record({ leadLine: "✔️ **Round 2 holds**" }),
+    handBack.replace(/^🔁 .*$/m, "⏸️ **Round 2 paused**"),
+    record({ leadLine: "✅ **Round 3 holds: no findings.** Merging." }),
+    record({ leadLine: "✅ **Looks good.** Merging." }),
+    // A lead line whose words contradict its marker.
+    record({
+      leadLine: "✅ **Round 2 hands back: no open findings.** Merging.",
+    }),
+    handBack.replace("Round 2 hands back", "Round 2 holds"),
     `${verdict}\n\n${holds}`,
   ]) {
     assert.equal(reviewedHead(body), head, body);
@@ -624,9 +640,18 @@ test("a lead line, verdict line and findings table that disagree are incomplete"
 
 test("missing, duplicated or placeholder parts are incomplete", () => {
   const template = reviewTemplate(head).join("\n");
+  const filled = [
+    template.split("\n")[0].replace("<✅ or 🔁>", "✅"),
+    verdict,
+    footer,
+  ].join("\n\n");
   for (const body of [
     template,
     template.replace("round <N>", "round 2"),
+    filled,
+    record({ leadLine: "✅ **Round <N> holds: no findings.** Merging." }),
+    handBack.replace("❌ Fail, refunds are missing", "❌ Fail, <note>"),
+    handBack.replace("❌ Fail, refunds are missing", "❌ Fail,"),
     record({ verdictLine: "" }),
     record({ verdictLine: "**Standards** Pass · **Spec** Pass" }),
     record({ verdictLine: "**Standards** ✅ · **Spec** ✅ Pass" }),

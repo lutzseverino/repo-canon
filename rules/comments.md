@@ -186,8 +186,9 @@ findings, optional evidence and the footer.
 ```
 
 - **Lead line:** a round with no open finding holds and leads with
-  `✅ **Round N holds: no findings.** Merging.`; that line records the merge,
-  so no merge comment follows. A hand-back leads with 🔁, a failed round with
+  `✅ **Round N holds: no findings.** Merging.`, or with
+  `no open findings, <n> fixed` when it fixed some; that line records the
+  merge, so no merge comment follows. A hand-back leads with 🔁, a failed round with
   ❌ and a grill's round with 👤.
 - **Verdict line:** each axis is `✅ Pass` or `❌ Fail`, optionally with a
   comma and a short note; an axis fails only with an open finding.
