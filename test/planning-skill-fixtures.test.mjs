@@ -662,11 +662,40 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "utf8",
     ),
   );
-  assert.ok(runFacts.allowedModels.length > 0);
-  assert.equal(
-    new Set(runFacts.allowedModels).size,
-    runFacts.allowedModels.length,
+  // The host's model facts give every catalog model its Model guidance, so a
+  // run can choose by fit, then narrower, then cheaper; narrower pairs and
+  // the default name catalog models.
+  assert.equal("allowedModels" in runFacts, false);
+  const { catalog, narrower, default: defaultModel } = runFacts.models;
+  assert.ok(catalog.length > 0);
+  const identities = catalog.map(({ model }) => model);
+  assert.equal(new Set(identities).size, catalog.length);
+  for (const { model, guidance } of catalog) {
+    assert.equal(typeof guidance, "string", model);
+    assert.ok(guidance.trim(), model);
+    assert.doesNotMatch(guidance, /\n/, model);
+  }
+  assert.ok(identities.includes(defaultModel));
+  assert.ok(narrower.length > 0);
+  for (const pair of narrower) {
+    assert.ok(identities.includes(pair.model), pair.model);
+    assert.ok(identities.includes(pair.than), pair.than);
+    assert.notEqual(pair.model, pair.than);
+  }
+  const factoryTriageExercise = readFileSync(
+    join(factoryTriage.path, "docs/exercise.md"),
+    "utf8",
   );
+  assert.doesNotMatch(factoryTriageExercise, /allowed models/);
+  for (const name of ["01", "04"])
+    assert.match(
+      factoryTriageExercise,
+      new RegExp(
+        `^${name} [^\\n]*under the Model selection rule[^\\n]*Model guidance used`,
+        "m",
+      ),
+      name,
+    );
   assert.deepEqual(Object.keys(runFacts.runResult).sort(), [
     "fields",
     "outcomes",
