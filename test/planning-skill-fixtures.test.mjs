@@ -671,7 +671,8 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "fields",
     "outcomes",
   ]);
-  assert.equal(runFacts.runs.length, 6);
+  assert.equal(runFacts.runs.length, 7);
+  assert.ok(runFacts.runResult.fields.revision);
   assert.equal(
     new Set(runFacts.runs.map(({ result }) => result)).size,
     runFacts.runs.length,
@@ -701,10 +702,11 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   );
   assert.equal(outside.length, 1);
   assert.doesNotMatch(outside[0], /^Labels: .*type:/m);
-  // Three direct tickets carry their contract in the body and no category
+  // Four direct tickets carry their contract in the body and no category
   // label; the tracker holds no Agent Brief for any run to start from. The
   // holding and correction cases each carry the notice of their exact body
-  // revision, and the third has none.
+  // revision, the third has none, and the fourth names its reviewing run as
+  // its writer, so that run cannot accept it.
   assert.equal(
     intakes.filter((text) => /^## Agent Brief$/m.test(text)).length,
     0,
@@ -714,7 +716,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     .filter(({ text }) => /^Contract: issue body$/m.test(text));
   assert.deepEqual(
     direct.map(({ issue }) => issue.split("/").pop().slice(0, 2)),
-    ["04", "05", "06"],
+    ["04", "05", "06", "07"],
   );
   const noticed = [];
   for (const [index, { issue, text }] of direct.entries()) {
@@ -756,7 +758,21 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     if (notices.length) assert.deepEqual(notices, [exact], issue);
     noticed.push(notices.length > 0);
   }
-  assert.deepEqual(noticed, [true, true, false]);
+  assert.deepEqual(noticed, [true, true, false, true]);
+  const writerRun = runFacts.runs[6];
+  const writerBody = readFileSync(
+    join(
+      factoryTriage.path,
+      ".scratch/factory-triage/contracts/07-self-authored-ticket.md",
+    ),
+    "utf8",
+  );
+  const config = JSON.parse(
+    readFileSync(join(factoryTriage.path, ".scriptorium/config.json"), "utf8"),
+  );
+  const writerMarker = `<!-- ${config.triageResult.marker} ${JSON.stringify({ run: writerRun.run })} -->`;
+  assert.ok(writerBody.includes(writerMarker));
+  assert.ok(intakes[6].includes(`Author: ${config.triageResult.author}`));
   for (const record of ["CHANGELOG.md", "docs/adr/README.md"])
     assert.ok(statSync(join(factoryTriage.path, record)).isFile(), record);
 

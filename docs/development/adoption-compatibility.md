@@ -167,6 +167,17 @@ until supported self-adoption. Repo-canon pickup remains paused from merge until
 the separately owned live v4 switch; this source work does not deploy a host,
 update adopters or publish a release.
 
+## Factory direct-contract acceptance support
+
+Factory triage's acceptance of a reviewed direct specification or implementation
+ticket requires **Scriptorium v4.4.0** or later, the first published host release
+carrying [scriptorium #252](https://github.com/lutzseverino/scriptorium/issues/252).
+The [release and deployment record](https://github.com/lutzseverino/scriptorium/issues/271#issuecomment-6992369776)
+identifies that minimum and its deployment to the host serving Repo Canon.
+Upgrade the host before adopting this triage skill change. Include the minimum
+host release in Repo Canon's release notes; this source change performs no
+release, adopter update or live acceptance demonstration.
+
 ## Validator executable migration
 
 Fresh adoption installs only the new exact targets, without compatibility copies:
