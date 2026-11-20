@@ -26,12 +26,16 @@ The new lock no longer owns orchestrate; later updates leave it alone, like
 the workbench-only creation skills. No special restore or CLI state edit is
 needed or permitted within the adoption pull request.
 
-Before committing, run `pnpm validate` and all-profile source validation as
-described in the [source profile](source-profile.md#executable-prerequisites).
-Repository conformance requires the complete orchestrate source and credits
-even under Canon's factory adoption; missing or incomplete source fails
-`pnpm validate`. If an update proposes source removal or loses a source file,
-stop for a supported transition rather than committing that deletion.
+Before committing, run the pre-review local checks that the
+[development guide](README.md#setup-and-validation) lists and all-profile
+source validation as described in the
+[source profile](source-profile.md#executable-prerequisites); the hosted
+required `Test` check runs the full suite. Repository conformance requires the
+complete orchestrate source and credits even under Canon's factory adoption;
+missing or incomplete source fails `test/repository-conformance.test.mjs`, so
+run that file among those checks. If an update proposes source removal or
+loses a source file, stop for a supported transition rather than committing
+that deletion.
 Downstream standard/factory adopters receive the normal removal of unchanged
 installations described in
 [adoption compatibility](adoption-compatibility.md#workbench-only-orchestrate-migration).
