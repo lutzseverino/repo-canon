@@ -195,5 +195,5 @@ closed Issue, `moved`, `dropped (owner)`, or an expedited row's merged PR in Sta
 State holds its latest step/session/PR, including `triaged <file>` or `grilled <file>`
 completion marks; expedited states start with `expedited`. Close only after every Done-means clause has evidence; end remaining open rows as `moved` or `dropped (owner)` as the Close reference says.
 Count/report open issues at start/close with no limit. Append to `log.md`, never rewrite: record every plan-filed issue with repository,
-number and creation evidence; retain each factory/direct run's issue, run and PR. Date entries from the UTC
+number and creation evidence, including one a run opens outside the goal; retain each factory/direct run's issue, run and PR. Date entries from the UTC
 clock (`date -u +%Y-%m-%dT%H:%MZ`), never by hand.
