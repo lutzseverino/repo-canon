@@ -25,6 +25,7 @@ import {
   awaitingTicketFeedback,
   bodyRevision,
   briefRevision,
+  feedbackLayout,
   feedbackState,
   recordedState,
   readinessReview,
@@ -661,10 +662,9 @@ test("timeline lag retries authoritative label changes within the existing bound
             feedbackWrite(decision, 13),
           ],
     );
-    assert.match(
-      decision.feedback.body,
-      recorded ? /readiness recorded/ : /timeline does not contain/,
-    );
+    if (recorded)
+      assert.equal(feedbackLayout(decision.feedback.body).marker, "✅");
+    else assert.match(decision.feedback.body, /timeline does not contain/);
   }
 });
 
@@ -1142,7 +1142,7 @@ test("unavailable reviewer roles reject readiness with cleanup and useful feedba
     );
     assert.deepEqual(writes(result)[1].body, { labels: ["state:triage"] });
     const feedback = writes(result).at(-1).body.body;
-    assert.match(feedback, /^## Issue contract readiness removed$/m);
+    assert.equal(feedbackLayout(feedback).marker, "❌");
     assert.match(
       feedback,
       /^Readiness was removed: Could not verify @maintainer's review authority:/m,
@@ -1432,9 +1432,9 @@ test("the adapter uses live repository labels to attribute renamed workflow hist
       ],
     );
     const body = writes(result).at(-1).body.body;
-    assert.match(
-      body,
-      repositoryLabels.length ? /readiness removed/i : /readiness recorded/i,
+    assert.equal(
+      feedbackLayout(body).marker,
+      repositoryLabels.length ? "❌" : "✅",
     );
     assert.doesNotMatch(body, /needs-triage/);
   }

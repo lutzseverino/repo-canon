@@ -339,7 +339,13 @@ it is read as `needs-attention` or `no-contract` and approves nothing.
 ## Feedback and readiness
 
 The validator maintains one marked feedback comment, which holds its [published
-result](#published-result). Incomplete contracts list the structural corrections
+result](#published-result). Below the result line, the notice leads with its
+outcome under the `comments` rules' Lead line: a status marker and the outcome
+in bold, followed by the short revision when the result records one. Corrections
+a person must make stay visible below it; the full revision and the explanation
+are collapsed in `<details>`, whose summary states the decision. A refusal's
+lead line carries its reason's first sentence, cut to the lead line's length
+limit, and its details hold the full reason. Incomplete contracts list the structural corrections
 there, under a `needs-attention` result that approves nothing and records no
 revision. It carries forward only the source invalidation, so a corrected
 contract's revision is published again before readiness is applied. A later
@@ -365,13 +371,15 @@ does not replace the reason. Timeline recognition of the opener's creation label
 requires its application in the same second the issue was created. The bot's
 removal of readiness as rejection cleanup also retains the reason.
 
-A rejection or supersession that removes readiness publishes an "Issue contract
-readiness removed" notice. It leads with `Readiness was removed:` and the
-reason, names each readiness label the validator removed, and says that
+A rejection or supersession that removes readiness publishes a "Readiness
+removed" notice. Its details start with `Readiness was removed:` and the
+reason, name each readiness label the validator removed, and says that
 restoring readiness needs a fresh authorized review of the exact revision, after
 its revision notice for an Agent Brief. Its result keeps the v1 fields with
 status `awaiting-review`. A run that retains the reason takes the removed
-labels from the validator's previous notice, so it publishes the same notice. A
+labels from the validator's previous notice, so it publishes the same notice;
+it also reads them from a notice posted before the feedback led with its
+outcome, under its "Issue contract readiness removed" heading. A
 rejection that removed no label keeps the awaiting-review notice with its
 reason. Triage's readiness command accepts either notice as a
 complete contract awaiting review.
@@ -862,7 +870,9 @@ fields, an approved contract keeping readiness with rejected items, the tally, a
 readiness command, with fated, unfated, closed and ADR-citing issues.
 Run `node --test test/issue-contract-result.test.mjs` for the published
 result: its complete v1 line, its write on every evaluated event, each rule
-above, and unknown formats and other authors. Its shared examples run the
+above, and unknown formats and other authors. Run
+`node --test test/issue-contract-feedback.test.mjs` for the notice's layout
+under each outcome and a refusal's shortened lead reason. Its shared examples run the
 validator's adapter and the `triage` readiness command against one in-memory
 issue through Postern: edited, deleted and newer Agent Briefs, Briefs and
 results by bot and other authors, a bot reviewer without a role, and events in

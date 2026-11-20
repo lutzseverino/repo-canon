@@ -1,7 +1,9 @@
 // Issue-contract fixtures shared by the decision tests and the adapter tests:
 // the public contract bodies, the recorded feedback, and the events that a
 // readiness review leaves.
+import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { statusMarkers } from "../../vendor/repo-canon/validate-issue-contract.mjs";
 
 export const repository = "example/repository";
 export const bot = { login: "github-actions[bot]" };
@@ -94,10 +96,21 @@ export function feedbackState({
           sourceInvalidation,
         },
   );
+  const marker = `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->`;
+  const short = contractRevision?.replace(/^sha256:/, "").slice(0, 7);
+  const collapsed = (summary, ...details) =>
+    `<details>\n<summary>${summary}</summary>\n\n${[...details, footprint].filter(Boolean).join("\n\n")}\n\n</details>`;
   if (status === "approved") {
-    return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract readiness recorded\n\nThe ${kind} at revision \`${contractRevision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.${footprint ? `\n\n${footprint}` : ""}`;
+    return `${marker}\n✅ **Readiness recorded** · revision \`${short}\` · bound to \`${label}\`\n\n${collapsed(
+      `@${reviewer} reviewed this revision; editing it removes readiness`,
+      `The ${kind} at revision \`${contractRevision}\` was reviewed by @${reviewer}, whose repository role authorizes triage, and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`,
+    )}`;
   }
-  return `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${state} -->\n## Issue contract awaiting review\n\nThe ${kind} has the required structure at revision \`${contractRevision}\`.\n\nA fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply \`state:ready\`. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.${footprint ? `\n\n${footprint}` : ""}`;
+  return `${marker}\n👤 **Awaiting review** · revision \`${short}\` · an authorized reviewer applies \`state:ready\`\n\n${collapsed(
+    "Structure complete; readiness needs an authorized review",
+    `The ${kind} has the required structure at revision \`${contractRevision}\`.`,
+    "A fresh authorized review is required. A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply `state:ready`. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.",
+  )}`;
 }
 
 // The result line for a direct contract without footprint fields.
@@ -305,6 +318,42 @@ export function publishedState(body) {
     /<!-- repo-canon:issue-contract-state (\{.*\}) -->/,
   )?.[1];
   return encoded ? JSON.parse(encoded) : null;
+}
+
+// A feedback comment's layout: its result marker and state lines, its lead
+// line's status marker, bold outcome and facts, anything left visible, and
+// its collapsed summary and details. Asserts the shape every outcome shares:
+// the short revision leads when the result records one, and the full revision
+// stays collapsed.
+export function feedbackLayout(body) {
+  const [feedbackLine, stateLine, leadLine = "", ...rest] = body.split("\n");
+  assert.equal(feedbackLine, "<!-- repo-canon:issue-contract-feedback -->");
+  const state = publishedState(stateLine);
+  assert.ok(state, `No result line: ${stateLine}`);
+  const lead = /^(\S+) \*\*([^*]+)\*\*((?: · .+)?)$/u.exec(leadLine);
+  assert.ok(lead, `No lead line: ${leadLine}`);
+  const [, marker, outcome, facts] = lead;
+  assert.ok(statusMarkers.includes(marker), `Unknown marker: ${marker}`);
+  const collapsed =
+    /^(?:([\s\S]+)\n\n)?<details>\n<summary>(.+)<\/summary>\n\n([\s\S]+)\n\n<\/details>$/.exec(
+      rest.join("\n").replace(/^\n/, ""),
+    );
+  assert.ok(collapsed, `No collapsed explanation: ${body}`);
+  const [, visible = null, summary, details] = collapsed;
+  assert.doesNotMatch(leadLine, /sha256:/);
+  if (state.revision) {
+    const short = state.revision.replace(/^sha256:/, "").slice(0, 7);
+    assert.ok(leadLine.includes(`\`${short}\``), leadLine);
+    assert.ok(details.includes(state.revision), details);
+  }
+  return {
+    marker,
+    outcome,
+    facts: facts.split(" · ").slice(1),
+    visible,
+    summary,
+    details,
+  };
 }
 
 // The review decision a feedback comment records, in the fields the earlier

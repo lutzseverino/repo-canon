@@ -17,6 +17,7 @@ import {
   briefRevision,
   completeAgentBrief,
   featureBody,
+  feedbackLayout,
   feedbackState,
   neutralEvent,
   publishedState,
@@ -259,7 +260,7 @@ test("an issue that has had a result keeps a current one when it carries no cont
     observedEventId: null,
     sourceInvalidation: null,
   });
-  assert.match(decision.feedback.body, /## Issue contract not required/);
+  assert.equal(feedbackLayout(decision.feedback.body).marker, "⏭️");
   // An intake form that never had a result gets none.
   const intake = decideIssueContract(
     snapshot({
