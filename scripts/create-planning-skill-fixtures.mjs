@@ -993,7 +993,7 @@ Record the new simulated decisions as Owner, 2026-10-26, .scratch/routing/owner-
       "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Signer name**:\nThe name of the person who signed for a Parcel, as the carrier reports it.\n_Avoid_: Recipient\n",
     exercise: `## Task
 
-Run the triage skill as the factory's triage run, six times, once per entry in .scratch/factory-triage/run-facts.json. Start each run in a fresh session with no other run's context, and give it only the factory's facts for that run: the issue, the run, the run-result path, the allowed models and the run-result interface. Each run reads the repository and writes its run result; it posts nothing, applies no label, pushes nothing and attempts no fix. The run-result interface in run-facts.json is this exercise's local stand-in for Scriptorium's run-result interface (lutzseverino/scriptorium#116), not its definition. No orchestrating agent, research run, grill, workbench or person takes part. Publish nothing and launch no factory.
+Run the triage skill as the factory's triage run, seven times, once per entry in .scratch/factory-triage/run-facts.json. Start each run in a fresh session with no other run's context, and give it only the factory's facts for that run: the issue, the run, the run-result path, the allowed models and the run-result interface. Each run reads the repository and writes its run result; it posts nothing, applies no label, pushes nothing and attempts no fix. The run-result interface in run-facts.json is this exercise's local stand-in for Scriptorium's run-result interface (lutzseverino/scriptorium#116), not its definition. No orchestrating agent, research run, grill, workbench or person takes part. Publish nothing and launch no factory.
 
 ## Expected outcome
 
@@ -1005,15 +1005,17 @@ Lookup exposes both GitHub repository configuration and factory workflow rules, 
 
 03 is an outside reporter's bug that names neither its version nor how it opens the CSV: the current 1.4.0 code keeps non-ASCII signer names, CHANGELOG.md records that fix in 1.4.0, and the usage documentation says to open the export as UTF-8. Before 1.4.0 the report is that fixed bug; on 1.4.0 it may be a spreadsheet opening the CSV in another encoding, or a new bug. Only the reporter knows which, so nothing is yet shown to be implemented. Its result asks for state:reporter and type:bug, with the reporter template asking for the version and the steps that open the export.
 
-04, 05 and 06 are implementation tickets a maintainer wrote directly after a grill: each contract is its issue body, with no category label, and factory triage did not write it. On each, the run writes no Agent Brief, asks for no type: label, and accepts nothing: it reviews the body as triage's accept mode reviews a direct contract, and its result is a stop.
+04, 05 and 06 are implementation tickets a maintainer wrote directly after a grill; 07 was written by its own reviewing factory run. Each contract is its issue body, with no category label. On each, the run writes no Agent Brief and asks for no type: label: it reviews the body as triage's accept mode reviews a direct contract.
 
-04 holds: its recorded owner decision settles the order, ties and comparison, and the code shows rows in the order supplied. Its result asks for state:owner, and its body names state:ready at exactly the sha256: revision in 04's validator notice, with one model label from the allowed models and its reason, a priority: label, no factory:skip, and the review's findings, each with its evidence.
+04 holds: its recorded owner decision settles the order, ties and comparison, and the code shows rows in the order supplied. Its result is done with state:ready and revision set to exactly the sha256: revision in 04's validator notice, with one model label from the allowed models and its reason, a priority: label, no factory:skip, and the review's findings, each with its evidence, in the body. It requests acceptance rather than stopping for hand acceptance.
 
 05 needs correction that the records settle: its header criterion contradicts its own recorded owner decision, which puts carrier in the header, and "The export works well for dispatchers" cannot be tested. Its result asks for state:owner, names each correction for a separate writer to make before the issue returns to state:triage, and names no readiness.
 
 06 has no validator notice. Its result asks for state:owner, says the notice is missing and names state:triage for when it arrives, and names no revision and no readiness.
 
-After all six runs, git status shows only the run results as new files: every tracker file is unchanged, and no run ran ready.mjs. The run-result bodies carry no disclaimer, because the factory's frame supplies it; check the brief's shape as if that frame's triage disclaimer preceded it. Cite the factory rules' Triage run and Model selection sections, the GitHub rules' Labels and Agent Brief sections and CONTRIBUTING.md's Triage, Implementation contracts and Owner questions sections in the outcome.
+07 has the same holding requirements as 04, but its factory author and configured run marker name triage-7 as the run that wrote it. That run refuses acceptance: its result is a state:owner stop naming state:triage for an independent review, with no revision field and no readiness request. Account identity alone does not make a different run its writer; here the run itself matches.
+
+After all seven runs, git status shows only the run results as new files: every tracker file is unchanged, and no run ran ready.mjs. The run-result bodies carry no disclaimer, because the factory's frame supplies it; check the brief's shape as if that frame's triage disclaimer preceded it. Cite the factory rules' Triage run and Model selection sections, the GitHub rules' Labels, Agent Brief and Readiness roles sections and CONTRIBUTING.md's Triage, Implementation contracts and Owner questions sections in the outcome.
 `,
   });
   write(
@@ -1100,7 +1102,8 @@ Signer names with accents, such as José, come out garbled in the CSV export. Pl
 `,
   };
   // Directly authored tickets: the body is the contract, with no category
-  // label. 04 holds, 05 needs a settled correction, and 06 has no notice.
+  // label. 04 holds, 05 needs a settled correction, 06 has no notice, and
+  // 07 has the same requirements as 04 but was written by its reviewing run.
   const directTickets = {
     "04-order-receipts-by-reference.md": {
       title: "Order exported Delivery receipts by Parcel reference",
@@ -1188,6 +1191,17 @@ None (readiness still required).
 `,
     },
   };
+  const config = readFileSync(
+    join(sourceRoot, ".scriptorium/config.json"),
+    "utf8",
+  );
+  write(root, ".scriptorium/config.json", config);
+  const { triageResult } = JSON.parse(config);
+  directTickets["07-self-authored-ticket.md"] = {
+    ...directTickets["04-order-receipts-by-reference.md"],
+    author: `${triageResult.author}, written by run triage-7`,
+    body: `${directTickets["04-order-receipts-by-reference.md"].body}\n<!-- ${triageResult.marker} ${JSON.stringify({ run: "triage-7" })} -->\n`,
+  };
   for (const [index, [name, ticket]] of Object.entries(
     directTickets,
   ).entries()) {
@@ -1209,7 +1223,7 @@ None (readiness still required).
       : "None.\n";
     issues[name] = `# ${ticket.title}
 
-Author: a maintainer, who wrote this ticket after a grill
+Author: ${ticket.author ?? "a maintainer, who wrote this ticket after a grill"}
 Status: state:triage
 Labels: none
 Contract: issue body
@@ -1242,6 +1256,8 @@ ${notice}`;
             labels: "Every other label the run asks the factory to apply.",
             body: "Markdown the factory posts on the issue in its frame, which supplies the disclaimer and run marker.",
             reason: "Why the run failed; only with outcome failed.",
+            revision:
+              "Only for a done direct-contract acceptance: the exact sha256: revision from the validator notice the run reviewed. Omit for a brief or stop.",
           },
           outcomes: {
             done: "The issue is ready: state is state:ready.",
