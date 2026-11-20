@@ -142,7 +142,9 @@ job installs the public CLI once and reuses it through `REPO_STANDARDS_PREFIX`.
 The required `Test` check passes only when planning and every matrix job succeed;
 a failure, cancellation or skip fails it. `pnpm validate` and `pnpm test` still
 run the complete suite locally; as one process,
-`test/repository-wide-rules.test.mjs` alone takes about 59 minutes. This
+`test/repository-wide-rules.test.mjs` alone takes about 59 minutes
+([measured](https://github.com/lutzseverino/repo-canon/issues/1237#issuecomment-7045825504)
+on 2026-11-20). This
 trades more hosted jobs and minutes for a shorter required check, accepted
 because Repo Canon is public and hosted minutes cost nothing. Lint uses oxlint's
 defaults plus
