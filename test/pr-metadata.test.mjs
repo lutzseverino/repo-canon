@@ -1031,6 +1031,38 @@ Closes #6
   assert.equal(result.status, 0, result.stderr);
 });
 
+test("accepts a worker handoff's Delivery subsection in Evidence", () => {
+  const result = runEvent({
+    body: `## Summary
+
+Move the worker handoff into the pull request body.
+
+## Evidence
+
+- **Before:** the handoff was a pull request comment.
+  **After:** the body carries it.
+
+### Delivery
+
+- **Head:** ${"a".repeat(40)}
+- **Required checks:** PR metadata, Test and Read set pass · github · \`pnpm validate\` · declaration ${"b".repeat(40)}
+- **Validation:** \`pnpm validate\` and \`git diff --check\` pass
+- **Findings:** #1234
+
+## Merge Danger
+
+**Door:** two-way
+
+**Blast Radius:** agents
+
+## Related issue
+
+Closes #6
+`,
+  });
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test("does not accept issue references or exceptions inside code examples", () => {
   for (const relatedIssue of [
     "Use `#123` as the example format.",

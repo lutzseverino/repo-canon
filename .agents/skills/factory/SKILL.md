@@ -59,7 +59,7 @@ labels together through the authorized readiness path. When readiness is
 already approved without the skip or model label, run the same `triage`
 readiness command: it adds the missing labels and records readiness again. Launch `implement`
 directly with the contract, evidence, decisions, issue link and delivery role.
-The worker opens the PR and records its handoff as
+The worker opens the PR and records its handoff in the body's Delivery subsection, as
 `.repo-standards/rules/comments.md#delivery-records` says. Continue as the orchestrating agent through `babysit` from that handoff;
 apply its current-head owner-approval gate when designated.
 

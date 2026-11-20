@@ -39,7 +39,8 @@ refusal; otherwise fix the cause and run it again.
    does not make it hold.
    Read the authoritative implementation contract
    under `CONTRIBUTING.md`'s Implementation contracts section, the whole issue
-   and its discussion, every earlier round's review and the grill's decision,
+   and its discussion, the PR body's Delivery subsection, which holds the
+   worker's handoff, every earlier round's review and the grill's decision,
    including acceptance of any contract revision the guide requires. Without
    a settled contract, retain the contract-finding stop. A PR without an issue
    takes its decision-bearing body as its contract. Done when you hold the

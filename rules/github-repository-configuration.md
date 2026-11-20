@@ -209,10 +209,10 @@ its reason. A later stale base follows the overlap decision and bound above.
 
 Read both the authoritative implementation contract, resolved under the
 contribution guide's Implementation contracts section, and the worker's
-handoff. Either can require owner review; an omission in one cancels no
-designation in the other. Carry the designation and its source into the PR
-handoff and a delivery record under the `comments` rules, even when no worker
-handoff is required.
+handoff in the pull request body's Delivery subsection. Either can require
+owner review; an omission in one cancels no designation in the other. Carry
+the designation and its source into that handoff and a designation delivery
+record under the `comments` rules, even when no worker handoff is required.
 
 Before merging a designated PR, the merging agent verifies the owner's explicit
 approval of the current head. Record the approval's source and head SHA as a
