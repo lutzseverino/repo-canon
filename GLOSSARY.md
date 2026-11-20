@@ -77,9 +77,12 @@ _Avoid_: Idea capture, backlog grooming
 
 **Front door**:
 Any agent session a person opens in an adopted repository, with or without a
-factory, which routes what they ask for to the right path: the hand skill of
-its stage, the running orchestrating agent if there is one, or a parked idea
-when they ask for one.
+factory, which routes what they ask for: to its stage's hand skill in the
+[Canonical stages](rules/factory-workflow.md#canonical-stages), or by
+[Triage](CONTRIBUTING.md#triage) where that table is not installed; to the
+running orchestrating agent if there is one; or to a parked idea when they ask
+for one. It answers a status question read-only and starts a full workflow
+only on the person's yes.
 _Avoid_: Start section, entry skill
 
 **Code-bound request**:
@@ -177,9 +180,9 @@ tracker instead. Its format and completion marker live in the
 _Avoid_: Hand-back message, nudge, worker report
 
 **Generated brief**:
-A launch brief whose mechanical fields a command derives from the Canonical
-stages table and the orchestrating agent's arguments; only its Context section
-is written by hand.
+A launch brief whose mechanical fields a command derives from the
+[Canonical stages](rules/factory-workflow.md#canonical-stages) table and the
+orchestrating agent's arguments; only its Context section is written by hand.
 _Avoid_: Launch template, hand-written brief
 
 **Stage input**:
