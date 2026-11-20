@@ -682,6 +682,88 @@ test("launch reports wake only at their exact final line until the plan's log na
   }
 });
 
+test("a log consumes a report only by its whole file name", async (t) => {
+  const bench = workbench(t);
+  bench.write("review/brief-01.md", brief("report-01.md"));
+  bench.write("review/report-01.md", "status: done\n");
+  bench.write("review/log.md", "# Log\n\n- Consumed grill-report-01.md.\n");
+  const output = capture();
+  assert.equal(
+    await main(waitArgs(bench.root), {
+      ...output.streams,
+      connect: unreachable,
+      pause: unreachable,
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(output.stdout, "finished: read review/report-01.md\n");
+});
+
+test("reloading records drops an ended row's watch and keeps other baselines", async (t) => {
+  const bench = workbench(t, {
+    plans: {
+      review: planText({
+        rows: [row("a", "example/tracker#7"), row("b", "example/tracker#8")],
+      }),
+    },
+  });
+  const items = {
+    "example/tracker#7": { comments: [] },
+    "example/tracker#8": { comments: [] },
+    "example/tracker#9": { comments: [] },
+  };
+  const { connect } = tracker(items);
+  const output = capture();
+  let pauses = 0;
+  assert.equal(
+    await main(waitArgs(bench.root), {
+      ...output.streams,
+      connect,
+      pause: async () => {
+        pauses++;
+        if (pauses !== 1) return;
+        bench.write(
+          "review/plan.md",
+          planText({
+            rows: [
+              row("a", "example/tracker#7"),
+              row("b", "example/tracker#8", "closed"),
+              row("c", "example/tracker#9"),
+            ],
+          }),
+        );
+        items["example/tracker#8"].labels = ["state:owner"];
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  // The ended row's change is not reported; the added row starts its baseline.
+  assert.equal(output.stdout, "review/plan.md: changed\n");
+  output.stdout = "";
+  pauses = 0;
+  assert.equal(
+    await main(waitArgs(bench.root), {
+      ...output.streams,
+      connect,
+      pause: async () => {
+        pauses++;
+        if (pauses !== 1) return;
+        items["example/tracker#7"].comments.push(comment(2));
+        items["example/tracker#8"].comments.push(comment(3));
+        items["example/tracker#9"].labels = ["state:ready"];
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(
+    output.stdout,
+    `${issue(7)}: new comment https://github.com/example/tracker/issues/7#issuecomment-2\n${issue(9)}: labels added state:ready\n`,
+  );
+});
+
 test("reloading records watches new launches without restarting the deadline", async (t) => {
   const output = capture();
   const bench = watching(t, "example/tracker#7");

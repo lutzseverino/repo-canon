@@ -117,6 +117,11 @@ const readText = (path) => {
   }
 };
 
+// Whether the text names the file as a whole name, so `report.md` is not
+// named by `grill-report.md`.
+const names = (text, file) =>
+  new RegExp(`(?<![\\w.-])${RegExp.escape(file)}(?![\\w-])`).test(text);
+
 // The report a brief names, relative to the brief's own directory.
 const reportOf = (brief) => {
   const named = /^Launch report:[ \t]*(\S.*?)\s*$/m.exec(brief)?.[1];
@@ -233,7 +238,7 @@ function readRecords(workbench) {
         if (!named) continue;
         const path = resolve(directory, named);
         const known = records.launches.some((launch) => launch.path === path);
-        if (known || log.includes(basename(path))) continue;
+        if (known || names(log, basename(path))) continue;
         records.launches.push(
           local("launch", path, { brief: `${name}/${entry.name}` }),
         );
