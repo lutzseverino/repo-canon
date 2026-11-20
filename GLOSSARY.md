@@ -129,7 +129,7 @@ _Avoid_: Owner questions comment, needs-input queue
 An owner-approved goal, with what Done means, that the orchestrating agent
 runs across tickets, kept in the workbench. Its
 [plan record](.agents/skills/orchestrate/references/templates.md#planmd-and-logmd)
-defines when its tickets have ended and it closes.
+defines how its rows end and when it closes.
 _Avoid_: Roadmap, specification
 
 **Specification**:
@@ -184,9 +184,9 @@ lessons by a separate session, is always one; see the
 _Avoid_: Post-mortem, plan audit
 
 **Done check**:
-The read-only owner-facing work, run once every row of a plan has ended, that
-holds each of the plan's Done-means clauses against primary sources and
-records its evidence or the lack of it. Close starts only when every clause has evidence;
+The read-only owner-facing work that holds each of the plan's Done-means
+clauses against primary sources and records its evidence or the lack of it.
+Close starts only when every clause has evidence;
 the Done check is a gate before Close, never a Close review.
 _Avoid_: Done gate, completion audit, closing check
 

@@ -21,10 +21,11 @@ Apply `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownershi
 
 The workbench is a private Markdown git repository outside projects. Use the path in your global instructions,
 or create one before proposing a plan. Commit straight to its default branch; push if it has a private remote.
-Repository issues, briefs, comments and decision records must be self-contained: copy every relied-on decision,
-with its date and quoted words, even when duplicated. Never reference or require the private workbench from a
-repository: no URL, host path or instruction to consult it as input or provenance. Repository records may cite
-each other; private planning retains its own sources. Its files:
+Repository issues, briefs, comments and decision records must be self-contained: copy a relied-on decision
+that exists only in private planning once, with its date and quoted words; cite a decision already recorded in
+a repository by link. Never reference or require the private workbench from a repository: no URL, host path or
+instruction to consult it as input or provenance. Repository records may cite each other; private planning
+retains its own sources. Its files:
 
 - `index.md`: repositories, plans, the current owning session.
 - `inbox.md`: decisions; [reconcile and process answers](references/templates.md#inboxmd) before other work.
@@ -51,11 +52,11 @@ on each `your move` row or turn it into a real wait: launch, factory, owner,
 named third party or date. Show arrivals as [templates](references/templates.md#nowmd) says,
 the inbox and every choice made alone since the last update, with dated sources for veto; log each.
 Link every row/decision code and issue number to its row, record or issue;
-expand unfamiliar codes once per owner-facing message. Deferred checker: implement over
-`now.md`, `inbox.md` and `plan.md` only at the first recorded post-release bare-code slip.
+expand unfamiliar codes once per owner-facing message.
 
-Present goal, Done means, specifications, tickets and Close reviews for approval;
-[record proposal and approval](references/templates.md#planmd-and-logmd) before execution.
+While two plans are being closed, propose no new plan or amendment and start no grill unless it is on their
+Done path or the owner asks for it now. Present goal, Done means, specifications, tickets and Close reviews for
+approval; [record proposal and approval](references/templates.md#planmd-and-logmd) before execution.
 Research, filing and contract preparation may precede it; execution readiness
 waits for approval, which replaces no independent review or readiness condition. An owner's
 request for work now skips only the plan: [Expedited change](references/launches.md#expedited-change).
@@ -65,18 +66,20 @@ reports, or questions from launch reports, issues or incoming messages. After a 
 contribution guide's writer publication, final split and independent acceptance
 responsibilities; use `to-spec` and `to-tickets` through the launch template.
 
-Log friction with evidence, **Value owner**, exposed seam and route (row, finding or wish).
-Keep deferrals at their code. Route Findings under the guide even outside the goal
-without waiting for resolution. A **new requirement** mid-plan, unless wanted now, takes:
+Log friction with evidence, **Value owner**, exposed seam and route (row, finding or wish). Keep deferrals at
+their code. Fix the instance; add a standing rule only when the same failure recurs after the fix, and name the
+rule it replaces or deletes. A **new requirement** mid-plan, unless wanted now, takes:
 
-- **Row:** serves the goal and passes the guide's inference test; add and log a
-  row, and list it in the next update.
+- **Row:** serves the goal, passes the guide's inference test, and edits or
+  deletes existing text or code; a row that adds a mechanism (script, port,
+  record kind, label or ticket family) needs a grill. Add and log it, and list
+  it in the next update.
 - **Amendment:** changes goal or scope; grill it, possibly one round in the
   orchestrating thread. Apply only after owner approval, with a new approval
   line superseding the old, and publication under the contribution guide.
 - **Wish:** outside the goal and not a Finding; add to `wishes.md`, needing no issue.
 
-When all rows end, [close](references/close.md): reconcile issues, run Close reviews and announce the close.
+When every Done-means clause has evidence, [close](references/close.md): reconcile issues, run Close reviews and announce the close.
 
 ## The wait step
 
@@ -104,7 +107,7 @@ Paths are relative to each repository or the workbench.
   written, and put each rule it leaves to it in `inbox.md` for the owner.
 - `AGENTS.md`: delegation, naming and workstation convention. If missing, pass
   context only and name sessions for operation/target where naming is supported.
-- The `codebase-design` skill: Ownership check. If missing, file the gap under Findings; retain the fields above.
+- The `codebase-design` skill: Ownership check. If missing, note the gap under Findings; retain the fields above.
 - The workbench, whose format this skill owns: its `index.md`, `inbox.md`,
   `wishes.md`, `now.md`, `inbox-archive.md`, `incoming/`, `<plan>/plan.md`, `<plan>/log.md` and `retro.md`.
   Create missing files as [templates](references/templates.md) says.

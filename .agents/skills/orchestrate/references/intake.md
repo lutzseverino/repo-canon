@@ -23,7 +23,7 @@ amendment of a named plan. Owner assent or a direct grill request schedules it.
 A grill is never an owner decision; `inbox.md` holds decisions only.
 The default is a grill. Suggest a shorter path (expedited change, issue straight to
 triage, direct change) only as an option; take it only on the owner's yes for that idea.
-Broken existing rules/contracts are Findings: file under the guide, without a grill or yes.
+Broken existing rules or contracts follow the guide's Findings rule; they need no grill.
 
 ## Grill queue
 

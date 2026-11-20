@@ -95,9 +95,11 @@ no claim to cover unchanged installed scripts or to find every defect.
 ## Confirmed defects in shipped installed scripts
 
 Evaluate every confirmed defect in a shipped installed script as a release
-candidate, including findings on adopters' installed copies. Follow the
-[findings rules](../../CONTRIBUTING.md#findings) to file or link the defect in
-the responsible repository. On that issue, record:
+candidate, including findings on adopters' installed copies. Link an existing
+issue for the defect, or file one in the responsible repository with
+`state:triage`: a release candidate is not an observation the
+[findings rules](../../CONTRIBUTING.md#findings) leave to notes. On that issue,
+record:
 
 - the finding and confirmation evidence;
 - affected published versions, with evidence for the range and any uncertainty;

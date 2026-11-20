@@ -599,7 +599,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.deepEqual(
     readdirSync(join(orchestrate.path, ".scratch/tooling/issues")),
     ["01-utf8-crash.md"],
-    "the participant must file the new finding, not the fixture builder",
+    "the participant notes the stale option and files no tooling issue",
   );
   // Two workers share one host access grant and report in either order.
   const hostGrant = manifest.repositories["host-grant"];

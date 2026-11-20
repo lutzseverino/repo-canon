@@ -47,11 +47,11 @@ Write the record into the launch report, with evidence links for:
 
 ## Route each lesson
 
-- **Rule or skill lesson:** file an issue for triage in its value owner's
-  repository under that repository's Findings and comment rules. For a Repo
-  Canon rule or skill, use the source repository named by the Repository
-  Standards adoption record's Selection; never edit an adopter's copy. Link an
-  existing issue for a recurring lesson, or reopen it when closed.
+- **Rule or skill lesson:** file an issue in its value owner's repository with
+  `state:triage`, under its issue forms and comment rules. For a Repo Canon rule
+  or skill, use the source repository named by the Repository Standards
+  adoption record's Selection; never edit an adopter's copy. Link an existing
+  issue for a recurring lesson, or reopen it when closed.
 - **Owner setup outside repositories:** record an owner chore in `now.md`'s
   Waiting on you, linking its evidence.
 - **One-off:** retain its evidence in the retro record.
@@ -93,7 +93,7 @@ Paths are relative to the workbench or the responsible repository.
   source for Canon lessons. If missing, record the unresolved destination and
   ask for that source rather than edit an installed copy or guess its owner.
 - `CONTRIBUTING.md`, `.repo-standards/rules/comments.md` and
-  `docs/agents/issue-tracker.md`: Findings, posting and tracker conventions. If
+  `docs/agents/issue-tracker.md`: posting and tracker conventions. If
   missing, use the lesson routes above and the repository's available issue
   forms; without a usable tracker, record unfiled lessons and their destinations
   in the report.

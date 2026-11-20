@@ -143,7 +143,7 @@ its outcome. Step 2 applies only inside a plan's goal.
 ## `wishes.md`
 
 One line per wish: date, owner's quoted words/idea, source link and repository.
-A wish may link a filed finding; it never replaces its tracker/reporting records.
+A wish may link a filed issue; it never replaces its tracker record.
 
 ## `incoming/`
 
@@ -191,10 +191,9 @@ New row codes are one to three whole English words, hyphenated (e.g. `intake` or
 `release-standards`), anchored in Item and cited by that anchor. Existing codes
 stay until their rows end; grill decision codes stay, always linked to their record. Keep rows for the plan's life: splits add rows,
 merges point rows at one issue, only the owner drops one. Every row ends with a
-closed Issue, `dropped (owner)`, or an expedited row's merged PR in State.
+closed Issue, `moved`, `dropped (owner)`, or an expedited row's merged PR in State.
 State holds its latest step/session/PR, including `triaged <file>` or `grilled <file>`
-completion marks; expedited states start with `expedited`. Close only after all rows end.
+completion marks; expedited states start with `expedited`. Close only after every Done-means clause has evidence; end remaining open rows as `moved` or `dropped (owner)` as the Close reference says.
 Count/report open issues at start/close with no limit. Append to `log.md`, never rewrite: record every plan-filed issue with repository,
-number and creation evidence, including outside findings; retain each factory/direct
-run's issue, run, PR and final findings-report location. Date entries from the UTC
+number and creation evidence; retain each factory/direct run's issue, run and PR. Date entries from the UTC
 clock (`date -u +%Y-%m-%dT%H:%MZ`), never by hand.

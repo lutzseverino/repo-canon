@@ -24,7 +24,7 @@ uncovered stages are factory gaps.
 | Review                     | Configured review independently reviews the implemented draft and handles findings under Run kinds.                                                                                                                                                               | `review`                                                                              | The pull request                                                      |
 | Merge                      | Configured review delivers through merge; otherwise implement follows Run kinds' delivery route. Skipped work retains separate merge ownership.                                                                                                                   | `babysit`                                                                             | The pull request                                                      |
 | Release                    | No configured run kind supplies release; follow the repository's existing rules.                                                                                                                                                                                  | None yet (gap)                                                                        | The release's planning issue                                          |
-| Live acceptance            | No run kind supplies live access. The separately blocked live-acceptance ticket closes only on recorded live evidence, as Skipped work says.                                                                                                                      | `implement`, under a time-bounded grant                                               | The live-acceptance issue                                             |
+| Live acceptance            | No run kind supplies live access. In the contribution guide's split case, the separately blocked live-acceptance ticket closes only on recorded live evidence, as Skipped work says.                                                                              | `implement`, under a time-bounded grant                                               | The live-acceptance issue                                             |
 | Close                      | Issue closure follows the contract and Issue closure below. A merged source PR never closes its live-acceptance ticket. No run kind supplies plan closure.                                                                                                        | `improve-codebase-architecture` for architecture Close reviews; `retro` for the retro | The plan row; owner-facing                                            |
 
 Owner grills, plan approval, independent contract acceptance outside Triage
@@ -106,8 +106,9 @@ then request readiness and wait for approval of that current event. Consume the
 validator's verified v2 association; never parse a competing contract or infer
 authority from an app author. Retain the exact unchanged inventoried legacy
 exception indefinitely; edits move it into the body, and deletion cannot resurrect it.
-Compatible release/adoption/host activation and actual pickup evidence belong
-to their separately closing live-acceptance ticket, never to source closure.
+In the contribution guide's split case, compatible release/adoption/host
+activation and actual pickup evidence belong to their separately closing
+live-acceptance ticket, never to source closure.
 
 ## Parent readiness
 
@@ -274,14 +275,14 @@ and `factory:skip`, applied together: work that edits `.github/workflows/`, or
 work whose live steps need host access the maintainer grants. A directly
 launched worker performs the agent work, including the source changes; host
 access gates only the live host steps and does not designate owner review of
-the source PR. A live-acceptance ticket, blocked by its source ticket, takes
-this route and closes only on its recorded live acceptance; a merge never
-closes it. The orchestrating agent that asked the maintainer for a
-time-bounded host access grant owns it and records the workers using it.
-Workers never end a grant: it ends when the last of them reports back, or at
-its own time bound. Whoever applies `factory:skip` creates it if the
-repository lacks it, as for `model:` labels; the factory never creates or
-removes it.
+the source PR. In the contribution guide's split case, a live-acceptance
+ticket, blocked by its source ticket, takes this route and closes only on its
+recorded live acceptance; a merge never closes it. The orchestrating agent
+that asked the maintainer for a time-bounded host access grant owns it and
+records the workers using it. Workers never end a grant: it ends when the last
+of them reports back, or at its own time bound. Whoever applies `factory:skip`
+creates it if the repository lacks it, as for `model:` labels; the factory
+never creates or removes it.
 
 For every skip-labelled PR and every PR opened by a directly launched worker,
 including a PR without a skip label, the implementing worker delivers an open PR
