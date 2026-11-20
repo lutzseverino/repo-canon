@@ -526,11 +526,15 @@ owner's recorded confirmation complete the Done-means evidence, and the plan
 closes with the still-open row 02 ending as `moved` and its issue at
 `priority:low`. Check the final counts and closing announcement against the
 skill.
-Before that announcement, check that a separate retro session, started by the
-operator when the harness cannot nest one and invoking `retro` with only its
-launch report path, writes `retro.md` from the workbench and simulated tracker
-records, attributes each wait, ranks its lessons by cost and records that no
-previous retro exists. The Close reviews line, set at
+Before that announcement, check that the retro launches from a generated Close
+brief (`workbench brief Close retro --row "Close reviews"`) in a separate
+session, started by the operator with that brief when the harness cannot nest
+one. Its report, at the brief's `Launch report:` path, is written from the
+workbench and simulated tracker records, attributes each wait, ranks its
+lessons by cost and records that no previous retro exists. The workbench's Git
+status and history show that the retro changed it only by writing that report,
+and the orchestrating agent links the consumed report on the Close reviews
+line. The Close reviews line, set at
 turn 2, holds only the retro, because the plan changes no code. A lesson about
 a Repo Canon skill or rule is drafted under `.scratch/repo-canon/issues/`,
 never published. The counts are recorded before the retro, so its lessons

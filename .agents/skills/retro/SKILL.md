@@ -1,27 +1,29 @@
 ---
 name: retro
-description: Perform a plan-close or session retrospective from its launch report, record the evidence and lessons, and route each lesson to its value owner.
+description: Perform a plan-close or session retrospective from its generated launch brief, record the evidence and lessons in its report, and route each lesson to its value owner.
 ---
 
 A prompt or brief naming this skill is its invocation.
 
-Your only input is one launch report path. Read its header for inputs,
-evidence links and scope. Use the primary plan files, cited issues, PRs,
+Your input is the generated brief that invokes you. Read its Context for
+inputs, evidence links and scope, and write into the report its
+`Launch report:` line names. Use the primary plan files, cited issues, PRs,
 comments and run records, and the latest Closed plan's retro record as evidence;
 never use the orchestrating agent's summary or context. Session retros outside
 plan closure use this same method, lesson routes and gap routes.
 
 The `orchestrate` skill owns workbench formats and the launch-report protocol.
 Read its [templates](../orchestrate/references/templates.md) for the records you
-use and its [launch duties](../orchestrate/references/launches.md#shared-launch-template)
-for finishing the report. Read each responsible repository's `CONTRIBUTING.md`
-and installed comment rules before filing or reopening issues.
+use; the brief's fixed duties finish the report. Read each responsible
+repository's `CONTRIBUTING.md` and installed comment rules before filing or
+reopening issues.
 
 ## Read the evidence
 
-Follow the header's evidence links to primary records. Read the plan's goal and
+Follow the Context's evidence links to primary records. Read the plan's goal and
 Done means, its history and run records, and the decision records in `inbox.md`
-and `inbox-archive.md`. Use `index.md` to find the latest Closed plan's `retro.md`.
+and `inbox-archive.md`. Use `index.md` to find the latest Closed plan; the
+report its Close reviews line links for its retro is the previous retro.
 Compare that retro and open issues before routing lessons. Record unavailable
 evidence as missing.
 
@@ -35,9 +37,9 @@ Write the record into the launch report, with evidence links for:
 - Lessons ranked by cost, each with its route and link.
 - Comparison with the previous retro and open issues; explicitly record when
   no previous retro or matching issue exists.
-- Filed or reopened issues, each with its repository and number, also logged
-  in the plan's `log.md` with creation evidence (and the reopening record for a
-  reopened issue). Outside a plan, keep that evidence in the report.
+- Filed or reopened issues, each with its repository, number and creation
+  evidence (and the reopening record for a reopened issue).
+- Owner chores a lesson needs, each with its evidence.
 - Counts of owner answers matching recommendations, by decision type; propose
   preapproval of a type the owner always accepted. A proposal grants no approval.
 - The friction log's gap-line count, excluding intake of ideas. File the top
@@ -52,12 +54,14 @@ Write the record into the launch report, with evidence links for:
   or skill, use the source repository named by the Repository Standards
   adoption record's Selection; never edit an adopter's copy. Link an existing
   issue for a recurring lesson, or reopen it when closed.
-- **Owner setup outside repositories:** record an owner chore as an open
-  `inbox.md` entry, linking its evidence.
+- **Owner setup outside repositories:** list an owner chore in the report,
+  linking its evidence.
 - **One-off:** retain its evidence in the retro record.
 
-Complete the report under the launch-report protocol. The orchestrating agent
-consumes it and marks the Close review done before announcing the close.
+Complete the report under the brief's duties, writing nothing else in the
+workbench. The orchestrating agent consumes it, logs the listed issues with
+their creation evidence in the plan's `log.md`, adds the listed chores as Open
+`inbox.md` entries and adds the report to the plan's Close reviews line.
 
 Seam (deferred): workbench record reads use orchestrate's format; consumers: 2
 (orchestrate and retro); propose extraction at 3 under the Ownership check.
@@ -66,26 +70,24 @@ Seam (deferred): workbench record reads use orchestrate's format; consumers: 2
 
 Paths are relative to the workbench or the responsible repository.
 
-- The supplied launch report: header and output destination. If missing, stop
-  and request the correct report path; if its header lacks evidence or scope,
-  record the missing input there and hand back without inventing it.
-- The `orchestrate` skill: workbench formats and launch-report protocol linked
-  above. If missing, record that gap in the report and stop rather than invent
-  the format or completion protocol.
+- The generated brief: its Context and the report its `Launch report:` line
+  names. If missing, stop and ask for the brief; if its Context lacks evidence
+  or scope, record the missing input in the report and hand back without
+  inventing it.
+- The `orchestrate` skill: workbench formats linked above. If missing, record
+  that gap in the report and stop rather than invent the format.
 - `index.md`: the latest Closed plan. If missing or no Closed plan exists,
   record that no previous retro is available.
 - `<plan>/plan.md`: goal and Done means. If missing for a plan retro, record the
-  unavailable comparison; for a session retro use the header's session scope.
+  unavailable comparison; for a session retro use the Context's session scope.
 - `<plan>/log.md`: history, friction, gaps and issue-creation evidence. If
-  missing, record unavailable timing and gap counts; create it for new issue
-  records only when the supplied plan and orchestrate's format establish it.
-- `<plan>/retro.md`: the previous retro selected through the index. If missing,
-  record the unavailable comparison.
+  missing, record unavailable timing and gap counts.
+- The previous retro's report, linked on the latest Closed plan's Close reviews
+  line. If missing, record the unavailable comparison.
 - `inbox.md` and `inbox-archive.md`: owner answers, recommendations and
   chores. If either is missing, report the unavailable counts rather than infer
-  answers; create `inbox.md` under orchestrate's format when a lesson calls for
-  a chore.
-- The header's cited issues, PRs, comments and run records, and the responsible
+  answers.
+- The Context's cited issues, PRs, comments and run records, and the responsible
   repositories' open issues: primary evidence and duplicate comparison. If
   missing or inaccessible, record that limit and any unfiled lesson with its
   destination; do not claim it was filed or reopen an unverified issue.

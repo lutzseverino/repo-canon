@@ -107,7 +107,7 @@ with amendments. Plan fields and tables:
 **Goal:** <outcome>
 **Approval:** <date, owner approval link and Preapproves scope>
 **Specifications:** <issue links>
-**Close reviews:** retro; <skill and repository, adding done <file> when complete>
+**Close reviews:** retro <report link once consumed>; <skill and repository> <report link once consumed>
 **Done means:**
 
 1. <one observable clause per line, ending met <evidence link> once it holds>
@@ -132,10 +132,9 @@ New row codes are one to three whole English words, hyphenated (e.g. `intake` or
 stay until their rows end; grill decision codes stay, always linked to their record. Keep rows for the plan's life: splits add rows,
 merges point rows at one issue, only the owner drops one. A row ends when its State
 starts with `closed` (its issue), `merged` (an expedited row's PR), `moved` or `dropped (owner)`;
-status watches every issue and PR linked on other rows. A launch brief is a plan-directory file with a
+status watches every issue and PR linked on other rows. A launch brief, which `workbench brief` writes, is a plan-directory file with a
 `Launch report: <path>` line, absolute or relative to that directory; its report finishes at its exact
-final `status: done` line. Consume a report by naming its file in `log.md`, only then, with the row's new state. State holds its latest step/session/PR, including `triaged <file>` or `grilled <file>`
-completion marks; expedited states start with `expedited`. Close only once every Done-means clause is met; end remaining open rows as `moved` or `dropped (owner)` as the Close reference says.
+final `status: done` line. Consume a report by naming its file in `log.md`, only then, with the row's new state. State holds its latest step/session/PR; expedited states start with `expedited`. Close only once every Done-means clause is met; end remaining open rows as `moved` or `dropped (owner)` as the Close reference says.
 Count/report open issues at start/close with no limit. Append to `log.md`, never rewrite: record every plan-filed issue with repository,
 number and creation evidence, including one a run opens outside the goal; retain each factory/direct run's issue, run and PR. Date entries from the UTC
 clock (`date -u +%Y-%m-%dT%H:%MZ`), never by hand.

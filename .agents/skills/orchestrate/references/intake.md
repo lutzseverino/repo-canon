@@ -27,8 +27,8 @@ Broken rules or contracts and parking an idea follow the guide's Findings rule, 
 
 Schedule agreed ideas, `state:grill` issues and routed review candidates as plan rows.
 Keep one grill open with the owner; others wait on their rows, by plan order then age.
-Merge same-plan items. Owner-requested grills open at once, whatever is open. Use
-[Grill](launches.md#grill) when it can start; status shows it Running until its report
+Merge same-plan items. Owner-requested grills open at once, whatever is open. Launch each with
+`workbench brief Grill` when it can start; status shows it Running until its report
 ends. Reuse its session across observations and takeover.
 
 ## Filed requests and reports

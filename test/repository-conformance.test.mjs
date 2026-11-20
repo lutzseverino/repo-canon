@@ -1397,45 +1397,24 @@ test("orchestrate keeps its required sections and links its references", () => {
   );
 });
 
-test("all hand launches share one invocation-and-context template", () => {
+test("hand launches use the generated brief, with no launch template left to copy", () => {
   const tokens = marked.lexer(
     read(".agents/skills/orchestrate/references/launches.md"),
   );
-  const templates = tokens.filter(
-    (token) => token.type === "code" && token.lang === "text",
+  assert.ok(
+    !tokens.some((token) => token.type === "code" && token.lang === "text"),
   );
-  assert.equal(templates.length, 1);
-  const [invocation, ...body] = templates[0].text.split("\n");
-  assert.equal(invocation, "<skill invocation>");
-  assert.deepEqual(
-    body
-      .filter((line) => /^[A-Z][^:]+:/.test(line))
-      .map((line) => line.split(":")[0]),
-    "Issues,Evidence,Recorded decisions,Scope,Workspace,Plan references,Model,Effective effort,Launch report".split(
-      ",",
-    ),
-  );
-  assert.ok(templates[0].text.endsWith("status: done"));
-  const sections = new Map();
-  let section;
-  for (const token of tokens) {
-    if (token.type === "heading" && token.depth === 2) {
-      section = token.text;
-      sections.set(section, []);
-    } else if (section) sections.get(section).push(token);
-  }
-  const launches =
-    "Triage run|Grill|Publication and review|Worker|Architecture review|Handover|Retro".split(
-      "|",
-    );
-  for (const name of launches) {
-    const role = sections.get(name);
-    assert.ok(role, name);
-    assert.ok(
-      !role.some((token) => token.type === "code"),
-      `${name} uses the shared template`,
-    );
-  }
+  const headings = tokens
+    .filter((token) => token.type === "heading")
+    .map((token) => token.text);
+  for (const name of "Triage run|Grill|Publication and review|Architecture review|Retro|Shared launch template".split(
+    "|",
+  ))
+    assert.ok(!headings.includes(name), name);
+  for (const name of "Starting a launch|Owner steps|Worker|Replacing a worker|Expedited change|Handover|The workbench script".split(
+    "|",
+  ))
+    assert.ok(headings.includes(name), name);
   const stages = marked
     .lexer(read("rules/factory-workflow.md"))
     .find((token) => token.type === "table");

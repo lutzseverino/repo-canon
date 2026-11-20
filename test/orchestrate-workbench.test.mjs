@@ -4,6 +4,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   unlinkSync,
@@ -14,6 +15,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { connect } from "../vendor/postern/postern.mjs";
+import { marked } from "../vendor/marked/marked.esm.js";
 import { main } from "../.agents/skills/orchestrate/workbench.mjs";
 
 const script = fileURLToPath(
@@ -1075,11 +1077,32 @@ test("the installed script runs with plain node and reports each exit", (t) => {
     spawnSync(process.execPath, [script, ...args], {
       cwd: root,
       encoding: "utf8",
+      input: "Check the guide.\n",
       timeout: 30_000,
     });
   const usage = run();
   assert.equal(usage.status, 1);
   assert.match(usage.stderr, /^usage: workbench\.mjs/);
+  const stages = fileURLToPath(
+    new URL("../.repo-standards/rules/factory-workflow.md", import.meta.url),
+  );
+  const generated = run(
+    "brief",
+    "Review",
+    "example/tracker#5",
+    "--plan",
+    "review",
+    "--row",
+    "check",
+    "--model",
+    "m@high",
+    "--reason",
+    "A reason.",
+    "--stages",
+    stages,
+  );
+  assert.equal(generated.status, 0, generated.stderr);
+  assert.match(generated.stdout, /\n## Context\n\nCheck the guide\.\n/);
   const status = run("status", ".", "--stale-after", "86400");
   assert.equal(status.status, 0, status.stderr);
   assert.match(status.stdout, /^Orchestrator: thread-a\n/);
@@ -1335,4 +1358,272 @@ test("file events wake the wait within a bound well below its interval", async (
     assert.equal(output.stdout, `${line}\n`, name);
     assert.ok(Date.now() - startedAt < 10_000, name);
   }
+});
+
+const installedStages = fileURLToPath(
+  new URL("../.repo-standards/rules/factory-workflow.md", import.meta.url),
+);
+
+// The installed Canonical stages rows, as stage name and raw Hand skill cell.
+const stageRows = () => {
+  const table = marked
+    .lexer(readFileSync(installedStages, "utf8"))
+    .find((token) => token.type === "table");
+  assert.ok(table?.type === "table");
+  const skill = table.header.findIndex((cell) => cell.text === "Hand skill");
+  return table.rows.map((row) => ({
+    stage: row[0].text,
+    skill: row[skill].text,
+    named: row[skill].tokens.some((token) => token.type === "codespan"),
+  }));
+};
+
+const briefArgs = (plan, stage, target, extra = {}) => {
+  const options = {
+    "--plan": plan,
+    "--row": "routing",
+    "--model": "claude-opus-5-5@high",
+    "--reason": "Writing-heavy work the guidance gives Opus.",
+    "--stages": installedStages,
+    ...extra,
+  };
+  return [
+    "brief",
+    stage,
+    target,
+    ...Object.entries(options).flatMap(([flag, value]) =>
+      value === undefined ? [] : [flag, value],
+    ),
+  ];
+};
+
+// Runs brief with the Context on its standard input on 2026-11-20.
+const runBrief = async (args, context = "Route the guide's grill.\n") => {
+  const output = capture();
+  const code = await main(args, {
+    ...output.streams,
+    connect: unreachable,
+    input: async () => context,
+    now: () => Date.parse("2026-11-20T09:30:00Z"),
+  });
+  return { code, ...output };
+};
+
+// The header fields a generated brief starts with, by name.
+const fields = (text) =>
+  Object.fromEntries(
+    text
+      .split("\n## Context\n")[0]
+      .split("\n")
+      .flatMap((line) => {
+        const match = /^([A-Z][\w/ ]*): (.*)$/.exec(line);
+        return match ? [[match[1], match[2]]] : [];
+      }),
+  );
+
+test("brief writes and prints each hand-skill stage's brief, copying its skill cell and deriving the report", async (t) => {
+  const bench = workbench(t);
+  const plan = bench.path("review");
+  const stages = stageRows().filter(({ named }) => named);
+  assert.ok(stages.length > 5);
+  for (const { stage, skill } of stages) {
+    const { code, stdout, stderr } = await runBrief(
+      briefArgs(plan, stage, "example/tracker#12"),
+    );
+    assert.equal(code, 0, `${stage}: ${stderr}`);
+    const slug = stage.toLowerCase().replaceAll(" ", "-");
+    const name = `brief-${slug}-example-tracker-12-2026-11-20`;
+    assert.equal(readFileSync(join(plan, `${name}.md`), "utf8"), stdout);
+    const header = fields(stdout);
+    assert.equal(header.Operation, stage);
+    assert.equal(header.Skill, skill);
+    assert.equal(header.Target, "example/tracker#12");
+    assert.equal(header["Plan/row"], "review/routing");
+    assert.match(header.Workspace, /fresh worktree of example\/tracker\b/);
+    assert.match(header.Model, /^claude-opus-5-5@high\b.*Writing-heavy work/);
+    assert.equal(header["Launch report"], join(plan, `${name}-report.md`));
+    assert.equal(header["Final line"], "status: done");
+    assert.ok(!existsSync(header["Launch report"]));
+    const [, context] = stdout.split("\n## Context\n");
+    assert.equal(context, "\nRoute the guide's grill.\n\nstatus: done\n");
+  }
+});
+
+test("brief never names an existing brief or report, numbering the name instead", async (t) => {
+  const bench = workbench(t);
+  const plan = bench.path("review");
+  const name = "brief-grill-routing-2026-11-20";
+  bench.write(`review/${name}.md`, "An earlier brief.\n");
+  bench.write(`review/${name}-2-report.md`, "An orphaned report.\n");
+  const { code, stdout, stderr } = await runBrief(
+    briefArgs(plan, "Grill", "routing"),
+  );
+  assert.equal(code, 0, stderr);
+  assert.equal(
+    readFileSync(bench.path(`review/${name}.md`), "utf8"),
+    "An earlier brief.\n",
+  );
+  assert.equal(
+    fields(stdout)["Launch report"],
+    join(plan, `${name}-3-report.md`),
+  );
+  assert.equal(readFileSync(join(plan, `${name}-3.md`), "utf8"), stdout);
+  const again = await runBrief(briefArgs(plan, "Grill", "routing"));
+  assert.equal(
+    fields(again.stdout)["Launch report"],
+    join(plan, `${name}-4-report.md`),
+  );
+});
+
+test("a Close brief gives the retro no worktree and an architecture review its repository's worktree", async (t) => {
+  const bench = workbench(t);
+  const plan = bench.path("review");
+  const close = { "--row": "Close reviews" };
+  const retro = await runBrief(briefArgs(plan, "Close", "retro", close));
+  assert.equal(retro.code, 0, retro.stderr);
+  const header = fields(retro.stdout);
+  assert.match(header.Skill, /`retro`/);
+  assert.equal(header["Plan/row"], "review/Close reviews");
+  assert.doesNotMatch(header.Workspace, /worktree of/);
+  assert.match(header.Workspace, /^no worktree\b.*only the report/i);
+  assert.ok(existsSync(join(plan, "brief-close-retro-2026-11-20.md")));
+  const review = await runBrief(
+    briefArgs(plan, "Close", "example/tracker", close),
+  );
+  assert.equal(review.code, 0, review.stderr);
+  assert.match(
+    fields(review.stdout).Workspace,
+    /fresh worktree of example\/tracker on its default branch.*only the report/,
+  );
+  assert.ok(
+    existsSync(join(plan, "brief-close-example-tracker-2026-11-20.md")),
+  );
+  const url = await runBrief(
+    briefArgs(plan, "Review", "https://github.com/example/other/pull/7"),
+  );
+  assert.match(fields(url.stdout).Workspace, /worktree of example\/other\b/);
+});
+
+test("brief refuses a stage without a hand skill, an unknown stage, a file without the table and an empty Context", async (t) => {
+  const bench = workbench(t);
+  const plan = bench.path("review");
+  bench.write(
+    "rules.md",
+    `# Rules\n\n## Canonical stages\n\n| Stage | Configured factory coverage | Hand skill | Input |\n| --- | --- | --- | --- |\n| Draft | None. | \`to-spec\` | The record |\n| Ship | None. | None yet (gap) | The issue |\n\n## Run kinds\n`,
+  );
+  bench.write("plain.md", "# Rules\n\n## Run kinds\n\nNo stages here.\n");
+  const fixture = { "--stages": bench.path("rules.md") };
+  const accepted = await runBrief(briefArgs(plan, "Draft", "routing", fixture));
+  assert.equal(accepted.code, 0, accepted.stderr);
+  const plain = { "--stages": bench.path("plain.md") };
+  for (const { args, context, reason } of [
+    {
+      args: briefArgs(plan, "Ship", "routing", fixture),
+      reason: /names no skill/,
+    },
+    {
+      args: briefArgs(plan, "draft", "routing", fixture),
+      reason: /unknown stage/,
+    },
+    { args: briefArgs(plan, "Deploy", "routing"), reason: /unknown stage/ },
+    {
+      args: briefArgs(plan, "Grill", "routing", plain),
+      reason: /no Canonical stages table/,
+    },
+    {
+      args: briefArgs(plan, "Grill", "routing"),
+      context: " \n\t\n",
+      reason: /empty Context/,
+    },
+    {
+      args: briefArgs(plan, "Grill", "routing"),
+      context: "",
+      reason: /empty Context/,
+    },
+  ]) {
+    const { code, stdout, stderr } = await runBrief(args, context);
+    assert.equal(code, 1, args.join(" "));
+    assert.match(stderr, reason);
+    assert.equal(stdout, "");
+  }
+  assert.deepEqual(
+    readdirSync(plan).filter((name) => name.startsWith("brief-")),
+    ["brief-draft-routing-2026-11-20.md"],
+  );
+});
+
+test("brief requires each argument and refuses a malformed model or reason", async (t) => {
+  const bench = workbench(t);
+  const plan = bench.path("review");
+  for (const flag of ["--plan", "--row", "--model", "--reason", "--stages"]) {
+    const { code, stderr } = await runBrief(
+      briefArgs(plan, "Grill", "routing", { [flag]: undefined }),
+    );
+    assert.equal(code, 1, flag);
+    assert.match(stderr, new RegExp(`${flag} is required`));
+  }
+  for (const { args, reason } of [
+    { args: ["brief", "Grill"], reason: /usage: workbench\.mjs/ },
+    {
+      args: briefArgs(plan, "Grill", "routing", { "--model": "opus" }),
+      reason: /<model>@<effort>/,
+    },
+    {
+      args: briefArgs(plan, "Grill", "routing", { "--reason": "two\nlines" }),
+      reason: /one line/,
+    },
+    {
+      args: briefArgs(plan, "Grill", "routing", {
+        "--plan": bench.path("missing"),
+      }),
+      reason: /plan directory/,
+    },
+  ]) {
+    const { code, stderr } = await runBrief(args);
+    assert.equal(code, 1, args.join(" "));
+    assert.match(stderr, reason);
+  }
+  assert.deepEqual(
+    readdirSync(plan).filter((name) => name.startsWith("brief-")),
+    [],
+  );
+});
+
+test("a generated brief runs under status until its report finishes, then waits as my move until consumed", async (t) => {
+  const bench = workbench(t);
+  const { code, stdout } = await runBrief(
+    briefArgs(bench.path("review"), "Grill", "routing"),
+  );
+  assert.equal(code, 0);
+  const report = fields(stdout)["Launch report"];
+  const name = "brief-grill-routing-2026-11-20";
+  const status = async () => {
+    const output = capture();
+    assert.equal(
+      await main(["status", bench.root, "--stale-after", "60"], {
+        ...output.streams,
+        connect: unreachable,
+      }),
+      0,
+      output.stderr,
+    );
+    return output.stdout;
+  };
+  assert.match(
+    await status(),
+    new RegExp(
+      `^Running\n- review/${name}-report\\.md report pending · review/${name}\\.md$`,
+      "m",
+    ),
+  );
+  writeFileSync(report, "The decision record.\nstatus: done\n");
+  assert.match(
+    await status(),
+    new RegExp(
+      `^- review/${name}-report\\.md finished; read the report · review/${name}\\.md$`,
+      "m",
+    ),
+  );
+  bench.write("review/log.md", `# Log\n\n- Consumed ${name}-report.md.\n`);
+  assert.doesNotMatch(await status(), new RegExp(`${name}-report`));
 });
