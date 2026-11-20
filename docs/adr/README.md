@@ -132,7 +132,7 @@ involve real alternatives.
   configuration the host's, and labels the issue's; amended by ADR 0047.
 - [Choose where checks run at adoption](0034-choose-where-checks-run-at-adoption.md):
   `github`, `runner` or `self-reported`, chosen in the selection, one check
-  command, and the merge gate enforced by Repo Canon's tooling.
+  command, and the merge gate enforced by Repo Canon's tooling; amended by ADR 0054.
 - [Keep the implementation contract in the issue body](0035-keep-the-implementation-contract-in-the-issue-body.md):
   triage writes the Agent Brief over the body and keeps the original request.
 - [Launch hand stages with identifiers only](0036-launch-hand-stages-with-identifiers-only.md):
@@ -198,3 +198,6 @@ involve real alternatives.
   a Canon-owned factory review attestation names the run and the exact body
   revision, and the validator approves the factory's readiness after a notice
   names it.
+- [Trust the runner account a repository variable names](0054-trust-the-runner-account-a-repository-variable-names.md):
+  `REPO_CANON_RUNNER_ACCOUNT` names the only account whose results count at
+  `runner`, and readiness at `self-reported` stays with the owner; amends ADR 0034.

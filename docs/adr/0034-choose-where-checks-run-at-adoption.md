@@ -1,5 +1,9 @@
 # Choose where checks run at adoption
 
+Status: amended by [ADR 0054](0054-trust-the-runner-account-a-repository-variable-names.md):
+readiness at `self-reported` stays with the owner, and a repository variable
+names the trusted runner account.
+
 An adopting repository chooses its check location when it adopts: `github`
 (GitHub's hosted runners), `runner` (a machine the repository names, such as
 its own server or the factory's host, posting each result as a commit status),
