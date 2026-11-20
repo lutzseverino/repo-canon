@@ -50,37 +50,38 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "triage-routing",
     "triage-wayfinder",
   ]);
-  const projectionHeader =
-    "| Item | Running | Waiting on owner | Since (UTC) | Next check |\n" +
-    "| ---- | ------- | ---------------- | ----------- | ---------- |\n";
-  const nowPaths = readdirSync(target, {
-    recursive: true,
-    encoding: "utf8",
-  }).filter((path) => path.endsWith("/now.md"));
-  assert.ok(nowPaths.includes("orchestrate-workbench/now.md"));
-  assert.ok(nowPaths.includes("host-grant-workbench/now.md"));
-  for (const path of nowPaths) {
-    const output = execFileSync(
-      process.execPath,
-      [
-        join(root, ".agents/skills/orchestrate/wait.mjs"),
-        "--status",
-        "--from",
-        join(target, path),
-      ],
-      { cwd: target, encoding: "utf8" },
+  const groups = (stale) =>
+    "\nMy move\n- none\nOwner's move\n- none\nRunning\n- none\n" +
+    "Waiting quietly: 0 state:ready (pickup), 0 open pull request (delivery), 0 state:reporter or state:carried (third party)\n" +
+    `Stale (unchanged for over ${stale} seconds)\n- none\n`;
+  for (const [workbench, header] of [
+    ["orchestrate-workbench", "Orchestrator: none\n"],
+    [
+      "front-door-workbench",
+      "Orchestrator: orchestrator-1 (simulated, running)\n" +
+        "receipts-page/plan.md · Done means ○\n",
+    ],
+    [
+      "host-grant-workbench",
+      "Orchestrator: previous-session (simulated), handed over\n" +
+        "rollout/plan.md · Done means ●○○\n",
+    ],
+  ])
+    assert.equal(
+      execFileSync(
+        process.execPath,
+        [
+          join(root, ".agents/skills/orchestrate/workbench.mjs"),
+          "status",
+          join(target, workbench),
+          "--stale-after",
+          "86400",
+        ],
+        { cwd: target, encoding: "utf8" },
+      ),
+      header + groups(86400),
+      workbench,
     );
-    assert.ok(output.startsWith(projectionHeader), path);
-    if (path === "orchestrate-workbench/now.md")
-      assert.equal(output, projectionHeader);
-    if (path === "host-grant-workbench/now.md")
-      assert.equal(
-        output,
-        projectionHeader +
-          "| [receipts#2](../host-grant/.scratch/rollout/issues/02-accept-endpoint-on-staging.md) | your move: ask for staging host access | — | 2026-11-02T09:10Z | owner turn |\n" +
-          "| [receipts#3](../host-grant/.scratch/rollout/issues/03-accept-export-on-staging.md) | your move: ask for staging host access | — | 2026-11-02T09:10Z | owner turn |\n",
-      );
-  }
   assert.equal(
     manifest.source.upstreamCommit,
     "24fe0ef7737efae15c87225755e9f6f5965e4888",
@@ -605,7 +606,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     readdirSync(workbench)
       .filter((name) => name !== ".git")
       .sort(),
-    ["inbox.md", "index.md", "now.md", "wishes.md"],
+    ["inbox.md", "index.md", "wishes.md"],
   );
   assert.deepEqual(
     readdirSync(join(orchestrate.path, ".scratch/tooling/issues")),
@@ -642,7 +643,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     readdirSync(grantWorkbench)
       .filter((name) => name !== ".git")
       .sort(),
-    ["inbox.md", "index.md", "now.md", "rollout", "wishes.md"],
+    ["inbox.md", "index.md", "rollout", "wishes.md"],
   );
   const rollout = join(hostGrant.path, ".scratch/rollout");
   assert.match(
@@ -697,19 +698,12 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     readdirSync(doorWorkbench)
       .filter((name) => name !== ".git")
       .sort(),
-    [
-      "inbox.md",
-      "incoming",
-      "index.md",
-      "now.md",
-      "receipts-page",
-      "wishes.md",
-    ],
+    ["inbox.md", "incoming", "index.md", "receipts-page", "wishes.md"],
   );
   assert.deepEqual(readdirSync(join(doorWorkbench, "incoming")), []);
   assert.match(
     readFileSync(join(doorWorkbench, "index.md"), "utf8"),
-    /^- `receipts-page\/`: .*Owner: \S+/m,
+    /^Orchestrator: \S+[^]*^- `receipts-page\/`: /m,
   );
   assert.deepEqual(readdirSync(join(doorWorkbench, "receipts-page")).sort(), [
     "log.md",

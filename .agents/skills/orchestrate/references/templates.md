@@ -2,8 +2,8 @@
 
 ## Creating the workbench
 
-Create a local git repository outside projects, seeded with `index.md`, `inbox.md`,
-`wishes.md` and `now.md`. Tell the owner its path and global-instruction line:
+Create a local git repository outside projects, seeded with `index.md`, `inbox.md`
+and `wishes.md`. Tell the owner its path and global-instruction line:
 `The orchestrating agent's workbench is <path>.`
 Offer Repo Canon's `workbench` profile (pinned workflow skills, no rules/CI/branch
 requirements). With the owner's yes, commit the seed and `adopt` using a tracked
@@ -14,18 +14,17 @@ Commit each completed adoption/update once its `status` says ready to commit.
 ## Layout
 
 ```text
-index.md          tracked repositories, plans and current owner session
-inbox.md          open decisions and Answered entries awaiting handover
+index.md          tracked repositories, active plans and the current orchestrator
+inbox.md          open decisions and chores, and Answered entries awaiting handover
 inbox-archive.md  answered decision history
 wishes.md         ideas about this procedure, not repository ideas
-now.md            owner waits, in-flight work, launches and arrivals
 incoming/         other sessions' messages, pending intake
 <plan>/plan.md    current state, goal, Done means, specifications and Close reviews
-<plan>/log.md     append-only history, including previous owner sessions
-<plan>/*.md       grill decisions and launch reports
+<plan>/log.md     append-only history, including previous orchestrators
+<plan>/*.md       grill decisions, launch briefs and reports
 ```
 
-Rewrite `now.md` and `plan.md` in place; keep superseded approvals. Elsewhere date
+Rewrite `plan.md` in place; keep superseded approvals. Elsewhere date
 entries, cite sources, and preserve superseded text with date and replacement link. Repository-facing records copy
 relied-on decisions, dates and quoted words under [Workbench](../SKILL.md#workbench);
 private records retain sources; decisions stay intact. Plans hold specification
@@ -33,90 +32,30 @@ links, not draft briefs. Session references are their opaque harness identifiers
 
 ## `index.md`
 
-List tracked Repositories and one line per active plan, proposals included:
-directory and goal. Name only the current owner session; history lives in
-`log.md`. Move a closed plan's line under Closed, dated. Launch capacity comes
-from Scriptorium status; keep no workbench launch caps.
-
-## `now.md`
-
-Rewrite each pass from the UTC clock. Keep all three tables even empty and retain
-counts, notifications and chores until acknowledged. Include the optional last section
-only for new issues, after the opening status projection in updates and heartbeat replies.
-
 ```markdown
-# Now
+# Workbench
 
-## Waiting on you
+Orchestrator: <current orchestrating session reference>
 
-<count> open decisions in `inbox.md`.
+## Repositories
 
-- <chore or notification for the owner>
+## Active
 
-| Item | Decision/owner action | Since (UTC) | Next check |
-| ---- | --------------------- | ----------- | ---------- |
+- `<plan directory>/`: <goal>
 
-## In flight
-
-| Item | Waiting on | Since (UTC) | Next check | Evidence | Watches |
-| ---- | ---------- | ----------- | ---------- | -------- | ------- |
-
-## Running launches
-
-| Host | Kind | Session | Started (UTC) | Item | Report | Next check |
-| ---- | ---- | ------- | ------------- | ---- | ------ | ---------- |
-
-## Arrived since last update
-
-- <new issue link in a tracked repository> — <author> — <ready, grill, owner, or waiting for the owner's word>
+## Closed
 ```
 
-- **Identity:** Item is a linked row code, e.g. `[intake](plan.md#intake)`; its
-  target joins tables. Display words and opaque Session references identify no
-  watch. One row per identity in each table; joined watches form a union.
-- **Owner waits:** dated rows link the decision/action. Since is the wait's
-  actual beginning, never derived from report prose. Retain outstanding/deferred
-  owner steps under [inbox](#inboxmd)'s do/defer/drop rules.
-- **In flight:** retain Since, Next check and Evidence. Waiting on takes `owner`,
-  `factory`, `launch`, `third party: <name>`, `date: <UTC date or time>` or
-  `orchestrator`, optionally followed by `: <detail>`; third party/date require theirs.
-  Watches is inline-code JSON naming wake mechanisms; Evidence implies no watch.
-  Owner-only rows use `[{"owner":true}]` and a matching owner row. Tracker watches
-  require observed labels and/or head/checks per [the wait script](launches.md#the-wait-script).
-- **Launches:** For hand stage launches, Kind is the canonical stage in lowercase. Record every column **before** launch, initially Session `pending`.
-  Reports supply launch watches. Resumption needs a fresh report or cleared old
-  final marker. Consume a report by removing its launch row and reconciling work
-  and owner rows; keep owner outcomes in explicit rows until resolved. A marker
-  means read, never success; remove finished work rows.
-- **Paths:** resolve Report and file/directory watches beside selected `now.md`;
-  absolute paths stay absolute. Incoming coverage is its `incoming/`; emitted
-  record links stay relative to that directory. No literal pipes in cells;
-  JSON uses `\u007c`. Report paths may be inline code.
-- **Projection:** `wait.mjs --status --from <now.md>` reads records/report final
-  lines only, without platform access or durations. Optional `--budget <status.json>`
-  adds the [same Scriptorium observation](launches.md#starting-a-launch), retaining
-  provenance, holds, unknown values and additive fields, without another status
-  read. Missing, malformed or incompatible supplied JSON is an error, never free
-  capacity. The fixed table is `Item | Running | Waiting on owner | Since (UTC) | Next check`.
-  Orchestrator rows lead in record order as `your move[: <detail>]`; others retain order.
-  Running otherwise uses Waiting on, else Kind; owner rows use `—`. Launches use
-  Started/Next check, others Since/Next check. A final `status: done`
-  overrides stale rows with `turn ended; read report`, owner `—`, Started and
-  `read [<report>](<report>)` until consumption. No prose classifies owner work; elapsed time invents no deadline.
-- **Special rows:** expedited Item starts with `expedited`, Evidence links its
-  Answered entry and PR, Waiting on names who moves next. A time-bounded
-  grant uses `launch: <workers>` and its bound event under Watches/Next check. Remove
-  reporting workers; at the last report or bound, end/log the grant, tell the
-  maintainer and remove its row, preserving plan/decision/chore tracking.
-
-Repair named missing fields/tables, invalid Waiting on/Watches and conflicting expectations;
-a missing report is incomplete, not invalid. Empty work tables keep incoming-only coverage.
+List tracked Repositories and, under Active, one line per active plan, proposals
+included, starting with its directory. `Orchestrator:` names only the current
+session; history lives in `log.md`. Move a closed plan's line under Closed, dated.
+Launch capacity comes from Scriptorium status; keep no workbench launch caps.
 
 ## `inbox.md`
 
-One entry per open owner decision across plans: question, plan, source link,
-opening date and recommendation. Notifications/chores live in `now.md`; only the
-orchestrating agent writes this inbox. Separate open entries from Answered history.
+One `### <question>` entry per open owner decision or chore across plans, under
+`## Open`: a `Plan: <plan>/<row>` line, source link, opening date and recommendation.
+Only the orchestrating agent writes this inbox. Answered history goes under `## Answered`.
 On handover move Answered entries intact to `inbox-archive.md`.
 After a rule update, including takeover, reconcile all open entries against it;
 repair missing context/recommendations from records, naming unavailable facts.
@@ -166,10 +105,12 @@ with amendments. Plan fields and tables:
 # <Plan title>
 
 **Goal:** <outcome>
-**Done means:** <observable ending state>
 **Approval:** <date, owner approval link and Preapproves scope>
 **Specifications:** <issue links>
 **Close reviews:** retro; <skill and repository, adding done <file> when complete>
+**Done means:**
+
+1. <one observable clause per line, ending met <evidence link> once it holds>
 
 ## Tickets
 
@@ -189,10 +130,12 @@ with amendments. Plan fields and tables:
 New row codes are one to three whole English words, hyphenated (e.g. `intake` or
 `release-standards`), anchored in Item and cited by that anchor. Existing codes
 stay until their rows end; grill decision codes stay, always linked to their record. Keep rows for the plan's life: splits add rows,
-merges point rows at one issue, only the owner drops one. Every row ends with a
-closed Issue, `moved`, `dropped (owner)`, or an expedited row's merged PR in State.
-State holds its latest step/session/PR, including `triaged <file>` or `grilled <file>`
-completion marks; expedited states start with `expedited`. Close only after every Done-means clause has evidence; end remaining open rows as `moved` or `dropped (owner)` as the Close reference says.
+merges point rows at one issue, only the owner drops one. A row ends when its State
+starts with `closed` (its issue), `merged` (an expedited row's PR), `moved` or `dropped (owner)`;
+status watches every issue and PR linked on other rows. A launch brief is a plan-directory file with a
+`Launch report: <path>` line, absolute or relative to that directory; its report finishes at its exact
+final `status: done` line. Consume a report by naming its file in `log.md`, only then, with the row's new state. State holds its latest step/session/PR, including `triaged <file>` or `grilled <file>`
+completion marks; expedited states start with `expedited`. Close only once every Done-means clause is met; end remaining open rows as `moved` or `dropped (owner)` as the Close reference says.
 Count/report open issues at start/close with no limit. Append to `log.md`, never rewrite: record every plan-filed issue with repository,
 number and creation evidence, including one a run opens outside the goal; retain each factory/direct run's issue, run and PR. Date entries from the UTC
 clock (`date -u +%Y-%m-%dT%H:%MZ`), never by hand.

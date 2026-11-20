@@ -1,9 +1,9 @@
 # Close
 
-Close a plan once every Done-means clause has evidence (an issue, pull
-request, release or recorded owner confirmation); rows still open then end as
-`moved`, their issues set to `priority:low`, or `dropped (owner)`. Take these
-steps in order.
+Close a plan once every Done-means clause is met, its line ending with its
+evidence (an issue, pull request, release or recorded owner confirmation); rows
+still open then end as `moved`, their issues set to `priority:low`, or
+`dropped (owner)`. Take these steps in order.
 
 ## Reconcile the plan's issues
 

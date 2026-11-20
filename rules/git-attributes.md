@@ -8,7 +8,7 @@ installed skill directories, including the triage skill's installed
 `.agents/skills/triage/ready.mjs` readiness helper, the code-review skill's
 installed `.agents/skills/code-review/ownership-facts.mjs` ownership facts
 and the orchestrate skill's installed
-`.agents/skills/orchestrate/wait.mjs` event wait. Reassess the installed
+`.agents/skills/orchestrate/workbench.mjs` status and wait. Reassess the installed
 inventory when updating to a selection that adds, retires or relocates runtime
 code. Paths
 Linguist's default vendor list already excludes,

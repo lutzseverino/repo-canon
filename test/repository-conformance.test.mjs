@@ -1341,12 +1341,11 @@ test("only workbench installs its owner-facing skills, while Canon retains the c
     "CREDITS.md",
     "SKILL.md",
     "agents/openai.yaml",
-    "records.mjs",
     "references/close.md",
     "references/intake.md",
     "references/launches.md",
     "references/templates.md",
-    "wait.mjs",
+    "workbench.mjs",
   ]);
   const frontmatter =
     /^---\n([\s\S]*?)\n---\n/.exec(

@@ -25,14 +25,11 @@ Broken rules or contracts and parking an idea follow the guide's Findings rule, 
 
 ## Grill queue
 
-Schedule agreed ideas, `state:grill` issues and routed review candidates. Keep one grill
-open with the owner; others wait in `now.md`'s In flight on the orchestrating agent,
-by plan order then age. Merge same-plan items. Owner-requested grills open at once,
-whatever is open. Use [Grill](launches.md#grill) when it can start.
-Record each queued grill's wake mechanism (e.g. open grill completion) in Watches;
-it is not owner-only. Launched grills get a Waiting on you row linking questions,
-with Since and Next check `owner answers, at your pace`; status shows the owner wait.
-Reuse its session across observations and takeover.
+Schedule agreed ideas, `state:grill` issues and routed review candidates as plan rows.
+Keep one grill open with the owner; others wait on their rows, by plan order then age.
+Merge same-plan items. Owner-requested grills open at once, whatever is open. Use
+[Grill](launches.md#grill) when it can start; status shows it Running until its report
+ends. Reuse its session across observations and takeover.
 
 ## Filed requests and reports
 

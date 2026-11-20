@@ -180,7 +180,8 @@ involve real alternatives.
   amends ADR 0033.
 - [Budget the computed read set, not files' lines](0048-budget-the-computed-read-set.md):
   bytes over what each entry-point skill makes an agent read, against the
-  base branch.
+  base branch; its wait-script and records-module decisions are superseded by
+  #1215's `workbench` script.
 - [Show one-way changes as animatics in the pull request body](0049-show-one-way-changes-as-animatics.md):
   a one-way change's pull request body carries a narrated video made with the
   owned `animatic` skill, enforced by the pull request metadata check; the

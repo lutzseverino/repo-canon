@@ -811,7 +811,7 @@ for (const [
         const skill = ".agents/skills/orchestrate";
         assert.ok(existsSync(join(project, skill, "SKILL.md")));
         if (baselineVersion === orchestrateVersion)
-          assert.ok(existsSync(join(project, skill, "wait.mjs")));
+          assert.ok(existsSync(join(project, skill, "workbench.mjs")));
         if (authoring || edited) {
           if (authoring) {
             for (const file of ["SKILL.md", "CREDITS.md"])
@@ -825,8 +825,7 @@ for (const [
               readFileSync(join(root, skill, "agents/openai.yaml")),
             );
             for (const file of [
-              "wait.mjs",
-              "records.mjs",
+              "workbench.mjs",
               "references/close.md",
               "references/intake.md",
               "references/launches.md",

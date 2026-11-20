@@ -52,8 +52,8 @@ Write the record into the launch report, with evidence links for:
   or skill, use the source repository named by the Repository Standards
   adoption record's Selection; never edit an adopter's copy. Link an existing
   issue for a recurring lesson, or reopen it when closed.
-- **Owner setup outside repositories:** record an owner chore in `now.md`'s
-  Waiting on you, linking its evidence.
+- **Owner setup outside repositories:** record an owner chore as an open
+  `inbox.md` entry, linking its evidence.
 - **One-off:** retain its evidence in the retro record.
 
 Complete the report under the launch-report protocol. The orchestrating agent
@@ -81,10 +81,10 @@ Paths are relative to the workbench or the responsible repository.
   records only when the supplied plan and orchestrate's format establish it.
 - `<plan>/retro.md`: the previous retro selected through the index. If missing,
   record the unavailable comparison.
-- `inbox.md` and `inbox-archive.md`: owner answers and recommendations. If either
-  is missing, report the unavailable counts rather than infer answers.
-- `now.md`: owner chores. If missing, create it under orchestrate's format when
-  a lesson calls for a chore.
+- `inbox.md` and `inbox-archive.md`: owner answers, recommendations and
+  chores. If either is missing, report the unavailable counts rather than infer
+  answers; create `inbox.md` under orchestrate's format when a lesson calls for
+  a chore.
 - The header's cited issues, PRs, comments and run records, and the responsible
   repositories' open issues: primary evidence and duplicate comparison. If
   missing or inaccessible, record that limit and any unfiled lesson with its
