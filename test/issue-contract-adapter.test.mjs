@@ -62,6 +62,8 @@ async function exercise(
     failurePath,
     bodyLastEditedAt = null,
     triageResult,
+    validatorLogin = "github-actions[bot]",
+    viewerFailure,
   } = {},
 ) {
   const root = await mkdtemp(join(tmpdir(), "postern-issue-"));
@@ -116,6 +118,17 @@ async function exercise(
       });
     if (failure && (!failurePath || failurePath(path, body)))
       return json({ message: `Read failed fixture-credential` }, failure);
+    if (path === "/graphql" && body.query.includes("TriageActingAccount")) {
+      if (viewerFailure)
+        return json({ message: "Viewer unavailable" }, viewerFailure);
+      return json({
+        data: {
+          viewer: validatorLogin.endsWith("[bot]")
+            ? { __typename: "Bot", login: validatorLogin.slice(0, -5) }
+            : { __typename: "User", login: validatorLogin },
+        },
+      });
+    }
     if (path === "/graphql") {
       const number = body.variables.number;
       const source = number === 42 ? current : parent;
@@ -201,7 +214,7 @@ async function exercise(
         comment({
           id: 99,
           body: body.body,
-          user: account("github-actions[bot]"),
+          user: account(validatorLogin),
         }),
         201,
       );
@@ -257,6 +270,8 @@ async function exercise(
           triageResult,
           undefined,
           resolveBoundary,
+          undefined,
+          validatorLogin,
         );
       }
     } else {
@@ -1438,4 +1453,82 @@ test("the adapter uses live repository labels to attribute renamed workflow hist
     );
     assert.doesNotMatch(body, /needs-triage/);
   }
+});
+
+test("the neutral entry point reuses its runner account's versioned result", async (t) => {
+  const command = (
+    await import(installedValidator(t, "vendor/repo-canon/validate.mjs"))
+  ).main;
+  const result = await exercise(t, {
+    command,
+    validatorLogin: "contract-runner[bot]",
+    issue: { body: ticketBody, labels: ["state:triage"] },
+    comments: [
+      {
+        ...awaitingTicketFeedback({ number: 42, body: ticketBody }),
+        id: 17,
+        user: { login: "contract-runner[bot]" },
+      },
+    ],
+  });
+  assert.equal(result.error, undefined);
+  const update = result.requests.find(({ method }) => method === "PATCH");
+  assert.ok(update, "the runner updates its own earlier notice");
+  assert.equal(update.path, `/repos/${repository}/issues/comments/17`);
+  assert.match(
+    update.body.body,
+    /"format":"repo-canon\/issue-contract-state\/v1"/,
+  );
+  assert.equal(
+    result.requests.some(({ path }) => path.includes("/actions/variables/")),
+    false,
+  );
+});
+
+test("only the runner's own readiness trigger skips the timeline wait", async (t) => {
+  for (const login of ["contract-runner[bot]", "worker[bot]"]) {
+    const pauses = [];
+    const result = await exercise(t, {
+      validatorLogin: "contract-runner[bot]",
+      issue: { body: ticketBody, labels: ["state:ready"] },
+      event: {
+        action: "labeled",
+        label: { name: "state:ready" },
+        sender: account(login),
+      },
+      pause: async (milliseconds) => {
+        pauses.push(milliseconds);
+      },
+      events: [],
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(pauses.length === 0, login === "contract-runner[bot]");
+  }
+});
+
+test("the neutral entry point fails before writes when its acting login cannot be resolved", async (t) => {
+  const command = (
+    await import(installedValidator(t, "vendor/repo-canon/validate.mjs"))
+  ).main;
+  const result = await exercise(t, { command, viewerFailure: 403 });
+  assert.ok(result.error);
+  assert.match(result.error.message, /Viewer unavailable/);
+  assert.deepEqual(writes(result), []);
+});
+
+test("the Actions adapter needs neither a viewer read nor repository-variables access", async (t) => {
+  const result = await exercise(t, {
+    issue: { body: ticketBody, labels: ["state:triage"] },
+    viewerFailure: 403,
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.code, 0);
+  assert.equal(
+    result.requests.some(
+      ({ path, body }) =>
+        path.includes("/actions/variables/") ||
+        body?.query?.includes("TriageActingAccount"),
+    ),
+    false,
+  );
 });

@@ -2,6 +2,7 @@
 
 import { readFile } from "node:fs/promises";
 import { connect } from "../../vendor/postern/postern.mjs";
+import { actionsValidatorLogin } from "../../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   validate,
   executedAsScript,
@@ -74,6 +75,7 @@ export async function githubValidation(
     (reference) => trackerFor(reference.repository).issue(reference.number),
     options.resolveBoundary,
     trackerFor,
+    { validatorLogin: actionsValidatorLogin },
   );
 }
 

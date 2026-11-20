@@ -5,6 +5,7 @@ import {
   contractCutoffInventory,
   issueContractResult,
   readIssueContractObservation,
+  readTrustedResultAccount,
 } from "../vendor/repo-canon/validate-issue-contract.mjs";
 import {
   captureContractCutoff,
@@ -59,12 +60,13 @@ export async function main(
       number ?? 0,
       configuration,
     );
+    const resultAccount = await readTrustedResultAccount(connection);
     let result = null;
     if (number) {
       const issue = await connection.issueTracker.issue(number);
       const comments = await connection.issueTracker.comments(number);
       const events = await connection.issueTracker.labelChanges(number);
-      const { state } = issueContractResult(comments);
+      const { state } = issueContractResult(comments, resultAccount.login);
       result = {
         state,
         current:
@@ -76,6 +78,7 @@ export async function main(
                 issue,
                 comments,
                 events,
+                resultAccount.login,
               ))
             : null,
       };
@@ -87,6 +90,7 @@ export async function main(
           cutoff: facts.cutoff ?? null,
           receipt: facts.receipt ?? null,
           result,
+          resultAccount,
         },
         null,
         2,

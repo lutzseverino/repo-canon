@@ -90,6 +90,16 @@ async function exercise(options = {}, command = main) {
     const method = init.method ?? "GET";
     const body = init.body ? JSON.parse(init.body) : null;
     requests.push({ method, path: url.pathname, body });
+    if (url.pathname.endsWith("/actions/variables/REPO_CANON_RUNNER_ACCOUNT"))
+      return options.runnerAccount
+        ? json({
+            name: "REPO_CANON_RUNNER_ACCOUNT",
+            value: options.runnerAccount,
+          })
+        : json(
+            { message: "Variable unavailable" },
+            options.variableFailure ?? 404,
+          );
     if (options.failure)
       return json({ message: "Fixture failure" }, options.failure);
     if (url.pathname === "/user")
@@ -309,7 +319,10 @@ async function exercise(options = {}, command = main) {
         // The current result format unless the fixture asks for another,
         // or for the earlier unversioned line.
         body: `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${JSON.stringify(options.legacy ? state : { format: options.format ?? resultFormat, ...state, ...v2 })} -->\n${heading}`,
-        user: { login: "github-actions[bot]", type: "Bot" },
+        user: {
+          login: options.resultAuthor ?? "github-actions[bot]",
+          type: "Bot",
+        },
         created_at: time,
         updated_at: time,
       };
@@ -1488,3 +1501,39 @@ test("source and installed commands keep their refusals for approved readiness",
     }
   }
 });
+
+test("readiness accepts the runner's result when the repository variable names it", async () => {
+  const result = await exercise({
+    runnerAccount: "contract-runner[bot]",
+    resultAuthor: "contract-runner[bot]",
+    v2: true,
+  });
+  assert.equal(result.code, 0, result.error?.message);
+  assert.equal(result.error, undefined);
+});
+
+for (const variableFailure of [404, 403, 500]) {
+  test(`variable response ${variableFailure} retains Actions trust and refuses runner results`, async () => {
+    const accepted = await exercise({ variableFailure, v2: true });
+    assert.equal(accepted.code, 0, accepted.error?.message);
+    const refused = await exercise({
+      variableFailure,
+      resultAuthor: "contract-runner[bot]",
+    });
+    assert.equal(writes(refused).length, 0);
+    assert.match(refused.error.message, /notice is missing/);
+    if (variableFailure !== 404)
+      assert.match(refused.error.message, /Variables: read/);
+  });
+}
+
+for (const resultAuthor of ["github-actions[bot]", "worker[bot]"]) {
+  test(`configured runner trust ignores a result by ${resultAuthor}`, async () => {
+    const result = await exercise({
+      runnerAccount: "contract-runner[bot]",
+      resultAuthor,
+    });
+    assert.match(result.error.message, /notice is missing/);
+    assert.equal(writes(result).length, 0);
+  });
+}

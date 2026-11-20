@@ -3,6 +3,8 @@
 import { setTimeout as wait } from "node:timers/promises";
 import { factorySkipLabel } from "../../../operations/lib/factory-labels.mjs";
 import {
+  actingLogin,
+  readTrustedResultAccount,
   contractFootprint,
   footprintRefusal,
   issueContractResult,
@@ -18,7 +20,6 @@ import {
   connectionFor,
   executedAsScript,
   pinnedFiles,
-  requestData,
 } from "../babysit/platform.mjs";
 
 // The validator binds one ready label; a companion carries no other state.
@@ -51,49 +52,26 @@ async function modelPolicy(connection) {
   }
 }
 
-// The authenticated login, whose own readiness event the validator's verdict
-// must approve. /user excludes installation tokens, so ask GraphQL.
-async function actingLogin(connection) {
-  const identity = await requestData(connection, {
-    method: "POST",
-    path: "/graphql",
-    body: {
-      query: "query TriageActingAccount { viewer { __typename login } }",
-    },
-  });
-  const viewer = identity?.data?.viewer;
-  if (
-    identity?.errors?.length ||
-    !["User", "Bot"].includes(viewer?.__typename) ||
-    typeof viewer.login !== "string" ||
-    !viewer.login.trim()
-  )
-    throw new Error("Could not identify the readiness acting account.");
-  // GraphQL omits the "[bot]" suffix that REST logins and events carry.
-  return viewer.__typename === "Bot" && !viewer.login.endsWith("[bot]")
-    ? `${viewer.login}[bot]`
-    : viewer.login;
-}
-
-async function snapshot(connection, number) {
+async function snapshot(connection, number, validatorLogin) {
   const tracker = connection.issueTracker;
   const issue = await tracker.issue(number);
   const comments = await tracker.comments(number);
   const events = await tracker.labelChanges(number);
   // The validator's own reader interprets its published result.
-  const result = issueContractResult(comments);
+  const result = issueContractResult(comments, validatorLogin);
   const current =
-    (result.state?.format === "repo-canon/issue-contract-state/v2" ||
-     result.state?.baseFormat === "repo-canon/issue-contract-state/v2")
+    result.state?.format === "repo-canon/issue-contract-state/v2" ||
+    result.state?.baseFormat === "repo-canon/issue-contract-state/v2"
       ? result.state.observation ===
         (await readIssueContractObservation(
           connection,
           issue,
           comments,
           events,
+          validatorLogin,
         ))
       : true;
-  return { issue, events, current, ...result };
+  return { issue, events, current, validatorLogin, ...result };
 }
 
 // The validator's refusal of a new grant, checked before any label write,
@@ -117,10 +95,10 @@ async function grantRefusal(connection, { issue, state }) {
 }
 
 // Whether the result has observed the latest readiness change.
-const processed = ({ state, events, current }) =>
+const processed = ({ state, events, current, validatorLogin }) =>
   current &&
   (state?.observedEventId ?? state?.reviewEventId ?? null) ===
-    observedChangeId(events);
+    observedChangeId(events, validatorLogin);
 
 function parentNeedsReapply({ issue, events }, label) {
   if (
@@ -230,15 +208,42 @@ export async function main(
   pause = wait,
   now = Date.now,
 ) {
-  const { number, revision, companions, repository } = argumentsFor(argv);
-  connection ??= connectionFor(repository);
+  const args = argumentsFor(argv);
+  connection ??= connectionFor(args.repository);
+  const resultAccount = await readTrustedResultAccount(connection);
+  try {
+    return await applyReadiness(
+      args,
+      argv,
+      connection,
+      pause,
+      now,
+      resultAccount.login,
+    );
+  } catch (error) {
+    if (resultAccount.error)
+      throw new Error(`${error.message}\n${resultAccount.error}`, {
+        cause: error,
+      });
+    throw error;
+  }
+}
+
+async function applyReadiness(
+  { number, revision, companions },
+  argv,
+  connection,
+  pause,
+  now,
+  validatorLogin,
+) {
   const login = await actingLogin(connection);
   const prefix = await modelPolicy(connection);
   const isModel = (name) => prefix !== null && name.startsWith(prefix);
   let before;
   let refusalChecked = false;
   for (;;) {
-    before = await snapshot(connection, number);
+    before = await snapshot(connection, number, validatorLogin);
     if (
       prefix !== null &&
       !before.issue.subIssues.length &&
@@ -310,7 +315,7 @@ export async function main(
   await provisionLabels(connection, prefix, companions);
   await connection.issueTracker.addLabels(number, [...companions, readyLabel]);
   for (;;) {
-    const current = await snapshot(connection, number);
+    const current = await snapshot(connection, number, validatorLogin);
     checkContract(current, revision);
     const own = current.events.findLast(
       (event) =>

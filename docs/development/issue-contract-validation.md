@@ -244,7 +244,7 @@ malformed reviews read as no result.
 ## Published result
 
 The validator's result on an issue is its feedback comment: the latest comment
-by `github-actions[bot]` containing `<!-- repo-canon:issue-contract-feedback -->`.
+by its acting account containing `<!-- repo-canon:issue-contract-feedback -->`.
 Its second line, `<!-- repo-canon:issue-contract-state {…} -->`, holds one JSON
 object in a published format. The factory reads that result instead of
 interpreting contracts, as
@@ -252,6 +252,36 @@ interpreting contracts, as
 decides, and the `triage` readiness command reads it through the validator's
 exported `issueContractResult`. A marked comment by any other account, person
 or bot, is not a result.
+
+The validator identifies its own results by its acting login at all six sites:
+previous feedback, readiness-trigger senders, its label removals, its
+`state:triage` fallback, the saved body-mode notice author, and feedback
+excluded from the v2 observation digest. On Actions the trusted trigger supplies
+`github-actions[bot]` without a platform read. Off Actions the neutral entry
+point resolves the token's GraphQL viewer, including the REST `[bot]` suffix for
+App accounts, and fails before writes if identity cannot be resolved. The
+validator never reads a repository variable.
+
+Readers resolve trust separately through `readTrustedResultAccount(connection)`.
+It reads the repository-variables endpoint for `REPO_CANON_RUNNER_ACCOUNT`:
+
+- Success trusts the variable's value, a REST account login.
+- Not found means unset and trusts `github-actions[bot]`.
+- Every other failure, including HTTP 403, trusts only `github-actions[bot]`
+  and returns the failed-read diagnostic to the caller. An empty or malformed
+  successful response also adds no trusted account.
+
+The readiness command and cutoff inspection/inventory pass that account to
+`issueContractResult` and use it when computing the observation digest. With
+an override, earlier Actions results and worker-posted results are ignored.
+When readiness refuses after a failed variable read, its error names the
+caller's missing **Variables: read** permission. With an Actions-authored
+result, readiness still works without that permission. A runner result needs
+readable configuration naming the runner. The reader is also the shared
+interface for the merge gate's runner support.
+
+At `self-reported`, nobody posts contract results: the owner applies readiness.
+Without a validator notice, the readiness command reports that it is missing.
 
 Scriptorium v2.3.0's factory host remains compatible with this result. Its
 reader checks `status`, `revision`, `label`, `reviewEventId` and `reviewer`,
@@ -422,7 +452,7 @@ recorded review.
 
 GitHub can deliver a `labeled` webhook before its issue-event timeline records
 that label event. A human readiness trigger is a `labeled` event for
-`state:ready` by a sender other than `github-actions[bot]`, while its
+`state:ready` by a sender other than the validator's acting login, while its
 re-fetched issue still carries the label. The timeline
 records the trigger only when the checked label's latest recorded application,
 by anyone, was made by that sender and is that label's latest recorded change.
@@ -687,7 +717,7 @@ workflow states is never a structural error.
   applied with the issue at creation, such as a form label, is removed. A label
   applied at creation is one the issue was opened with or whose application
   carries the issue's creation timestamp. The validator's own `state:triage`
-  application (actor `github-actions[bot]`) is a fallback for a stateless issue
+  application (actor the validator's acting login) is a fallback for a stateless issue
   and never supersedes this readiness: it is removed even when the timeline
   records it after the review. This also handles an opening run that read a
   bare snapshot and wrote its fallback after an authorized creation review.
@@ -901,7 +931,10 @@ for ports that use named sections.
 For a standalone run, `node vendor/repo-canon/validate.mjs <neutral-input.json>` reads
 a neutral object with `kind: "issue-contract"`, a Postern repository identity
 or remote URL in `repository`, and a normalized `event`. The command uses
-`POSTERN_TOKEN` as its supplied credential. The trusted GitHub trigger instead
+`POSTERN_TOKEN` as its supplied credential. At `runner`, run it with the
+runner account's token; it posts the same versioned result as the workflow.
+Set `REPO_CANON_RUNNER_ACCOUNT` to that account so readers accept it. Event
+delivery and scheduling remain the caller's responsibility. The trusted GitHub trigger instead
 passes its workflow credential and normalized event to the same dispatch
 interface. Neither path substitutes a later event snapshot for current port
 reads. The PR metadata path uses `kind: "pr-metadata"` and
