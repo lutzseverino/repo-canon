@@ -1754,6 +1754,96 @@ The operator relays these in order, one turn at a time, and runs each order from
 }
 
 {
+  const skills = [
+    "triage",
+    "grill-with-docs",
+    "orchestrate",
+    "grilling",
+    "domain-modeling",
+    "research",
+    "prototype",
+  ];
+  const root = createRepository("front-door", skills, {
+    profile: "factory",
+    agents: readFileSync(join(sourceRoot, "AGENTS.md"), "utf8"),
+    context:
+      "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination, with the UTC time of delivery.\n_Avoid_: Receipt record\n\n**Receipts page**:\nThe page where a recipient sees their Delivery receipts.\n",
+    exercise: `## Task
+
+Operator-only: never point the session at this file. A session that reads it is a recorded exercise limit. Run eight fresh sessions, one per request and route, each from a fresh build. Give each session only the preamble and one request below. For the route with a running orchestrator, the preamble also says: "For this exercise only, my user-level instructions say: The orchestrating agent's workbench is <absolute path of the workbench in manifest.json>." For the route without one, it names no workbench. All tracker, workbench and owner inputs are local simulations.
+
+Preamble: "This is a local simulation in <this repository's absolute path>. Use only the local Markdown tracker. No remote issue, PR, message, schedule or factory operation is authorized."
+
+1. Idea: "I've been thinking: recipients could confirm a Delivery receipt with a photo of the parcel at the door."
+2. Filed bug: "I filed .scratch/receipts/issues/02-export-shifts-late-receipts.md this morning. Can you deal with it?"
+3. UI question: "Should the receipts page show delivery times in the recipient's local time or in UTC? Which would look better?"
+4. Status: "What's going on?"
+
+## Expected outcome
+
+The session reads AGENTS.md's Agent skills routing and the installed Canonical stages. For the idea, it discusses it and proposes a grill, filing nothing unless asked. For the filed bug, it proposes triage. For the UI question, it proposes a grill. For "What's going on?", it answers read-only from the tracker and, with an orchestrator, from the workbench records. No session starts triage, grill-with-docs or orchestrate without the person's yes. With an orchestrator, the session reads it from the workbench index.md and offers to report through incoming/, writing nothing there unless asked. After each case, record git status --porcelain in this repository and in the workbench: the status cases leave both clean with no tracker write, and any change in another case is an observed write to report. Allow at most ten minutes per session. Report observed outcomes with the pull request that needs them, separately from fixture checks.
+`,
+  });
+  cpSync(
+    join(sourceRoot, ".scriptorium/config.json"),
+    join(root, ".scriptorium/config.json"),
+  );
+  write(
+    root,
+    "docs/usage/receipts.md",
+    "# Delivery receipts\n\nThe nightly export writes the previous UTC date's Delivery receipts as CSV, ordered by Parcel reference, with ISO 8601 UTC timestamps. The receipts page lists a recipient's Delivery receipts with their UTC delivery times.\n",
+  );
+  write(
+    root,
+    ".scratch/receipts/issues/01-show-receipts-page.md",
+    "# 01: Show recipients their Delivery receipts\n\nStatus: state:ready\nLabels: type:enhancement, state:ready, model:claude-opus-5-5, priority:normal\nBlocked by: None\n\n## What to build\n\nA receipts page listing a recipient's Delivery receipts, newest first, with each UTC delivery time.\n\n## Acceptance criteria\n\n- [ ] The page lists the signed-in recipient's Delivery receipts, newest first.\n- [ ] Each receipt shows its UTC delivery time.\n",
+  );
+  write(
+    root,
+    ".scratch/receipts/issues/02-export-shifts-late-receipts.md",
+    "# 02: Nightly export lists late-evening receipts under the next day\n\nStatus: state:triage\nLabels: type:bug\nAuthor: owner\n\nA Delivery receipt recorded at 23:30 UTC on 2026-11-03 appears in the export for 2026-11-04, not 2026-11-03. docs/usage/receipts.md says the export covers the previous UTC date.\n",
+  );
+  const workbench = join(fixtureRoot, "front-door-workbench");
+  mkdirSync(workbench);
+  write(
+    workbench,
+    "index.md",
+    "# Workbench\n\n## Repositories\n\n- receipts (the front-door exercise project)\n\n## Active\n\n- `receipts-page/`: show recipients their Delivery receipts. Owner: orchestrator-1 (simulated, running).\n\n## Closed\n",
+  );
+  write(workbench, "inbox.md", "# Decision inbox\n\nNo open decisions.\n");
+  write(workbench, "wishes.md", "# Wishes\n");
+  write(
+    workbench,
+    "now.md",
+    "# Now\n\n## Waiting on you\n\n0 open decisions in `inbox.md`.\n\n| Item | Decision/owner action | Since (UTC) | Next check |\n| ---- | --------------------- | ----------- | ---------- |\n\n## In flight\n\n| Item | Waiting on | Since (UTC) | Next check | Evidence | Watches |\n| ---- | ---------- | ----------- | ---------- | -------- | ------- |\n\n## Running launches\n\n| Host | Kind | Session | Started (UTC) | Item | Report | Next check |\n| ---- | ---- | ------- | ------------- | ---- | ------ | ---------- |\n",
+  );
+  write(
+    workbench,
+    "receipts-page/plan.md",
+    "# Receipts page\n\n**Goal:** recipients see their Delivery receipts.\n**Done means:** ticket 01 merged.\n**Approval:** 2026-11-02, controlled approval in the exercise setup (simulated). Preapproves: ticket 01.\n**Close reviews:** retro; `improve-codebase-architecture` in receipts\n\n## Tickets\n\n| Item | Repository | Issue | State |\n| ---- | ---------- | ----- | ----- |\n| Show the receipts page | receipts | #1 | ready, waiting for the factory |\n\n## Open issues\n\n| Repository | At start | At close |\n| ---------- | -------- | -------- |\n| receipts | 1 | |\n\n## Current state\n\nTicket 01 is ready; the factory has not picked it up yet.\n",
+  );
+  write(
+    workbench,
+    "receipts-page/log.md",
+    "# Receipts page log\n\n- 2026-11-02T10:00Z Plan approved (simulated exercise setup).\n- 2026-11-02T10:05Z Filed receipts#1 and recorded its readiness (simulated).\n",
+  );
+  // Sessions report through incoming/, so it exists and starts empty.
+  mkdirSync(join(workbench, "incoming"));
+  initializeFixtureRepository(workbench, {
+    author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
+  });
+  repositories["front-door"] = {
+    path: root,
+    skills,
+    initial: commit(root, "chore: establish front-door exercise"),
+    workbench: {
+      path: workbench,
+      initial: commit(workbench, "chore: initialize front-door workbench"),
+    },
+  };
+}
+
+{
   const root = createRepository("session-naming", [], {
     agents: readFileSync(join(sourceRoot, "AGENTS.md"), "utf8"),
     context:
