@@ -51,9 +51,12 @@ export async function validate(
   );
 }
 
+const checkContexts = { runner: "Runner checks", review: "Review rerun" };
+
 async function runCheckCommand(input, connection, credential) {
   if (
-    !["runner", "review"].includes(input.role) ||
+    typeof input.role !== "string" ||
+    !Object.hasOwn(checkContexts, input.role) ||
     !/^[a-f0-9]{40}$/.test(input.head) ||
     typeof input.checkout !== "string" ||
     !input.checkout.trim() ||
@@ -67,7 +70,7 @@ async function runCheckCommand(input, connection, credential) {
     throw new Error(
       "Provide the posting credential to check-command validation.",
     );
-  const context = input.role === "runner" ? "Runner checks" : "Review rerun";
+  const context = checkContexts[input.role];
   const head = execFileSync("git", ["rev-parse", "HEAD"], {
     cwd: input.checkout,
     encoding: "utf8",

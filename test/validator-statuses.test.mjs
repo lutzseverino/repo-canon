@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import {
   mkdtempSync,
   writeFileSync,
@@ -12,6 +11,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 import { installedValidator } from "./helpers/installed-validator.mjs";
+import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import { main, validate } from "../vendor/repo-canon/validate.mjs";
 import { connect } from "../vendor/postern/postern.mjs";
 import { validatePullRequestMetadata } from "../.github/scripts/validate-pr-metadata.mjs";
@@ -117,17 +117,15 @@ test("PR number input posts the existing metadata verdict on the head read from 
 
 function checkout(directory) {
   const git = (...args) =>
-    execFileSync("git", args, {
-      cwd: directory,
-      encoding: "utf8",
-      timeout: 15_000,
-    });
+    execFixtureGit(args, { cwd: directory, timeout: 15_000 });
   git("init", "--quiet");
   git(
     "-c",
     "user.name=Fixture",
     "-c",
     "user.email=fixture@example.test",
+    "-c",
+    "commit.gpgsign=false",
     "commit",
     "--quiet",
     "--allow-empty",

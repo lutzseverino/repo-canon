@@ -175,7 +175,8 @@ source and license notices live beside the vendored ESM files.
 
 ## Entry points outside Actions
 
-The installed neutral command runs with Node.js 24 or 26 and no npm install:
+The installed neutral command runs with Node.js 24 or 26 and no npm install;
+check-command input also needs Git on `PATH`:
 
 ```sh
 node vendor/repo-canon/validate.mjs neutral-input.json
@@ -253,7 +254,10 @@ execution.
 
 The command inherits the environment except `POSTERN_TOKEN` and every variable
 whose value equals the posting token. This also removes a second copy under
-another name; other variables pass through unchanged. The runner host remains
+another name; other variables pass through unchanged. The filter covers only
+the command's environment: the command runs as the entry point's operating
+system user, so it can still read the entry point's own process environment,
+for example through `/proc/<pid>/environ` on Linux. The runner host remains
 responsible for credentials stored elsewhere and for running the trusted entry
 point independently of the pull request's command.
 
