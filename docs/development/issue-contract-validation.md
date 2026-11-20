@@ -266,10 +266,11 @@ Readers resolve trust separately through `readTrustedResultAccount(connection)`.
 It reads the repository-variables endpoint for `REPO_CANON_RUNNER_ACCOUNT`:
 
 - Success trusts the variable's value, a REST account login.
-- Not found means unset and trusts `github-actions[bot]`.
-- Every other failure, including HTTP 403, trusts only `github-actions[bot]`
-  and returns the failed-read diagnostic to the caller. An empty or malformed
-  successful response also adds no trusted account.
+- Not found, HTTP 404 only, means unset and trusts `github-actions[bot]`.
+- Every other failure, including HTTP 403 and 410, trusts only
+  `github-actions[bot]` and returns the failed-read diagnostic to the caller.
+  An empty or malformed successful response also adds no trusted account; its
+  diagnostic says the variable names no login.
 
 The readiness command and cutoff inspection/inventory pass that account to
 `issueContractResult` and use it when computing the observation digest. With

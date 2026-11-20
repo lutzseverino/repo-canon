@@ -1512,7 +1512,7 @@ test("readiness accepts the runner's result when the repository variable names i
   assert.equal(result.error, undefined);
 });
 
-for (const variableFailure of [404, 403, 500]) {
+for (const variableFailure of [404, 403, 410, 500]) {
   test(`variable response ${variableFailure} retains Actions trust and refuses runner results`, async () => {
     const accepted = await exercise({ variableFailure, v2: true });
     assert.equal(accepted.code, 0, accepted.error?.message);
@@ -1526,6 +1526,37 @@ for (const variableFailure of [404, 403, 500]) {
       assert.match(refused.error.message, /Variables: read/);
   });
 }
+
+test("a blank runner variable retains Actions trust without blaming the credential", async () => {
+  const refused = await exercise({
+    runnerAccount: " ",
+    resultAuthor: "contract-runner[bot]",
+  });
+  assert.equal(writes(refused).length, 0);
+  assert.match(refused.error.message, /names no account login/);
+  assert.doesNotMatch(refused.error.message, /Variables: read/);
+});
+
+test("a refusal after a parent's re-entry names the failed variable read once", async () => {
+  // The link follows this account's application, so readiness re-enters.
+  const link = "2026-10-25T12:00:04Z";
+  const options = {
+    variableFailure: 403,
+    parent: true,
+    linkTime: link,
+    after: {},
+    onWait({ phase, events }) {
+      if (phase !== "removed" || options.linkTime !== link) return;
+      // The fixture reuses its own event's ID; keep the first one distinct.
+      events.find(({ id }) => id === 300).id = 299;
+      options.linkTime = "2026-10-25T12:00:02Z";
+      options.after = { rejectionReason: "Not authorized for readiness." };
+    },
+  };
+  const result = await exercise(options);
+  assert.match(result.error?.message ?? "", /Not authorized for readiness/);
+  assert.equal(result.error.message.match(/Variables: read/g)?.length, 1);
+});
 
 for (const resultAuthor of ["github-actions[bot]", "worker[bot]"]) {
   test(`configured runner trust ignores a result by ${resultAuthor}`, async () => {

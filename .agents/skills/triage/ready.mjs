@@ -214,7 +214,6 @@ export async function main(
   try {
     return await applyReadiness(
       args,
-      argv,
       connection,
       pause,
       now,
@@ -230,13 +229,13 @@ export async function main(
 }
 
 async function applyReadiness(
-  { number, revision, companions },
-  argv,
+  args,
   connection,
   pause,
   now,
   validatorLogin,
 ) {
+  const { number, revision, companions } = args;
   const login = await actingLogin(connection);
   const prefix = await modelPolicy(connection);
   const isModel = (name) => prefix !== null && name.startsWith(prefix);
@@ -340,7 +339,8 @@ async function applyReadiness(
       if (parentNeedsReapply(current, readyLabel)) {
         await withdrawReadiness(connection, number, prefix, []);
         await pause(2000);
-        return main(argv, connection, pause, now);
+        // Re-enter below main, which already appends a failed read's note.
+        return applyReadiness(args, connection, pause, now, validatorLogin);
       }
       console.log(
         `Issue #${number}: ${readyLabel} approved at ${revision} by @${login}.`,

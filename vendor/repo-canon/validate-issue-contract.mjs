@@ -42,15 +42,14 @@ export const actionsValidatorLogin = "github-actions[bot]";
 // The repository owns the runner login. Readers share this resolution; the
 // validator never uses it to identify its own results.
 export async function readTrustedResultAccount(connection) {
+  let data;
   try {
-    const { data } = await connection.access.request({
+    ({ data } = await connection.access.request({
       path: `/repos/${connection.repository.path}/actions/variables/REPO_CANON_RUNNER_ACCOUNT`,
-    });
-    if (typeof data?.value !== "string" || !data.value.trim())
-      throw new Error("REPO_CANON_RUNNER_ACCOUNT has no account login.");
-    return { login: data.value, configured: true, error: null };
+    }));
   } catch (error) {
-    if (error instanceof PlatformError && error.reason === "notFound")
+    // Postern's notFound also covers 410 and 451; only 404 means unset.
+    if (error instanceof PlatformError && error.status === 404)
       return { login: actionsValidatorLogin, configured: false, error: null };
     return {
       login: actionsValidatorLogin,
@@ -58,6 +57,13 @@ export async function readTrustedResultAccount(connection) {
       error: `Could not read REPO_CANON_RUNNER_ACCOUNT; the caller's credential needs "Variables: read" on the repository. ${error.message}`,
     };
   }
+  if (typeof data?.value !== "string" || !data.value.trim())
+    return {
+      login: actionsValidatorLogin,
+      configured: false,
+      error: "REPO_CANON_RUNNER_ACCOUNT is set but names no account login.",
+    };
+  return { login: data.value, configured: true, error: null };
 }
 
 // /user excludes App installation tokens. GraphQL's Bot login omits the

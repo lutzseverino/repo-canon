@@ -70,7 +70,7 @@ Configure the repository before using runner results:
    its acting login from the supplied token. On Actions that login is
    `github-actions[bot]`, with no identity or variable read.
 
-A successful variable read trusts its value. Not found trusts
+A successful variable read trusts its value. Not found (HTTP 404) trusts
 `github-actions[bot]`; every other failure also trusts only that account and
 reports the read failure. A readiness refusal after a failed read names
 **Variables: read**. Actions results therefore need no new App permission;
