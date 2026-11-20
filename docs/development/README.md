@@ -56,10 +56,13 @@ execution work that remains separate; the
 covers the CLI 11 prerequisite and the migration from the retired runner
 variable.
 
-Run `pnpm validate`, focused tests for the changed behavior, and
-`git diff --check` before opening a PR. `pnpm validate` runs, in order,
-`pnpm run format:check`, `pnpm run lint`, `pnpm run check` (the `node --check`
-syntax check), `pnpm run typecheck`, and `pnpm test`.
+Before review, run `pnpm run format:check`, `pnpm run lint`,
+`pnpm run check` (the `node --check` syntax check), `pnpm run typecheck`, the
+test files the change touches, focused tests for the changed behavior, and
+`git diff --check`. A full local `pnpm validate` is not required: after those
+checks, workers rely on the hosted required `Test` check as the full-suite
+gate. `pnpm validate` runs, in order, `pnpm run format:check`,
+`pnpm run lint`, `pnpm run check`, `pnpm run typecheck`, and `pnpm test`.
 
 `pnpm run typecheck` runs `scripts/typecheck.mjs`, which runs TypeScript 7
 with `tsconfig.json`: `checkJs`, without `strict` and with Node.js 24's types,
@@ -86,8 +89,11 @@ byte for byte, every selected owned skill whole from `.agents/skills/`, and, apa
 from each skill's `CREDITS.md`, the upstream base's bytes for every skill and
 setup file identical to its base. It uses
 the release fixture's answers and a disposable source containing only declared
-inputs; GitHub HTTP responses and Git transport use local fixtures, with no
-in-tree factory dependency. The Git attributes guidance's worked block and the
+inputs; GitHub HTTP responses and the CLI's Git transport use local fixtures,
+with no in-tree factory dependency. To build that source, the test fetches the
+published release tags `v0.18.0`, `v0.19.0` and `v0.27.0` from
+`https://github.com/lutzseverino/repo-canon` with real Git, so it needs network
+access to GitHub. The Git attributes guidance's worked block and the
 release fixture must mark every `.mjs`, `.js` and `.sh` file that the standard
 and factory declarations install outside `vendor/`, `.github/` and
 `.repo-standards/`, and no repository-owned path. Standard/factory updates from
@@ -135,9 +141,12 @@ format, lint, syntax check, typecheck and all-profile source validation. Every
 job installs the public CLI once and reuses it through `REPO_STANDARDS_PREFIX`.
 The required `Test` check passes only when planning and every matrix job succeed;
 a failure, cancellation or skip fails it. `pnpm validate` and `pnpm test` still
-run the complete suite locally. This trades more hosted jobs and minutes for
-a shorter required check, accepted because Repo Canon is public and hosted
-minutes cost nothing. Lint uses oxlint's
+run the complete suite locally; as one process,
+`test/repository-wide-rules.test.mjs` alone takes about 59 minutes
+([measured](https://github.com/lutzseverino/repo-canon/issues/1237#issuecomment-7045825504)
+on 2026-11-20). This
+trades more hosted jobs and minutes for a shorter required check, accepted
+because Repo Canon is public and hosted minutes cost nothing. Lint uses oxlint's
 defaults plus
 ESLint's `recommended` rules that oxlint does not enable by default, with Node
 globals, as named in `.oxlintrc.json`. It excludes `vendor/`, `.repo-standards/`,
