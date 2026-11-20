@@ -160,14 +160,16 @@ with the validator's accepted and rejected issues. Run
 decision, driven by reviewer data fixtures (including real summary comments),
 and its silence, driven by
 the published bundle with an injected fetch transport.
-Run `node --test test/orchestrate-wait.test.mjs` for explicit and records-driven
-waits, pre-arm expected labels/PR head/raw check observations, report final markers,
-live watch reload and the shared records-only status table. Published Postern
-transport fixtures preserve issue/PR state, comments and linked-PR observations;
-real temporary Git repositories cover raw file/directory changes, incoming upstream
-commits (including fetched-but-unpulled commits), nested-only changes, no remote
-and fetch failures. Fixtures cover required finite positive durations, timeout
-exit 0, errors exit 1 and plain Node execution without runtime packages.
+Run `node --test test/orchestrate-workbench.test.mjs` for the `orchestrate`
+skill's `workbench` status and wait over fixture workbenches: status grouping,
+Done-means marks, unavailable facts and Stale; tracker, record, launch report and
+`incoming/` wakes; the saved observation baseline; live record reload; and real
+file-system events waking well below the interval. Published Postern transport
+fixtures preserve issue/PR state, comments, linked-PR, head and raw check
+observations; real temporary Git repositories cover incoming upstream commits
+(including fetched-but-unpulled commits), nested-only changes and fetch
+failures. Fixtures cover required finite positive durations, timeout exit 0,
+errors exit 1 and plain Node execution without runtime packages.
 Run `node --test test/required-checks.test.mjs test/babysit-merge.test.mjs`
 for the required-name schema, retained read-only check, positive current-head
 evidence, configured-reviewer thread resolution and final freshness gates

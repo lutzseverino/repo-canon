@@ -132,11 +132,10 @@ Install Node.js 24. Wordtally has no dependencies to install. Run
 // `orchestrate` skill seeds it before its first plan. It holds no project and
 // gets no scope or assessment.
 export const workbenchFiles = {
-  "index.md": "# Index\n\n## Repositories\n\n## Launch caps\n",
-  "inbox.md": "# Inbox\n\n## Answered\n",
+  "index.md":
+    "# Workbench\n\nOrchestrator: none\n\n## Repositories\n\n## Active\n\n## Closed\n",
+  "inbox.md": "# Inbox\n\n## Open\n\n## Answered\n",
   "wishes.md": "# Wishes\n",
-  "now.md":
-    "# Now\n\n## Waiting on you\n\n0 open decisions in `inbox.md`.\n\n## In flight\n\n## Running launches\n",
 };
 
 // Each discovery declaration's scope entry that no discovery script drafts.

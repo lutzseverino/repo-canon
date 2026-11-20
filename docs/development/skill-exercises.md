@@ -474,9 +474,8 @@ worker. The operator's wake-ups stand for wait exits; start no live wait or
 schedule. Check that the answered blocker question without continuation is
 surfaced with dated issue/run/PR evidence, separately from approval and blocker
 waits. Intervention follows the installed recovery rules and grants no execution.
-Throughout, check that `now.md` is rewritten rather than appended, and that
-plan history goes to the plan's append-only `log.md` while `plan.md` keeps
-current state.
+Throughout, check that plan history goes to the plan's append-only `log.md`
+while `plan.md` keeps current state and its numbered Done means.
 Turn 2 records plan approval separately from independent contract review and
 all other readiness gates. Observe the pending amendment before supplying
 turn 5. The in-goal row cites the approved review goal; the amendment changes scope only after approval. The
@@ -493,7 +492,7 @@ documentation plan.
 Turns 6d–6e bring the owner's "do this now" while ticket 01's factory run and
 ticket 03's research run are running and ticket 02's worker launch is due. Check
 that the request is recorded under `inbox.md`'s `Answered` before any other
-action, and that it skips only the plan: an expedited `now.md` In flight row
+action, and that it skips only the plan: the expedited `Answered` entry
 states the pause, and an expedited plan row without an issue follows from the
 approved goal. The pause holds only 02's launch and merges the orchestrating
 agent would make; the running sessions continue. The factory pause puts the
@@ -516,11 +515,10 @@ delivers a product change.
 End session one with unfinished rows and committed active state. Start session
 two with a fresh context, the same project/workbench paths, its own session
 reference, and turn 8. Give it no session-one transcript or artifact summary.
-It reads `index.md`, `now.md`, `inbox.md` and each active `plan.md`, not
-`log.md`, before other work, then the skill/local guidance. Inspect the
-recorded takeover and preserved previous owner, check that it re-arms a
-simulated wake-up for every In flight row not waiting on the owner before
-other work, and confirm the plan remains open while a Done-means clause lacks
+It reads `index.md`, `inbox.md` and each active `plan.md`, not `log.md`,
+before other work, then the skill/local guidance. Inspect the takeover in
+`index.md`'s `Orchestrator:` field with the previous orchestrator logged, check
+that it re-arms a simulated wake-up before other work, and confirm the plan remains open while a Done-means clause lacks
 evidence. Relay turn 9: the owner drop remains in the table as
 `dropped (owner)`, which only the owner's recorded decision authorizes, and
 the already-filed parked issue stays open. Relay turn 10: only then does the
@@ -570,7 +568,7 @@ finished predecessor permits continuation without cancellation; unknown run
 identity and unavailable stop capability each retain responsibility and produce
 an owner-question handoff naming the missing fact. The owner-review designation
 survives every successful transfer. Inspect the workbench's `replacement/log.md`
-and `now.md` against the operator's actual delivered turns, rather than asking
+and `replacement/plan.md` against the operator's actual delivered turns, rather than asking
 the agent to recite the expected policy. Record UTC times, requested actions,
 owner handoffs, transfer order, session reference, manifest/skill digests and
 resulting commits outside maintained documentation, and report the observations
@@ -649,13 +647,13 @@ reports, each written as the worker's message in the workbench's `incoming/`.
 The first report offers to end the grant.
 
 In both orders, check that the session asks the maintainer for the grant in
-`inbox.md`, records it as one In flight row it owns, with both workers listed
-before their simulated launches and a wake-up at the grant's time bound, and
-gives each worker the grant as task context. It takes each report in from
-`incoming/` before acting on it. At the first report the reporting
-worker leaves the row, the offer is declined and the grant stays. At the second
-report the session ends the grant, tells the maintainer, logs its end and
-removes the row. Each ticket closes only on its recorded live acceptance, never
+`inbox.md`, records it in the plan's Current state with its time bound and
+both workers listed before their simulated launches, and gives each worker the
+grant as task context. It takes each report in from `incoming/` before acting
+on it. At the first report the reporting worker leaves the grant's list, the
+offer is declined and the grant stays. At the second report the session ends
+the grant, tells the maintainer, logs its end and removes it from Current
+state. Each ticket closes only on its recorded live acceptance, never
 on the merge. Report both orders' observed outcomes, session references and
 workbench commits with the pull request that needs them.
 

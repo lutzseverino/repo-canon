@@ -81,7 +81,7 @@ const commands = [
   "babysit/merge.mjs",
   "babysit/request.mjs",
   "babysit/wait.mjs",
-  "orchestrate/wait.mjs",
+  "orchestrate/workbench.mjs",
   "triage/ready.mjs",
 ];
 

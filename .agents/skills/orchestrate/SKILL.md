@@ -26,30 +26,27 @@ a repository by link. Never reference or require the private workbench from a re
 instruction to consult it as input or provenance. Repository records may cite each other; private planning
 retains its own sources. Its files:
 
-- `index.md`: repositories, plans, the current owning session.
-- `inbox.md`: decisions; [reconcile and process answers](references/templates.md#inboxmd) before other work.
-- `wishes.md`: ideas about this procedure, not repository ideas (guide's Findings rule); `now.md`: current state, rewritten each pass.
+- `index.md`: repositories, active plans, the `Orchestrator:` field.
+- `inbox.md`: decisions and owner chores; [reconcile and process answers](references/templates.md#inboxmd) before other work.
+- `wishes.md`: ideas about this procedure, not repository ideas (guide's Findings rule).
 - `incoming/`: [other sessions' messages](references/templates.md#incoming).
-- `<plan>/`: current `plan.md`, append-only `log.md`, decision and run records.
+- `<plan>/`: current `plan.md`, append-only `log.md`, decision records, launch briefs and reports.
 
 ## Lifecycle
 
 Use the **Canonical stages** in the repository's installed `factory-workflow`
 rules (source: `rules/factory-workflow.md`). Read coverage with `.scriptorium/config.json`. <!-- Seam (deferred): Scriptorium configuration reads; consumers: 6; extraction proposed in https://github.com/lutzseverino/repo-canon/issues/967. -->
 For each covered stage hand off through `factory` and wait; otherwise perform it
-by hand to the same contract with the factory's own scripts. When recording its
-launch in `now.md`, log `Gap | <stage> | <repository> | <why>` in `log.md`.
+by hand to the same contract with the factory's own scripts. When launching it,
+log `Gap | <stage> | <repository> | <why>` in `log.md`.
 Intake of ideas is permanent orchestrating work, exempt from gap logging;
 [intake](references/intake.md) owns its method.
 
 A **plan update** includes proposals and heartbeat replies. Open with
-`wait.mjs --status --from <now.md>`, adding `--budget <status.json>` for the
-Scriptorium observation from [launches](references/launches.md#starting-a-launch).
-Keep `Item | Running | Waiting on owner | Since (UTC) | Next check`; read only
-records/budget, never harness thread lists or a second view. In this update, act
-on each `your move` row or turn it into a real wait: launch, factory, owner,
-named third party or date. Show arrivals as [templates](references/templates.md#nowmd) says,
-the inbox and every choice made alone since the last update, with dated sources for veto; log each.
+[`workbench status`](references/launches.md#the-workbench-script), never harness thread
+lists or a second view. Act on each My move line or turn it into a real wait: launch,
+factory, owner, named third party or date. Show Owner's move and every choice made
+alone since the last update, with dated sources for veto; log each.
 Link every row/decision code and issue number to its row, record or issue;
 expand unfamiliar codes once per owner-facing message.
 
@@ -81,19 +78,17 @@ When every Done-means clause has evidence, [close](references/close.md): reconci
 
 ## The wait step
 
-Keep one background wait continuously armed during foreground work and between turns,
-covering every In-flight wake mechanism, launch report and incoming message. Owner-only
-rows use recorded owner waits and incoming responses; with no work, wait on incoming.
+Keep one background [`workbench wait`](references/launches.md#the-workbench-script)
+continuously armed during foreground work and between turns; records are its watches.
 Use harness events for what the script cannot observe. On wake/timeout, minimally
-reconcile expected facts and records, then immediately re-arm before other work or
-updates. Rewrite records to change watches. Without background waits or events,
-report the limit and reread records each turn.
+reconcile, then immediately re-arm before other work or updates. Without background
+waits or events, report the limit and run status each turn.
 
 ## Report-back
 
 Launches hand back only through their current-turn report, final line `status: done`:
 “this turn ended; read the report”, including owner waits, never success. Follow
-[launches](references/launches.md) for prerequisites/relay and [consume reports](references/templates.md#nowmd).
+[launches](references/launches.md) for prerequisites/relay and [consume reports](references/templates.md#planmd-and-logmd).
 Other sessions write to `incoming/`.
 
 ## Reads
@@ -106,8 +101,9 @@ Paths are relative to each repository or the workbench.
 - `AGENTS.md`: delegation, naming and workstation convention. If missing, pass
   context only and name sessions for operation/target where naming is supported.
 - The workbench, whose format this skill owns: its `index.md`, `inbox.md`,
-  `wishes.md`, `now.md`, `inbox-archive.md`, `incoming/`, `<plan>/plan.md`, `<plan>/log.md` and `retro.md`.
-  Create missing files as [templates](references/templates.md) says.
+  `wishes.md`, `inbox-archive.md`, `incoming/`, `<plan>/plan.md`, `<plan>/log.md`, `retro.md`,
+  launch briefs and reports (`<plan>/*.md`), and the script's `workbench-observation.json` in its
+  Git directory. Create missing files as [templates](references/templates.md) says.
 - A tracked repository's Repository Standards adoption record: the Repo Canon
   source its Selection names, for the `workbench` profile offer.
   When it is missing, use the example source.
@@ -117,4 +113,4 @@ Paths are relative to each repository or the workbench.
 - Scriptorium status JSON: budget/model observations. When absent or unavailable,
   report missing facts and establish them before launching.
 - The `retro` skill: method and lesson routes. When missing, obtain it before closing the plan.
-- The `babysit` skill: the wait's GitHub CLI connection and merge continuation. When missing, re-read records each turn as [the wait step](#the-wait-step) says.
+- The `babysit` skill: the workbench script's GitHub CLI connection and merge continuation. When missing, re-read records each turn as [the wait step](#the-wait-step) says.
