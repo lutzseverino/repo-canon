@@ -1814,6 +1814,7 @@ The session reads AGENTS.md's Agent skills routing and the installed Canonical s
     "# 02: Nightly export lists late-evening receipts under the next day\n\nStatus: state:triage\nLabels: type:bug\nAuthor: owner\n\nA Delivery receipt recorded at 23:30 UTC on 2026-11-03 appears in the export for 2026-11-04, not 2026-11-03. docs/usage/receipts.md says the export covers the previous UTC date.\n",
   );
   const workbench = join(fixtureRoot, "front-door-workbench");
+  // Seam (deferred): workbench seed records; consumers: 3 (orchestrate, host-grant, front-door); extraction proposed after #1219 replaces now.md.
   mkdirSync(workbench);
   write(
     workbench,
