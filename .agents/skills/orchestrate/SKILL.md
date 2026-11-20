@@ -15,7 +15,6 @@ and delivery, and installed comment rules for posts. `triage` handles one reques
 Read [templates](references/templates.md) before you write a workbench file,
 [launches](references/launches.md) before you launch, take over, hand over,
 observe or arm a wait, and [close](references/close.md) before you close a plan.
-Apply `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check) to your inbox recommendations, plan updates and friction.
 
 ## Workbench
 
@@ -29,7 +28,7 @@ retains its own sources. Its files:
 
 - `index.md`: repositories, plans, the current owning session.
 - `inbox.md`: decisions; [reconcile and process answers](references/templates.md#inboxmd) before other work.
-- `wishes.md`: ideas outside the goal; `now.md`: current state, rewritten each pass.
+- `wishes.md`: ideas about this procedure, not repository ideas (guide's Findings rule); `now.md`: current state, rewritten each pass.
 - `incoming/`: [other sessions' messages](references/templates.md#incoming).
 - `<plan>/`: current `plan.md`, append-only `log.md`, decision and run records.
 
@@ -66,9 +65,8 @@ reports, or questions from launch reports, issues or incoming messages. After a 
 contribution guide's writer publication, final split and independent acceptance
 responsibilities; use `to-spec` and `to-tickets` through the launch template.
 
-Log friction with evidence, **Value owner**, exposed seam and route (row, finding or wish). Keep deferrals at
-their code. Fix the instance; add a standing rule only when the same failure recurs after the fix, and name the
-rule it replaces or deletes. A **new requirement** mid-plan, unless wanted now, takes:
+Log friction with evidence and route (row, finding or wish). Fix the instance; add a standing rule only when the same failure
+recurs after the fix, and name the rule it replaces or deletes. A **new requirement** mid-plan, unless wanted now, takes:
 
 - **Row:** serves the goal, passes the guide's inference test, and edits or
   deletes existing text or code; a row that adds a mechanism (script, port,
@@ -77,7 +75,7 @@ rule it replaces or deletes. A **new requirement** mid-plan, unless wanted now, 
 - **Amendment:** changes goal or scope; grill it, possibly one round in the
   orchestrating thread. Apply only after owner approval, with a new approval
   line superseding the old, and publication under the contribution guide.
-- **Wish:** outside the goal and not a Finding; add to `wishes.md`, needing no issue.
+- **Idea:** outside the goal and not a Finding; follow the guide's Findings rule for parking ideas.
 
 When every Done-means clause has evidence, [close](references/close.md): reconcile issues, run Close reviews and announce the close.
 
@@ -107,7 +105,6 @@ Paths are relative to each repository or the workbench.
   written, and put each rule it leaves to it in `inbox.md` for the owner.
 - `AGENTS.md`: delegation, naming and workstation convention. If missing, pass
   context only and name sessions for operation/target where naming is supported.
-- The `codebase-design` skill: Ownership check. If missing, note the gap under Findings; retain the fields above.
 - The workbench, whose format this skill owns: its `index.md`, `inbox.md`,
   `wishes.md`, `now.md`, `inbox-archive.md`, `incoming/`, `<plan>/plan.md`, `<plan>/log.md` and `retro.md`.
   Create missing files as [templates](references/templates.md) says.

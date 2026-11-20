@@ -30,12 +30,16 @@ Format a round like so:
 
 Each round the user answers reshapes the tree: settled decisions push the frontier outward and unblock questions that depended on them. Recompute the frontier and ask the next round. A question whose answer depends on another question still open in this round belongs to a _later_ round, not this one.
 
-Finding _facts_ is your job, never the user's. When a frontier question needs a fact from the environment (filesystem, tools, etc.), dispatch a sub-agent to find it; don't ask the user for anything you could look up yourself. Don't block on it: a running exploration is an unsettled prerequisite, so only the questions downstream of it wait for the sub-agent to report; ask the rest of the frontier now. Put the decisions the inference test leaves open to the user and wait for their answers.
+Finding _facts_ is your job, never the user's. When a frontier question needs a fact from the environment (filesystem, tools, etc.), dispatch a sub-agent to find it; don't ask the user for anything you could look up yourself. Don't block on it: a running exploration is an unsettled prerequisite, so only the questions downstream of it wait for the sub-agent to report; ask the rest of the frontier now. Put the decisions the inference test leaves open to the user and wait for their answers. When words cannot settle a look (UI, owner-facing output, layout) or how a state model feels, you may build a throwaway prototype with the `prototype` skill and cite it in the question.
 
 The interview is done when the frontier is empty: each decision is recorded or
 listed as a qualifying inference, with no required owner answer missing under
-the guide's Triage rules. Reuse recorded approval. A composite skill can then
-continue to its publication step.
+the guide's Triage rules. A grill that adds or changes a mechanism or policy
+then ends with an independent review against long-term design: a fresh session,
+of another provider where the harness offers one, reads ADRs as history, not
+constraints. Ask its findings as the final round, before the owner's final
+approval and publication; a grill that only drops or moves work skips it. Reuse
+recorded approval. A composite skill can then continue to its publication step.
 
 ## Without a contribution guide
 
@@ -52,3 +56,5 @@ Retain the owner's grill answers and plan approval as gates.
 
 - `CONTRIBUTING.md`, relative to the repository root: the Triage inference test
   and owner-question route. If missing, use Without a contribution guide.
+- The `prototype` skill: a throwaway prototype for a question. If missing, ask
+  the question in words.

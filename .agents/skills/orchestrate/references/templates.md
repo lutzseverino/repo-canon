@@ -17,7 +17,7 @@ Commit each completed adoption/update once its `status` says ready to commit.
 index.md          tracked repositories, plans and current owner session
 inbox.md          open decisions and Answered entries awaiting handover
 inbox-archive.md  answered decision history
-wishes.md         ideas before conversation or outside the current goal
+wishes.md         ideas about this procedure, not repository ideas
 now.md            owner waits, in-flight work, launches and arrivals
 incoming/         other sessions' messages, pending intake
 <plan>/plan.md    current state, goal, Done means, specifications and Close reviews
@@ -142,8 +142,7 @@ its outcome. Step 2 applies only inside a plan's goal.
 
 ## `wishes.md`
 
-One line per wish: date, owner's quoted words/idea, source link and repository.
-A wish may link a filed issue; it never replaces its tracker record.
+One line per idea about this procedure: date, quoted words, source link; repository ideas follow the guide's Findings rule.
 
 ## `incoming/`
 

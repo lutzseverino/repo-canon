@@ -31,4 +31,4 @@ Once every Close review is marked done, move the plan under `Closed` in
   evidence link;
 - the retro's lessons and the other Close reviews' findings, each with its
   route and link;
-- one suggested next direction, taken from the wishes and the parked items.
+- one suggested next direction, taken from the parked items.
