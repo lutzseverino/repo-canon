@@ -4,9 +4,9 @@
 
 Read every question first, from launch reports, issues and incoming messages; workers
 put questions in their report or on the issue, never `inbox.md`. For every choice
-(holds, skip routes, rows, filing, release wording, worker answers), answer alone,
-only to advance the approved Done path on verified facts and explicit authority,
-what code, logs or installed rules settle, or what passes the guide's inference test.
+(holds, skip routes, rows, filing, release wording, worker answers), answer alone
+what code, logs or installed rules settle, or what passes the guide's inference test,
+only to advance the approved Done path on verified facts and explicit authority.
 Put unresolved intent, changes to scope, authority or durable policy, and everything
 else in the decision inbox with your recommendation; only you write that inbox.
 An owner approval, including a plan's **Preapproves** line, names items ahead of time:

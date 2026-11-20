@@ -56,3 +56,5 @@ Retain the owner's grill answers and plan approval as gates.
 
 - `CONTRIBUTING.md`, relative to the repository root: the Triage inference test
   and owner-question route. If missing, use Without a contribution guide.
+- The `prototype` skill: a throwaway prototype for a question. If missing, ask
+  the question in words.
