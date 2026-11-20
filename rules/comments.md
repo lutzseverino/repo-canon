@@ -5,16 +5,18 @@ comments, reviews, review-thread replies and the bodies of issues it files, on
 any account, the factory App's included. They apply to all work in the
 repository, including tracker work that changes no file. Pull request titles
 and bodies and commit messages follow the contribution guide's titles, commits
-and attribution rules instead.
+and attribution rules instead, except the body's Delivery subsection, which
+[Delivery records](#delivery-records) shapes.
 
 ## Occasions
 
 Any agent, whichever account it uses, and the factory post only on these
 occasions, and only to record a decision, an outcome, or a question that needs
 an answer, never to narrate progress. Everything to say on one occasion goes
-into one comment. The contribution guide, the `github-repository-configuration`
-rules and, where installed, the `factory-workflow` rules say when each occasion
-arises; these rules say what the post holds:
+into one comment, or for a worker handoff into the body's Delivery subsection.
+The contribution guide, the `github-repository-configuration` rules and, where
+installed, the `factory-workflow` rules say when each occasion arises; these
+rules say what the post holds:
 
 | Occasion                                         | Where                                             | Shape                                                 |
 | ------------------------------------------------ | ------------------------------------------------- | ----------------------------------------------------- |

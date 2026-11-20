@@ -243,9 +243,10 @@ Paths are relative to the repository root.
   steps and the commands' own checks as written, and hand off to the owner in
   one PR comment for any rule the steps leave to the guide.
 - `.repo-standards/rules/comments.md`: the installed comment rules, whose
-  sections the steps name before each post. When it is missing, post each
-  record or question the steps name as one comment, and each review in the
-  shape the wait prints.
+  sections the steps name before each post. When it is missing, keep the
+  worker handoff in the PR body's Evidence section, post each other record or
+  question the steps name as one comment, and each review in the shape the
+  wait prints.
 - The installed rules the steps name, such as the
   `github-repository-configuration` rules, which the `repository-standards`
   skill looks up. When they are missing, the commands' own behavior stands, no
