@@ -45,6 +45,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "orchestrate",
     "planning",
     "project-agent-guidance",
+    "release",
     "session-naming",
     "triage-routing",
     "triage-wayfinder",
@@ -96,6 +97,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "orchestrate",
     "pr",
     "prototype",
+    "release",
     "research",
     "retro",
     "tdd",
@@ -117,6 +119,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "prototype",
       "orchestrate",
       "retro",
+      "release",
       "factory",
     ],
   );
@@ -170,6 +173,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     ],
     orchestrate: ["orchestrate", "retro", "factory"],
     "host-grant": ["orchestrate", "factory"],
+    release: ["release"],
     "session-naming": [],
   };
   for (const [name, skills] of Object.entries(expectedSkills))
@@ -652,6 +656,62 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.match(sourcePull, /^Part of #2$/m);
   assert.match(sourcePull, /^Part of #3$/m);
   assert.doesNotMatch(sourcePull, /Closes #[23]/);
+  // The release starts from one commit on main, with no tag or remote, and its
+  // planning issue held by one open native blocker.
+  const release = manifest.repositories.release;
+  assert.deepEqual(release.skills, ["release"]);
+  assert.equal(
+    realpathSync(join(release.path, ".agents/skills/release")),
+    realpathSync(join(root, ".agents/skills/release")),
+  );
+  for (const args of [["remote"], ["tag"]])
+    assert.equal(
+      execFixtureGit(args, { cwd: release.path, encoding: "utf8" }),
+      "",
+    );
+  assert.equal(
+    execFixtureGit(["rev-parse", "main"], {
+      cwd: release.path,
+      encoding: "utf8",
+    }).trim(),
+    release.initial,
+  );
+  assert.ok(
+    statSync(join(release.path, "docs/development/release.md")).isFile(),
+  );
+  const releaseScratch = join(release.path, ".scratch/release");
+  const dependencies = JSON.parse(
+    readFileSync(join(releaseScratch, "native-dependencies.json"), "utf8"),
+  );
+  assert.equal(dependencies.simulated, true);
+  assert.deepEqual(
+    dependencies.blockedBy.map(({ state }) => state),
+    ["open"],
+  );
+  for (const { path } of dependencies.blockedBy)
+    assert.match(
+      readFileSync(join(release.path, path), "utf8"),
+      /^Status: open$/m,
+    );
+  assert.match(
+    readFileSync(join(releaseScratch, "issues/01-release-v1-3-0.md"), "utf8"),
+    /^Status: open$/m,
+  );
+  for (const record of ["pr.md", "published.md"])
+    assert.ok(!existsSync(join(releaseScratch, record)), record);
+  // The operator's turns cover the three cases: an open blocker, and a
+  // default branch moving before and after the release pull request merges.
+  const releaseInputs = readFileSync(
+    join(release.path, "docs/participant-inputs.md"),
+    "utf8",
+  );
+  for (const turn of ["A1", "B1", "B2", "C1", "C2"])
+    assert.match(releaseInputs, new RegExp(`^${turn}\\. `, "m"), turn);
+  // The procedure's gate passes on the starting commit.
+  execFileSync(process.execPath, ["--test"], {
+    cwd: release.path,
+    stdio: "pipe",
+  });
   // The factory triage run gets one run per issue, each with its own result
   // path, and the tracker starts with every issue waiting on triage.
   const factoryTriage = manifest.repositories["factory-triage"];

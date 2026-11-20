@@ -453,6 +453,11 @@ defaults:
       name: prototype
       source: .agents/skills/prototype
 
+    skill-release:
+      kind: skill
+      name: release
+      source: .agents/skills/release
+
     skill-research:
       kind: skill
       name: research

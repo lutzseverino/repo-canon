@@ -40,6 +40,7 @@ const skills = [
   "orchestrate",
   "pr",
   "prototype",
+  "release",
   "research",
   "retro",
   "review",
@@ -164,8 +165,8 @@ test("public CLI 11.0.0 adopts the workbench profile into an empty repository an
     }
   }
   // The creation entry points, orchestrate and retro remain workbench-only.
-  assert.equal(validation.profiles.standard.declarations.length, 66);
-  assert.equal(validation.profiles.factory.declarations.length, 71);
+  assert.equal(validation.profiles.standard.declarations.length, 67);
+  assert.equal(validation.profiles.factory.declarations.length, 72);
   for (const name of workbenchOnly) {
     for (const profile of ["standard", "factory"])
       assert.ok(

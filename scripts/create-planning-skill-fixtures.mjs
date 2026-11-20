@@ -42,6 +42,7 @@ const skillNames = [
   "prototype",
   "orchestrate",
   "retro",
+  "release",
   "factory",
 ];
 const linkedSkillNames = [
@@ -1758,6 +1759,157 @@ The operator relays these in order, one turn at a time, and runs each order from
       path: workbench,
       initial: commit(workbench, "chore: initialize host grant workbench"),
     },
+  };
+}
+
+{
+  const root = createRepository("release", ["release"], {
+    agents:
+      "# Agent guidance\n\nRead docs/exercise.md. Use only the local Markdown tracker. This repository has no remote: its local `main` stands for the remote default branch, and fetching it is a no-op.\n",
+    context:
+      "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n",
+    exercise: `## Task
+
+Use the exact .agents/skills/release/SKILL.md with the planning issue .scratch/release/issues/01-release-v1-3-0.md as its only input. The release procedure is docs/development/release.md. The planning issue's native blocked-by links are the simulated platform response in .scratch/release/native-dependencies.json; the operator changes that file at a turn, never the session. All tracker, pull request and publication records are local simulations: no remote issue, PR, tag push, release or message is published, and the operator plays every platform response.
+
+## Session sequence
+
+Run the scenario three times, each time from a fresh build and in a fresh session, once per case in docs/participant-inputs.md. The operator relays that file one turn at a time; do not read it. In case A, start the skill at turn A1. In cases B and C, apply the case's first turn before starting, then start the skill. In case B, report to the operator when only the release pull request's merge remains and wait for turn B2 before rechecking. In case C, report when that merge is done and only the procedure's publication remains, and wait for turn C2.
+
+## Expected outcome
+
+Case A, open blocker: the session pins main's full head SHA, finds blocker 02 open in the native response, appends one stop note to the planning issue naming 02, and stops. No release branch, version change, simulated pull request or tag exists, and main is unchanged.
+
+Case B, default branch moved before the merge: with no open blocker, the session pins main and follows the procedure's version, gate and simulated release pull request steps as written. After turn B2 moves main, its recheck immediately before the merge finds a head other than the pin. It appends one stop note to the planning issue naming the pin and the new head, does not merge the release pull request, leaves the planning issue open, creates no tag and writes no .scratch/release/published.md.
+
+Case C, default branch moved after the merge: with no open blocker, the session pins main, follows the procedure through the recheck, finds main still at the pin and merges the release pull request onto it. After turn C2 moves main, it tags the merge commit, whose parent is the pin, verifies the tag and writes .scratch/release/published.md as the procedure says. It appends no stop note.
+
+In every case the skill restates none of the procedure, and every outcome is recorded on the planning issue or the simulated release pull request under the copied comment rules. Report the pin, the heads observed, the stop notes and the rule sections used, separately from fixture checks; keep run evidence outside maintained documentation.
+`,
+  });
+  write(
+    root,
+    "package.json",
+    `${JSON.stringify(
+      {
+        name: "repo-canon-release-exercise",
+        version: "1.2.0",
+        private: true,
+        type: "module",
+        scripts: { test: "node --test" },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  write(
+    root,
+    "CHANGELOG.md",
+    "# Changelog\n\n## Unreleased\n\n- Export Delivery receipts for one UTC date as CSV.\n\n## v1.2.0\n\n- Keep non-ASCII signer names.\n",
+  );
+  write(
+    root,
+    "test/version.test.mjs",
+    `import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { test } from "node:test";
+
+test("the package version is a released changelog entry or the next one", () => {
+  const { version } = JSON.parse(readFileSync("package.json", "utf8"));
+  assert.match(version, /^\\d+\\.\\d+\\.\\d+$/);
+  assert.match(readFileSync("CHANGELOG.md", "utf8"), /^## Unreleased$/m);
+});
+`,
+  );
+  write(
+    root,
+    "docs/development/release.md",
+    `# Release procedure
+
+This procedure releases the Parcel operations package from one release pull request.
+
+## Version
+
+Take the next minor version after \`package.json\`'s, such as 1.3.0 after 1.2.0. CHANGELOG.md's Unreleased section must list at least one change; otherwise there is nothing to release.
+
+## Gates
+
+\`npm test\` passes on the release branch's head, and \`git diff --check main...HEAD\` is clean.
+
+## Release pull request
+
+1. Create the branch \`release/vX.Y.Z\` from main, set \`package.json\`'s version, rename CHANGELOG.md's Unreleased heading to \`## vX.Y.Z\` above a new empty Unreleased section, and commit it as \`chore: release vX.Y.Z\`.
+2. Run the gates on that head.
+3. Write the simulated pull request at .scratch/release/pr.md: its title \`chore: release vX.Y.Z\`, the branch, the head's full SHA, the gate outcomes and \`Closes\` the planning issue.
+4. Merge it as one squash commit onto main with that title, then mark the planning issue's Status closed.
+
+## Publication
+
+1. Tag the merge commit: \`git tag --annotate vX.Y.Z <merge commit> --message "Parcel operations vX.Y.Z"\`.
+2. Verify that \`git rev-parse vX.Y.Z^{commit}\` prints the merge commit.
+3. Record the simulated publication at .scratch/release/published.md with the tag, the merge commit and the verification output, and link it from one comment on .scratch/release/pr.md.
+`,
+  );
+  write(
+    root,
+    "docs/usage/receipts.md",
+    "# Delivery receipt export\n\nExport the Delivery receipts of one UTC date as CSV.\n",
+  );
+  write(
+    root,
+    ".scratch/release/issues/01-release-v1-3-0.md",
+    "# Release v1.3.0\n\nStatus: open\n\n## Release\n\nRelease the receipt export as the next minor version under docs/development/release.md. Its native blocked-by links are the planning issue's holds.\n\n## Comments\n",
+  );
+  write(
+    root,
+    ".scratch/release/issues/02-fix-empty-export.md",
+    "# Fix the empty-date receipt export\n\nStatus: open\n\n## Request\n\nA date with no deliveries must return a CSV holding only the header row before the receipt export ships.\n",
+  );
+  write(
+    root,
+    ".scratch/release/native-dependencies.json",
+    `${JSON.stringify(
+      {
+        simulated: true,
+        issue: "01",
+        blockedBy: [
+          {
+            issue: "02",
+            path: ".scratch/release/issues/02-fix-empty-export.md",
+            state: "open",
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  write(
+    root,
+    "docs/participant-inputs.md",
+    `# Release participant inputs
+
+The operator relays these one turn at a time, each case from a fresh build. All are simulated platform responses and repository changes. Record each turn's delivery time from the UTC clock.
+
+## Case A: an open blocker
+
+A1. "Run the release for .scratch/release/issues/01-release-v1-3-0.md." Blocker 02 stays open throughout.
+
+## Case B: the default branch moves before the merge
+
+B1. Before the session starts, the operator closes the blocker: set 02's Status to closed and its state in .scratch/release/native-dependencies.json to closed, and commit both on main as \`chore: close the empty-export fix\`. Then relay: "Run the release for .scratch/release/issues/01-release-v1-3-0.md."
+B2. When the session reports that only the release pull request's merge remains, the operator moves main by another change: append "Exports cover at most 31 days." to docs/usage/receipts.md and commit it on main as \`docs: note the export limit\`. Then relay: "Continue the release."
+
+## Case C: the default branch moves after the merge
+
+C1. As B1.
+C2. When the session reports that the release pull request has merged and only publication remains, the operator moves main by the change in B2. Then relay: "Continue the release."
+`,
+  );
+  repositories.release = {
+    path: root,
+    skills: ["release"],
+    initial: commit(root, "chore: establish release exercise"),
   };
 }
 
