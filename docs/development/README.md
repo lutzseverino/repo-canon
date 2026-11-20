@@ -64,6 +64,20 @@ checks, workers rely on the hosted required `Test` check as the full-suite
 gate. `pnpm validate` runs, in order, `pnpm run format:check`,
 `pnpm run lint`, `pnpm run check`, `pnpm run typecheck`, and `pnpm test`.
 
+Outside Actions, `node vendor/repo-canon/validate.mjs neutral-input.json`
+accepts PR-number metadata input or check-command input. Both take a repository
+URL and `POSTERN_TOKEN` with **Commit statuses: write**; metadata also needs
+**Pull requests: read**. Metadata reads the current PR title, body and head and
+posts `PR metadata` success or failure. Check-command input names an exact head,
+its checkout, the command (`pnpm validate` here), and role: `runner` posts
+`Runner checks`, while `review` posts `Review rerun`. It refuses a checkout HEAD
+mismatch, posts pending before execution, and posts the exit verdict afterward,
+with token-valued environment variables removed from the command. The
+[entry-point reference](pr-metadata-validation.md#entry-points-outside-actions)
+documents the JSON fields, permissions and snapshot input that posts nothing.
+Run `node --test test/validator-statuses.test.mjs test/validator-entrypoints.test.mjs`
+for posting, exact-head execution, credential isolation and installed imports.
+
 `pnpm run typecheck` runs `scripts/typecheck.mjs`, which runs TypeScript 7
 with `tsconfig.json`: `checkJs`, without `strict` and with Node.js 24's types,
 over every `.mjs` and `.js` file outside `node_modules/`, the installed

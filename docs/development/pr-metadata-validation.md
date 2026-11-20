@@ -173,7 +173,96 @@ The shared runtime reads Markdown structure with the repository's pinned
 attributes with the pinned [parse5 bundle](../../vendor/parse5/README.md). Their
 source and license notices live beside the vendored ESM files.
 
-The common command dispatches `pr-metadata` and `issue-contract`. The trigger
+## Entry points outside Actions
+
+The installed neutral command runs with Node.js 24 or 26 and no npm install:
+
+```sh
+node vendor/repo-canon/validate.mjs neutral-input.json
+```
+
+Supply the posting token through `POSTERN_TOKEN` in the entry point's
+environment, never in the JSON file. Both posting paths need the repository's
+**Commit statuses: write** permission; PR metadata also needs **Pull requests:
+read**. GitHub documents the [commit status endpoint](https://docs.github.com/en/rest/commits/statuses#create-a-commit-status).
+The repository URL selects the destination explicitly; no CLI credential or
+repository discovery occurs.
+
+### PR metadata posting
+
+Use a pull request number to read its current title, body and head, apply the
+same validation described above, and post one `PR metadata` status on that
+head:
+
+```json
+{
+  "kind": "pr-metadata",
+  "repository": "https://github.com/example/project",
+  "pullRequest": 42
+}
+```
+
+A valid title and body post `success` and return exit 0; an invalid title or
+body posts `failure` and returns exit 1. The result belongs to the head read
+with that metadata, even if the pull request changes during validation.
+
+The existing snapshot input remains available without a token or repository:
+
+```json
+{
+  "kind": "pr-metadata",
+  "pullRequest": { "title": "feat: describe the change", "body": "..." }
+}
+```
+
+It validates only the supplied title and body and posts nothing. The Actions
+trigger continues to use its `pull_request_target` snapshot and job check.
+
+### Check command posting
+
+Pass the exact full head SHA, an existing checkout, the repository's one check
+command from its development guide, and the caller's role:
+
+```json
+{
+  "kind": "check-command",
+  "repository": "https://github.com/example/project",
+  "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "checkout": "/work/project",
+  "command": "pnpm validate",
+  "role": "runner"
+}
+```
+
+`checkout` is absolute or relative to the entry point's working directory.
+Its Git `HEAD` must equal `head`; a mismatch refuses before posting or running
+anything. The command runs through the system shell in that checkout, with
+its output inherited by the entry point. No command setting is added: the
+caller supplies the command documented by the adopting repository.
+
+| Role     | Posted context  |
+| -------- | --------------- |
+| `runner` | `Runner checks` |
+| `review` | `Review rerun`  |
+
+The entry point posts `pending` before execution, then `success` for exit 0 or
+`failure` for any other exit, signal or launch failure, all on the requested
+head. Its own exit is 0 for success and 1 for failure. A failed platform read
+or status write fails the invocation; a refused pending write prevents command
+execution.
+
+The command inherits the environment except `POSTERN_TOKEN` and every variable
+whose value equals the posting token. This also removes a second copy under
+another name; other variables pass through unchanged. The runner host remains
+responsible for credentials stored elsewhere and for running the trusted entry
+point independently of the pull request's command.
+
+Run `node --test test/validator-statuses.test.mjs test/validator-entrypoints.test.mjs`
+for HTTP-boundary fixtures, disposable Git checkouts, token isolation and
+installed-layout coverage alongside the unchanged snapshot entry points.
+
+The common command dispatches `pr-metadata`, `issue-contract` and
+`check-command`. The trigger
 invokes its exported neutral interface so raw event data stays outside policy.
 Postern supplies issue-event normalization, not a PR-event operation. Its exact
 [public bundle, license and provenance](../../vendor/postern/README.md) are
