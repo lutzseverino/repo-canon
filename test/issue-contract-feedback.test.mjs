@@ -179,3 +179,15 @@ test("a refusal leads with a short reason and keeps the full reason collapsed", 
   assert.ok(layout.details.includes(reason));
   assert.equal(publishedState(feedback.body).rejectionReason, reason);
 });
+
+test("a refusal's lead reason ends at a stop outside code", () => {
+  const reason =
+    "The label `state:foo. bar` supersedes readiness. A second sentence.";
+  const { feedback } = decideIssueContract(
+    snapshot({ comments: [awaiting({ rejectionReason: reason })] }),
+  );
+  const [, short] = feedbackLayout(feedback.body).facts;
+  assert.ok(reason.startsWith(short), short);
+  assert.ok(short.length > reason.indexOf(". "), short);
+  assert.equal((short.match(/`/g) ?? []).length % 2, 0);
+});

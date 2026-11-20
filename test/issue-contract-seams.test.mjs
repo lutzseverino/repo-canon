@@ -25,6 +25,7 @@ import { checkSeamsRelease } from "../scripts/release/verify.mjs";
 import {
   bot,
   completeAgentBrief,
+  feedbackLayout,
   mapBody,
   revision,
 } from "./helpers/issue-contracts.mjs";
@@ -472,6 +473,17 @@ test("body-mode category repair retains historical proof without reviving readin
     stateOf(approved).seamsExemption,
   );
 });
+
+for (const mode of ["prepared", "comment", "body"]) {
+  test(`${mode}: a retained exemption's needs-attention notice leads with its revision`, () => {
+    const s = historical(mode);
+    s.issue.labels.push("type:bug");
+    const held = decide(s);
+    assert.equal(stateOf(held).status, "needs-attention");
+    assert.ok(stateOf(held).revision);
+    feedbackLayout(held.feedback.body);
+  });
+}
 
 for (const mode of ["comment", "body"]) {
   test(`${mode}: first-cutover category repair retains the original approval evidence`, () => {

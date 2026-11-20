@@ -345,9 +345,10 @@ in bold, followed by the short revision when the result records one. Corrections
 a person must make stay visible below it; the full revision and the explanation
 are collapsed in `<details>`, whose summary states the decision. A refusal's
 lead line carries its reason's first sentence, cut to the lead line's length
-limit, and its details hold the full reason. Incomplete contracts list the structural corrections
-there, under a `needs-attention` result that approves nothing and records no
-revision. It carries forward only the source invalidation, so a corrected
+limit, and its details hold the full reason. Incomplete contracts list the
+structural corrections there, under a `needs-attention` result that approves
+nothing and records no revision unless a retained Seams exemption supplies its
+Agent Brief's. It carries forward only the source invalidation, so a corrected
 contract's revision is published again before readiness is applied. A later
 structural pass replaces a "needs attention" notice with a "structure corrected"
 notice; an issue that no longer carries a contract gets a "not required" notice.
@@ -373,7 +374,7 @@ removal of readiness as rejection cleanup also retains the reason.
 
 A rejection or supersession that removes readiness publishes a "Readiness
 removed" notice. Its details start with `Readiness was removed:` and the
-reason, name each readiness label the validator removed, and says that
+reason, name each readiness label the validator removed, and say that
 restoring readiness needs a fresh authorized review of the exact revision, after
 its revision notice for an Agent Brief. Its result keeps the v1 fields with
 status `awaiting-review`. A run that retains the reason takes the removed
@@ -870,13 +871,13 @@ fields, an approved contract keeping readiness with rejected items, the tally, a
 readiness command, with fated, unfated, closed and ADR-citing issues.
 Run `node --test test/issue-contract-result.test.mjs` for the published
 result: its complete v1 line, its write on every evaluated event, each rule
-above, and unknown formats and other authors. Run
-`node --test test/issue-contract-feedback.test.mjs` for the notice's layout
-under each outcome and a refusal's shortened lead reason. Its shared examples run the
+above, and unknown formats and other authors. Its shared examples run the
 validator's adapter and the `triage` readiness command against one in-memory
 issue through Postern: edited, deleted and newer Agent Briefs, Briefs and
 results by bot and other authors, a bot reviewer without a role, and events in
-the same second. The `CI` workflow runs the complete repository test suite
+the same second. Run `node --test test/issue-contract-feedback.test.mjs` for
+the notice's layout under each outcome and a refusal's shortened lead reason.
+The `CI` workflow runs the complete repository test suite
 with `pnpm test`. These fixtures exercise the authorization mechanism but do not
 claim that a reviewer made a sound semantic judgment.
 

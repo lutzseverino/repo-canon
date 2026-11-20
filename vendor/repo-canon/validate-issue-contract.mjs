@@ -2741,6 +2741,7 @@ function resultLine({
 }
 
 // The comment rules' Limits: a lead line holds at most 100 characters.
+// Seam (deferred): the comment rules' lead-line limit; consumers: 1; wrap at 2.
 const leadLineLimit = 100;
 
 // A notice after the result line: its lead line, the status marker and the
@@ -2766,11 +2767,15 @@ const revisionFact = (revision) =>
   `revision \`${revision.replace(/^sha256:/, "").slice(0, 7)}\``;
 
 // A refusal reason short enough to end a lead line that already holds
-// `before`: its first sentence, cut at a word outside code and marked when
-// cut. The full reason stays in the notice's details.
+// `before`: its first sentence, ending at a stop outside code, cut at a word
+// outside code and marked when cut. The full reason stays in the notice's
+// details.
 function shortReason(reason, before) {
   const room = leadLineLimit - [...`${before} · `].length;
-  const sentence = reason.split(/(?<=[.!?])\s/)[0].replace(/[.!?]$/, "");
+  const sentence = /^(?:[^`.!?]|`[^`]*`|[.!?](?!\s))*/
+    .exec(reason)[0]
+    .trimEnd()
+    .replace(/[.!?]$/, "");
   if ([...sentence].length <= room) return sentence;
   const words = sentence.split(" ");
   let kept = "";
@@ -2784,14 +2789,23 @@ function shortReason(reason, before) {
   return `${kept.replace(/[,;:]$/, "")}…`;
 }
 
+// A retained Seams exemption keeps its Agent Brief's revision in the result.
 function invalidFeedback(errors, evaluation) {
+  const { kind, revision } = evaluation;
   return `${resultLine({ ...evaluation, status: "needs-attention" })}\n${feedbackNotice(
     {
       lead: "👤 **Contract needs attention**",
-      facts: ["its writer fixes the items below"],
+      facts: [
+        revision && revisionFact(revision),
+        "its writer fixes the items below",
+      ],
       visible: errors.map((error) => `- ${error}`).join("\n"),
-      summary: "Structure incomplete, so no revision and no readiness",
+      summary: revision
+        ? "Structure incomplete, so no readiness"
+        : "Structure incomplete, so no revision and no readiness",
       details: [
+        revision &&
+          `The ${kind} at revision \`${revision}\` lacks the required structure.`,
         "Fix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.",
       ],
     },
