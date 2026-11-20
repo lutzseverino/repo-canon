@@ -60,7 +60,7 @@ request for work now skips only the plan: [Expedited change](references/launches
 Read [intake](references/intake.md) for ideas, `state:grill` issues, retro/architecture
 reports, or questions from launch reports, issues or incoming messages. After a grill, retain the
 contribution guide's writer publication, final split and independent acceptance
-responsibilities; use `to-spec` and `to-tickets` through the launch template.
+responsibilities; launch `to-spec` and `to-tickets` with `workbench brief`.
 
 Log friction with evidence and route (row, finding or wish). Fix the instance; add a standing rule only when the same failure
 recurs after the fix, and name the rule it replaces or deletes. A **new requirement** mid-plan, unless wanted now, takes:
@@ -101,7 +101,7 @@ Paths are relative to each repository or the workbench.
 - `AGENTS.md`: delegation, naming and workstation convention. If missing, pass
   context only and name sessions for operation/target where naming is supported.
 - The workbench, whose format this skill owns: its `index.md`, `inbox.md`,
-  `wishes.md`, `inbox-archive.md`, `incoming/`, `<plan>/plan.md`, `<plan>/log.md`, `retro.md`,
+  `wishes.md`, `inbox-archive.md`, `incoming/`, `<plan>/plan.md`, `<plan>/log.md`,
   launch briefs and reports (`<plan>/*.md`), and the script's `workbench-observation.json` in its
   Git directory. Create missing files as [templates](references/templates.md) says.
 - A tracked repository's Repository Standards adoption record: the Repo Canon

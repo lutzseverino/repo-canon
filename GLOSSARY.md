@@ -175,7 +175,8 @@ _Avoid_: Gap session, back session, orchestrator
 **Launch report**:
 The workbench record of a launched stage whose output is a workbench record,
 such as a grill's decision record; tracker-producing stages report through the
-tracker instead. Its format and completion marker live in the
+tracker instead. Its completion marker is its final line `status: done`, which
+the generated brief requires; see the
 [launch method](.agents/skills/orchestrate/references/launches.md).
 _Avoid_: Hand-back message, nudge, worker report
 
@@ -187,9 +188,9 @@ _Avoid_: Launch template, hand-written brief
 
 **Stage input**:
 The identifiers a hand launch passes to its stage's hand skill: an issue, a
-pull request or a launch report. See the
-[launch template](.agents/skills/orchestrate/references/launches.md#shared-launch-template)
-for the launch contract.
+pull request, a plan row or a launch report.
+[`workbench brief`](.agents/skills/orchestrate/references/launches.md#the-workbench-script)
+takes it as the generated brief's target.
 _Avoid_: Brief, task context, launch notes
 
 **Close review**:

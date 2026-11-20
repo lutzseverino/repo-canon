@@ -9,9 +9,17 @@ Name each hand launch and its thread, where supported, `<stage>: <item>` using t
 under [Workbench](../SKILL.md#workbench). For heavy reads, use a covering
 installed skill or read a bounded tail; without one, pass context only.
 
-Write the brief into its plan directory before starting; its `Launch report:` line names the current-turn
-report, and the pair is the launch's wait. On resumption choose a fresh report or clear the previous terminal marker.
-Immediately before **every** launch below, read validated Scriptorium status **once**, from that host's
+Generate each hand launch's brief with [`workbench brief`](#the-workbench-script), naming the
+stage exactly as the Canonical stages table does, its issue or PR as target (else its plan row; a Close
+review as [close](close.md#run-the-close-reviews) says), and the plan row. It copies the
+stage's hand skill, refuses a stage without one and derives the workspace, report and duties; run a
+refused gap by hand under its gap line and note the missing skill once under Findings. Write only its
+Context on standard input: issue links, evidence (including status JSON), recorded decisions with dates
+and quoted words, scope and deliverables, and destinations beyond the workspace. Start the session with
+the brief's skill invocation and the printed brief. The brief and its report are the launch's wait; on
+resumption generate a fresh brief. The report's final line is the only completion mark: record the
+row's new state when you consume it.
+Immediately before **every** launch, read validated Scriptorium status **once**, from that host's
 installation:
 
 ```sh
@@ -20,40 +28,10 @@ node <scriptorium>/src/main.ts status <host-configuration> --json > <budget.json
 
 Check version 1; consume capacity, holds/provenance, unavailable observations and model
 catalog/defaults/effort/guidance. Use the installed factory-workflow **Model selection** rule, including
-for hand reviews. Set the launch's actual model and effective effort from this read and record both in the
-template; honor capacity and holds, inspecting unavailable facts before launching. Counts cover factory
+for hand reviews. Pass the launch's actual model and effective effort from this read, with its reason,
+to `brief`; honor capacity and holds, inspecting unavailable facts before launching. Counts cover factory
 work only: account for your running launches too; the observation is no reservation or grant. Refresh for
 each later launch.
-
-### Shared launch template
-
-Every hand launch invokes its Canonical stages hand skill through the supported
-mechanism, then uses these fields and fixed duties. A stage with none still runs
-with its gap line; note its missing skill once under Findings. Fill context, not
-skill procedure or question format; there is no procedure field.
-
-```text
-<skill invocation>
-Issues: <issue/specification/PR links, or none>
-Evidence: <source links and observations, including status JSON>
-Recorded decisions: <dates, quoted words and sources, or none>
-Scope: <bounded work and deliverables>
-Workspace: <owned checkout/branch and destinations; workstation convention if needed>
-Plan references: <plan directory, linked row or Close review, and completion mark>
-Model: <actual model and its guidance-based reason>
-Effective effort: <resolved effort>
-Launch report: <current-turn report path>
-
-Before an operation makes relay late, expose prerequisite owner steps in the
-report, with the preceding operation's timing/evidence and actual latest start
-when one exists; complete the owner-wait report before that opportunity passes.
-Write the complete launch report, put open questions in the report, set the
-specified completion mark, commit the workbench writes and push when it has a
-remote. Hand back through the report only; send no closing message to the
-orchestrating thread. End the report with the final line exactly: status: done
-```
-
-Seam (deferred): skills declaring their inputs; consumers: 1 (these templates); extract at a second launcher. The host owns capacity/guidance/effort; the standard owns stages/templates.
 
 ## Owner steps
 
@@ -64,29 +42,9 @@ summary. Relay reported chores in one message before the preceding
 time-sensitive operation ends: deadline first (actual latest start when supplied), then a card each: what it unblocks, in
 plain words; why it needs the owner; about how long; what to look for and each field's meaning in your summary table, never
 a file without a guide or the worker's thread; the commands verbatim from the owner's workstation, naming the host by the
-Workspace repository convention (if none, use the owner-question route and record a finding); and what happens if skipped.
+repository's workstation convention (if none, use the owner-question route and record a finding); and what happens if skipped.
 Log report availability, relay time, deadline and evidence; untimed chores get no invented deadline or timeout. Return owner
 output to the same worker with a fresh report. Seam (deferred): workstation commands; consumers: 1; revisit at 2.
-
-## Triage run
-
-Scope names the request and plan-directory result linking brief/findings.
-Plan references sets `triaged <file>` on its `plan.md` row.
-
-## Grill
-
-Start from the [intake queue](intake.md#grill-queue), in the owner's session environment. Evidence
-includes unresolved questions and Scope names the decision record in the plan directory. Workspace
-supplies the owned branch/checkout and one PR destination per repository for domain edits, as the
-contribution guide requires. Plan references sets `grilled <file>` and records the session reference in
-the row's State. For `state:grill` issues, retain the guide's independent acceptance and readiness rules
-and plan approval gate; factory implementation of a ready issue skips triage. Continue an owner's grill or
-prototype in that same session when taking it over.
-
-## Publication and review
-
-Name contract inputs/destinations in Scope/Workspace. Retain contribution-guide authority and independent
-acceptance; a publisher never accepts its own contract.
 
 ## Worker
 
@@ -122,24 +80,12 @@ Deliver through [Worker](#worker) or yourself. At merge, resume the factory via
 that section and held launches/merges, add the PR outcome to its Answered entry,
 ending the pause, and end the row.
 
-## Retro
-
-Start a separate owner-facing session with `retro`. Prepare its launch report
-header with inputs, evidence links and scope, using the shared launch template;
-pass only that report path to the skill. For plan closure use `<plan>/retro.md`
-as the report. After consuming it, mark the Close review `done <file>`.
-
-## Architecture review
-
-Scope names repository/changes, Evidence names sources, Plan references marks the review `done <file>`.
-Route its report through [intake](intake.md#filed-requests-and-reports).
-
 ## Handover
 
 Handover starts a successor orchestrating session, outside the stage pipeline. One session owns all
 plans. At plan close or compaction since takeover, update records, move Answered entries intact to
 `inbox-archive.md`, log the former owner reference, and commit/push. Start a fresh session with
-`/orchestrate` and the shared template where supported; otherwise tell the owner it is ready.
+`/orchestrate` and the workbench path where supported; otherwise tell the owner it is ready.
 Then stop: the records are the handover. The successor reads `index.md`, `inbox.md` and active
 plans, sets `Orchestrator:` to itself, arms [continuous coverage](../SKILL.md#the-wait-step),
 keeps any expedited pause, and [reconciles the inbox](templates.md#inboxmd) before acting.
@@ -150,6 +96,7 @@ With Node.js 24 or 26 and current GitHub CLI credentials, run from records only:
 
 ```sh
 node <skill>/workbench.mjs status <workbench> --stale-after <seconds>
+node <skill>/workbench.mjs brief <stage> <target> --plan <plan directory> --row <row> --model <model>@<effort> --reason <one line> --stages <installed factory-workflow rules> < <context>
 node <skill>/workbench.mjs wait <workbench> --interval <seconds> --max-duration <seconds>
 ```
 

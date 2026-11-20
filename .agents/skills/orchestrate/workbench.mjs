@@ -3,12 +3,15 @@
 // The orchestrating agent's status and wait, read from the workbench records
 // that references/templates.md shapes and from live tracker state.
 // Usage: node workbench.mjs status <workbench> --stale-after <seconds>
+//        node workbench.mjs brief <stage> <target> --plan <plan directory> --row <row>
+//          --model <model>@<effort> --reason <one line> --stages <rules file> < <context>
 //        node workbench.mjs wait <workbench> --interval <seconds> --max-duration <seconds>
 // Durations are required positive finite caller choices, without defaults.
 // Both save the facts they observed in the workbench's Git directory; wait
 // compares against them, so a change after the last status or wait wakes it.
-// Exit 0: status printed, or a change, finished report or maximum duration
-// (re-arm); exit 1: usage, read or platform error.
+// Brief writes a new launch brief into the plan directory and prints it.
+// Exit 0: status or brief printed, or a change, finished report or maximum duration
+// (re-arm); exit 1: usage, refusal, read or platform error.
 // Tracker requests and upstream fetches retain their 45-second timeout.
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -17,53 +20,75 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  statSync,
   watch,
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
+import { text } from "node:stream/consumers";
 import { promisify } from "node:util";
 import { connectionFor, executedAsScript } from "../babysit/platform.mjs";
 
 class UsageError extends Error {}
 
 const usage =
-  "usage: workbench.mjs status <workbench> --stale-after <seconds> | workbench.mjs wait <workbench> --interval <seconds> --max-duration <seconds>";
-const durations = {
-  status: ["stale-after"],
-  wait: ["interval", "max-duration"],
+  "usage: workbench.mjs status <workbench> --stale-after <seconds> | workbench.mjs brief <stage> <target> --plan <plan directory> --row <row> --model <model>@<effort> --reason <one line> --stages <factory-workflow rules file> < <context> | workbench.mjs wait <workbench> --interval <seconds> --max-duration <seconds>";
+const commands = {
+  status: { positional: ["workbench"], options: ["stale-after"] },
+  brief: {
+    positional: ["stage", "target"],
+    options: ["plan", "row", "model", "reason", "stages"],
+  },
+  wait: { positional: ["workbench"], options: ["interval", "max-duration"] },
+};
+
+// Each option's value: durations are seconds, brief's options are text.
+const optionValue = (command, argument, value) => {
+  if (command === "brief") {
+    if (!value.trim()) throw new UsageError(`${argument} needs a value`);
+    return value;
+  }
+  const seconds = value.trim() === "" ? NaN : Number(value);
+  if (!(seconds > 0) || !Number.isFinite(seconds * 1000))
+    throw new UsageError(
+      `${argument} must be a finite positive number of seconds with finite milliseconds`,
+    );
+  return seconds;
 };
 
 const parseArguments = (argv) => {
   const [command, ...rest] = argv;
-  if (!Object.hasOwn(durations, command)) throw new UsageError(usage);
-  const options = { command, workbench: undefined };
+  if (!Object.hasOwn(commands, command)) throw new UsageError(usage);
+  const { positional, options: names } = commands[command];
+  const options = { command };
+  const given = [];
   for (let index = 0; index < rest.length; index += 1) {
     const argument = rest[index];
     const flag = /^--(.+)$/.exec(argument)?.[1];
     if (!flag) {
-      if (options.workbench)
+      if (given.length === positional.length)
         throw new UsageError(`unexpected argument ${argument}; ${usage}`);
-      options.workbench = resolve(argument);
+      given.push(argument);
       continue;
     }
-    if (!durations[command].includes(flag))
+    if (!names.includes(flag))
       throw new UsageError(`unrecognized option ${argument}; ${usage}`);
     if (Object.hasOwn(options, flag))
       throw new UsageError(`${argument} is given more than once`);
     const value = rest[(index += 1)];
     if (value === undefined) throw new UsageError(`${argument} needs a value`);
-    const seconds = value.trim() === "" ? NaN : Number(value);
-    if (!(seconds > 0) || !Number.isFinite(seconds * 1000))
-      throw new UsageError(
-        `${argument} must be a finite positive number of seconds with finite milliseconds`,
-      );
-    options[flag] = seconds;
+    options[flag] = optionValue(command, argument, value);
   }
-  const missing = durations[command]
+  const missing = names
     .filter((flag) => !Object.hasOwn(options, flag))
     .map((flag) => `--${flag} is required`);
-  if (!options.workbench) missing.unshift("the workbench directory is required");
+  for (const name of positional.slice(given.length).reverse())
+    missing.unshift(
+      `${name === "workbench" ? "the workbench directory" : `<${name}>`} is required`,
+    );
   if (missing.length) throw new UsageError(`${missing.join("; ")}; ${usage}`);
+  for (const [index, name] of positional.entries()) options[name] = given[index];
+  if (options.workbench) options.workbench = resolve(options.workbench);
   return options;
 };
 
@@ -591,6 +616,100 @@ const status = async (options, { connectionOf, now, stdout }) => {
   return 0;
 };
 
+// Seam (deferred): skills declaring their inputs; consumers: 1 (brief); extract
+// at a second launcher. The host owns capacity, guidance and effort; the
+// standard owns the stages, read from the caller's rules file, never copied.
+const duties = [
+  "Run the hand skill the Skill line names, with this brief as its task context; where the line names more than one, run the one the Context names.",
+  "Before an operation makes relay late, expose prerequisite owner steps in the report, with the preceding operation's timing and evidence and the actual latest start when one exists; complete the owner-wait report before that opportunity passes.",
+  "Write the complete launch report, with open questions in it, commit the workbench writes and push when the workbench has a remote. Hand back through the report only; send no closing message to the orchestrating thread. End the report with the final line exactly: status: done",
+];
+
+// The Hand skill cell of the stage, named exactly as the rules file's
+// Canonical stages table names it; refused when the cell names no skill.
+const handSkill = (rules, stage) => {
+  const table = (
+    sections(readFileSync(rules, "utf8")).get("Canonical stages") ?? []
+  ).filter((line) => line.trim().startsWith("|"));
+  const header = table.length ? cells(table[0]) : [];
+  const column = header.indexOf("Hand skill");
+  if (header[0] !== "Stage" || column < 0)
+    throw new Error(
+      `${rules} has no Canonical stages table with Stage and Hand skill columns`,
+    );
+  const row = table.slice(2).map(cells).find(([name]) => name === stage);
+  if (!row)
+    throw new Error(
+      `unknown stage ${stage}; name it exactly as the Canonical stages table in ${rules} does`,
+    );
+  if (!/`[^`]+`/.test(row[column] ?? ""))
+    throw new Error(
+      `stage ${stage} is refused: its Hand skill cell names no skill (${row[column]})`,
+    );
+  return row[column];
+};
+
+const slug = (text) =>
+  text
+    .toLowerCase()
+    .replace(/^https:\/\/github\.com\//, "")
+    .replaceAll(/[^\p{L}\p{N}]+/gu, "-")
+    .replaceAll(/^-|-$/g, "");
+
+const brief = async (options, { input, now, stdout }) => {
+  const { stage, target, plan, row, model, reason } = options;
+  if (!/^[^@\s]+@[^@\s]+$/.test(model))
+    throw new Error(
+      `--model must take the model: label's <model>@<effort> form, not ${model}`,
+    );
+  if (/[\r\n]/.test(reason)) throw new Error("--reason must be one line");
+  const directory = resolve(plan);
+  if (!statSync(directory, { throwIfNoEntry: false })?.isDirectory())
+    throw new Error(`--plan names no plan directory: ${directory}`);
+  if (!slug(target)) throw new Error(`<target> ${target} names nothing`);
+  const skill = handSkill(options.stages, stage);
+  const context = (await input()).replace(/^(?:[ \t]*\r?\n)+/, "").trimEnd();
+  if (!context) throw new Error("refused: an empty Context on standard input");
+  const tracked = new RegExp(`^(?:${trackerPattern.source})$`).exec(target);
+  const repository = tracked
+    ? `${tracked[1] ?? tracked[4]}/${tracked[2] ?? tracked[5]}`
+    : /^[\w.-]+\/[\w.-]+$/.test(target) && target;
+  // Numbered until neither the brief nor its report exists.
+  const date = new Date(now()).toISOString().slice(0, 10);
+  const stem = `brief-${slug(stage)}-${slug(target)}-${date}`;
+  const taken = (name) =>
+    [name, `${name}-report`].some((file) => existsSync(join(directory, `${file}.md`)));
+  let name = stem;
+  for (let number = 2; taken(name); number += 1) name = `${stem}-${number}`;
+  const content = [
+    `# ${stage}: ${target}`,
+    "",
+    `Operation: ${stage}`,
+    `Skill: ${skill}`,
+    `Target: ${target}`,
+    `Plan/row: ${basename(directory)}/${row}`,
+    `Workspace: ${
+      repository
+        ? `a fresh worktree of ${repository} on its default branch, removed when done; in the workbench, write only the report`
+        : "no worktree; read the workbench and the tracker, and write in the workbench only the report"
+    }`,
+    `Model: ${model} — ${reason}`,
+    `Launch report: ${join(directory, `${name}-report.md`)}`,
+    "Final line: status: done",
+    "",
+    ...duties.flatMap((duty) => [duty, ""]),
+    "## Context",
+    "",
+    context,
+    "",
+    "status: done",
+    "",
+  ].join("\n");
+  writeFileSync(join(directory, `${name}.md`), content, { flag: "wx" });
+  stdout.write(content);
+  return 0;
+};
+
 // Resolves "time" after the duration, or with the event's value first.
 const pause = (durationMs, event) =>
   new Promise((resolve) => {
@@ -750,7 +869,7 @@ const wait = async (options, { connectionOf, pause: pauseFor, now, stdout }) => 
 // `connect` turns an <owner>/<name> selector into a Postern connection with
 // the GitHub CLI's current credential; `pause` waits a number of
 // milliseconds, resolving "event" early when the given file-event promise
-// does; `now` gives the time; `stdout` and `stderr` receive the lines. Each is
+// does; `input` reads brief's Context; `now` gives the time; `stdout` and `stderr` receive the lines. Each is
 // replaceable for fixtures.
 export const main = async (
   argv = process.argv.slice(2),
@@ -759,6 +878,7 @@ export const main = async (
     pause: pauseFor = pause,
     stdout = process.stdout,
     stderr = process.stderr,
+    input = () => text(process.stdin),
     now = Date.now,
   } = {},
 ) => {
@@ -776,6 +896,8 @@ export const main = async (
     return connections.get(key);
   };
   try {
+    if (options.command === "brief")
+      return await brief(options, { input, now, stdout });
     return options.command === "status"
       ? await status(options, { connectionOf, now, stdout })
       : await wait(options, { connectionOf, pause: pauseFor, now, stdout });
