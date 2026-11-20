@@ -41,6 +41,7 @@ const retirementMentions = [
   "discovery/github-repository-configuration.md",
   "docs/usage/adopt-repo-canon.md",
   "docs/adr/0034-choose-where-checks-run-at-adoption.md",
+  "docs/adr/0054-trust-the-runner-account-a-repository-variable-names.md",
 ];
 // The inventory itself, which names the variable to search for it.
 const inventory = [
