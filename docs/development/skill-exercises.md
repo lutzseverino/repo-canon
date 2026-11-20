@@ -415,9 +415,10 @@ orchestrator for an active plan in `index.md` and has an empty `incoming/`.
 Run eight bounded sessions, each fresh, from a fresh build and with the
 fixture repository as its working directory: four requests, each once with a
 running orchestrator and once without. Give each session only the local-only
-preamble and one request from the fixture's `docs/exercise.md`, which the
-session itself never reads. With an orchestrator, the preamble names the
-workbench as the person's user-level instruction; without one, it names none.
+preamble and one request from the operator file that the manifest's
+`repositories.front-door.operatorInputs` names, outside the repository. With
+an orchestrator, the preamble names the workbench as the person's user-level
+instruction; without one, it names none.
 
 - **Idea:** the session discusses it and proposes a grill, filing nothing
   unless asked.

@@ -675,6 +675,10 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     readFileSync(join(frontDoor.path, ".scriptorium/config.json"), "utf8"),
     readFileSync(join(root, ".scriptorium/config.json"), "utf8"),
   );
+  // The requests and expected outcomes stay where sessions do not read them.
+  assert.ok(statSync(frontDoor.operatorInputs).isFile());
+  for (const path of [frontDoor.path, frontDoor.workbench.path])
+    assert.ok(!frontDoor.operatorInputs.startsWith(`${path}/`));
   const doorWorkbench = frontDoor.workbench.path;
   for (const path of [frontDoor.path, doorWorkbench]) {
     assert.equal(

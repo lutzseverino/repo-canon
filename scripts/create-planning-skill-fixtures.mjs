@@ -1768,11 +1768,21 @@ The operator relays these in order, one turn at a time, and runs each order from
     agents: readFileSync(join(sourceRoot, "AGENTS.md"), "utf8"),
     context:
       "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination, with the UTC time of delivery.\n_Avoid_: Receipt record\n\n**Receipts page**:\nThe page where a recipient sees their Delivery receipts.\n",
-    exercise: `## Task
+    exercise:
+      "## Task\n\nSessions here receive only a person's request. The operator keeps the requests and expected outcomes outside this repository, in the file the manifest names.\n",
+  });
+  // Sessions must not read the expected outcomes, so they stay outside the
+  // fixture repository.
+  const operatorInputs = join(fixtureRoot, "front-door-operator.md");
+  writeFileSync(
+    operatorInputs,
+    `# Front-door exercise
 
-Operator-only: never point the session at this file. A session that reads it is a recorded exercise limit. Run eight fresh sessions, one per request and route, each from a fresh build. Give each session only the preamble and one request below. For the route with a running orchestrator, the preamble also says: "For this exercise only, my user-level instructions say: The orchestrating agent's workbench is <absolute path of the workbench in manifest.json>." For the route without one, it names no workbench. All tracker, workbench and owner inputs are local simulations.
+## Task
 
-Preamble: "This is a local simulation in <this repository's absolute path>. Use only the local Markdown tracker. No remote issue, PR, message, schedule or factory operation is authorized."
+Never give a session this file. Run eight fresh sessions, one per request and route, each from a fresh build. Give each session only the preamble and one request below. For the route with a running orchestrator, the preamble also says: "For this exercise only, my user-level instructions say: The orchestrating agent's workbench is <absolute path of the workbench in manifest.json>." For the route without one, it names no workbench. All tracker, workbench and owner inputs are local simulations.
+
+Preamble: "This is a local simulation in <the front-door repository's absolute path>. Use only the local Markdown tracker. No remote issue, PR, message, schedule or factory operation is authorized."
 
 1. Idea: "I've been thinking: recipients could confirm a Delivery receipt with a photo of the parcel at the door."
 2. Filed bug: "I filed .scratch/receipts/issues/02-export-shifts-late-receipts.md this morning. Can you deal with it?"
@@ -1781,9 +1791,9 @@ Preamble: "This is a local simulation in <this repository's absolute path>. Use 
 
 ## Expected outcome
 
-The session reads AGENTS.md's Agent skills routing and the installed Canonical stages. For the idea, it discusses it and proposes a grill, filing nothing unless asked. For the filed bug, it proposes triage. For the UI question, it proposes a grill. For "What's going on?", it answers read-only from the tracker and, with an orchestrator, from the workbench records. No session starts triage, grill-with-docs or orchestrate without the person's yes. With an orchestrator, the session reads it from the workbench index.md and offers to report through incoming/, writing nothing there unless asked. After each case, record git status --porcelain in this repository and in the workbench: the status cases leave both clean with no tracker write, and any change in another case is an observed write to report. Allow at most ten minutes per session. Report observed outcomes with the pull request that needs them, separately from fixture checks.
+The session reads AGENTS.md's Agent skills routing and the installed Canonical stages. For the idea, it discusses it and proposes a grill, filing nothing unless asked. For the filed bug, it proposes triage. For the UI question, it proposes a grill. For "What's going on?", it answers read-only from the tracker and, with an orchestrator, from the workbench records. No session starts triage, grill-with-docs or orchestrate without the person's yes. With an orchestrator, the session reads it from the workbench index.md and offers to report through incoming/, writing nothing there unless asked. After each case, record git status --porcelain in the repository and in the workbench: the status cases leave both clean with no tracker write, and any change in another case is an observed write to report. Allow at most ten minutes per session. Report observed outcomes with the pull request that needs them, separately from fixture checks.
 `,
-  });
+  );
   cpSync(
     join(sourceRoot, ".scriptorium/config.json"),
     join(root, ".scriptorium/config.json"),
@@ -1835,6 +1845,7 @@ The session reads AGENTS.md's Agent skills routing and the installed Canonical s
   repositories["front-door"] = {
     path: root,
     skills,
+    operatorInputs,
     initial: commit(root, "chore: establish front-door exercise"),
     workbench: {
       path: workbench,
