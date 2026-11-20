@@ -13,17 +13,17 @@ runs as, its acting login, as the author of its own results. That is
 `github-actions[bot]` on Actions and the runner's account off Actions. The
 adopter sets the factory's trusted contract-result author to the same account.
 At `self-reported`, nobody posts contract results, so the owner applies
-readiness. Merge there requires `PR metadata` and the review run's
-`Review rerun` status, which reruns the one check command on the exact head.
+readiness. Merge there requires `PR metadata` and `Review rerun`, the status
+the review run posts after rerunning the one check command on the exact head.
 
-The owner answered "yes to all" on 2026-11-19. That answer made the runner's
-account the trusted author at `runner` and left readiness with the owner at
-`self-reported`, knowingly narrowing ADR 0034's "Readiness ... must each work at
-every check location". On 2026-11-20 the owner answered "I'll follow your rec
-for rc908.", choosing a repository variable because it "adds no new file shape
-and keeps 'keeps no runner registry'". The variable is read through the API,
-so agents can see it, unlike the retired `REPO_CANON_RUNS_ON`, which only
-workflows read.
+The owner answered "yes to all" on #908 on 2026-11-19. That answer made the
+runner's account the trusted author at `runner` and left readiness with the
+owner at `self-reported`, knowingly narrowing ADR 0034's "Readiness ... must
+each work at every check location". On 2026-11-20 the owner answered on #908
+"I'll follow your rec for rc908.", choosing a repository variable because it
+"adds no new file shape and keeps 'keeps no runner registry'". Any credential
+holding "Variables: read" reads the variable through the API, while the
+retired `REPO_CANON_RUNS_ON` was read only by workflows.
 
 The Actions token cannot read repository variables through the API. On
 2026-11-20 the owner therefore answered the triage grill on #1226 by accepting
@@ -51,6 +51,8 @@ workflow changes.
 
 ## Consequences
 
+- At `runner`, merge refuses while the variable is unset, so the owner must
+  set it.
 - At `runner`, earlier `github-actions[bot]` results no longer count, and the
   validator, running as the runner's account, posts a fresh result.
 - A worker that runs the validator under its own token gets results the

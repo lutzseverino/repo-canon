@@ -522,7 +522,7 @@ _Avoid_: Unchecked, skipped checks
 
 **Review rerun**:
 The review run's repetition of the one check command on a self-reported pull
-request's exact head, which merge requires before a self-reported check counts.
+request's exact head, posted as the commit status merge requires there.
 _Avoid_: Second run, re-check, reviewer's tests
 
 **Plan-gated requirement**:
