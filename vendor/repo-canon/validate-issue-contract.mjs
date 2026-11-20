@@ -550,9 +550,12 @@ const feedbackStatePrefix = "<!-- repo-canon:issue-contract-state ";
 // The published result format. Any change to the state line's fields or their
 // meaning is a new version.
 export const resultFormat = "repo-canon/issue-contract-state/v1";
+// Headings of the notices posted before the feedback led with its outcome,
+// still read from those notices.
 const needsAttentionHeading = "## Issue contract needs attention";
 const structureCorrectedHeading = "## Issue contract structure corrected";
 const readinessRemovedHeading = "## Issue contract readiness removed";
+const readinessRemovedLead = "❌ **Readiness removed**";
 // An open issue's workflow state is its one `state:` label, or the `wontfix`
 // outcome that closes it. Only `state:ready` is readiness, bound to a review;
 // the validator's own fallback is `state:triage`. The `triage` readiness
@@ -2737,15 +2740,88 @@ function resultLine({
   return `${feedbackMarker}\n${feedbackStatePrefix}${state} -->`;
 }
 
+// The comment rules' Limits: a lead line holds at most 100 characters.
+// Seam (deferred): the comment rules' lead-line limit; consumers: 1; wrap at 2.
+const leadLineLimit = 100;
+
+// A notice after the result line: its lead line, the status marker and the
+// outcome in bold followed by facts, then anything a person must act on, then
+// the explanation collapsed under a summary stating the decision.
+function feedbackNotice({
+  lead,
+  facts = [],
+  visible = null,
+  summary,
+  details,
+}) {
+  return [
+    [lead, ...facts.filter(Boolean)].join(" · "),
+    visible,
+    `<details>\n<summary>${summary}</summary>\n\n${details.filter(Boolean).join("\n\n")}\n\n</details>`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+const revisionFact = (revision) =>
+  `revision \`${revision.replace(/^sha256:/, "").slice(0, 7)}\``;
+
+// A refusal reason short enough to end a lead line that already holds
+// `before`: its first sentence, ending at a stop outside code, cut at a word
+// outside code and marked when cut. The full reason stays in the notice's
+// details.
+function shortReason(reason, before) {
+  const room = leadLineLimit - [...`${before} · `].length;
+  const sentence = /^(?:[^`.!?]|`[^`]*`|[.!?](?!\s))*/
+    .exec(reason)[0]
+    .trimEnd()
+    .replace(/[.!?]$/, "");
+  if ([...sentence].length <= room) return sentence;
+  const words = sentence.split(" ");
+  let kept = "";
+  for (const word of words) {
+    const next = kept ? `${kept} ${word}` : word;
+    if ([...next].length + 1 > room) break;
+    kept = next;
+  }
+  while (kept && (kept.match(/`/g) ?? []).length % 2)
+    kept = kept.slice(0, kept.lastIndexOf("`")).trimEnd();
+  return `${kept.replace(/[,;:]$/, "")}…`;
+}
+
+// A retained Seams exemption keeps its Agent Brief's revision in the result.
 function invalidFeedback(errors, evaluation) {
-  return `${resultLine({ ...evaluation, status: "needs-attention" })}\n${needsAttentionHeading}\n\n${errors.map((error) => `- ${error}`).join("\n")}\n\nFix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.`;
+  const { kind, revision } = evaluation;
+  return `${resultLine({ ...evaluation, status: "needs-attention" })}\n${feedbackNotice(
+    {
+      lead: "👤 **Contract needs attention**",
+      facts: [
+        revision && revisionFact(revision),
+        "its writer fixes the items below",
+      ],
+      visible: errors.map((error) => `- ${error}`).join("\n"),
+      summary: revision
+        ? "Structure incomplete, so no readiness"
+        : "Structure incomplete, so no revision and no readiness",
+      details: [
+        revision &&
+          `The ${kind} at revision \`${revision}\` lacks the required structure.`,
+        "Fix the items above. Structural validation will re-run, but only an authorized reviewer can grant readiness.",
+      ],
+    },
+  )}`;
 }
 
 // The readiness labels the validator's previous readiness-removed notice
-// names, so a run that keeps its reason publishes the same notice.
+// names, so a run that keeps its reason publishes the same notice. Earlier
+// notices name the removal by their heading, current ones by their lead line.
 function removedLabelsIn(feedback) {
   const body = feedback?.body ?? "";
-  if (!body.includes(`\n${readinessRemovedHeading}\n`)) return [];
+  if (
+    !body.includes(`\n${readinessRemovedHeading}\n`) &&
+    !body.includes(`\n${readinessRemovedLead} · `)
+  )
+    return [];
   const line = /^The validator removed (.+) from the /m.exec(body)?.[1] ?? "";
   return [...line.matchAll(/`([^`]+)`/g)]
     .map(([, label]) => label)
@@ -2767,15 +2843,48 @@ function awaitingReviewFeedback(
   });
   const review =
     "A repository admin, maintainer, or explicitly authorized triage-role collaborator must review this exact revision, then apply `state:ready`. For an Agent Brief, wait for this revision notice before applying the label. Structural validation never grants readiness.";
-  const footprint = published.footprint ? `\n\n${published.footprint}` : "";
+  const revision = revisionFact(published.revision);
   if (reason && removedLabels.length > 0) {
     const labels = removedLabels.map((label) => `\`${label}\``).join(" and ");
-    return `${state}\n${readinessRemovedHeading}\n\nReadiness was removed: ${reason}\n\nThe validator removed ${labels} from the ${published.kind} at revision \`${published.revision}\`, which has the required structure.\n\nA fresh authorized review is required to restore readiness. ${review}${footprint}`;
+    const lead = readinessRemovedLead;
+    return `${state}\n${feedbackNotice({
+      lead,
+      facts: [revision, shortReason(reason, `${lead} · ${revision}`)],
+      summary: `${removedLabels.map((label) => `<code>${label}</code>`).join(" and ")} removed; a fresh authorized review restores readiness`,
+      details: [
+        `Readiness was removed: ${reason}`,
+        `The validator removed ${labels} from the ${published.kind} at revision \`${published.revision}\`, which has the required structure.`,
+        `A fresh authorized review is required to restore readiness. ${review}`,
+        published.footprint,
+      ],
+    })}`;
   }
-  const explanation = reason
-    ? `\n\nThe last readiness attempt was rejected: ${reason}`
-    : "";
-  return `${state}\n## Issue contract awaiting review\n\nThe ${published.kind} has the required structure at revision \`${published.revision}\`.${explanation}\n\nA fresh authorized review is required. ${review}${footprint}`;
+  const structure = `The ${published.kind} has the required structure at revision \`${published.revision}\`.`;
+  if (reason) {
+    const lead = "❌ **Readiness refused**";
+    return `${state}\n${feedbackNotice({
+      lead,
+      facts: [revision, shortReason(reason, `${lead} · ${revision}`)],
+      summary:
+        "Readiness refused; this revision needs a fresh authorized review",
+      details: [
+        `The last readiness attempt was rejected: ${reason}`,
+        structure,
+        `A fresh authorized review is required. ${review}`,
+        published.footprint,
+      ],
+    })}`;
+  }
+  return `${state}\n${feedbackNotice({
+    lead: "👤 **Awaiting review**",
+    facts: [revision, "an authorized reviewer applies `state:ready`"],
+    summary: "Structure complete; readiness needs an authorized review",
+    details: [
+      structure,
+      `A fresh authorized review is required. ${review}`,
+      published.footprint,
+    ],
+  })}`;
 }
 
 function approvedFeedback(
@@ -2785,13 +2894,35 @@ function approvedFeedback(
   const review = triageRun
     ? `was accepted by the factory's triage run ${triageRun}, whose ${reviewAttested ? "review attestation" : "result"} @${reviewer} posted,`
     : `was reviewed by @${reviewer}, whose repository role authorizes triage,`;
-  return `${resultLine({ ...published, status: "approved", label, reviewer, reviewEventId })}\n## Issue contract readiness recorded\n\nThe ${published.kind} at revision \`${published.revision}\` ${review} and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.${published.footprint ? `\n\n${published.footprint}` : ""}`;
+  return `${resultLine({ ...published, status: "approved", label, reviewer, reviewEventId })}\n${feedbackNotice(
+    {
+      lead: "✅ **Readiness recorded**",
+      facts: [revisionFact(published.revision), `bound to \`${label}\``],
+      summary: `${triageRun ? "The factory's triage run" : `@${reviewer}`} reviewed this revision; editing it removes readiness`,
+      details: [
+        `The ${published.kind} at revision \`${published.revision}\` ${review} and is bound to \`${label}\`. Editing or replacing the contract or removing readiness invalidates this association.`,
+        published.footprint,
+      ],
+    },
+  )}`;
 }
 
 function noContractFeedback(evaluation, corrected) {
   const notice = corrected
-    ? `${structureCorrectedHeading}\n\nThe ${evaluation.kind} now has the required structure. A fresh authorized review is still required before restoring readiness.`
-    : `## Issue contract not required\n\nThe ${evaluation.kind} has the required structure and carries no implementation contract, so it carries no readiness.`;
+    ? feedbackNotice({
+        lead: "✅ **Structure corrected**",
+        summary: "No implementation contract; readiness needs a fresh review",
+        details: [
+          `The ${evaluation.kind} now has the required structure. A fresh authorized review is still required before restoring readiness.`,
+        ],
+      })
+    : feedbackNotice({
+        lead: "⏭️ **Contract not required**",
+        summary: "No implementation contract, so no readiness",
+        details: [
+          `The ${evaluation.kind} has the required structure and carries no implementation contract, so it carries no readiness.`,
+        ],
+      });
   return `${resultLine({ ...evaluation, status: "no-contract" })}\n${notice}`;
 }
 

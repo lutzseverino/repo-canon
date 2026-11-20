@@ -17,6 +17,7 @@ import {
   createdWithReadiness,
   creationLabel,
   featureBody,
+  feedbackLayout,
   feedbackState,
   labeledBy,
   laggingReapplicationEvents,
@@ -155,6 +156,10 @@ function assertDecision(decision, expected) {
     assert.match(decision.message, pattern);
   for (const pattern of [expected.notMessage ?? []].flat())
     assert.doesNotMatch(decision.message, pattern);
+  if (decision.feedback) {
+    const { marker } = feedbackLayout(decision.feedback.body);
+    if (expected.marker) assert.equal(marker, expected.marker);
+  }
   for (const pattern of [expected.feedbackBody ?? []].flat())
     assert.match(decision.feedback.body, pattern);
   for (const pattern of [expected.notFeedbackBody ?? []].flat())
@@ -363,8 +368,8 @@ test("current recorded approvals report unavailable or revoked reviewer authorit
             add: ["state:triage"],
             feedback: 13,
             message: reason,
+            marker: "❌",
             feedbackBody: [
-              /^## Issue contract readiness removed$/m,
               new RegExp(`^Readiness was removed: ${reason.source}`, "m"),
               new RegExp(`The validator removed \`${label}\` from the `),
               /A fresh authorized review is required to restore readiness/,
@@ -393,6 +398,15 @@ test("current recorded approvals report unavailable or revoked reviewer authorit
           assert.equal(
             settled.comments.find(({ id }) => id === 13).body,
             rejection.feedback.body,
+          );
+          // So does a removal notice posted before the feedback led with its
+          // outcome, under its heading.
+          const legacy = structuredClone(settled);
+          const legacyNotice = legacy.comments.find(({ id }) => id === 13);
+          legacyNotice.body = `${rejection.feedback.body.split("\n", 2).join("\n")}\n## Issue contract readiness removed\n\n${feedbackLayout(rejection.feedback.body).details}`;
+          assert.match(
+            decideIssueContract(snapshotFor(legacy)).feedback.body,
+            new RegExp(`^The validator removed \`${label}\` from the `, "m"),
           );
 
           settled.issue.labels.push({ name: label });
@@ -3023,7 +3037,7 @@ decisionTable(
         assertDecision(decision, {
           exitCode: 0,
           feedback: 99,
-          feedbackBody: /awaiting review/,
+          marker: "👤",
         });
         assert.doesNotMatch(
           decision.feedback.body,
@@ -3088,8 +3102,8 @@ const supersededBy = (state) => ({
   remove: ["state:ready"],
   feedback: 13,
   message: new RegExp(`\`${state}\` superseded state:ready`),
+  marker: "❌",
   feedbackBody: [
-    /^## Issue contract readiness removed$/m,
     new RegExp(
       `^Readiness was removed: \`${state}\` was applied after the review and supersedes its readiness\\.$`,
       "m",
@@ -3269,7 +3283,7 @@ decisionTable("workflow states are ordered against the review", [
       exitCode: 0,
       feedback: 13,
       message: /valid triaged wontfix request/i,
-      feedbackBody: /## Issue contract not required/,
+      marker: "⏭️",
     },
   },
   ...["state:reporter", "state:ready"].map((trigger) => {
@@ -3421,7 +3435,7 @@ decisionTable("workflow states are ordered against the review", [
       exitCode: 0,
       add: ["state:triage"],
       feedback: 13,
-      feedbackBody: /awaiting review/i,
+      marker: "👤",
     },
   },
   {
@@ -3449,7 +3463,7 @@ decisionTable("workflow states are ordered against the review", [
         },
       };
     })(),
-    expected: { exitCode: 0, feedback: 13, feedbackBody: /awaiting review/i },
+    expected: { exitCode: 0, feedback: 13, marker: "👤" },
   },
   {
     name: "removing readiness revokes the recorded approval and returns a triaged request to review",
@@ -3495,7 +3509,7 @@ decisionTable("workflow states are ordered against the review", [
       exitCode: 0,
       add: ["state:triage"],
       feedback: 13,
-      feedbackBody: /awaiting review/i,
+      marker: "👤",
     },
   },
 ]);
@@ -3563,10 +3577,8 @@ decisionTable("a person answers a stop by applying the issue's next state", [
       remove: ["state:owner"],
       feedback: 13,
       message: /valid implementation ticket with state:ready bound/i,
-      feedbackBody: [
-        /## Issue contract readiness recorded/,
-        /"reviewEventId":"110"/,
-      ],
+      marker: "✅",
+      feedbackBody: /"reviewEventId":"110"/,
     },
   },
 ]);
@@ -3853,7 +3865,8 @@ decisionTable(
         exitCode: 0,
         feedback: 13,
         message: /valid triaged wontfix request/i,
-        feedbackBody: /"status":"no-contract".*## Issue contract not required/s,
+        marker: "⏭️",
+        feedbackBody: /"status":"no-contract"/,
       },
     },
     {
@@ -3888,9 +3901,7 @@ decisionTable(
         remove: [earlier],
         message,
         // A wontfix outcome replaces the Brief's revision notice.
-        ...(later === "wontfix"
-          ? { feedback: 13, feedbackBody: /## Issue contract not required/ }
-          : {}),
+        ...(later === "wontfix" ? { feedback: 13, marker: "⏭️" } : {}),
       },
     })),
     .../** @type {[string, string, object, string, RegExp][]} */ ([
@@ -5134,7 +5145,7 @@ test("a validator fallback carried through an in-place rename preserves readines
     exitCode: 0,
     remove: ["state:triage"],
     feedback: 13,
-    feedbackBody: /readiness recorded/i,
+    marker: "✅",
   });
   assert.doesNotMatch(decision.feedback.body, /supersed|needs-triage/);
 });
@@ -5177,7 +5188,7 @@ decisionTable("renamed workflow states use attributed history", [
       exitCode: 0,
       remove: [state],
       feedback: 13,
-      feedbackBody: /readiness recorded/i,
+      marker: "✅",
     },
     check: (decision) =>
       assert.doesNotMatch(
@@ -5232,7 +5243,7 @@ decisionTable("renamed workflow states use attributed history", [
       exitCode: 0,
       remove: ["state:triage"],
       feedback: 13,
-      feedbackBody: /readiness recorded/i,
+      marker: "✅",
     },
   },
   {

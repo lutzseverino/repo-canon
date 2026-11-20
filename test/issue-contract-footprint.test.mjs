@@ -194,12 +194,12 @@ test("the result shows adds against deletes and lists unknown footprints", () =>
   );
   assert.match(
     ticket.feedback.body,
-    /\nFootprint: 2 adds against 1 delete, shown and never gated\.$/,
+    /\nFootprint: 2 adds against 1 delete, shown and never gated\.$/m,
   );
   const unknown = decideIssueContract(snapshot(ticketBody));
   assert.match(
     unknown.feedback.body,
-    /\nFootprint: unknown, without `Supersedes:`, `Adds:` and `Deletes:` lines\.$/,
+    /\nFootprint: unknown, without `Supersedes:`, `Adds:` and `Deletes:` lines\.$/m,
   );
   const specification = decideIssueContract(
     snapshot(`${specificationBody}${fields("none", "a", "b; c")}`, [
@@ -209,7 +209,7 @@ test("the result shows adds against deletes and lists unknown footprints", () =>
   );
   assert.match(
     specification.feedback.body,
-    /\nFootprint: 2 adds against 2 deletes over this specification and 1 of its 2 tickets, shown and never gated\. Unknown footprint, without `Supersedes:`, `Adds:` and `Deletes:` lines: other\/name#8\.$/,
+    /\nFootprint: 2 adds against 2 deletes over this specification and 1 of its 2 tickets, shown and never gated\. Unknown footprint, without `Supersedes:`, `Adds:` and `Deletes:` lines: other\/name#8\.$/m,
   );
 });
 
@@ -399,7 +399,7 @@ test("with every fate posted, readiness proceeds", async (t) => {
   assert.ok(world.issue.labels.includes("state:ready"));
   assert.match(
     world.comments.find(({ author }) => author === bot.login).body,
-    /\nFootprint: 1 add against 1 delete, shown and never gated\.$/,
+    /\nFootprint: 1 add against 1 delete, shown and never gated\.$/m,
   );
 });
 
