@@ -52,9 +52,9 @@ as "`gh issue list --label state:triage` returns classified issues", not "Triage
 
 After readiness, nobody edits the brief to record progress, ticking its acceptance criteria included: editing it removes its readiness. Progress lives in linked pull requests, sub-issue states and comments, and the issue closes when its own acceptance criteria hold.
 
-### Live acceptance gets its own ticket
+### Live evidence and split tickets
 
-When work must be shown on a live system, write two briefs. The source ticket's brief covers the change, and its issue closes when the pull request merges. The live-acceptance ticket's brief, blocked by the source ticket, has acceptance criteria that are the recorded evidence that the deployed change behaves on the live system as its contract says. A merge never closes the live-acceptance ticket: the source pull request links it without a closing reference, and it closes only once that evidence is recorded on it. Its readiness follows the installed rules for work whose live steps need host access.
+When work must be shown on a live system, follow the contribution guide's Implementation contracts paragraph: put the live evidence in the source brief's acceptance criteria. In its split case, write two briefs instead: the live-acceptance brief, blocked by the source ticket, makes the recorded live evidence its acceptance criteria, and the source pull request links it without a closing reference. Its readiness follows the installed rules for work whose live steps need host access.
 
 ### Explicit scope boundaries
 

@@ -1,20 +1,14 @@
 # Close
 
-Close a plan once every row of its ticket table has ended, as
-[Lifecycle](../SKILL.md#lifecycle) says. Take these steps in order.
+Close a plan once every Done-means clause has evidence (an issue, pull
+request, release or recorded owner confirmation); rows still open then end as
+`moved`, their issues set to `priority:low`, or `dropped (owner)`. Take these
+steps in order.
 
 ## Reconcile the plan's issues
 
-Collect the plan's issue-creation records. Reconcile those records with every
-run's findings: PR findings comments and, for runs without PRs, the reporting
-locations the contribution guide prescribes. Include factory and directly
-launched workers, even when their findings are absent from the ticket table.
-Follow creation evidence from those reports to recover issues missing from the
-plan's `log.md`. Consolidate references by repository and issue number, then
-check current issue state. Distinguish newly plan-filed issues from
-pre-existing linked findings and unrelated concurrent work; retain the
-provenance links. Closed issues stay out of the still-open list. Outside
-findings need not be resolved for the plan to close.
+Check the current state of the issues the plan's rows link and of the issues
+the plan's `log.md` records as filed.
 
 After reconciliation, record the open-issue counts at close.
 

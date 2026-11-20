@@ -30,7 +30,7 @@ reading a harness. Refresh for each later launch.
 
 Every hand launch invokes its Canonical stages hand skill through the supported
 mechanism, then uses these fields and fixed duties. A stage with none still runs
-with its gap line; file its missing skill once under Findings. Fill context, not
+with its gap line; note its missing skill once under Findings. Fill context, not
 skill procedure or question format; there is no procedure field.
 
 ```text

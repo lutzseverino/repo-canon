@@ -18,25 +18,25 @@ The contribution guide, the `github-repository-configuration` rules and, where
 installed, the `factory-workflow` rules say when each occasion arises; these
 rules say what the post holds:
 
-| Occasion                                         | Where                                             | Shape                                                 |
-| ------------------------------------------------ | ------------------------------------------------- | ----------------------------------------------------- |
-| Agent Brief, triage notes and reporter questions | The issue or external PR being triaged            | [Disclaimers](#disclaimers)                           |
-| A question only the owner can answer             | Its issue, or its PR for work without one         | [Owner questions](#owner-questions)                   |
-| An answer, or a recorded owner decision          | The issue the question or decision concerns       | [Disclaimers](#disclaimers)                           |
-| A contract-review verdict                        | The contract's issue                              | [Disclaimers](#disclaimers)                           |
-| A stop without a pull request or question        | Its issue                                         | [Stop notes](#stop-notes)                             |
-| A superseded issue's fate                        | The superseded issue                              | [Fates](#fates)                                       |
-| New evidence on an existing finding              | The finding's issue                               | [Fates](#fates)                                       |
-| An internal review round                         | The pull request                                  | [Reviews](#reviews)                                   |
-| A fix or a reasoned decline of a finding         | The finding's review thread                       | [Review-thread replies](#review-thread-replies)       |
-| A review request                                 | The pull request                                  | [Review request comments](#review-request-comments)   |
-| A worker handoff                                 | The pull request body's Evidence section          | [Delivery records](#delivery-records)                 |
-| An owner-review designation or approval          | The pull request                                  | [Delivery records](#delivery-records)                 |
-| A reconstruction conflict resolution             | The pull request                                  | [Delivery records](#delivery-records)                 |
-| A configured reviewer that did not review a head | The pull request                                  | [Delivery records](#delivery-records)                 |
-| Findings links and adoption check outcomes       | As the contribution guide's Findings section says | [Findings](#findings)                                 |
-| A filed issue                                    | Its body                                          | [Disclaimers](#disclaimers) and [Findings](#findings) |
-| The factory's run, action and close comments     | The issue it runs, or the parent it closes        | [Factory comments](#factory-comments)                 |
+| Occasion                                         | Where                                       | Shape                                                               |
+| ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------- |
+| Agent Brief, triage notes and reporter questions | The issue or external PR being triaged      | [Disclaimers](#disclaimers)                                         |
+| A question only the owner can answer             | Its issue, or its PR for work without one   | [Owner questions](#owner-questions)                                 |
+| An answer, or a recorded owner decision          | The issue the question or decision concerns | [Owner questions](#owner-questions) and [Disclaimers](#disclaimers) |
+| A contract-review verdict                        | The contract's issue                        | [Disclaimers](#disclaimers)                                         |
+| A stop without a pull request or question        | Its issue                                   | [Stop notes](#stop-notes)                                           |
+| A superseded issue's fate                        | The superseded issue                        | [Fates](#fates)                                                     |
+| New evidence on an existing finding              | The finding's issue                         | [Fates](#fates)                                                     |
+| An internal review round                         | The pull request                            | [Reviews](#reviews)                                                 |
+| A fix or a reasoned decline of a finding         | The finding's review thread                 | [Review-thread replies](#review-thread-replies)                     |
+| A review request                                 | The pull request                            | [Review request comments](#review-request-comments)                 |
+| A worker handoff                                 | The pull request body's Evidence section    | [Delivery records](#delivery-records)                               |
+| An owner-review designation or approval          | The pull request                            | [Delivery records](#delivery-records)                               |
+| A reconstruction conflict resolution             | The pull request                            | [Delivery records](#delivery-records)                               |
+| A configured reviewer that did not review a head | The pull request                            | [Delivery records](#delivery-records)                               |
+| Adoption check outcomes                          | The adoption pull request                   | [Findings](#findings)                                               |
+| A filed issue                                    | Its body                                    | [Disclaimers](#disclaimers) and [Findings](#findings)               |
+| The factory's run, action and close comments     | The issue it runs, or the parent it closes  | [Factory comments](#factory-comments)                               |
 
 ## Lead line
 
@@ -138,6 +138,10 @@ belongs to, linking the open pull request when there is one. Work without an
 issue asks on its pull request instead. Its lead line asks the question and
 addresses the owner. The contribution guide's owner-question
 handoff says what the agent does once the question is posted.
+
+An answer or recorded decision answers only the question asked, in at most 150
+words, and links a decision already recorded in a repository instead of
+quoting it.
 
 ## Stop notes
 
@@ -249,13 +253,13 @@ current head, and posts no delivery-record comment:
 - **Head:** <full head SHA>
 - **Required checks:** <names and outcomes> · <location> · `<required command>` · declaration <trusted revision>
 - **Validation:** <commands run and their outcomes>
-- **Findings:** <None, or each filed or outstanding finding's issue link>
+- **Findings:** <None, or each out-of-scope note and issue opened for one>
 ```
 
 Add a line for internal review outcomes, an owner-review requirement with its
 source, or a refused read the run continued past, with the record the
 contribution guide's Credentials section requires, whenever one applies. Link
-findings without closing keywords, so the merge closes none of them. An
+opened issues without closing keywords, so the merge closes none of them. An
 adoption pull request's body stays its adoption record, so its worker handoff
 is one pull request comment holding the same record.
 
@@ -275,12 +279,10 @@ Each other delivery record that the `github-repository-configuration` or
 
 ## Findings
 
-Findings links, unfiled findings and an adoption pull request's check-outcomes
-comment go where the contribution guide's Findings and adoption pull request
-rules say, and hold what they list; a review links its filed findings as
-[Filed rows](#reviews) instead. The body of an issue a factory run files for
-a finding cites its filing run; out-of-scope work, however small, goes into
-such an issue, never into a separate unticketed pull request.
+Out-of-scope notes go where the contribution guide's Findings section says,
+never in a comment of their own. An adoption pull request's check-outcomes
+comment holds what its adoption rules list. A review lists an issue it opens as
+a [Filed row](#reviews), and a factory-filed issue's body cites its filing run.
 
 ## Factory comments
 
@@ -290,9 +292,7 @@ and a parent its close notice. An agent posts on an issue only when a person
 must act or has acted: a question for the owner, a reporter or a grill, its
 answer or recorded decision, a contract-review verdict, a stop note, or a
 [fate or new evidence](#fates).
-Findings, reviews, delivery records and fix discussion go on the pull request;
-a run without one links its findings where the contribution guide's Findings
-section says.
+Reviews, delivery records and fix discussion go on the pull request.
 
 The factory keeps one run comment on each issue it runs and edits it in place;
 agents never post or edit a run comment. The factory posts a fresh one-line

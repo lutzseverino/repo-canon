@@ -46,10 +46,12 @@ issue closed as will not be actioned.
 
 A triaged request carries one `type:` label, its category.
 
-Triage sets pickup priority: a broken workflow, data loss or security problem
-is `priority:high`; most work is `priority:normal`; cleanup with no user effect
-is `priority:low`. No priority label means normal. Triage never replaces a
-person's priority; the owner may change it at any time.
+Triage sets `priority:high` for harm (security, data loss, a broken default
+branch) and `priority:low` for everything else, unless a person or the agent
+planning for the maintainer asked for the work. Only they set
+`priority:normal`, or `priority:high` for the next items on a goal's path,
+never for every row of a plan. No priority label means normal. Triage never
+replaces a person's priority; the owner may change it at any time.
 
 `docs/agents/triage-labels.md` maps the triage skills' roles to these labels.
 

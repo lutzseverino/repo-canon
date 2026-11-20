@@ -53,9 +53,9 @@ refusal; otherwise fix the cause and run it again.
    contract against the issue, and report where the contract contradicts,
    drops or invents what the issue and its recorded decisions ask, or leaves it
    ambiguous. A PR without an issue has no such check. Verify every finding
-   against the source and drop those that do not hold. File a defect outside
-   the change's responsibility under `CONTRIBUTING.md`'s Findings section as
-   a Filed row of this review. Sort each remaining finding as **contract**,
+   against the source and drop those that do not hold. Route a defect outside
+   the change's responsibility under `CONTRIBUTING.md`'s Findings section;
+   an issue it opens is a Filed row of this review. Sort each remaining finding as **contract**,
    **larger** or **small**, by the rules' section. Done when every finding
    from both axes is dropped with its reason or sorted.
 3. **Fix small findings** when no contract or larger finding stands; otherwise

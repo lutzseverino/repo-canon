@@ -437,14 +437,15 @@ Turn 2 records plan approval separately from independent contract review and
 all other readiness gates. Observe the pending amendment before supplying
 turn 5. The in-goal row cites the approved review goal; the amendment changes scope only after approval. The wish is a
 future multilingual-guide capability, not a defect or Finding, and needs no issue.
-Turns 6a–6c add two out-of-goal Findings in the separate simulated tooling
-tracker: reuse the existing open UTF-8 crash issue, then file the stale-option
-finding with that tracker's bug form and `state:triage`. Check the supplied
-observed command outcomes are cited, both findings are linked from a comment
-on review ticket 01 (there is no PR), and the optional planning wish links the
-reported finding without replacing its issue or reporting links. The method
-follows the contribution guide's Findings section, including its reporting
-fallback when filing fails; neither repair delays the documentation plan.
+Turns 6a–6c bring two out-of-goal observations about the separate simulated
+tooling repository. Check that each is noted, with the supplied observed
+command outcome, in the checkpoint report and the plan's `log.md`; that the
+UTF-8 crash note links the existing open issue; and that no issue is filed for
+the stale option, which neither blocks the documentation goal nor causes harm,
+so `.scratch/tooling/issues/` keeps only its existing issue. The optional
+planning wish may cite the stale-option note. The method follows the
+contribution guide's Findings section; neither observation delays the
+documentation plan.
 Turns 6d–6e bring the owner's "do this now" while ticket 01's factory run and
 ticket 03's research run are running and ticket 02's worker launch is due. Check
 that the request is recorded under `inbox.md`'s `Answered` before any other
@@ -457,18 +458,16 @@ configured hold label on the change's simulated PR 12 through the linked
 launch starts, the `Answered` entry records the outcome and the expedited row
 ends with the merged pull request, which the close accepts in place of a closed
 issue.
-At turn 7 relay `docs/closure-inputs.md` and materialize its simulated PR
-findings, no-PR issue comments, issue-less run's final message and current
-tracker records. Keep the factory-only finding out of the ticket table and
-initial creation log so reconciliation must recover it from the PR comment's
-creation evidence. Consolidate duplicate links by repository and issue number;
-the same number in two repositories denotes two issues. Check the final list
-against the input's explicit oracle: five still-open plan-filed issues, each
-with its reason and evidence, excluding a closed issue, pre-existing linked
-findings and unrelated concurrent work. The project counts are zero at start
-and two at close; tooling has five open issues at close, including unrelated
-and pre-existing work. Tracker updates are controlled simulations; no worker
-implements or delivers a product change.
+At turn 7 relay `docs/closure-inputs.md` and materialize its simulated PR 11
+body, ticket 02's run result and current tracker records. Check that their
+out-of-scope observations stay notes, and that the issue ticket 02's worker
+filed for harm is recorded as filed in the plan's `log.md`. Check the final
+list against the input's explicit oracle: three still-open plan-filed issues,
+each with its reason and evidence, excluding a closed issue, pre-existing
+issues and unrelated concurrent work. The project counts are zero at start and
+three at close; tooling has two open issues at close, one pre-existing and one
+unrelated. Tracker updates are controlled simulations; no worker implements or
+delivers a product change.
 
 End session one with unfinished rows and committed active state. Start session
 two with a fresh context, the same project/workbench paths, its own session
@@ -477,10 +476,14 @@ It reads `index.md`, `now.md`, `inbox.md` and each active `plan.md`, not
 `log.md`, before other work, then the skill/local guidance. Inspect the
 recorded takeover and preserved previous owner, check that it re-arms a
 simulated wake-up for every In flight row not waiting on the owner before
-other work, and confirm the plan remains open. Relay turn 9: the owner drop remains in the table and the already-filed
-parked issue stays open. Relay turn 10: only then may the remaining closed
-simulated issues plus the owner drop permit closure. Check the final counts
-and closing announcement against the skill.
+other work, and confirm the plan remains open while a Done-means clause lacks
+evidence. Relay turn 9: the owner drop remains in the table as
+`dropped (owner)`, which only the owner's recorded decision authorizes, and
+the already-filed parked issue stays open. Relay turn 10: only then does the
+owner's recorded confirmation complete the Done-means evidence, and the plan
+closes with the still-open row 02 ending as `moved` and its issue at
+`priority:low`. Check the final counts and closing announcement against the
+skill.
 Before that announcement, check that a separate retro session, started by the
 operator when the harness cannot nest one and invoking `retro` with only its
 launch report path, writes `retro.md` from the workbench and simulated tracker
@@ -561,7 +564,7 @@ initial and resulting commits, session references, skill digests and observed
 comparisons outside maintained documentation and report outcomes on the PR.
 This focused check supplements the lifecycle exercise above; filing-time
 observation, approval-gated readiness, current-head owner approval in delivery,
-and findings-based closure retain their existing requirements and exercises.
+and Done-means closure retain their existing requirements and exercises.
 
 ### Focused grill routing check
 
