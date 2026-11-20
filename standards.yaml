@@ -650,6 +650,11 @@ profiles:
         rules: rules/factory-sandbox-image.md
         guidance: guidance/factory-sandbox-image.md
 
+      factory-sandbox-image-command:
+        kind: file
+        target: vendor/repo-canon/sandbox-image.mjs
+        exact: vendor/repo-canon/sandbox-image.mjs
+
       factory-sandbox-image-workflow:
         kind: file
         check-locations: [github]
