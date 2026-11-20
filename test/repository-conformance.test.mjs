@@ -1482,11 +1482,11 @@ test("entry-point read sets resolve every member at its source", () => {
     "rules/factory-workflow.md",
     "CONTRIBUTING.md",
     "AGENTS.md",
-    ".agents/skills/codebase-design/SKILL.md",
     ".agents/skills/retro/SKILL.md",
     ".agents/skills/babysit/SKILL.md",
   ])
     assert.ok(orchestrate.includes(member), member);
+  assert.ok(!orchestrate.includes(".agents/skills/codebase-design/SKILL.md"));
   for (const rule of ["factory-workflow", "github-repository-configuration"])
     assert.ok(sets.get("factory").members.includes(`rules/${rule}.md`));
   for (const { members } of sets.values()) {

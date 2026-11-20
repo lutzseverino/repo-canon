@@ -137,6 +137,17 @@ The test verifies the exact shared guidance, the scenario prerequisites, intact
 skill links, disabled local signing, a clean initial Git state, and an ordinary
 later commit under hostile global signing.
 
+### Focused grill close-review check
+
+Run two fresh `grilling` sessions in the `grilling` repository, answering each
+round with its recommended answers. In the first, the participant proposes a
+mechanism: automatic retries of failed Export requests within a Retry window.
+In the second, the participant names a first-release plan with three rows and
+asks only to drop one and move another to a later plan. Check that the first
+grill, once its frontier is empty, has a fresh session review the settled
+design against long-term design and asks its findings as a final round before
+final approval, and that the second ends without that round.
+
 ## Planning skills and project-agent-guidance contextual work
 
 ```bash
@@ -435,15 +446,15 @@ plan history goes to the plan's append-only `log.md` while `plan.md` keeps
 current state.
 Turn 2 records plan approval separately from independent contract review and
 all other readiness gates. Observe the pending amendment before supplying
-turn 5. The in-goal row cites the approved review goal; the amendment changes scope only after approval. The wish is a
-future multilingual-guide capability, not a defect or Finding, and needs no issue.
+turn 5. The in-goal row cites the approved review goal; the amendment changes scope only after approval. The
+multilingual-guide idea is a repository capability, not a defect or Finding; unparked, it gains no issue and no wish.
 Turns 6a–6c bring two out-of-goal observations about the separate simulated
 tooling repository. Check that each is noted, with the supplied observed
 command outcome, in the checkpoint report and the plan's `log.md`; that the
 UTF-8 crash note links the existing open issue; and that no issue is filed for
 the stale option, which neither blocks the documentation goal nor causes harm,
-so `.scratch/tooling/issues/` keeps only its existing issue. The optional
-planning wish may cite the stale-option note. The method follows the
+so `.scratch/tooling/issues/` keeps only its existing issue. The linked tooling
+idea likewise gains no issue and no wish. The method follows the
 contribution guide's Findings section; neither observation delays the
 documentation plan.
 Turns 6d–6e bring the owner's "do this now" while ticket 01's factory run and

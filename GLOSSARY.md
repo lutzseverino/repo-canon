@@ -233,13 +233,15 @@ _Avoid_: Context, line count
 **Workbench**:
 The private git repository of plain Markdown outside project checkouts in
 which the orchestrating agent keeps plans, the decision inbox and wishes.
+Repository ideas live in their trackers under
+[Findings](CONTRIBUTING.md#findings), not in the workbench.
 [Orchestrate](.agents/skills/orchestrate/SKILL.md#workbench) owns its setup and layout.
 _Avoid_: Notes, memory
 
 **Wish**:
-A non-finding idea outside its plan's goal, recorded in the workbench with its
-date, source and repository. It may link a filed issue for future planning;
-[Findings](CONTRIBUTING.md#findings) owns when an observation becomes an issue.
+An idea about the orchestrating agent's own procedure, recorded in the
+workbench with its date and source. A repository idea is no wish:
+[Findings](CONTRIBUTING.md#findings) owns when it is parked as an issue.
 _Avoid_: Backlog item, suggestion
 
 **Research run**:

@@ -54,7 +54,7 @@ remote. Hand back through the report only; send no closing message to the
 orchestrating thread. End the report with the final line exactly: status: done
 ```
 
-Seam (deferred): skills declaring their inputs; consumers: 1 (these templates); extract at a second launcher under the Ownership check. The host owns capacity/guidance/effort; the standard owns stages/templates.
+Seam (deferred): skills declaring their inputs; consumers: 1 (these templates); extract at a second launcher. The host owns capacity/guidance/effort; the standard owns stages/templates.
 
 ## Owner steps
 

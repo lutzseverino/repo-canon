@@ -1,15 +1,13 @@
 # Intake
 
-Read for ideas, `state:grill` issues, retro/architecture-review reports, or questions
-from launch reports, issues or incoming messages. Wishes park ideas and may start conversation.
-
 ## Questions
 
 Read every question first, from launch reports, issues and incoming messages; workers
 put questions in their report or on the issue, never `inbox.md`. For every choice
-(holds, skip routes, rows, filing, release wording, worker answers), answer alone
+(holds, skip routes, rows, filing, release wording, worker answers), answer alone,
+only to advance the approved Done path on verified facts and explicit authority,
 what code, logs or installed rules settle, or what passes the guide's inference test.
-List each answer with its dated source in your next update for veto. Put everything
+Put unresolved intent, changes to scope, authority or durable policy, and everything
 else in the decision inbox with your recommendation; only you write that inbox.
 An owner approval, including a plan's **Preapproves** line, names items ahead of time:
 a dated source the test may cite, covering what it names, with nothing inferred beyond it.
@@ -23,7 +21,7 @@ amendment of a named plan. Owner assent or a direct grill request schedules it.
 A grill is never an owner decision; `inbox.md` holds decisions only.
 The default is a grill. Suggest a shorter path (expedited change, issue straight to
 triage, direct change) only as an option; take it only on the owner's yes for that idea.
-Broken existing rules or contracts follow the guide's Findings rule; they need no grill.
+Broken rules or contracts and parking an idea follow the guide's Findings rule, without a grill.
 
 ## Grill queue
 
@@ -51,4 +49,4 @@ within it and file each pick for triage. Without delegation, or for intent beyon
 use triage's normal intent-question route to `state:grill` and the queue.
 Unpicked candidates stay in the review record.
 
-Seam (deferred): intake as a reusable skill; consumers: 1 (orchestrate); extract at a second consumer under the Ownership check.
+Seam (deferred): intake as a reusable skill; consumers: 1 (orchestrate); extract at a second consumer.
