@@ -2762,6 +2762,191 @@ decisionTable(
   ],
 );
 
+// The ticket's state, the maintainer's `factory:hold` (301) and readiness
+// (302) after the revision notice, and, when `removed`, the maintainer's
+// removal of readiness (303).
+function heldReadinessEvents({ removed = false } = {}) {
+  const triage = creationLabel({
+    id: 300,
+    label: { name: "state:triage" },
+    actor: bot,
+    created_at: "2026-09-14T16:00:05Z",
+  });
+  const hold = creationLabel({
+    id: 301,
+    label: { name: "factory:hold" },
+    created_at: "2026-09-14T17:02:00Z",
+  });
+  const readiness = creationLabel({
+    id: 302,
+    created_at: "2026-09-14T17:02:10Z",
+  });
+  return [
+    triage,
+    hold,
+    readiness,
+    ...(removed
+      ? [
+          {
+            ...readiness,
+            id: 303,
+            event: "unlabeled",
+            created_at: "2026-09-14T17:02:20Z",
+          },
+        ]
+      : []),
+  ];
+}
+
+// A run that read the held ticket's labels without readiness and then its
+// timeline, started by `event`, after a notice that observed `observedEventId`.
+function heldRunSnapshot({
+  event,
+  issueEvents = heldReadinessEvents(),
+  observedEventId = null,
+}) {
+  const issue = {
+    number: 42,
+    node_id: "ISSUE_42",
+    body: ticketBody,
+    labels: [{ name: "state:triage" }, { name: "factory:hold" }],
+    state: "open",
+    user: { login: "author" },
+    created_at: "2026-09-14T16:00:00Z",
+    updated_at: "2026-09-14T17:02:10Z",
+  };
+  return {
+    issue,
+    comments: [
+      {
+        ...awaitingTicketFeedback(issue, { observedEventId }),
+        updated_at: "2026-09-14T17:01:05Z",
+      },
+    ],
+    issueEvents,
+    event,
+    permissions: { maintainer: role("admin") },
+  };
+}
+
+const heldRuns = [
+  [
+    "a factory:hold label run",
+    labeledBy("maintainer", "factory:hold", { body: ticketBody }),
+  ],
+  [
+    "a comment run",
+    {
+      action: "created",
+      issue: { number: 42 },
+      comment: { id: 1, body: "The owner's answer." },
+      sender: { login: "maintainer" },
+    },
+  ],
+];
+
+decisionTable(
+  "a run that read labels before readiness leaves that readiness to its own run",
+  [
+    ...heldRuns.map(([name, event]) => ({
+      name: `${name} does not observe the readiness and its readiness run approves it`,
+      run: () => {
+        const earlier = heldRunSnapshot({ event });
+        const decision = decideIssueContract(snapshotFor(earlier));
+        assertDecision(decision, { exitCode: 0, feedback: 13 });
+        assert.equal(
+          recordedState(decision.feedback.body).observedEventId,
+          null,
+        );
+        const comments = structuredClone(earlier.comments);
+        applyFeedback(comments, decision);
+        comments[0].updated_at = "2026-09-14T17:02:12Z";
+        const readiness = snapshotFor({
+          ...earlier,
+          issue: {
+            ...earlier.issue,
+            labels: [...earlier.issue.labels, { name: "state:ready" }],
+          },
+          comments,
+          event: labeledBy("maintainer", "state:ready", earlier.issue),
+        });
+        assert.equal(readinessTriggerUnrecorded(readiness), false);
+        const approval = decideIssueContract(readiness);
+        // Readiness replaces only the earlier workflow state.
+        assertDecision(approval, {
+          exitCode: 0,
+          remove: ["state:triage"],
+          feedback: 13,
+          message: /valid implementation ticket with state:ready bound/i,
+        });
+        assert.deepEqual(recordedState(approval.feedback.body), {
+          status: "approved",
+          revision: bodyRevision(earlier.issue),
+          label: "state:ready",
+          reviewer: "maintainer",
+          reviewEventId: "302",
+          sourceInvalidation: null,
+        });
+      },
+    })),
+    ...heldRuns.map(([name, event]) => ({
+      name: `${name} observes a recorded removal of that readiness`,
+      snapshot: heldRunSnapshot({
+        event,
+        issueEvents: heldReadinessEvents({ removed: true }),
+      }),
+      expected: {
+        exitCode: 0,
+        feedback: 13,
+        feedbackBody: /"observedEventId":"303"/,
+      },
+    })),
+    {
+      name: "a removal run of that readiness observes it while the removal is unrecorded, so the sender's unrecorded retry fails closed",
+      run: () => {
+        const earlier = heldRunSnapshot({
+          event: {
+            ...labeledBy("maintainer", "state:ready", { body: ticketBody }),
+            action: "unlabeled",
+          },
+        });
+        const decision = decideIssueContract(snapshotFor(earlier));
+        assertDecision(decision, { exitCode: 0, feedback: 13 });
+        assert.equal(
+          recordedState(decision.feedback.body).observedEventId,
+          "302",
+        );
+        const comments = structuredClone(earlier.comments);
+        applyFeedback(comments, decision);
+        comments[0].updated_at = "2026-09-14T17:02:30Z";
+        const retry = snapshotFor({
+          ...earlier,
+          issue: {
+            ...earlier.issue,
+            labels: [...earlier.issue.labels, { name: "state:ready" }],
+          },
+          comments,
+          event: labeledBy("maintainer", "state:ready", earlier.issue),
+        });
+        assert.equal(readinessTriggerUnrecorded(retry), true);
+        const failed = decideIssueContract(retry);
+        // The held ticket still carries its workflow state.
+        assertDecision(failed, { ...reapplicationFailsClosed, add: [] });
+        keepsNoApproval(failed);
+      },
+    },
+    ...heldRuns.map(([name, event]) => ({
+      name: `${name} keeps observing an application the notice observed while its removal is unrecorded`,
+      snapshot: heldRunSnapshot({ event, observedEventId: "302" }),
+      expected: {
+        exitCode: 0,
+        feedback: 13,
+        feedbackBody: /"observedEventId":"302"/,
+      },
+    })),
+  ],
+);
+
 // A reapplication run's fail-closed decision.
 const reapplicationFailsClosed = {
   exitCode: 1,
@@ -3031,6 +3216,22 @@ decisionTable(
         );
       },
     })),
+    {
+      name: "a readiness application after the labels the run read keeps the rejection, as a run before it does",
+      run: () => {
+        const snapshot = rejectedCreationSnapshot();
+        const before = decideIssueContract(snapshotFor(snapshot));
+        snapshot.issueEvents.push(
+          creationLabel({ id: 300, created_at: "2026-09-14T17:01:00Z" }),
+        );
+        const after = decideIssueContract(snapshotFor(snapshot));
+        assert.match(after.feedback.body, /"rejectionReason":"/);
+        assert.deepEqual(
+          withoutEvaluatedEvent(after),
+          withoutEvaluatedEvent(before),
+        );
+      },
+    },
     ...[
       ["a different state", labeledBy("reporter", "state:owner")],
       [

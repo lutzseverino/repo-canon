@@ -35,8 +35,16 @@ comment write, and the exit status, with no network or file access. Its closed
 path needs only the fetched issue, and its open path needs the contract snapshot.
 The file also exports `readinessTriggerUnrecorded`, a pure predicate over the same
 snapshot, and, for the `triage` readiness command, `readyLabels`, the notice
-barrier `noticePrecedes` and `observedChangeId`, so the command copies none of
-the rules they decide. Its
+barrier `noticePrecedes`, `observedChangeId` and the observed-transition barrier
+`observedBarrier`, so the command copies none of
+the rules they decide. After applying readiness, the command waits for a result
+that observed its own readiness event and decides it. A result that awaits
+review, carries no rejection reason and leaves the readiness label on the issue
+decides no event, even when it names the command's event as observed. An
+earlier validator's run that read the labels before readiness could write one,
+and the command keeps waiting past it. It exits 0 only for an approval of its own
+event, account and reviewed revision, and fails with the validator's rejection
+reason when the validator rejects that event. Its
 GitHub adapter runs only when the workflow executes the file: for an open issue,
 it fetches the complete snapshot before deciding, waiting within a bound for the
 issue-event timeline to record a human readiness trigger, then applies the
@@ -291,7 +299,8 @@ with `null` where the evaluation has no value:
   bytes differ from the one it replaces, so each write updates the comment even
   when two events of the same kind leave the decision unchanged.
 - `observedEventId`: the latest readiness transition the evaluation observed,
-  other than the validator's own removal of readiness.
+  other than the validator's own removal of readiness, among those consistent
+  with the labels it decided on.
 - `sourceInvalidation`: the deleted newer Agent Brief, `deleted-comment:<ID>`,
   that invalidated a restored source.
 - `publishedAt`: when the validator first published this revision, carried by
@@ -355,6 +364,30 @@ the review. The observed transition is the latest readiness transition other
 than the validator's own removal of readiness, so the run after that cleanup
 records the same one.
 
+The adapter reads the issue's labels before its timeline, so readiness applied
+between the two reads appears in the timeline but not in the labels the run
+decides on. The observed transition is therefore limited to transitions
+consistent with those labels. When the run's labels lack a readiness label
+whose latest recorded change is its application, and that application follows
+the previous result's observed transition (or, for an earlier approval that
+records none, its review), the run read its labels before that application.
+It observes the latest transition before it, and keeps any recorded rejection
+it saw. That application's own run then finds it after the barrier and decides
+it on its merits. This holds whatever started the earlier run: another label,
+a comment, an edit or any other trigger. An application at or before the
+previous result's observed transition, one the timeline cannot place after
+it, one by the sender of the run's own application of that label, or one before
+the run's own removal of that label stays observed: its removal is not recorded
+yet. So the observed transition never moves behind the previous result's.
+
+The labels and timeline alone cannot tell an application made after the run
+read its labels from one whose removal the timeline has not recorded yet. For a
+run that another trigger started, such as another label or a comment, the
+validator takes the application as unseen. When the same sender then removes
+and reapplies readiness and the timeline records neither change, the retry's
+run binds that earlier application. It does not fail closed, as it does when an
+earlier run observed the application.
+
 Every readiness rejection records its reason, such as an unauthorized
 reviewer's "is not authorized to grant readiness", and so does a workflow state
 that supersedes a review. Once a run has recorded that rejection, later runs
@@ -381,9 +414,9 @@ label's creation event, the first readiness transition when the rejection
 observed none, does not replace the reason, so it survives both creation runs
 in either order, even when they see empty history. A later readiness event or a
 contract edit replaces the rejection through the usual review or
-revision-notice path; a readiness transition the timeline has not recorded yet
-does not. Feedback records from the previous validator without a rejection
-reason keep the plain notice.
+revision-notice path; a readiness transition the timeline has not recorded yet,
+or an application after the labels the run read, does not. Feedback records
+from the previous validator without a rejection reason keep the plain notice.
 
 The revision is computed from a versioned record containing the selected
 contract kind, exact contract bytes, source identity, and source edit revision.
@@ -423,7 +456,8 @@ observed is a barrier: the timeline records the trigger only when, in addition,
 that application is positioned after the barrier. The run that wrote that
 feedback already observed every application at or before the barrier, so none
 of them can be this trigger. Awaiting-review feedback is only written while readiness is
-absent or being removed, so a present readiness label was applied after the
+absent or being removed, and a run that read its labels before an application
+does not observe it, so a present readiness label was applied after the
 barrier, and a complete timeline always holds that application. A barrier the
 timeline cannot place, such as another issue's opening or an event the timeline
 does not hold, never lets a trigger count as recorded; this issue's own opening

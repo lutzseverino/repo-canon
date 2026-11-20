@@ -8,6 +8,7 @@ import {
   issueContractResult,
   isSpecification,
   noticePrecedes,
+  observedBarrier,
   observedChangeId,
   readyLabels,
   readIssueContractObservation,
@@ -118,9 +119,15 @@ async function grantRefusal(connection, { issue, state }) {
 
 // Whether the result has observed the latest readiness change.
 const processed = ({ state, events, current }) =>
-  current &&
-  (state?.observedEventId ?? state?.reviewEventId ?? null) ===
-    observedChangeId(events);
+  current && observedBarrier(state) === observedChangeId(events);
+
+// Whether a result that observed this command's readiness event still decides
+// none: it awaits review and rejects nothing while the label is on the issue,
+// as a notice from a run that read the labels before readiness does.
+const undecided = ({ state, issue }) =>
+  state.status === "awaiting-review" &&
+  !state.rejectionReason &&
+  issue.labels.includes(readyLabel);
 
 function parentNeedsReapply({ issue, events }, label) {
   if (
@@ -319,7 +326,7 @@ export async function main(
         event.actor?.login === login &&
         !before.events.some((previous) => previous.id === event.id),
     );
-    if (own && processed(current)) {
+    if (own && processed(current) && !undecided(current)) {
       if (current.state.rejectionReason)
         throw new Error(current.state.rejectionReason);
       if (
