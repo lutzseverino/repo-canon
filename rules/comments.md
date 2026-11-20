@@ -253,13 +253,13 @@ current head, and posts no delivery-record comment:
 - **Head:** <full head SHA>
 - **Required checks:** <names and outcomes> · <location> · `<required command>` · declaration <trusted revision>
 - **Validation:** <commands run and their outcomes>
-- **Findings:** <None, or each filed or outstanding finding's issue link>
+- **Findings:** <None, or each out-of-scope note and issue opened for one>
 ```
 
 Add a line for internal review outcomes, an owner-review requirement with its
 source, or a refused read the run continued past, with the record the
 contribution guide's Credentials section requires, whenever one applies. Link
-findings without closing keywords, so the merge closes none of them. An
+opened issues without closing keywords, so the merge closes none of them. An
 adoption pull request's body stays its adoption record, so its worker handoff
 is one pull request comment holding the same record.
 
