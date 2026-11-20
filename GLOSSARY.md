@@ -222,8 +222,8 @@ _Avoid_: Notes, memory
 
 **Wish**:
 A non-finding idea outside its plan's goal, recorded in the workbench with its
-date, source and repository. It may link a reported finding for future planning;
-[Findings](CONTRIBUTING.md#findings) owns finding-reporting requirements.
+date, source and repository. It may link a filed issue for future planning;
+[Findings](CONTRIBUTING.md#findings) owns when an observation becomes an issue.
 _Avoid_: Backlog item, suggestion
 
 **Research run**:
