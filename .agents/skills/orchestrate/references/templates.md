@@ -107,7 +107,7 @@ with amendments. Plan fields and tables:
 **Goal:** <outcome>
 **Approval:** <date, owner approval link and Preapproves scope>
 **Specifications:** <issue links>
-**Close reviews:** retro <report link once consumed>; <skill and repository> <report link once consumed>
+**Close reviews:** retro <report link once consumed>; <skill> <owner>/<name> <report link once consumed>
 **Done means:**
 
 1. <one observable clause per line, ending met <evidence link> once it holds>

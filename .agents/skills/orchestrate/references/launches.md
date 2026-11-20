@@ -10,7 +10,8 @@ under [Workbench](../SKILL.md#workbench). For heavy reads, use a covering
 installed skill or read a bounded tail; without one, pass context only.
 
 Generate each hand launch's brief with [`workbench brief`](#the-workbench-script), naming the
-stage exactly as the Canonical stages table does, its Input as target, and the plan row. It copies the
+stage exactly as the Canonical stages table does, its issue or PR as target (else its plan row; a Close
+review as [close](close.md#run-the-close-reviews) says), and the plan row. It copies the
 stage's hand skill, refuses a stage without one and derives the workspace, report and duties; run a
 refused gap by hand under its gap line and note the missing skill once under Findings. Write only its
 Context on standard input: issue links, evidence (including status JSON), recorded decisions with dates
