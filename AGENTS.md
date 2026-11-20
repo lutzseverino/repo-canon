@@ -10,20 +10,20 @@ separate agent when configured, as `CONTRIBUTING.md` directs.
 
 ## Agent skills
 
-Before handing work to another agent, subagent or session, check whether an
-installed skill covers it. This includes implementation workers delegating
-ticket subwork without invoking `orchestrate` or `triage`, and heavy reads.
-When covered, invoke that skill using the session's supported invocation
-mechanism, followed by task context. When no installed skill covers the work,
-pass task context only.
+Route a person's request by its requested outcome, uncertainty and authority to
+its stage's hand skill in the installed `factory-workflow` rules' Canonical
+stages, else by `CONTRIBUTING.md`'s Triage; answer status questions read-only;
+propose `triage`, `grill-with-docs` or `orchestrate`, starting it only on their
+yes; where user-level instructions name a workbench, read its running
+orchestrator from `index.md` and offer to report through `incoming/`.
 
-Task context includes issue links, evidence, recorded decisions, scope,
-workspace and plan references, report-back destinations and task-specific
-delivery obligations. Keep procedure and question format with the invoked skill.
+Hand work, including subwork and heavy reads, to another agent, subagent or
+session by invoking any covering installed skill with task context: issue links,
+evidence, recorded decisions, scope, workspace and plan references, report-back
+destinations and delivery obligations, never procedure or question format.
 
-Where session naming is supported, name sessions you launch or own for their
-operation and target. Otherwise, continue without naming. Keep naming metadata
-outside the skill invocation and task context.
+Where supported, name sessions you launch or own for their operation and
+target, outside invocations and task context; otherwise continue unnamed.
 
 ### Issue tracker
 

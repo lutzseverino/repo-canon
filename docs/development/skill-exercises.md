@@ -166,7 +166,7 @@ factory-profile triage and readiness decisions; `triage-routing` for routing
 by uncertainty and brief acceptance; `factory-triage` for `triage` run as the
 factory's triage run; `orchestrate` for the workbench plan lifecycle;
 `host-grant` for `orchestrate` and `factory` with a shared host access grant;
-and `delivery` for
+`front-door` for routing a fresh session's request; and `delivery` for
 `implement`, `pr`, `babysit`, and `prototype`. The delivery repository links
 `codebase-design` as the Ownership check dependency for `implement` and records
 its candidate directory and digest in the manifest with the other linked skills. It
@@ -211,8 +211,8 @@ adopting-repository conformance. Root guidance points to this adapter; the
 upstream workflow skills remain intact.
 
 All scenarios explicitly use `standard`, except `factory-planning`,
-`triage-routing`, `factory-triage`, `orchestrate` and `host-grant`, which use
-`factory`. Standard scenarios
+`triage-routing`, `factory-triage`, `orchestrate`, `host-grant` and
+`front-door`, which use `factory`. Standard scenarios
 expose GitHub repository configuration rules without factory workflow rules.
 
 For `planning`, follow the five checkpoints in its exercise and use
@@ -401,6 +401,39 @@ messages. Report actual capabilities, names, session references, messages and
 results with the PR. Fixture tests establish setup and shared-rule discovery;
 these observations establish behavior. Existing conformance tests separately
 protect skill invocation and grill/workbench delivery contracts.
+
+## Front door: a fresh session's request
+
+The planning builder's `repositories.front-door` fixture copies the shared
+`AGENTS.md`, links `triage`, `grill-with-docs`, `orchestrate` and their support
+skills, and installs the factory rules, so routing reaches the Canonical
+stages; the contribution guide's Triage route without them is shown in an
+adopter without the factory. Its tracker holds a ready ticket and a filed bug
+in `state:triage`. The manifest's separate workbench names a running
+orchestrator for an active plan in `index.md` and has an empty `incoming/`.
+
+Run eight bounded sessions, each fresh, from a fresh build and with the
+fixture repository as its working directory: four requests, each once with a
+running orchestrator and once without. Give each session only the local-only
+preamble and one request from the operator file that the manifest's
+`repositories.front-door.operatorInputs` names, outside the repository. With
+an orchestrator, the preamble names the workbench as the person's user-level
+instruction; without one, it names none.
+
+- **Idea:** the session discusses it and proposes a grill, filing nothing
+  unless asked.
+- **Filed bug:** the session proposes `triage`.
+- **UI question:** the session proposes a grill.
+- **"What's going on?":** the session answers read-only.
+
+No session starts `triage`, `grill-with-docs` or `orchestrate` without the
+person's yes. With an orchestrator, the session reads it from the workbench
+`index.md` and offers to report through `incoming/`, writing nothing unless
+asked. After each session, record `git status --porcelain` in the fixture
+repository and the workbench: both stay clean after "what's going on?", with
+no tracker write. Allow ten minutes per session. Report each case's request,
+route, session reference, proposals, starts, writes and both statuses with
+the pull request that needs them, separately from fixture-test success.
 
 ## Orchestrate: two sessions and a local workbench
 

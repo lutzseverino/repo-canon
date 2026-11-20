@@ -41,6 +41,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     "delivery",
     "factory-planning",
     "factory-triage",
+    "front-door",
     "host-grant",
     "orchestrate",
     "planning",
@@ -170,6 +171,15 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
     ],
     orchestrate: ["orchestrate", "retro", "factory"],
     "host-grant": ["orchestrate", "factory"],
+    "front-door": [
+      "triage",
+      "grill-with-docs",
+      "orchestrate",
+      "grilling",
+      "domain-modeling",
+      "research",
+      "prototype",
+    ],
     "session-naming": [],
   };
   for (const [name, skills] of Object.entries(expectedSkills))
@@ -291,6 +301,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       manifest.repositories["triage-routing"],
       manifest.repositories.orchestrate,
       manifest.repositories["host-grant"],
+      manifest.repositories["front-door"],
       manifest.repositories.delivery,
     ].includes(repository);
     assert.equal(repository.profile, factory ? "factory" : "standard");
@@ -652,6 +663,68 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
   assert.match(sourcePull, /^Part of #2$/m);
   assert.match(sourcePull, /^Part of #3$/m);
   assert.doesNotMatch(sourcePull, /Closes #[23]/);
+  // Fresh sessions route requests from the shared guidance, with and without
+  // the workbench a running orchestrator keeps.
+  const frontDoor = manifest.repositories["front-door"];
+  assert.ok(
+    readFileSync(join(frontDoor.path, "AGENTS.md"), "utf8").startsWith(
+      readFileSync(join(root, "AGENTS.md"), "utf8"),
+    ),
+  );
+  assert.equal(
+    readFileSync(join(frontDoor.path, ".scriptorium/config.json"), "utf8"),
+    readFileSync(join(root, ".scriptorium/config.json"), "utf8"),
+  );
+  // The requests and expected outcomes stay where sessions do not read them.
+  assert.ok(statSync(frontDoor.operatorInputs).isFile());
+  for (const path of [frontDoor.path, frontDoor.workbench.path])
+    assert.ok(!frontDoor.operatorInputs.startsWith(`${path}/`));
+  const doorWorkbench = frontDoor.workbench.path;
+  for (const path of [frontDoor.path, doorWorkbench]) {
+    assert.equal(
+      execFixtureGit(["remote"], { cwd: path, encoding: "utf8" }),
+      "",
+    );
+    assert.equal(
+      execFixtureGit(["status", "--porcelain"], {
+        cwd: path,
+        encoding: "utf8",
+      }),
+      "",
+    );
+  }
+  assert.deepEqual(
+    readdirSync(doorWorkbench)
+      .filter((name) => name !== ".git")
+      .sort(),
+    [
+      "inbox.md",
+      "incoming",
+      "index.md",
+      "now.md",
+      "receipts-page",
+      "wishes.md",
+    ],
+  );
+  assert.deepEqual(readdirSync(join(doorWorkbench, "incoming")), []);
+  assert.match(
+    readFileSync(join(doorWorkbench, "index.md"), "utf8"),
+    /^- `receipts-page\/`: .*Owner: \S+/m,
+  );
+  assert.deepEqual(readdirSync(join(doorWorkbench, "receipts-page")).sort(), [
+    "log.md",
+    "plan.md",
+  ]);
+  const doorIssues = join(frontDoor.path, ".scratch/receipts/issues");
+  assert.deepEqual(
+    readdirSync(doorIssues)
+      .sort()
+      .map((name) =>
+        /^Status: (\S+)$/m.exec(readFileSync(join(doorIssues, name), "utf8")),
+      )
+      .map((status) => status?.[1]),
+    ["state:ready", "state:triage"],
+  );
   // The factory triage run gets one run per issue, each with its own result
   // path, and the tracker starts with every issue waiting on triage.
   const factoryTriage = manifest.repositories["factory-triage"];
