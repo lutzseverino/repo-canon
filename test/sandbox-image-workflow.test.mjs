@@ -25,6 +25,10 @@ import {
 } from "./helpers/fixture-source.mjs";
 
 const workflowPath = ".github/workflows/sandbox-image.yml";
+const entryPointPath = "vendor/repo-canon/sandbox-image.mjs";
+const posternPath = "vendor/postern/postern.mjs";
+const sourceFile = (path) =>
+  readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const dockerfilePath = ".scriptorium/Dockerfile";
 const workflow = () =>
   readFileSync(new URL(`../${workflowPath}`, import.meta.url), "utf8");
@@ -34,6 +38,8 @@ function fixture(
   changes,
   dockerfile = "FROM scratch\n",
   installedWorkflow = workflow(),
+  installedEntryPoint = sourceFile(entryPointPath),
+  installedPostern = sourceFile(posternPath),
 ) {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-sandbox-workflow-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
@@ -57,6 +63,8 @@ function fixture(
   git("init", "--quiet");
   git("config", "user.email", "fixture@example.invalid");
   git("config", "user.name", "Fixture");
+  write(entryPointPath, installedEntryPoint);
+  write(posternPath, installedPostern);
   write(dockerfilePath, dockerfile);
   write(workflowPath, "original workflow\n");
   write("README.md", "original readme\n");
@@ -69,10 +77,24 @@ function fixture(
     BASE_SHA: base,
     HEAD_SHA: head,
     RUNNER_TEMP: directory,
+    POSTERN_TOKEN: "",
   };
   return {
     directory,
     env,
+    runEntryPoint(nodeArgs = [], repositoryName) {
+      return spawnSync(
+        process.execPath,
+        [
+          ...nodeArgs,
+          join(repository, entryPointPath),
+          env.BASE_SHA,
+          env.HEAD_SHA,
+          ...(repositoryName ? [repositoryName] : []),
+        ],
+        { cwd: repository, env, encoding: "utf8" },
+      );
+    },
     advanceBase(changes) {
       git("checkout", "--quiet", "--detach", base);
       env.BASE_SHA = commit(changes, "Advance base");
@@ -121,6 +143,72 @@ process.exit(Number(process.env.DOCKER_STATUS));
   f.env.DOCKER_STATUS = String(status);
   return () => JSON.parse(readFileSync(capture, "utf8"));
 }
+
+test("the standalone entry point builds changed inputs without Actions", (t) => {
+  const f = fixture(t, { [dockerfilePath]: "FROM scratch\n# standalone\n" });
+  const capture = stubDocker(f);
+  const result = f.runEntryPoint();
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(capture(), {
+    args: ["build", "-"],
+    input: "FROM scratch\n# standalone\n",
+  });
+});
+
+/** @type {Array<[string, Record<string, string | null>, number, string, number]>} */
+const statusCases = [
+  [
+    "a successful build",
+    { [dockerfilePath]: "FROM scratch\n# status\n" },
+    0,
+    "success",
+    0,
+  ],
+  [
+    "a failed build",
+    { [dockerfilePath]: "FROM scratch\n# status\n" },
+    17,
+    "failure",
+    17,
+  ],
+  ["unchanged image inputs", { "README.md": "unrelated\n" }, 17, "success", 0],
+  ["a removed Dockerfile", { [dockerfilePath]: null }, 0, "failure", 1],
+];
+for (const [name, changes, dockerStatus, state, exit] of statusCases) {
+  test(`a token posts the outcome of ${name} on the requested head through Postern`, (t) => {
+    const f = fixture(t, changes);
+    stubDocker(f, dockerStatus);
+    const requests = join(f.directory, "requests.json");
+    const preload = join(f.directory, "transport.mjs");
+    writeFileSync(
+      preload,
+      `import { writeFileSync } from "node:fs";
+globalThis.fetch = async (url, init) => {
+  writeFileSync(${JSON.stringify(requests)}, JSON.stringify({ url: String(url), method: init.method, authorization: new Headers(init.headers).get("authorization"), body: JSON.parse(init.body) }));
+  return new Response("{}", {status: 201, headers: {"content-type": "application/json"}});
+};`,
+    );
+    f.env.POSTERN_TOKEN = "fixture-token";
+    const result = f.runEntryPoint(["--import", preload], "owner/repo");
+    assert.equal(result.status, exit, result.stderr);
+    assert.deepEqual(JSON.parse(readFileSync(requests, "utf8")), {
+      url: `https://api.github.com/repos/owner/repo/statuses/${f.env.HEAD_SHA}`,
+      method: "POST",
+      authorization: "Bearer fixture-token",
+      body: { context: "Sandbox image", state },
+    });
+  });
+}
+
+test("the entry point refuses a checkout that is not the requested head", (t) => {
+  const f = fixture(t, { [dockerfilePath]: "FROM scratch\n# mismatch\n" });
+  const capture = stubDocker(f);
+  f.env.HEAD_SHA = f.env.BASE_SHA;
+  const result = f.runEntryPoint();
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /checkout.*head/i);
+  assert.throws(capture, { code: "ENOENT" });
+});
 
 test("unrelated pull requests succeed without invoking Docker", (t) => {
   const f = fixture(t, { "README.md": "updated readme\n" });
@@ -250,6 +338,15 @@ test("the shared workflow always reports on pull requests with read-only permiss
   assert.match(text, /persist-credentials: false/);
   const profiles = declarations(fileURLToPath(new URL("..", import.meta.url)));
   assert.deepEqual(
+    profiles.factory.find(({ id }) => id === "factory-sandbox-image-command"),
+    {
+      id: "factory-sandbox-image-command",
+      kind: "file",
+      target: entryPointPath,
+      exact: entryPointPath,
+    },
+  );
+  assert.deepEqual(
     profiles.factory.find(({ id }) => id === "factory-sandbox-image-workflow"),
     {
       id: "factory-sandbox-image-workflow",
@@ -268,7 +365,12 @@ test("public CLI installs the workflow whose executable step builds canonical in
   const cli = publicCli(directory);
   // Install the production exact configuration/workflow declarations. Full
   // factory/standard/workbench selection is covered by the adoption suites.
-  const ids = ["factory-configuration", "factory-sandbox-image-workflow"];
+  const ids = [
+    "factory-configuration",
+    "factory-sandbox-image-workflow",
+    "factory-sandbox-image-command",
+    "postern-bundle",
+  ];
   const selected = declarations(root).factory.filter(({ id }) =>
     ids.includes(id),
   );
@@ -336,6 +438,12 @@ test("public CLI installs the workflow whose executable step builds canonical in
   }
   assert.equal(report.outcome, "complete", JSON.stringify(report));
   assert.equal(invoke("status").readyToCommit, true);
+  const installedEntryPoint = readFileSync(
+    join(project, entryPointPath),
+    "utf8",
+  );
+  const installedPostern = readFileSync(join(project, posternPath), "utf8");
+  assert.equal(installedEntryPoint, sourceFile(entryPointPath));
   const installed = readFileSync(join(project, workflowPath), "utf8");
   assert.equal(installed, workflow());
   assert.deepEqual(
@@ -354,6 +462,8 @@ test("public CLI installs the workflow whose executable step builds canonical in
       { [path]: "FROM scratch\n# installed workflow exercise\n" },
       "FROM scratch\n",
       installed,
+      installedEntryPoint,
+      installedPostern,
     );
     const capture = stubDocker(f);
     assert.equal(f.run().status, 0);
@@ -372,6 +482,8 @@ test("public CLI installs the workflow whose executable step builds canonical in
     { [dockerfilePath]: null },
     "FROM scratch\n",
     installed,
+    installedEntryPoint,
+    installedPostern,
   );
   stubDocker(missing);
   assert.notEqual(missing.run().status, 0);
@@ -380,6 +492,8 @@ test("public CLI installs the workflow whose executable step builds canonical in
     { [dockerfilePath]: "FROM scratch\n# broken\n" },
     "FROM scratch\n",
     installed,
+    installedEntryPoint,
+    installedPostern,
   );
   stubDocker(broken, 17);
   assert.equal(broken.run().status, 17);

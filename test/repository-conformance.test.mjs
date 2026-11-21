@@ -239,6 +239,7 @@ const factoryFiles = [
   ".scriptorium/config.json",
   ".scriptorium/Dockerfile",
   ".github/workflows/sandbox-image.yml",
+  "vendor/repo-canon/sandbox-image.mjs",
 ];
 
 test("the standard profile installs no factory file, and the factory profile adds exactly the factory's", () => {
@@ -284,6 +285,12 @@ test("the standard profile installs no factory file, and the factory profile add
         },
         rules: "rules/factory-sandbox-image.md",
         guidance: "guidance/factory-sandbox-image.md",
+      },
+      {
+        id: "factory-sandbox-image-command",
+        kind: "file",
+        target: "vendor/repo-canon/sandbox-image.mjs",
+        exact: "vendor/repo-canon/sandbox-image.mjs",
       },
       {
         id: "factory-sandbox-image-workflow",

@@ -223,7 +223,11 @@ test("public CLI 11.0.0 resolves and adopts the standard and factory profiles at
       ".github/scripts/validate-pr-metadata.mjs",
       "scripts/issue-contract-cutoff.mjs",
       ...(profile === "factory"
-        ? [".scriptorium/config.json", ".scriptorium/Dockerfile"]
+        ? [
+            ".scriptorium/config.json",
+            ".scriptorium/Dockerfile",
+            "vendor/repo-canon/sandbox-image.mjs",
+          ]
         : []),
     ])
       assert.ok(installed.runner.includes(path), `${profile} keeps ${path}`);

@@ -288,7 +288,7 @@ for (const [
       const profile = validation.profiles[name];
       assert.equal(
         profile.declarations.length,
-        { standard: 66, factory: 71 }[name],
+        { standard: 66, factory: 72 }[name],
       );
       assert.deepEqual(
         profile.declarations.find(
