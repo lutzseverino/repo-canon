@@ -84,9 +84,9 @@ At `self-reported`, the review run runs the entry point on the exact current
 head when image inputs changed and Docker is available. A failed build hands
 the pull request back to the worker. When Docker is unavailable on the review
 host, the review records that the build did not run and posts no status. The
-review-run step is implemented by
-[#1229](https://github.com/lutzseverino/repo-canon/issues/1229); this entry
-point supplies its build, without scheduling the review.
+[`review` skill](../../.agents/skills/review/SKILL.md#self-reported-reruns)
+performs this step on its round's head and on every head pushed during
+delivery; this entry point supplies its build, without scheduling the review.
 
 ## Validation
 
