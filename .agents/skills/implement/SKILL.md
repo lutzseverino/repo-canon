@@ -48,8 +48,8 @@ posts it.
 On both routes, the worker handoff is the PR body's `### Delivery` subsection
 that `.repo-standards/rules/comments.md#delivery-records` describes. Write it
 when opening the PR and update it after every push and once that head's
-required checks finish; post no delivery-record comment. A body edit reruns
-checks that read the body, so confirm the required checks after the last edit.
+handoff results finish; post no delivery-record comment. A body edit reruns
+checks that read the body, so confirm the handoff results after the last edit.
 Report one lead line naming the PR and its check state, such as
 `✅ **Draft PR #N** · checks green on <short SHA>` or
 `❌ **Draft PR #N** · Test failed on <short SHA>`, with at most a few lines

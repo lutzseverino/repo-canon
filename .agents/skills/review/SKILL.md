@@ -97,13 +97,13 @@ refusal; otherwise fix the cause and run it again.
    the PR, posting each internal review round it calls for with
    `round.mjs --post`, in the same shape as step 4. At `self-reported`, before
    babysit waits on a head without this run's reruns, including each head it
-   pushes for a fix or branch update, run Self-reported reruns on it; a failure
-   there is a failed check that babysit's wait reports and its steps 2–4
-   handle. Before each of babysit's
-   merge attempts, run `round.mjs` again. When it reports a gate, stop at
-   ready-to-merge as the `factory-workflow` rules say: leave the PR open, move
-   its issue, if it has one, to `state:owner`, and end the run, reporting the
-   gate.
+   pushes for a fix or branch update, run Self-reported reruns on it, and rerun
+   its PR metadata step after each title or body edit; a failure there is a
+   failed check that babysit's wait reports and its steps 2–4 handle. Before
+   each of babysit's merge attempts, run `round.mjs` again. When it reports a
+   gate, stop at ready-to-merge as the `factory-workflow` rules say: leave the
+   PR open, move its issue, if it has one, to `state:owner`, and end the run,
+   reporting the gate.
 
 ## Self-reported reruns
 
@@ -130,7 +130,9 @@ head, from the repository root and with the run's supplied GitHub credential as
    and record in that head's review, or its carried-review record, that the
    sandbox image build did not run.
 
-A nonzero exit from any of them is a failure. A permission refusal follows
+A nonzero exit after an entry point posts its status is a failure. One before
+it posts, from its input, credential or a head mismatch, is an invocation
+error: fix the cause and run it again. A permission refusal follows
 `CONTRIBUTING.md`'s Credentials section.
 
 ## Reads
