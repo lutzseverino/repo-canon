@@ -62,9 +62,11 @@ refusal; otherwise fix the cause and run it again.
    fix nothing and carry every finding into the review. With no fix, retain the
    current head. Commit the fixes to the
    PR branch, run the required checks the development guide names, and push.
-   Run `round.mjs` again: its head is the head this round's review covers. Done
-   when the diff from the reviewed head to that head holds only the fixes and
-   the checks pass.
+   Run `round.mjs` again: its head is the head this round's review covers. At
+   `self-reported`, when no contract or larger finding stands, run
+   [Self-reported reruns](#self-reported-reruns) on that head; a failure is a
+   larger finding of this round. Done when the diff from the reviewed head to
+   that head holds only the fixes and the checks pass.
 4. **Post the round's review**, after reading
    `.repo-standards/rules/comments.md#reviews`: the actual Standards and Spec
    outcomes, a row for each open, fixed or filed finding, and the round and
@@ -93,11 +95,45 @@ refusal; otherwise fix the cause and run it again.
 5. **Deliver.** Mark the PR ready with `round.mjs <number> --ready`; exit `2`
    means the review has not held, so return to step 1. Then run `babysit` on
    the PR, posting each internal review round it calls for with
-   `round.mjs --post`, in the same shape as step 4. Before each of babysit's
-   merge attempts, run `round.mjs` again. When it reports a gate, stop at
-   ready-to-merge as the `factory-workflow` rules say: leave the PR open, move
-   its issue, if it has one, to `state:owner`, and end the run, reporting the
-   gate.
+   `round.mjs --post`, in the same shape as step 4. At `self-reported`, before
+   babysit waits on a head without this run's reruns, including each head it
+   pushes for a fix or branch update, run Self-reported reruns on it, and rerun
+   its PR metadata step after each title or body edit; a failure there is a
+   failed check that babysit's wait reports and its steps 2–4 handle. Before
+   each of babysit's merge attempts, run `round.mjs` again. When it reports a
+   gate, stop at ready-to-merge as the `factory-workflow` rules say: leave the
+   PR open, move its issue, if it has one, to `state:owner`, and end the run,
+   reporting the gate.
+
+## Self-reported reruns
+
+`CONTRIBUTING.md`'s Worker handoff tells the check location from the pinned
+trusted default-branch `.github/required-checks.json`; read no selection. At
+`self-reported`, merge needs `Review rerun` and `PR metadata` on the exact
+head, and only this skill posts `Review rerun`. In your own checkout of the
+head, from the repository root and with the run's supplied GitHub credential as
+`POSTERN_TOKEN`, run:
+
+1. The check command the development guide names, through the check-command
+   entry point's `review` role, which posts `Review rerun`:
+   `node vendor/repo-canon/validate.mjs <file>` with
+   `{"kind": "check-command", "repository": "https://github.com/<owner>/<repo>", "head": "<full SHA>", "checkout": ".", "command": "<command>", "role": "review"}`.
+2. The PR metadata entry point, so `PR metadata` reflects the current title
+   and body: the same command with
+   `{"kind": "pr-metadata", "repository": "https://github.com/<owner>/<repo>", "pullRequest": <number>}`.
+3. Where `vendor/repo-canon/sandbox-image.mjs` is installed, check Docker with
+   `docker info`. When it answers, run
+   `node vendor/repo-canon/sandbox-image.mjs <base SHA> <head SHA> <owner>/<repo>`
+   with the PR's current base commit: it builds the toolchain image when its
+   inputs changed and posts `Sandbox image`, which stays non-required for
+   merge. When Docker is unavailable, skip it, post no `Sandbox image` status,
+   and record in that head's review, or its carried-review record, that the
+   sandbox image build did not run.
+
+A nonzero exit after an entry point posts its status is a failure. One before
+it posts, from its input, credential or a head mismatch, is an invocation
+error: fix the cause and run it again. A permission refusal follows
+`CONTRIBUTING.md`'s Credentials section.
 
 ## Reads
 
@@ -124,6 +160,14 @@ Paths are relative to the repository root.
   start: stop and report that this skill needs it.
 - The `implement` skill, which takes a hand-back on the same PR. When it is
   missing, report the hand-back with the review's link and stop.
+- `.github/required-checks.json` at the pinned trusted default-branch commit:
+  the check location. When it is missing or unreadable, run no reruns;
+  babysit refuses delivery until it is corrected.
+- `vendor/repo-canon/validate.mjs` and `vendor/repo-canon/sandbox-image.mjs`:
+  the entry points Self-reported reruns call, which Repo Canon's adoption
+  installs. When the validator is missing at `self-reported`, stop and report
+  that the reruns need it. When the sandbox image entry point is missing, skip
+  that step.
 - The `codebase-design` skill: the check used through Standards above. When
   missing, report the gap through the contribution guide's Findings route, or
   in the handoff without the guide; retain the recorded contract as the baseline.

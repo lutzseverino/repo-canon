@@ -239,15 +239,22 @@ adoption pull request, use the adoption record as described below.
 
 ### Worker handoff
 
-Before worker handoff, required checks must pass on the latest pushed PR head;
-the separate-review handoff's passing-checks condition follows the factory workflow
+Before worker handoff, the location's handoff results must pass on the latest
+pushed PR head; the separate-review handoff's passing-checks condition follows the factory workflow
 rules' environment-performed step rule in their Run kinds section.
 Required names come from pinned trusted default-branch `.github/required-checks.json`
-under the `github-repository-configuration` rules. Each location runs the required command:
+under the `github-repository-configuration` rules, and so does the location: a
+declaration naming `Runner checks` means `runner`, one naming `Review rerun`
+means `self-reported`, and any other means `github`. No run reads the
+selection. Each location runs the required command, and the handoff needs:
 
-- `github`: use required hosted check results on that head.
-- `runner`: use required commit statuses from the repository's named runner.
-- `self-reported`: run and report the required local command on that head.
+- `github`: the required hosted check results on that head.
+- `runner`: the runner's `Runner checks` and `PR metadata` statuses on that head.
+- `self-reported`: the worker's own result of the required command on that
+  head, plus `PR metadata` from the PR metadata entry point, run after the last
+  body edit. The handoff never waits on `Review rerun`, and the worker never
+  posts it. The Delivery subsection states that the checks are self-reported,
+  with the full head SHA, the command and its outcome.
 
 A head change invalidates earlier evidence. Run-performed gates reject pending,
 missing, failing, unavailable or unrun results. Unavailable Actions cannot
@@ -263,8 +270,10 @@ keep it current on each push. Draft-to-separate-review and no-review handoffs
 both retain review/merge ownership and gates.
 
 Self-reported success requires the independent review run, another agent and
-sandbox, to rerun the same command on the current head before merging. The
-worker report cannot replace that rerun or clear designated owner review.
+sandbox, to rerun the same command on the current head before merging, and on
+every head pushed during delivery, as the `review` skill does; only that run
+posts `Review rerun`. The worker report cannot replace that rerun or clear
+designated owner review.
 
 ### Adoption pull requests
 
@@ -313,7 +322,11 @@ enforcing those rules on the current head alongside the conditions below.
 
 Merge a pull request once every required check passes on its latest head and
 every review thread is answered with its fix or a reasoned decline under the
-[comment rules](.repo-standards/rules/comments.md). Checks must include the current default branch
+[comment rules](.repo-standards/rules/comments.md). By the location the
+[worker handoff](#worker-handoff) tells, merge needs: at `github`, the hosted
+checks; at `runner`, `Runner checks` and `PR metadata`; at `self-reported`, the
+review run's `Review rerun` plus `PR metadata`. Only merge requires
+`Review rerun`. Checks must include the current default branch
 under GitHub enforcement wherever available; proven private-plan limitations
 require immediate merging-agent verification with the accepted concurrent-base race. The
 `github-repository-configuration` rules define freshness, passing checks and

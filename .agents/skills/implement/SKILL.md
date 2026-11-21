@@ -36,11 +36,20 @@ Worker handoff condition, applying the factory rules'
 to its passing-checks condition. Report as below, then stop. Leave review, marking
 ready, babysitting and merging to the separate `review` agent; do not self-review.
 
+At `self-reported`, which `CONTRIBUTING.md`'s Worker handoff tells from the
+trusted required-check declaration, your own run of the check command on the
+pushed head is the handoff's check result. After every body edit, run the PR
+metadata entry point, `node vendor/repo-canon/validate.mjs <file>` with
+`{"kind": "pr-metadata", "repository": "https://github.com/<owner>/<repo>", "pullRequest": <number>}`
+and the run's supplied GitHub credential as `POSTERN_TOKEN`, and confirm its
+`PR metadata` success. Never wait on or post `Review rerun`; only `review`
+posts it.
+
 On both routes, the worker handoff is the PR body's `### Delivery` subsection
 that `.repo-standards/rules/comments.md#delivery-records` describes. Write it
 when opening the PR and update it after every push and once that head's
-required checks finish; post no delivery-record comment. A body edit reruns
-checks that read the body, so confirm the required checks after the last edit.
+handoff results finish; post no delivery-record comment. A body edit reruns
+checks that read the body, so confirm the handoff results after the last edit.
 Report one lead line naming the PR and its check state, such as
 `✅ **Draft PR #N** · checks green on <short SHA>` or
 `❌ **Draft PR #N** · Test failed on <short SHA>`, with at most a few lines
@@ -60,6 +69,12 @@ Paths are relative to the repository root.
   body's Evidence section and report the fixes there.
 - `.repo-standards/rules/factory-workflow.md`: delivery and environment-performed steps.
   When it is missing, use the draft handoff above.
+- `.github/required-checks.json` at the pinned trusted default-branch commit:
+  the required names and check location. When it is missing or unreadable,
+  record that in the handoff; delivery refuses until it is corrected.
+- `vendor/repo-canon/validate.mjs`: the PR metadata entry point, which Repo
+  Canon's adoption installs. When it is missing at `self-reported`, record in
+  the handoff that `PR metadata` was not posted.
 - The `codebase-design` skill: the check applied above. When missing, report
   the gap through the contribution guide's Findings route, or in the handoff
   when the guide is missing; retain the recorded contract.
