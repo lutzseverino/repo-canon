@@ -77,9 +77,13 @@ reports the read failure. A readiness refusal after a failed read names
 runner results cannot count without the readable override.
 
 At `self-reported`, nobody posts contract results and the owner applies
-readiness; the readiness command reports a missing validator notice. Off-Actions
-PR metadata, check-command execution, standards updates and event delivery
-remain separate [check-execution work](https://github.com/lutzseverino/repo-canon/issues/1225).
+readiness; the readiness command reports a missing validator notice. The
+neutral entry point already posts `PR metadata` and check-command statuses off
+Actions, as its
+[entry-point reference](../development/pr-metadata-validation.md#entry-points-outside-actions)
+says. The review run's rerun, merge at these locations, standards updates and
+event delivery remain separate
+[check-execution work](https://github.com/lutzseverino/repo-canon/issues/1225).
 Merge gates continue to require their results and the first-adoption owner
 handoff in [Remote setup](#remote-setup) still applies. Nothing bypasses the
 required-check, freshness or review gates.
