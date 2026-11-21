@@ -35,6 +35,60 @@ import {
   contractSourceConfiguration,
 } from "../../scripts/issue-contract-store.mjs";
 
+// The on-Actions acting login and the sole fallback for result readers.
+export const actionsValidatorLogin = "github-actions[bot]";
+
+// Seam (deferred): trusted result-account resolution; consumers: 2 (readiness, cutoff); extract at 3.
+// The repository owns the runner login. Readers share this resolution; the
+// validator never uses it to identify its own results.
+export async function readTrustedResultAccount(connection) {
+  let data;
+  try {
+    ({ data } = await connection.access.request({
+      path: `/repos/${connection.repository.path}/actions/variables/REPO_CANON_RUNNER_ACCOUNT`,
+    }));
+  } catch (error) {
+    // Postern's notFound also covers 410 and 451; only 404 means unset.
+    if (error instanceof PlatformError && error.status === 404)
+      return { login: actionsValidatorLogin, configured: false, error: null };
+    return {
+      login: actionsValidatorLogin,
+      configured: false,
+      error: `Could not read REPO_CANON_RUNNER_ACCOUNT; the caller's credential needs "Variables: read" on the repository. ${error.message}`,
+    };
+  }
+  if (typeof data?.value !== "string" || !data.value.trim())
+    return {
+      login: actionsValidatorLogin,
+      configured: false,
+      error: "REPO_CANON_RUNNER_ACCOUNT is set but names no account login.",
+    };
+  return { login: data.value, configured: true, error: null };
+}
+
+// /user excludes App installation tokens. GraphQL's Bot login omits the
+// suffix that REST authors and events carry.
+export async function actingLogin(connection) {
+  const { data: identity } = await connection.access.request({
+    method: "POST",
+    path: "/graphql",
+    body: {
+      query: "query TriageActingAccount { viewer { __typename login } }",
+    },
+  });
+  const viewer = identity?.data?.viewer;
+  if (
+    identity?.errors?.length ||
+    !["User", "Bot"].includes(viewer?.__typename) ||
+    typeof viewer.login !== "string" ||
+    !viewer.login.trim()
+  )
+    throw new Error("Could not identify the acting account.");
+  return viewer.__typename === "Bot" && !viewer.login.endsWith("[bot]")
+    ? `${viewer.login}[bot]`
+    : viewer.login;
+}
+
 // Pinned once by release:prepare for the first stable release shipping Seams.
 // The annotated tag and GitHub release are the immutable public identity.
 export const seamsReleaseTag = "v0.26.0";
@@ -665,7 +719,7 @@ export function decideIssueContract(snapshot) {
     contractSources: { ...snapshot.contractSources, record: selected.record },
     selectedSource: selected,
     comments:
-      !findFeedback(snapshot.comments) && saved
+      !findFeedback(snapshot.comments, snapshot.validatorLogin) && saved
         ? [...snapshot.comments, saved]
         : snapshot.comments,
   };
@@ -674,7 +728,7 @@ export function decideIssueContract(snapshot) {
     assessed.valid && assessed.contract?.type === "issue-body"
       ? bodyTriageAssociation(effective, contractRevision(effective, assessed))
       : null;
-  const previous = findFeedback(effective.comments);
+  const previous = findFeedback(effective.comments, effective.validatorLogin);
   if (
     association &&
     same(feedbackState(previous?.body)?.factoryTriage, association) &&
@@ -710,7 +764,8 @@ export function decideIssueContract(snapshot) {
       `${feedbackStatePrefix}${JSON.stringify(state)} -->`,
     );
     // A restored durable notice must recreate the platform comment.
-    decision.feedback.commentId = findFeedback(snapshot.comments)?.id ?? null;
+    decision.feedback.commentId =
+      findFeedback(snapshot.comments, snapshot.validatorLogin)?.id ?? null;
   }
   return {
     ...decision,
@@ -758,7 +813,7 @@ function decideCurrentContract(snapshot) {
 
   const { comments } = snapshot;
   let result = assessStructure(snapshot);
-  const previousFeedback = findFeedback(comments);
+  const previousFeedback = findFeedback(comments, snapshot.validatorLogin);
   const recorded = feedbackState(previousFeedback?.body);
   const timeline = result.usesWorkflowState ? issueTimeline(snapshot) : null;
   let exemption = null;
@@ -827,7 +882,7 @@ function decideCurrentContract(snapshot) {
       message: result.errors.join("\n"),
       ...stateWrites(),
       feedback: feedbackChange(
-        comments,
+        snapshot,
         invalidFeedback(result.errors, evaluation),
       ),
     });
@@ -842,7 +897,7 @@ function decideCurrentContract(snapshot) {
       ...stateWrites(),
       feedback: previousFeedback
         ? feedbackChange(
-            comments,
+            snapshot,
             noContractFeedback(
               evaluation,
               recorded?.status === "needs-attention",
@@ -881,7 +936,7 @@ function decideCurrentContract(snapshot) {
       message: readiness.error,
       ...writes,
       feedback: feedbackChange(
-        comments,
+        snapshot,
         awaitingReviewFeedback(published, {
           reason: readiness.error,
           rejectedCreationLabel: readiness.rejectedCreationLabel,
@@ -904,7 +959,7 @@ function decideCurrentContract(snapshot) {
       message: `Valid ${result.kind}; ${superseding} superseded ${readiness.label}.`,
       ...writes,
       feedback: feedbackChange(
-        comments,
+        snapshot,
         awaitingReviewFeedback(published, {
           reason:
             supersedingStates.length === 1
@@ -921,7 +976,7 @@ function decideCurrentContract(snapshot) {
     message: `Valid ${result.kind}${readiness.approved ? ` with ${readiness.label} bound to ${revision}` : "; awaiting authorized review"}.`,
     ...stateWrites(readiness.approved ? [readiness.label] : null),
     feedback: feedbackChange(
-      comments,
+      snapshot,
       readiness.approved
         ? approvedFeedback(published, {
             label: readiness.label,
@@ -1078,7 +1133,7 @@ export function noticePrecedes({ comment, state }, time) {
 
 // Whether the snapshot's run is a human readiness trigger the timeline has not
 // recorded yet: a `labeled` event for `state:ready` by a sender other than
-// `github-actions[bot]`, while its re-fetched issue still carries the label and
+// the validator, while its re-fetched issue still carries the label and
 // the label's latest recorded application, by anyone, is not the sender's or a
 // removal is the label's latest recorded change. While the latest feedback
 // awaits review, that application must also follow its observed event: the run
@@ -1087,19 +1142,24 @@ export function noticePrecedes({ comment, state }, time) {
 // re-reads the timeline while this holds, within its bound, and the decision
 // fails closed while it does.
 export function readinessTriggerUnrecorded(snapshot) {
-  const { event, issue, comments } = snapshot;
+  const {
+    event,
+    issue,
+    comments,
+    validatorLogin = actionsValidatorLogin,
+  } = snapshot;
   const trigger = readinessTransitionLabel(event);
   const sender = event.actor?.login;
   if (
     event.kind !== "labeled" ||
     !trigger ||
     !sender ||
-    sender === "github-actions[bot]"
+    sender === validatorLogin
   ) {
     return false;
   }
   if (!(issue.labels ?? []).map(labelName).includes(trigger)) return false;
-  const recorded = feedbackState(findFeedback(comments)?.body);
+  const recorded = feedbackState(findFeedback(comments, validatorLogin)?.body);
   const barrier =
     recorded?.status === "awaiting-review" ? recorded.observedEventId : null;
   return !issueTimeline(snapshot).recordsApplication(trigger, sender, barrier);
@@ -2244,14 +2304,14 @@ function reviewerAuthority(permissions, login) {
 // of an opening event. A `labeled` run reviews from the creation snapshot only
 // when the opener is that label event's actor, so the opener's role is read
 // whenever it can decide the outcome.
-function reviewerLogins({ event, comments, issueEvents }) {
+function reviewerLogins({ event, comments, issueEvents, validatorLogin }) {
   const logins = new Set();
   for (const candidate of issueEvents) {
     if (isReadinessTransition(candidate) && candidate.actor?.login)
       logins.add(candidate.actor.login);
   }
   const recordedReviewer = feedbackState(
-    findFeedback(comments)?.body,
+    findFeedback(comments, validatorLogin)?.body,
   )?.reviewer;
   if (recordedReviewer) logins.add(recordedReviewer);
   if (event.kind === "opened" && event.actor?.login)
@@ -2260,12 +2320,15 @@ function reviewerLogins({ event, comments, issueEvents }) {
 }
 
 // The validator's latest result on an issue: the latest marked comment by
-// `github-actions[bot]`, with its state, `null` when the line is missing,
+// the selected account, with its state, `null` when the line is missing,
 // malformed or of an unknown format. Comments carry their author as `user`, as
 // GitHub's REST API names it, or as `author`, as Postern's port does. The
 // `triage` readiness command reads results through this function.
-export function issueContractResult(comments) {
-  const comment = findFeedback(comments ?? []) ?? null;
+export function issueContractResult(
+  comments,
+  validatorLogin = actionsValidatorLogin,
+) {
+  const comment = findFeedback(comments ?? [], validatorLogin) ?? null;
   return { comment, state: feedbackState(comment?.body) };
 }
 
@@ -2383,17 +2446,19 @@ function stateAppliedAfterReview(labels, reviewEventId, timeline) {
 }
 
 // The validator's own removal of a label, which cleans up a recorded decision.
-function isValidatorRemoval(candidate) {
+function isValidatorRemoval(candidate, validatorLogin) {
   return (
-    candidate.event === "unlabeled" &&
-    candidate.actor?.login === "github-actions[bot]"
+    candidate.event === "unlabeled" && candidate.actor?.login === validatorLogin
   );
 }
 
 // A readiness transition a result observes: any but the validator's own
 // removal.
-function isObservedTransition(candidate) {
-  return isReadinessTransition(candidate) && !isValidatorRemoval(candidate);
+function isObservedTransition(candidate, validatorLogin) {
+  return (
+    isReadinessTransition(candidate) &&
+    !isValidatorRemoval(candidate, validatorLogin)
+  );
 }
 
 function isReadinessTransition(candidate) {
@@ -2417,7 +2482,13 @@ function isReadinessTransition(candidate) {
 // was opened with) is at position zero and the Nth event at position N. Agent
 // Brief comments are ordered among themselves by comment ID, in
 // `latestAgentBrief`.
-function issueTimeline({ event, issue, issueEvents, repositoryLabels }) {
+function issueTimeline({
+  event,
+  issue,
+  issueEvents,
+  repositoryLabels,
+  validatorLogin = actionsValidatorLogin,
+}) {
   if (!Array.isArray(issueEvents))
     throw new Error("The snapshot does not include the issue-event timeline.");
   const openingId = openingReviewId(issue);
@@ -2532,7 +2603,11 @@ function issueTimeline({ event, issue, issueEvents, repositoryLabels }) {
   }
 
   function latestObservedTransition() {
-    return issueEvents.findLast(isObservedTransition) ?? null;
+    return (
+      issueEvents.findLast((candidate) =>
+        isObservedTransition(candidate, validatorLogin),
+      ) ?? null
+    );
   }
 
   // Whether the label's latest recorded change is its application.
@@ -2565,7 +2640,9 @@ function issueTimeline({ event, issue, issueEvents, repositoryLabels }) {
       ) {
         transitions.shift();
       }
-      return transitions.every(isValidatorRemoval);
+      return transitions.every((candidate) =>
+        isValidatorRemoval(candidate, validatorLogin),
+      );
     },
 
     // Whether a review event follows an earlier barrier in the timeline. No
@@ -2628,7 +2705,7 @@ function issueTimeline({ event, issue, issueEvents, repositoryLabels }) {
       return (
         label === fallbackState &&
         latestChangeIsApplication(label) &&
-        lastApplication(label)?.event.actor?.login === "github-actions[bot]"
+        lastApplication(label)?.event.actor?.login === validatorLogin
       );
     },
 
@@ -2674,18 +2751,18 @@ function issueTimeline({ event, issue, issueEvents, repositoryLabels }) {
 // Every evaluation writes its result, even when the decision is unchanged, so
 // a result older than the issue's latest activity shows the validator has not
 // run since.
-function feedbackChange(comments, body) {
-  const existing = findFeedback(comments);
+function feedbackChange({ comments, validatorLogin }, body) {
+  const existing = findFeedback(comments, validatorLogin);
   return { commentId: existing ? existing.id : null, body };
 }
 
-function findFeedback(comments) {
+function findFeedback(comments, validatorLogin = actionsValidatorLogin) {
   return [...comments]
     .reverse()
     .find(
       (comment) =>
         comment.body?.includes(feedbackMarker) &&
-        (comment.user ?? comment.author)?.login === "github-actions[bot]",
+        (comment.user ?? comment.author)?.login === validatorLogin,
     );
 }
 
@@ -2979,8 +3056,15 @@ function timelineEvent(change) {
 // The ID of the latest readiness change among the tracker's label changes that
 // a result records as observed, `null` for none. The `triage` readiness
 // command waits for a result that observed it.
-export function observedChangeId(changes) {
-  return eventId(changes.map(timelineEvent).findLast(isObservedTransition));
+export function observedChangeId(
+  changes,
+  validatorLogin = actionsValidatorLogin,
+) {
+  return eventId(
+    changes
+      .map(timelineEvent)
+      .findLast((candidate) => isObservedTransition(candidate, validatorLogin)),
+  );
 }
 
 export async function runIssueContractValidation(
@@ -2993,6 +3077,7 @@ export async function runIssueContractValidation(
   sourceConfiguration = contractSourceConfiguration(),
   resolveBoundary = resolveSeamsBoundary,
   resolveTracker = null,
+  validatorLogin = actionsValidatorLogin,
 ) {
   const tracker = connection.issueTracker;
   if (!event) {
@@ -3023,6 +3108,7 @@ export async function runIssueContractValidation(
       "Issue body edit time is unavailable; cannot validate readiness.",
     );
   const snapshot = {
+    validatorLogin,
     repository: event.repository,
     event,
     issue,
@@ -3067,7 +3153,7 @@ export async function runIssueContractValidation(
       facts.record?.retired ||
       legacy ||
       [
-        findFeedback(snapshot.comments),
+        findFeedback(snapshot.comments, snapshot.validatorLogin),
         facts.record?.notice,
         legacy?.notice,
       ].some(
@@ -3085,7 +3171,7 @@ export async function runIssueContractValidation(
     snapshot.contractSources = facts;
     snapshot.sourceEdits = await sourceEditIdentities(connection, [
       current.nodeId,
-      ...observationComments(snapshot.comments).map(
+      ...observationComments(snapshot.comments, snapshot.validatorLogin).map(
         (comment) => comment.node_id,
       ),
     ]);
@@ -3237,7 +3323,7 @@ export async function runIssueContractValidation(
     const notice = {
       id: writtenFeedback?.id ?? decision.feedback.commentId,
       body: decision.feedback.body,
-      user: { login: "github-actions[bot]" },
+      user: { login: validatorLogin },
       updated_at: writtenFeedback?.updatedAt ?? snapshot.evaluatedAt,
     };
     const record = {
@@ -3262,6 +3348,7 @@ export async function runIssueContractValidation(
 // Repository-facing cutoff input. Uses the same selector, revision and result
 // reader as live validation; inventory inclusion never implies approval.
 export async function contractCutoffInventory(connection) {
+  const resultAccount = await readTrustedResultAccount(connection);
   const listed = await connection.issueTracker.issues({ state: "open" });
   const issues = [];
   for (const item of listed) {
@@ -3303,7 +3390,7 @@ export async function contractCutoffInventory(connection) {
           },
         )
       : null;
-    const feedback = findFeedback(comments);
+    const feedback = findFeedback(comments, resultAccount.login);
     issues.push({
       number: issue.number,
       issue: issue.nodeId,
@@ -3315,14 +3402,14 @@ export async function contractCutoffInventory(connection) {
     });
   }
   issues.sort((a, b) => a.number - b.number);
-  return { complete: true, issues };
+  return { complete: true, issues, resultAccount };
 }
 
-function observationComments(comments) {
+function observationComments(comments, validatorLogin = actionsValidatorLogin) {
   return comments.filter(
     (comment) =>
       !(
-        (comment.user ?? comment.author)?.login === "github-actions[bot]" &&
+        (comment.user ?? comment.author)?.login === validatorLogin &&
         comment.body?.includes(feedbackMarker)
       ),
   );
@@ -3333,7 +3420,10 @@ function observationComments(comments) {
 export function issueContractObservation(snapshot) {
   const issue = snapshot.issue;
   const node = issue.node_id ?? issue.nodeId;
-  const comments = observationComments(snapshot.comments)
+  const comments = observationComments(
+    snapshot.comments,
+    snapshot.validatorLogin,
+  )
     .map((comment) => ({
       id: String(comment.id),
       body: comment.body,
@@ -3353,7 +3443,7 @@ export function issueContractObservation(snapshot) {
       comments,
       observedEventId: snapshot.issueEvents
         ? eventId(issueTimeline(snapshot).latestObservedTransition())
-        : observedChangeId(snapshot.events ?? []),
+        : observedChangeId(snapshot.events ?? [], snapshot.validatorLogin),
     }),
   );
 }
@@ -3363,12 +3453,21 @@ export async function readIssueContractObservation(
   issue,
   comments,
   events,
+  validatorLogin = actionsValidatorLogin,
 ) {
   const sourceEdits = await sourceEditIdentities(connection, [
     issue.nodeId,
-    ...observationComments(comments).map((comment) => comment.nodeId),
+    ...observationComments(comments, validatorLogin).map(
+      (comment) => comment.nodeId,
+    ),
   ]);
-  return issueContractObservation({ issue, comments, events, sourceEdits });
+  return issueContractObservation({
+    issue,
+    comments,
+    events,
+    sourceEdits,
+    validatorLogin,
+  });
 }
 
 function validResultCore(state) {

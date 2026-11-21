@@ -5,7 +5,10 @@ import { fileURLToPath } from "node:url";
 import { readFile } from "node:fs/promises";
 import { execFileSync, spawn } from "node:child_process";
 import { connect } from "../postern/postern.mjs";
-import { runIssueContractValidation } from "./validate-issue-contract.mjs";
+import {
+  actingLogin,
+  runIssueContractValidation,
+} from "./validate-issue-contract.mjs";
 import { validatePullRequestMetadata } from "../../.github/scripts/validate-pr-metadata.mjs";
 
 // All paths consume neutral input; the trusted trigger owns event decoding.
@@ -15,7 +18,10 @@ export async function validate(
   resolveIssue,
   resolveBoundary,
   resolveTracker,
-  credential,
+  {
+    credential,
+    validatorLogin,
+  } = /** @type {{ credential?: string, validatorLogin?: string }} */ ({}),
 ) {
   if (input.kind === "issue-contract")
     return runIssueContractValidation(
@@ -28,6 +34,7 @@ export async function validate(
       undefined,
       resolveBoundary,
       resolveTracker,
+      validatorLogin ?? (await actingLogin(connection)),
     );
   if (input.kind === "pr-metadata" && typeof input.pullRequest === "number") {
     const pullRequest = await connection.pullRequests.pullRequest(
@@ -144,7 +151,7 @@ export async function main(
     (reference) => trackerFor(reference.repository).issue(reference.number),
     connectionOptions.resolveBoundary,
     trackerFor,
-    options.credential,
+    { credential: options.credential },
   );
 }
 

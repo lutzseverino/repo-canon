@@ -35,7 +35,27 @@ export function contractWorld({
   triageResult = null,
   start = "2026-10-25T12:00:00Z",
   others = [],
+  validatorLogin: resultLogin = validatorLogin,
+  runnerAccount = null,
+  variableFailure = 404,
+  sourceConfiguration = { mode: "prepared" },
 } = {}) {
+  const requests = [];
+  const files = new Map();
+  if (sourceConfiguration.mode === "body")
+    files.set("cutoff.json", {
+      sha: "receipt",
+      value: {
+        format: "repo-canon/issue-contract-cutoff/v1",
+        repository: worldRepository,
+        release: "v1",
+        sha: "b".repeat(40),
+        epoch: start,
+        complete: true,
+        publicationFrozen: true,
+        issues: [],
+      },
+    });
   let clock = Date.parse(start);
   let frozen = false;
   let pauses = 0;
@@ -127,13 +147,47 @@ export function contractWorld({
 
   // The transport for one account's credential.
   function fetchAs(login) {
-    const queue = login !== validatorLogin;
+    const queue = login !== resultLogin;
     return async (input, init = {}) => {
       const url = new URL(input);
       const path = url.pathname;
       const method = init.method ?? "GET";
       const request = init.body ? JSON.parse(init.body) : null;
       const repo = `/repos/${worldRepository}`;
+      requests.push({ method, path, body: request, login });
+      if (path === `${repo}/actions/variables/REPO_CANON_RUNNER_ACCOUNT`)
+        return runnerAccount === null
+          ? json({ message: "Variable unavailable" }, variableFailure)
+          : json({ name: "REPO_CANON_RUNNER_ACCOUNT", value: runnerAccount });
+      if (path === repo) return json({ default_branch: "main" });
+      if (path === `${repo}/git/ref/heads/main`)
+        return json({ object: { sha: "b".repeat(40) } });
+      if (path.includes("/contents/")) {
+        const name = path.split("/contents/")[1];
+        if (method === "PUT") {
+          const sha = `file-${nextId++}`;
+          files.set(name, {
+            sha,
+            value: JSON.parse(
+              Buffer.from(request.content, "base64").toString(),
+            ),
+          });
+          return json({ content: { sha } });
+        }
+        const found =
+          name === ".github/issue-contracts.json"
+            ? { sha: "configuration", value: sourceConfiguration }
+            : files.get(name);
+        if (!found) return json({ message: "Not found" }, 404);
+        const content = Buffer.from(JSON.stringify(found.value));
+        return json({
+          type: "file",
+          encoding: "base64",
+          sha: found.sha,
+          size: content.length,
+          content: content.toString("base64"),
+        });
+      }
       if (path === "/graphql") {
         const query = request.query;
         if (query.includes("TriageActingAccount"))
@@ -308,13 +362,15 @@ export function contractWorld({
       credential: `fixture-${Buffer.from(login).toString("hex")}`,
       fetch: fetchAs(login),
     });
-  const validator = connectionAs(validatorLogin);
+  const validator = connectionAs(resultLogin);
   /** @type {any} */
   const noPause = async () => {};
 
   const world = {
     comments,
     events,
+    requests,
+    files,
     issue,
     pending,
     // Called by `pause` before it delivers the queued events.
@@ -340,8 +396,10 @@ export function contractWorld({
               noPause,
               () => clock,
               triageResult,
-              undefined,
+              sourceConfiguration,
               resolveBoundary,
+              undefined,
+              resultLogin,
             ),
           );
         } finally {

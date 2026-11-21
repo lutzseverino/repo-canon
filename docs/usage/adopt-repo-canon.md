@@ -57,14 +57,35 @@ development guide names. Your repository owns that command; Repo Canon names
 none for you and adds no second command setting.
 
 At `runner` and `self-reported`, Repo Canon installs none of its workflow
-files. Selecting either is selection and installation support only: running
-the checks off Actions and the self-reported review rerun are separate
-[check-execution work](https://github.com/lutzseverino/repo-canon/issues/908).
-Until that work ships, such a repository gets no issue-contract result, so no
-readiness, no PR metadata result, and no automated standards updates. Merge
-gates that need results only Repo Canon's workflows produce refuse or hand off
-to the owner rather than pass, and the first-adoption owner handoff in
-[Remote setup](#remote-setup) still applies. Nothing bypasses or weakens the
+files. At `runner`, the neutral issue-contract entry point can post contract
+results under the runner's token; see
+[off-Actions validation](../development/issue-contract-validation.md#shared-validator-and-platform-access).
+Configure the repository before using runner results:
+
+1. Set the GitHub repository variable `REPO_CANON_RUNNER_ACCOUNT` to the runner's
+   dedicated account's REST login, including `[bot]` for an App account.
+2. Set Scriptorium's `contractResult.author` to that same login.
+3. Give each credential that runs readiness or merge **Variables: read** on the
+   repository. The validator itself never reads the variable: it identifies
+   its acting login from the supplied token. On Actions that login is
+   `github-actions[bot]`, with no identity or variable read.
+
+A successful variable read trusts its value. Not found (HTTP 404) trusts
+`github-actions[bot]`; every other failure also trusts only that account and
+reports the read failure. A readiness refusal after a failed read names
+**Variables: read**. Actions results therefore need no new App permission;
+runner results cannot count without the readable override.
+
+At `self-reported`, nobody posts contract results and the owner applies
+readiness; the readiness command reports a missing validator notice. The
+neutral entry point already posts `PR metadata` and check-command statuses off
+Actions, as its
+[entry-point reference](../development/pr-metadata-validation.md#entry-points-outside-actions)
+says. The review run's rerun, merge at these locations, standards updates and
+event delivery remain separate
+[check-execution work](https://github.com/lutzseverino/repo-canon/issues/1225).
+Merge gates continue to require their results and the first-adoption owner
+handoff in [Remote setup](#remote-setup) still applies. Nothing bypasses the
 required-check, freshness or review gates.
 
 A fresh adoption asks for the location. An adoption recorded before Repo Canon

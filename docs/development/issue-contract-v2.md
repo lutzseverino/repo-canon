@@ -206,7 +206,10 @@ lists them; the host parses no contract Markdown.
 ## Exact v2 wire interface
 
 The feedback marker/author remain `repo-canon:issue-contract-state` and
-`github-actions[bot]`. The JSON line uses
+the validator's acting login (`github-actions[bot]` on Actions, the token's
+account off Actions). Readers trust `REPO_CANON_RUNNER_ACCOUNT` when readable
+and set, and only `github-actions[bot]` when unset or unreadable; see
+[trusted results](issue-contract-validation.md#published-result). The JSON line uses
 `format: "repo-canon/issue-contract-state/v2"`. Preparation emits the v1 base; exempt Seams revisions use its documented v3 wrapper, and a direct contract whose notice names a factory review attestation uses the documented [v4 wrapper](issue-contract-validation.md#review-attestation-result-v4).
 The machine schema is [issue-contract-v2.schema.json](../../test/fixtures/issue-contract-v2.schema.json);
 shared positive/negative platform snapshots and literal decisions are

@@ -23,7 +23,15 @@ names every label the factory reads or writes by role, in the `state:`,
 `gate:`, `factory:` and `priority:` families, with no role for answers a run
 waits on. `contractResult` stays the issue-contract workflow's result, with
 `marker` `repo-canon:issue-contract-state` and `author`
-`github-actions[bot]`. `triageResult` names the marker and account of the
+`github-actions[bot]` at `github`. At `runner`, the adopter sets
+`REPO_CANON_RUNNER_ACCOUNT` to the runner account's REST login (including
+`[bot]` for an App), sets `contractResult.author` to the same login, and grants
+**Variables: read** to each readiness/merge credential. The validator uses its
+own acting login without reading the variable; readers trust the variable's
+value on success and only `github-actions[bot]` when unset or unreadable.
+Unreadable configuration refuses runner readiness with the permission named.
+At `self-reported`, no contract results are posted and readiness stays with
+the owner. `triageResult` names the marker and account of the
 factory's triage result, which the issue-contract validator reads to approve
 readiness the triage run applies. There is no factory configuration
 compatibility layer.
