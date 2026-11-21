@@ -1531,4 +1531,9 @@ test("the Actions adapter needs neither a viewer read nor repository-variables a
     ),
     false,
   );
+  assert.equal(
+    result.requests.some(({ body }) => body?.query?.includes("viewer")),
+    false,
+    "the Actions adapter passes its login, not a credential, so it never asks who it is",
+  );
 });
