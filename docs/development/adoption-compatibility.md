@@ -64,17 +64,36 @@ applies at every offered location. Repository Standards owns the selection:
 its `checks` answer or `--checks` flag, the recorded `github` meaning of a
 supported selection without the field, retained and headless preservation, and
 the additions and removals reported when a deliberate update changes the
-location. Repo Canon reads no selection itself and keeps no runner registry.
-Declaration `checks` still names executable operations.
+location. Repo Canon reads no selection itself and keeps no runner registry,
+with one exception: PR integration setup reads the operation request's
+optional `checks` field, which the script protocol documents as the selected
+location, and treats its absence as `github`. Wait and merge instead tell the
+location from the trusted `.github/required-checks.json`: `Runner checks`
+means `runner`, `Review rerun` means `self-reported`, and any other
+declaration means `github`. Declaration `checks` still names executable
+operations.
 
-Selecting `runner` or `self-reported` changes only which files install. The
-off-Actions execution of the required check command, the self-reported review
-rerun and any location-aware workflow-presence handling are separate
-[check-execution work](https://github.com/lutzseverino/repo-canon/issues/908);
-until it ships, those locations produce no issue-contract or PR metadata
-result and no automated standards update. Sources:
+Selecting `runner` or `self-reported` changes which files install, and which
+account or process posts each result:
+
+- `github`: the installed workflows post the issue-contract results,
+  `PR metadata` and the hosted checks as `github-actions[bot]`.
+- `runner`: the repository's runner posts the issue-contract results,
+  `PR metadata` and `Runner checks` through the neutral entry point, as the
+  account `REPO_CANON_RUNNER_ACCOUNT` names. Readiness, wait and merge count
+  only that account's results.
+- `self-reported`: the worker posts `PR metadata` through the neutral entry
+  point, and the separate review run posts `Review rerun` and `PR metadata`.
+  Nothing posts issue-contract results.
+
+At both off-Actions locations, PR integration setup requires `PR metadata`
+without the workflow or an Actions event policy, and merge reads no PR
+metadata workflow. Automated standards updates off Actions remain separate
+[check-execution work](https://github.com/lutzseverino/repo-canon/issues/1231).
+Sources:
 [author format](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/author-format.md#check-locations),
-[adoption run](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/adoption-run.md#choose-the-check-location).
+[adoption run](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/adoption-run.md#choose-the-check-location),
+[script protocol](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/script-protocol.md#json-input-on-stdin).
 
 ## Required check invocation support
 

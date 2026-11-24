@@ -1673,3 +1673,80 @@ test("retains partial classic changes and retries only missing freshness", (t) =
   ]);
   assert.equal(scenario.invoke().result.status, "unchanged");
 });
+
+test("off Actions, setup requires PR metadata without the workflow or an Actions policy", (t) => {
+  for (const checks of ["runner", "self-reported"]) {
+    const scenario = setup(t, { state: { policies: [], workflow: "absent" } });
+    const first = scenario.invoke({ checks });
+    assert.equal(first.status, 0, first.stderr);
+    assert.equal(first.result.status, "changed");
+    assert.match(first.result.message, /created required-check ruleset/);
+    assert.doesNotMatch(first.result.message, /Actions event policy/);
+    const state = scenario.readState();
+    assert.deepEqual(state.rulesets, [canonicalRuleset({ id: 100 })]);
+    assert.deepEqual(state.policies, []);
+    assert.ok(
+      !state.requests.some(
+        (request) =>
+          request.includes("/contents/") || request.includes("/actions/"),
+      ),
+      state.requests.join("\n"),
+    );
+    const repeat = scenario.invoke({ checks });
+    assert.equal(repeat.result.status, "unchanged");
+    assert.equal(scenario.readState().mutations, state.mutations);
+  }
+});
+
+test("off Actions on a plan-limited private repository, setup reports merge's enforcement", (t) => {
+  for (const checks of ["runner", "self-reported"]) {
+    const scenario = setup(t, {
+      state: {
+        private: true,
+        workflow: "absent",
+        forbidden: { protection: planLimit, rulesets: planLimit },
+      },
+    });
+    const before = snapshot(scenario.project.root);
+    for (const status of ["changed", "unchanged"]) {
+      const run = scenario.invoke({ checks, overwriteAllowed: true });
+      assert.equal(run.status, 0, run.stderr);
+      assert.equal(run.result.status, status);
+      assert.match(
+        run.result.message,
+        /Requiring `PR metadata` is unavailable because GitHub offers neither branch protection nor rulesets/,
+      );
+      assert.match(
+        run.result.message,
+        new RegExp(
+          `At the \`${checks}\` check location, merge's trusted \`\\.github/required-checks\\.json\` enforces the gate`,
+        ),
+      );
+      assert.doesNotMatch(run.result.message, /next adoption or update/);
+      assert.doesNotMatch(run.result.message, /through the owner/);
+    }
+    const state = scenario.readState();
+    assert.deepEqual(state.mutationLog, ["update squash settings"]);
+    assert.ok(
+      !state.requests.some((request) => request.includes("/contents/")),
+    );
+    assertProjectUnchanged(before, scenario);
+  }
+});
+
+test("an explicit github location keeps setup unchanged and an unknown one blocks", (t) => {
+  const github = setup(t, { state: { workflow: "absent" } });
+  const deferred = github.invoke({ checks: "github", overwriteAllowed: true });
+  assert.equal(deferred.result.status, "changed");
+  assert.match(deferred.result.message, deferredRequirement);
+  assert.ok(github.readState().requests.includes(workflowRead));
+
+  for (const checks of ["actions", "", 1, null]) {
+    const scenario = setup(t);
+    const run = scenario.invoke({ checks });
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(run.result.status, "blocked");
+    assert.match(run.result.message, /check location/);
+    assert.equal(scenario.readState().mutations ?? 0, 0);
+  }
+});

@@ -372,7 +372,8 @@ export async function main(argv = process.argv.slice(2), connection) {
   if (await held(connection, configuration.revision, Number(number))) return;
   if (await deletionsRefused(connection, Number(number), branch, head)) return;
   try {
-    if (freshness === "plan-limited") {
+    // Off Actions, no workflow reports a result; the declaration is the gate.
+    if (freshness === "plan-limited" && configuration.location === "github") {
       const workflowPath = ".github/workflows/pr-metadata.yml";
       const workflow = await requestData(connection, {
         path: `/repos/${connection.repository.path}/contents/${workflowPath}?ref=${encodeURIComponent(branch)}`,
@@ -393,6 +394,7 @@ export async function main(argv = process.argv.slice(2), connection) {
       rollup,
       configuration.requiredChecks,
       runs,
+      configuration.resultAccount,
     );
     const required = checks.filter((check) =>
       configuration.requiredChecks.includes(check.name),

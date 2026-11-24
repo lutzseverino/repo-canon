@@ -94,6 +94,19 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
         ? json(state.protection)
         : json({ message: "Branch not protected" }, 404);
     }
+    if (path.endsWith("/actions/variables/REPO_CANON_RUNNER_ACCOUNT")) {
+      if (state.runnerAccountStatus)
+        return json(
+          { message: "Resource not accessible by integration" },
+          state.runnerAccountStatus,
+        );
+      return state.runnerAccount === undefined
+        ? json({ message: "Not Found" }, 404)
+        : json({
+            name: "REPO_CANON_RUNNER_ACCOUNT",
+            value: state.runnerAccount,
+          });
+    }
     if (path.includes("/contents/.github/workflows/pr-metadata.yml")) {
       if (state.workflowStatus)
         return json(

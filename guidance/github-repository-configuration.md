@@ -12,11 +12,15 @@ freshness, rollback, or an ownership baseline.
 When the repository's plan offers neither branch protection nor rulesets, the
 `pull-request-integration` fix completes without requiring the `PR metadata`
 check, and the next adoption or update requires it once GitHub offers either.
-Until the PR metadata validation workflow is on the default branch, requiring
-the check is deferred, and the next adoption or update after the workflow
-merges requires it.
+The fix reads the check location from Repository Standards' operation request.
+At `github`, until the PR metadata validation workflow is on the default
+branch, requiring the check is deferred, and the next adoption or update after
+the workflow merges requires it. At `runner` and `self-reported`, no workflow
+reports the check, so the fix requires it without reading or waiting for one;
+where GitHub offers neither protection mechanism, its result reports that
+merge's trusted required-check declaration enforces the gate.
 
-For a public repository, the fix establishes the active
+For a public repository at `github`, the fix establishes the active
 `Repo Canon PR metadata events` repository Actions policy alongside that check,
 allowing `pull_request_target` for `.github/workflows/pr-metadata.yml` after
 GitHub's default block. The policy uses `conditions.workflow_path.include`
@@ -31,8 +35,9 @@ targeting and the event allowance. Matching configuration needs no writes.
 Unsupported or refused policy requests return `blocked` with the missing
 capability or permission and credential-redacted platform status and message,
 confirmed partial effects and remaining work; no further mutation follows.
-There is no trigger fallback. Private and internal repositories receive no
-policy requests. An absent workflow on default defers the policy with the
+There is no trigger fallback. Private and internal repositories, and every
+repository at `runner` and `self-reported`, receive no policy requests. At
+`github`, an absent workflow on default defers the policy with the
 check until the next adoption or update. Enterprise or organization Actions
 policies can still block execution; repository-level readback cannot detect
 that. See the [setup policy documentation](../docs/development/github-pr-integration-setup.md#public-repository-actions-event-policy)
@@ -100,7 +105,9 @@ get `state:triage` and go back to triage.
 The required repository-owned `.github/required-checks.json` follows the rules'
 Required-check authority and merge gate schema. The declaration owns no file or
 names and adoption never creates or rewrites it. Its read-only check fails on
-absence, malformed data or an empty list. Establish repository-chosen names before starting adoption, in
+absence, malformed data, an empty list or a list naming both `Runner checks`
+and `Review rerun`. At `runner`, declare `PR metadata` and `Runner checks`; at
+`self-reported`, `PR metadata` and `Review rerun`. Establish repository-chosen names before starting adoption, in
 a separate repository-policy change outside the adoption commit and PR.
 An absent trusted declaration stops wait and merge: correct it on the destination
 default branch through the applicable owner procedure, then invoke again.
@@ -166,12 +173,14 @@ repeated by the separate review run), Repo Canon installs no workflow file.
 Every location runs the one required check command the repository's
 development guide names; the repository owns that command.
 
-Off-Actions execution is separate check-execution work. Until it ships, a
-`runner` or `self-reported` repository gets no issue-contract result, so no
-readiness, no PR metadata result and no automated standards updates, and merge
-gates that need results only Repo Canon's workflows produce refuse or hand off
-to the owner rather than pass. Report that limit; the first-adoption owner
-handoff above still applies.
+At `runner`, the runner posts issue-contract results, `PR metadata` and
+`Runner checks` through Repo Canon's neutral entry point, and wait and merge
+count only statuses from the account `REPO_CANON_RUNNER_ACCOUNT` names. At
+`self-reported`, the worker and the separate review run post `PR metadata`,
+the review run posts `Review rerun`, and nobody posts issue-contract results,
+so the owner applies readiness. Neither location gets automated standards
+updates. Report these limits; merge gates refuse rather than pass without the
+declared results.
 
 The `REPO_CANON_RUNS_ON` variable is retired: the run neither reads nor sets,
 changes, or deletes it, and repository-owned workflows that read it keep their

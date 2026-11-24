@@ -68,11 +68,12 @@ Requiring the stable `PR metadata` check is a plan-gated requirement: the
 default branch requires it wherever GitHub offers branch protection or rulesets
 for the repository. On a private repository whose plan offers neither, the
 requirement is unavailable, not optional, and applies once GitHub offers
-either. GitHub runs the PR metadata validation workflow only from the default
-branch, so the check is required once the workflow is on the default branch.
+either. At `github`, GitHub runs the PR metadata validation workflow only
+from the default branch, so the check is required once the workflow is on the
+default branch. At `runner` and `self-reported`, setup requires it without one.
 
-On a public repository requiring that check, the PR integration setup also
-manages one repository Actions event policy, `Repo Canon PR metadata events`,
+At `github`, on a public repository requiring that check, the PR integration
+setup also manages one repository Actions event policy, `Repo Canon PR metadata events`,
 to allow `pull_request_target` after GitHub's default block. It is active,
 targets `.github/workflows/pr-metadata.yml` through
 `conditions.workflow_path.include`, and has a `restrict_action_events` rule
@@ -90,9 +91,10 @@ Read back active workflow targeting and the event allowance before reporting
 Unsupported or refused policy operations return `blocked`, name the capability
 or permission and credential-redacted platform status and message, retain
 confirmed partial effects and remaining work, and stop further mutation.
-Never fall back to another trigger. Private and internal repositories receive
-no Actions policy requests; an absent workflow on default defers policy setup
-with the check until the next adoption or update. An enterprise or organization
+Never fall back to another trigger. Private and internal repositories, and
+every repository at `runner` and `self-reported`, receive no Actions policy
+requests; at `github`, an absent workflow on default defers policy setup with
+the check until the next adoption or update. An enterprise or organization
 Actions policy can still block the event; repository-level readback cannot
 detect this.
 
@@ -134,9 +136,10 @@ plan-limited branch-rules read; every other permission refusal grants no excepti
 After slow gates, immediately before the expected-head merge, verify the live
 default destination, unchanged validated/reviewed head, successful applicable
 validation on that exact head, and current default-tip ancestry. Missing or
-unreadable evidence, all other permission refusals, missing workflow and deferred
-setup grant no exception. Another writer can advance the base after this final
-check and the merge can succeed: the owner accepts this residual concurrent-base
+unreadable evidence, all other permission refusals, deferred setup and, at
+`github`, a missing PR metadata workflow grant no exception; at `runner` and
+`self-reported` the path reads no workflow. Another writer can advance the
+base after this final check and the merge can succeed: the owner accepts this residual concurrent-base
 race only on this proven plan-limited path. Immediate checks narrow the window;
 they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
 enforcement remains required wherever available.
@@ -251,11 +254,22 @@ through the applicable owner correction and merge procedure, then invoke again
 to select the current revision. A proposed file alone cannot repair an invocation;
 there is no bootstrap bypass and no automatic selection of required names.
 
+The declaration also tells the check location: naming `Runner checks` means
+`runner`, naming `Review rerun` means `self-reported`, and any other
+declaration means `github`. Naming both is invalid.
+
 At every check location (`github`, `runner` and `self-reported`), the required
 checks run the one required check command that the repository's development
 guide names, and merge itself requires positive success for every declared name
 on the exact current head.
-A completed successful check run or successful commit status qualifies. Missing,
+A completed successful check run or successful commit status qualifies, except
+at `runner`: there each declared name counts only commit statuses created by
+the account the `REPO_CANON_RUNNER_ACCOUNT` repository variable names, and
+check runs and other creators' statuses satisfy nothing. Wait and merge
+refuse for the owner while it is unset. A failed read (HTTP 403, or another
+failure other than not found) trusts no account beyond `github-actions[bot]`,
+so the runner's statuses satisfy nothing, and the refusal names the missing
+"Variables: read" permission on the caller's credential. Missing,
 pending, failed, cancelled, timed-out, skipped and neutral results do not.
 Older-head success and earlier attempts cannot satisfy later pending or failed
 attempts. Incomplete, unreadable or ambiguous evidence refuses merging. Wait
@@ -292,10 +306,18 @@ install only at `github`, and every installed job runs on `ubuntu-latest`,
 GitHub's hosted runners; on a private repository they consume the account's
 hosted Actions minutes. At `runner` and `self-reported`, Repo Canon installs
 none of its workflow files. A repository that cannot use hosted Actions selects
-one of those locations instead. Their off-Actions execution is separate work;
-until it ships they produce no issue-contract or PR metadata result and no
-automated standards update, and the merge gate above refuses rather than
-passes without the declared results.
+one of those locations instead. Results come from these posters:
+
+- `github`: the installed workflows, as `github-actions[bot]`.
+- `runner`: the runner, through Repo Canon's neutral entry point, as the
+  account `REPO_CANON_RUNNER_ACCOUNT` names: issue-contract results,
+  `PR metadata` and `Runner checks`.
+- `self-reported`: the worker posts `PR metadata` after its last body edit;
+  the separate review run posts `Review rerun` and `PR metadata`. Nobody
+  posts issue-contract results, so the owner applies readiness.
+
+Neither off-Actions location gets automated standards updates, and the merge
+gate above refuses rather than passes without the declared results.
 
 The `REPO_CANON_RUNS_ON` repository variable is retired. Installed jobs never
 read it, so an existing value has no effect on them: a repository whose value

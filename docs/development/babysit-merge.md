@@ -100,6 +100,21 @@ earlier attempts cannot satisfy newer pending/failed evidence. Existing waits
 on observed checks and workflow attempts remain. Wait shares the same
 interpretation and cannot report success after a no-check timeout.
 
+The declaration tells the check location, without reading the selection: a
+declaration naming `Runner checks` means `runner`, one naming `Review rerun`
+means `self-reported`, and any other means `github`; the shared parser rejects
+one naming both. At `runner`, `trustedReviewConfiguration()` resolves the
+trusted result account through the issue-contract validator's
+`readTrustedResultAccount`, the reader readiness uses, from the
+`REPO_CANON_RUNNER_ACCOUNT` repository variable. Each declared name then
+counts only commit statuses that account created; the rollup reads each
+status's creator and restores the `[bot]` suffix GraphQL omits for an App.
+Check runs and other creators' statuses satisfy nothing. An unset variable, a
+blank value or a failed read (which trusts no account beyond
+`github-actions[bot]` and names the missing "Variables: read" permission) is an
+invalid trusted configuration: merge returns `3` and wait `7`. At `github` and
+`self-reported`, declared names count by name.
+
 With a configured reviewer, merge independently paginates the complete thread
 set, including outdated threads, and requires every thread that reviewer opened
 to be resolved. Replies, acknowledgements and completed reviews cannot resolve
@@ -112,7 +127,9 @@ The classic-protection read must return either the recognized plan-limit 403 or
 HTTP 403 with the platform message `Resource not accessible by integration`.
 This integration refusal qualifies only on that protection probe after the
 plan-limited branch-rules read; every other permission refusal grants no exception.
-That path retains its default-branch PR metadata workflow-presence check.
+At `github`, that path also requires the PR metadata workflow on the default
+branch; at `runner` and `self-reported`, no workflow reports a result and the
+path reads none.
 After all slow gates on either path, immediately before expected-head merging,
 verify the unchanged head, live default destination and current default-tip
 ancestry. Missing evidence, all other permission refusals and deferred setup
@@ -172,7 +189,8 @@ without retrying the merge. Exit `2` means current-head validation has not succe
 before the merge call or after a refused merge;
 the skill returns to its wait step. Exit `1` reports an invalid invocation or
 a platform error outside freshness preflight, including unreadable trusted review
-configuration. Invalid trusted review declarations return `3` with the selected
+configuration. Invalid trusted review declarations, and an unset or unreadable runner account
+at `runner`, return `3` with the selected
 revision, affected file, validation problem and required correction for the owner;
 they permit neither merging nor an unchanged-configuration retry.
 Unreadable freshness policy or comparison

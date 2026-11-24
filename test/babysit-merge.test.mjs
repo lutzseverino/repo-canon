@@ -2748,3 +2748,155 @@ test("source and installed merge accept a complete lead-line review of the curre
     }
   }
 });
+
+const runnerLogin = "contract-runner[bot]";
+const runnerStatus = (
+  context,
+  creator = { __typename: "Bot", login: "contract-runner" },
+) => ({
+  __typename: "StatusContext",
+  context,
+  state: "SUCCESS",
+  targetUrl: "https://example.com/runner",
+  createdAt: "2026-11-20T10:00:00Z",
+  creator,
+});
+const atRunner = {
+  requiredChecks: { version: 1, checks: ["PR metadata", "Runner checks"] },
+  runnerAccount: runnerLogin,
+  checks: [runnerStatus("PR metadata"), runnerStatus("Runner checks")],
+};
+
+test("at runner, merge counts only commit statuses the trusted runner account created", (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/merge.mjs");
+  for (const target of [undefined, installed]) {
+    const merged = run(t, atRunner, undefined, target);
+    assert.equal(merged.status, 0, merged.stderr);
+    assert.equal(merged.state.merge.expectedHead, head);
+    for (const checks of [
+      [
+        runnerStatus("PR metadata"),
+        runnerStatus("Runner checks", { __typename: "User", login: "someone" }),
+      ],
+      [runnerStatus("PR metadata"), runnerStatus("Runner checks", null)],
+      [
+        runnerStatus("PR metadata"),
+        {
+          __typename: "CheckRun",
+          name: "Runner checks",
+          status: "COMPLETED",
+          conclusion: "SUCCESS",
+          startedAt: "2026-11-20T10:00:00Z",
+        },
+      ],
+      [
+        runnerStatus("PR metadata", {
+          __typename: "Bot",
+          login: "github-actions",
+        }),
+        runnerStatus("Runner checks"),
+      ],
+    ]) {
+      const refused = run(t, { ...atRunner, checks }, undefined, target);
+      assert.equal(refused.status, 2, refused.stderr);
+      assert.match(refused.stderr, /\((pending)\)/);
+      assert.equal(refused.state.merge, undefined);
+    }
+  }
+});
+
+test("at runner, an unset or unreadable account variable refuses for the owner", (t) => {
+  for (const [state, pattern] of /** @type {[object, RegExp][]} */ ([
+    [{ runnerAccount: undefined }, /REPO_CANON_RUNNER_ACCOUNT is unset/],
+    [{ runnerAccount: " " }, /names no account login/],
+    [{ runnerAccountStatus: 403 }, /"Variables: read"/],
+    [{ runnerAccountStatus: 500 }, /"Variables: read"/],
+  ])) {
+    const result = run(t, { ...atRunner, ...state });
+    assert.equal(result.status, 3, result.stderr);
+    assert.match(result.stderr, /Owner handoff required/);
+    assert.match(result.stderr, pattern);
+    assert.equal(result.state.merge, undefined);
+  }
+});
+
+const atSelfReported = {
+  requiredChecks: { version: 1, checks: ["PR metadata", "Review rerun"] },
+  checks: [
+    runnerStatus("PR metadata", { __typename: "User", login: "worker" }),
+    runnerStatus("Review rerun", { __typename: "Bot", login: "reviewer" }),
+  ],
+};
+
+test("at self-reported, merge requires Review rerun and PR metadata on the exact head", (t) => {
+  const merged = run(t, { ...atSelfReported, traceRequests: true });
+  assert.equal(merged.status, 0, merged.stderr);
+  assert.ok(
+    !merged.state.requests.some((request) =>
+      request.includes("/actions/variables/"),
+    ),
+  );
+  for (const checks of [
+    [atSelfReported.checks[0]],
+    [atSelfReported.checks[1]],
+    [
+      atSelfReported.checks[0],
+      { ...atSelfReported.checks[1], state: "PENDING" },
+    ],
+    [
+      atSelfReported.checks[0],
+      { ...atSelfReported.checks[1], state: "FAILURE" },
+    ],
+  ]) {
+    const refused = run(t, { ...atSelfReported, checks });
+    assert.equal(refused.status, 2, refused.stderr);
+    assert.equal(refused.state.merge, undefined);
+  }
+  const otherHead = run(t, {
+    ...atSelfReported,
+    checksByHead: { ["d".repeat(40)]: atSelfReported.checks },
+  });
+  assert.equal(otherHead.status, 2, otherHead.stderr);
+});
+
+test("the proven private-plan path reads the PR metadata workflow only at github", (t) => {
+  for (const location of [atRunner, atSelfReported]) {
+    const result = run(t, {
+      ...planLimited,
+      ...location,
+      workflowStatus: 404,
+      traceRequests: true,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(
+      !result.state.requests.some((request) => request.includes("/contents/")),
+    );
+    const failed = run(t, {
+      ...planLimited,
+      ...location,
+      workflowStatus: 404,
+      checks: [location.checks[0]],
+    });
+    assert.equal(failed.status, 2, failed.stderr);
+    assert.equal(failed.state.merge, undefined);
+  }
+  const github = run(t, { ...planLimited, workflowStatus: 404 });
+  assert.equal(github.status, 3, github.stderr);
+  assert.match(github.stderr, /pr-metadata\.yml.*404/);
+});
+
+test("a declaration naming both off-Actions contexts refuses for the owner", (t) => {
+  const result = run(t, {
+    ...atRunner,
+    requiredChecks: {
+      version: 1,
+      checks: ["PR metadata", "Runner checks", "Review rerun"],
+    },
+  });
+  assert.equal(result.status, 3, result.stderr);
+  assert.match(
+    result.stderr,
+    /required-checks\.json.*Runner checks and Review rerun/,
+  );
+  assert.equal(result.state.merge, undefined);
+});

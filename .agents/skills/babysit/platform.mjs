@@ -198,6 +198,14 @@ export async function pages(connection, path) {
   );
 }
 
+// GraphQL's Bot login omits the suffix that REST authors and variables carry.
+const restLogin = (actor) =>
+  !actor?.login
+    ? null
+    : actor.__typename === "Bot" && !actor.login.endsWith("[bot]")
+      ? `${actor.login}[bot]`
+      : actor.login;
+
 // CheckResult omits links, workflow identity and start time. Access retains
 // those GitHub facts so the existing check/attempt ordering stays unchanged.
 export async function checkRollup(connection, head) {
@@ -212,7 +220,7 @@ export async function checkRollup(connection, head) {
       body: {
         query: `query BabysitChecks($owner: String!, $name: String!, $head: String!, $after: String) {
           repository(owner: $owner, name: $name) { object(expression: $head) { ... on Commit { statusCheckRollup { contexts(first: 100, after: $after) {
-            nodes { __typename ... on CheckRun { name status conclusion detailsUrl startedAt checkSuite { workflowRun { workflow { name } } } } ... on StatusContext { context state targetUrl createdAt } }
+            nodes { __typename ... on CheckRun { name status conclusion detailsUrl startedAt checkSuite { workflowRun { workflow { name } } } } ... on StatusContext { context state targetUrl createdAt creator { __typename login } } }
             pageInfo { hasNextPage endCursor }
           } } } } }
         }`,
@@ -247,7 +255,8 @@ export async function checkRollup(connection, head) {
           : item?.__typename === "StatusContext" &&
             typeof item.context === "string" &&
             item.context.length > 0 &&
-            statusStates.has(item.state);
+            statusStates.has(item.state) &&
+            (item.creator == null || typeof item.creator.login === "string");
       if (!valid)
         throw new PlatformError(
           "invalidResponse",
@@ -257,6 +266,9 @@ export async function checkRollup(connection, head) {
         ...item,
         workflowName:
           item.checkSuite?.workflowRun?.workflow?.name ?? item.workflowName,
+        ...(item.__typename === "StatusContext"
+          ? { creator: restLogin(item.creator) }
+          : {}),
       });
     }
     if (!page.pageInfo.hasNextPage) return items;

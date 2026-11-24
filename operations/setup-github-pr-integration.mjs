@@ -14,6 +14,7 @@ const checkName = "PR metadata";
 const rulesetName = "Repo Canon required PR checks";
 const workflowPath = ".github/workflows/pr-metadata.yml";
 const policyName = "Repo Canon PR metadata events";
+const checkLocations = ["github", "runner", "self-reported"];
 const workflowEvent = "pull_request_target";
 const mergeSettings = {
   allow_squash_merge: true,
@@ -590,8 +591,8 @@ async function updateMergeSettings(identity, access, effects) {
 }
 
 // Requiring PR metadata is plan-gated, where GitHub offers neither branch
-// protection nor rulesets, and deferred, while the default branch lacks the
-// workflow that reports it. Either way only the merge settings apply, and the
+// protection nor rulesets, and deferred at github, while the default branch
+// lacks the workflow that reports it. Either way only the merge settings apply, and the
 // outcome names what applies and why the requirement does not.
 async function setupMergeSettingsOnly(
   identity,
@@ -649,6 +650,16 @@ function unavailableRequirement(identity, defaultBranch, workflowPresent) {
   };
 }
 
+// Off Actions, no workflow reports the check and merge's trusted declaration
+// is the gate.
+function enforcedByMerge(identity, location) {
+  const offered = `matches what GitHub offers this repository: squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is unavailable because GitHub offers neither branch protection nor rulesets for this private repository on its current plan. At the \`${location}\` check location, merge's trusted \`.github/required-checks.json\` enforces the gate: babysit merges only after positive success of every declared name on the exact current head and verifies default-branch freshness immediately before merging; a concurrent base advance after that check can still merge, an accepted residual race. Strict GitHub enforcement remains required wherever available.`;
+  return {
+    unchanged: `GitHub PR integration for ${identity} ${offered}`,
+    changed: `GitHub PR integration ${offered}`,
+  };
+}
+
 function deferredRequirement(identity, defaultBranch) {
   const deferred = `GitHub PR integration for ${identity} applies squash-only integration, PR-title subjects, and PR-body messages. Requiring \`${checkName}\` is deferred because the default branch \`${defaultBranch}\` does not carry the PR metadata validation workflow yet, so GitHub cannot report the check. Merge this adoption through the owner; the next adoption or update then requires the check. Strict freshness is unconfirmed; unattended merging stops until GitHub enforcement is confirmed.`;
   return { unchanged: deferred, changed: deferred };
@@ -666,6 +677,16 @@ async function setupIntegration(request) {
   }
   const inferred = { identity: prepared.identity };
   const repository = prepared.repository;
+  // The one Repo Canon operation that reads the selected check location.
+  const location = request.checks === undefined ? "github" : request.checks;
+  if (!checkLocations.includes(location)) {
+    result(
+      "blocked",
+      `${operationName} cannot apply the request's check location ${JSON.stringify(location)}; expected one of ${checkLocations.join(", ")}.`,
+    );
+    return;
+  }
+  const offActions = location !== "github";
   if (
     typeof repository.default_branch !== "string" ||
     repository.default_branch.length === 0
@@ -701,11 +722,13 @@ async function setupIntegration(request) {
     );
     return;
   }
-  const workflow = await readWorkflowPresence(
-    inferred.identity,
-    repository.default_branch,
-    prepared.access,
-  );
+  const workflow = offActions
+    ? { value: null }
+    : await readWorkflowPresence(
+        inferred.identity,
+        repository.default_branch,
+        prepared.access,
+      );
   if (workflow.error) {
     result(
       "blocked",
@@ -718,16 +741,18 @@ async function setupIntegration(request) {
       inferred.identity,
       repository,
       request,
-      unavailableRequirement(
-        inferred.identity,
-        repository.default_branch,
-        workflow.value,
-      ),
+      offActions
+        ? enforcedByMerge(inferred.identity, location)
+        : unavailableRequirement(
+            inferred.identity,
+            repository.default_branch,
+            workflow.value,
+          ),
       prepared.access,
     );
     return;
   }
-  if (!workflow.value) {
+  if (!offActions && !workflow.value) {
     await setupMergeSettingsOnly(
       inferred.identity,
       repository,
@@ -739,7 +764,7 @@ async function setupIntegration(request) {
   }
 
   let policyPlan;
-  if (repository.visibility === "public") {
+  if (!offActions && repository.visibility === "public") {
     const policy = await readManagedPolicy(inferred.identity, prepared.access);
     if (policy.error) {
       policyFailure(inferred.identity, policy);

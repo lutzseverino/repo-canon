@@ -65,28 +65,39 @@ Configure the repository before using runner results:
 1. Set the GitHub repository variable `REPO_CANON_RUNNER_ACCOUNT` to the runner's
    dedicated account's REST login, including `[bot]` for an App account.
 2. Set Scriptorium's `contractResult.author` to that same login.
-3. Give each credential that runs readiness or merge **Variables: read** on the
-   repository. The validator itself never reads the variable: it identifies
+3. Give each credential that runs readiness, wait or merge **Variables: read**
+   on the repository. The validator itself never reads the variable: it identifies
    its acting login from the supplied token. On Actions that login is
    `github-actions[bot]`, with no identity or variable read.
 
 A successful variable read trusts its value. Not found (HTTP 404) trusts
 `github-actions[bot]`; every other failure also trusts only that account and
 reports the read failure. A readiness refusal after a failed read names
-**Variables: read**. Actions results therefore need no new App permission;
+**Variables: read**. At `runner`, wait and merge refuse for the owner while the
+variable is unset or unreadable, naming **Variables: read** after a failed
+read. Actions results therefore need no new App permission;
 runner results cannot count without the readable override.
 
 At `self-reported`, nobody posts contract results and the owner applies
 readiness; the readiness command reports a missing validator notice. The
-neutral entry point already posts `PR metadata` and check-command statuses off
+neutral entry point posts `PR metadata` and check-command statuses off
 Actions, as its
 [entry-point reference](../development/pr-metadata-validation.md#entry-points-outside-actions)
-says. The review run's rerun, merge at these locations, standards updates and
-event delivery remain separate
+says. Each location's required declaration in `.github/required-checks.json`
+names its results, and tells wait and merge the location:
+
+- `runner`: `PR metadata` and `Runner checks`, both posted by the runner.
+  Merge counts only commit statuses that the account
+  `REPO_CANON_RUNNER_ACCOUNT` names created.
+- `self-reported`: `PR metadata`, posted by the worker and the review run, and
+  `Review rerun`, posted only by the separate review run.
+
+A declaration may not name both `Runner checks` and `Review rerun`. Off Actions,
+merge needs no PR metadata workflow, and the first-adoption owner handoff in
+[Remote setup](#remote-setup) applies only at `github`. Standards updates and
+event delivery off Actions remain separate
 [check-execution work](https://github.com/lutzseverino/repo-canon/issues/1225).
-Merge gates continue to require their results and the first-adoption owner
-handoff in [Remote setup](#remote-setup) still applies. Nothing bypasses the
-required-check, freshness or review gates.
+Nothing bypasses the required-check, freshness or review gates.
 
 A fresh adoption asks for the location. An adoption recorded before Repo Canon
 offered locations carries no choice and continues at `github`; its next
@@ -235,11 +246,12 @@ GitHub's stock values for a new repository need no confirmation: a label named
 `wontfix` that still has GitHub's default color and description, a label still
 at the values Repo Canon or the factory created it with, and merge settings
 that are all at GitHub's stock values. A single other value makes the
-merge settings count as chosen. The `PR metadata`
+merge settings count as chosen. At `github`, the `PR metadata`
 requirement waits for the adoption to merge, because GitHub runs its workflow
 only from the default branch: the first adoption applies the merge settings
 and leaves the check unrequired, and the next `adopt` after the merge requires
-it. On a private repository whose GitHub plan offers neither branch protection
+it. At `runner` and `self-reported`, no workflow reports the check, and the
+first adoption requires it. On a private repository whose GitHub plan offers neither branch protection
 nor rulesets, the check is unavailable, and adoption completes without it.
 
 For unattended delivery, `babysit` confirms strict required-check enforcement
@@ -265,9 +277,9 @@ concurrent-base race only on the proven plan-limited path. These checks narrow
 the window without providing GitHub's atomic protection; strict non-bypassable
 GitHub enforcement remains required wherever available.
 
-All other permission or authentication refusals, missing or unreadable evidence,
-a missing PR metadata workflow on the default branch and deferred remote setup
-grant no exception; otherwise unconfirmed enforcement still stops delivery for
+All other permission or authentication refusals, missing or unreadable evidence
+and deferred remote setup grant no exception, nor, at `github`, does a missing
+PR metadata workflow on the default branch; otherwise unconfirmed enforcement still stops delivery for
 the owner. See the [merge script's policy checks](../development/babysit-merge.md)
 for the detailed evidence and verification requirements.
 
