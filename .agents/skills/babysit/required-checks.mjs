@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 export const requiredChecksTarget = ".github/required-checks.json";
 
-// Seam (deferred): off-Actions status contexts, also posted by vendor/repo-canon/validate.mjs; consumers: 2; extract at 3.
+// Seam (deferred): off-Actions status contexts, also posted by the neutral validator's check command; consumers: 2; extract at 3.
 const locationContexts = {
   runner: "Runner checks",
   "self-reported": "Review rerun",

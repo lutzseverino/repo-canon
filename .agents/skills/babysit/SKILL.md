@@ -245,6 +245,10 @@ Paths are relative to the repository root.
 - `.github/factory-review-policy.json`: the optional app-author review policy.
   When it is missing at the selected commit, configured reviewer behavior
   applies.
+- `.github/workflows/pr-metadata.yml`: at `github` only, the workflow the
+  merge command reads on the live default branch for the rules' proven
+  private-plan path. When it is missing there, merge needs the owner; at
+  `runner` and `self-reported` it is never read.
 - `.scriptorium/config.json`: its `labels.hold` and `labels.releaseHold`, which the
   merge command reads. When the file or a key is missing, that hold does not apply.
 - `.agents/skills/` and `rules/` at the pull request's head and merge base: the
