@@ -296,6 +296,6 @@ Reviews, delivery records and fix discussion go on the pull request.
 
 The factory keeps one run comment on each issue it runs and edits it in place;
 agents never post or edit a run comment. The factory posts a fresh one-line
-action comment, linking the run comment and without mentions, only when a
-person must act: a grill, owner or reporter stop, a failure or a reached gate.
+action comment, linking the run comment, only when a person must act: a grill,
+owner or reporter stop, a failure or a reached gate.
 The factory posts no comment of its own on a pull request.
