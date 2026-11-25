@@ -1,3 +1,4 @@
+import "./helpers/temporary-directory.mjs";
 import { parseStandards } from "../scripts/standards-declarations.mjs";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";

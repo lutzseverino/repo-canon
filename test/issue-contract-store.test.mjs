@@ -1,3 +1,4 @@
+import "./helpers/temporary-directory.mjs";
 import { main as cutoff } from "../scripts/issue-contract-cutoff.mjs";
 import { resolveBoundary } from "./helpers/contract-decision.mjs";
 import assert from "node:assert/strict";

@@ -1,3 +1,4 @@
+import "./temporary-directory.mjs";
 import { execFixtureGit } from "../../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import {

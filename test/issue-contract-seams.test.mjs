@@ -1,3 +1,4 @@
+import "./helpers/temporary-directory.mjs";
 import assert from "node:assert/strict";
 import {
   readFileSync,

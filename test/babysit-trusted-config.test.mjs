@@ -1,3 +1,4 @@
+import "./helpers/temporary-directory.mjs";
 import assert from "node:assert/strict";
 import { runChild } from "./helpers/child-runner.mjs";
 import {

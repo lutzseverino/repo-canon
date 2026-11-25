@@ -1,3 +1,4 @@
+import "./helpers/temporary-directory.mjs";
 // The check-location selection: the source offers all three locations in the
 // standard and factory profiles, Repo Canon's workflows apply only at
 // `github`, and the retired runner variable has no operative use. The public

@@ -1,3 +1,4 @@
+import "./helpers/temporary-directory.mjs";
 import {
   execFixtureGit,
   fixtureGitEnvironment,
