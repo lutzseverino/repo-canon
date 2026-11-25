@@ -239,18 +239,9 @@ function readRecords(workbench) {
         const where = `${name}/${plain(row[item] ?? "")}`;
         const keys = new Set();
         for (const match of line.matchAll(trackerPattern)) {
-          const [owner, repository, number] = match[1]
-            ? match.slice(1, 4)
-            : match.slice(4, 7);
-          const key = `${owner}/${repository}#${number}`.toLowerCase();
+          const { key, repository, number } = trackerTarget(match[0]);
           if (!trackers.has(key)) {
-            trackers.set(key, {
-              kind: "tracker",
-              key,
-              repository: `${owner}/${repository}`,
-              number: Number(number),
-              rows: [],
-            });
+            trackers.set(key, { kind: "tracker", key, repository, number, rows: [] });
             records.watches.push(trackers.get(key));
           }
           if (!keys.has(key)) trackers.get(key).rows.push(where);
@@ -586,7 +577,8 @@ const status = async (options, { connectionOf, now, stdout }) => {
       continue;
     }
     if (facts.state !== "open") continue;
-    if (!facts.pull && facts.labels.includes("state:grill")) {
+    const grill = !facts.pull && facts.labels.includes("state:grill");
+    if (grill) {
       const conflicts = records.inbox.filter((entry) => entry.keys.includes(item.key) || item.rows.includes(entry.plan));
       if (conflicts.length)
         throw new Error(`${link(item, facts)} (${where}) grill is in the Open inbox: ${conflicts.map((entry) => `${entry.link} ${entry.heading}`).join(", ")}; route it to its Grill session`);
@@ -596,7 +588,7 @@ const status = async (options, { connectionOf, now, stdout }) => {
       quiet[what] += 1;
       if (now() - Date.parse(updatedAt) > options["stale-after"] * 1000)
         line(stale, `${link(item, facts)} unchanged since ${updatedAt}`, where);
-    } else if (!facts.pull && facts.labels.includes("state:grill")) {
+    } else if (grill) {
       if (!records.launches.some((launch) => launch.operation === "Grill" && launch.target === item.key && observed.get(launch.key) === false))
         line(mine, `${link(item, facts)} start or resume its Grill session with ${grillSkill}`, where);
     } else line(group === "owner" ? owner : mine, `${link(item, facts)} ${what}`, where);

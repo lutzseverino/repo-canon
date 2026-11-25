@@ -1832,7 +1832,13 @@ test("status requires stages and refuses a Grill row without a hand skill", asyn
     "stages.md",
     "# Rules\n\n## Canonical stages\n\n| Stage | Hand skill |\n| --- | --- |\n| Grill | None yet (gap) |\n",
   );
-  for (const options of [[], ["--stages", bench.path("stages.md")]]) {
+  for (const { options, refusal } of [
+    { options: [], refusal: /--stages is required/ },
+    {
+      options: ["--stages", bench.path("stages.md")],
+      refusal: /stage Grill is refused.*names no skill/,
+    },
+  ]) {
     const output = capture();
     assert.equal(
       await main(["status", bench.root, "--stale-after", "60", ...options], {
@@ -1842,10 +1848,7 @@ test("status requires stages and refuses a Grill row without a hand skill", asyn
       1,
     );
     assert.equal(output.stdout, "");
-    assert.match(
-      output.stderr,
-      /--stages is required|stage Grill is refused.*names no skill/,
-    );
+    assert.match(output.stderr, refusal);
   }
 });
 
