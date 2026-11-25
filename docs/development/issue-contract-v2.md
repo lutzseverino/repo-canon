@@ -34,6 +34,23 @@ node scripts/issue-contract-cutoff.mjs inspect --repo OWNER/REPO --issue 123
 node scripts/issue-contract-cutoff.mjs evaluate --repo OWNER/REPO --issue 123
 ```
 
+Dispatch requests resolve the destination's `.github/required-checks.json` from
+one pinned default-branch commit through the shared required-check reader.
+Local checkout selections do not govern them. Missing, malformed, unreadable or
+ambiguous declarations refuse dispatch and activation before activation writes.
+At `runner`, `evaluate` refuses because repository dispatch has no runner
+receiver. Use the documented [neutral issue-contract input and validator
+command](issue-contract-validation.md#runner-evaluation) with `POSTERN_TOKEN`
+for the account named by `REPO_CANON_RUNNER_ACCOUNT`.
+
+At `runner`, `activate` also refuses before creating the ledger branch, receipt,
+issue records or mode configuration, even with an empty inventory. Activation
+did not occur. Use the authorized receipt/configuration route below under the
+publication freeze, preserving all capture and inventory checks. After that
+switch, manually evaluate **every inventoried issue** with the same off-Actions
+command and inspect each matching notice before lifting the freeze. Running
+one evaluation alone never activates body mode.
+
 `--publication-frozen` attests an operator-maintained freeze, not an automatic
 host stop. The operator must have the repository's authorization to commit
 activation configuration directly to its default branch; enforcement refusals
@@ -172,6 +189,11 @@ triageResult, facts, issue?, edits?, writerProof?)` comes from the host's
    authority. It requests evaluation even on an idempotent retry. This closes
    the race where the attestation's workflow evaluated before proof persistence;
    a failed dispatch can be retried without changing evidence or readiness.
+   At `runner`, the shared request seam refuses dispatch after saving proof,
+   including on an identical retry. The error confirms that proof remains saved
+   and needs evaluation, not republication. Preserve the evidence and run the
+   [off-Actions evaluation](issue-contract-validation.md#runner-evaluation)
+   before continuing to the matching-notice step.
 5. Wait for a matching current validator notice that includes the verified
    association; only then request readiness through the existing event. Wait
    for `approved` bound to that current ready event before implement admission.

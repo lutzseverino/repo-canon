@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { ticketBody } from "./helpers/issue-contracts.mjs";
 import { installedValidator } from "./helpers/installed-validator.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -201,4 +202,169 @@ console.log("Skipped validation");`;
       assert.match(result.stderr, /ENOENT/);
     }
   }
+});
+
+test("documented runner input evaluates through the real standalone command without dispatch or readiness", (t) => {
+  const { directory, neutral } = fixture(t);
+  const documentation = readFileSync(
+    join(root, "docs/development/issue-contract-validation.md"),
+    "utf8",
+  );
+  const section = documentation.split("### Runner evaluation")[1];
+  const input = JSON.parse(/```json\n([\s\S]*?)\n```/.exec(section)[1]);
+  writeFileSync(neutral, JSON.stringify(input));
+  const statePath = join(directory, "state.json");
+  writeFileSync(
+    statePath,
+    JSON.stringify({ comments: [], emitted: [], requests: [] }),
+  );
+  const preload = join(directory, "runner-fetch.mjs");
+  writeFileSync(
+    preload,
+    `
+import { readFileSync, writeFileSync } from "node:fs";
+const statePath = ${JSON.stringify(statePath)};
+const page = (nodes) => ({ nodes, pageInfo: { hasNextPage: false, endCursor: null } });
+const repository = ${JSON.stringify(input.event.repository)};
+const login = ${JSON.stringify(input.event.actor.login)};
+const time = "2026-11-09T00:00:00Z";
+globalThis.fetch = async (input, options = {}) => {
+  const url = new URL(input);
+  const body = options.body ? JSON.parse(options.body) : null;
+  const state = JSON.parse(readFileSync(statePath, "utf8"));
+  const method = options.method ?? "GET";
+  state.requests.push({ method, path: url.pathname });
+  const json = (value, status = 200) => new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } });
+  let response;
+  if (url.pathname === "/graphql" && body.query.includes("TriageActingAccount")) {
+    response = json({ data: { viewer: { __typename: "Bot", login: login.slice(0, -5) } } });
+  } else if (url.pathname === "/graphql" && body.variables.number === 42) {
+    response = json({ data: { repository: { issue: {
+      number: 42, fullDatabaseId: "42", id: "I42", url: "https://github.com/" + repository + "/issues/42",
+      state: "OPEN", title: "Fixture ticket", body: ${JSON.stringify(ticketBody)}, createdAt: time, lastEditedAt: null,
+      author: { __typename: "User", login: "reporter" }, labels: page([{name: "state:triage"}]),
+      parent: null, subIssues: page([]), blockedBy: page([]), timelineItems: { nodes: [] }
+    } } } });
+  } else if (url.pathname.endsWith("/comments")) {
+    if (method === "POST") {
+      const comment = { id: 99, node_id: "C99", html_url: "https://github.com/" + repository + "/issues/42#issuecomment-99", body: body.body, user: { login, type: "Bot" }, created_at: time, updated_at: time };
+      state.comments.push(comment);
+      state.emitted.push(body.body);
+      response = json(comment, 201);
+    } else response = json(state.comments);
+  } else if (url.pathname.endsWith("/labels") || url.pathname.endsWith("/events")) {
+    if (method !== "GET") throw new Error("Unexpected label mutation");
+    response = json([]);
+  } else if (url.pathname.endsWith("/permission")) response = json({ permission: "none" });
+  else throw new Error("Unexpected runner request " + method + " " + url.pathname);
+  writeFileSync(statePath, JSON.stringify(state));
+  return response;
+};
+`,
+  );
+  const script = installedValidator(t, "vendor/repo-canon/validate.mjs");
+  const result = spawnSync(
+    process.execPath,
+    ["--import", preload, script, neutral],
+    {
+      cwd: directory,
+      encoding: "utf8",
+      env: { ...process.env, POSTERN_TOKEN: "fixture-runner-token" },
+      timeout: 10000,
+    },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  const state = JSON.parse(readFileSync(statePath, "utf8"));
+  assert.equal(state.comments.length, 1);
+  assert.equal(state.comments[0].user.login, "contract-runner[bot]");
+  const notice = JSON.parse(
+    /<!-- repo-canon:issue-contract-state (.*) -->/.exec(state.emitted[0])[1],
+  );
+  assert.equal(notice.format, "repo-canon/issue-contract-state/v1");
+  assert.equal(notice.kind, "implementation ticket");
+  assert.equal(notice.status, "awaiting-review");
+  assert.equal(notice.source.type, "issue-body");
+  assert.equal(notice.reviewer, null);
+  assert.equal(notice.reviewEventId, null);
+  assert.equal(
+    state.requests.some(({ path }) =>
+      /dispatches|actions\/variables/.test(path),
+    ),
+    false,
+  );
+  assert.equal(
+    state.requests.filter(({ method }) => method !== "GET").length,
+    state.requests.filter(({ path }) => path === "/graphql").length + 1,
+  );
+});
+
+test("cutoff commands exit nonzero at runner without success output or activation writes", (t) => {
+  const { directory } = fixture(t);
+  const statePath = join(directory, "state.json");
+  const preload = join(directory, "cutoff-fetch.mjs");
+  writeFileSync(
+    statePath,
+    JSON.stringify({
+      repository: "example/repository",
+      requiredChecks: { version: 1, checks: ["Runner checks"] },
+      traceRequests: true,
+    }),
+  );
+  writeFileSync(
+    preload,
+    `
+import { fixtureFetch } from ${JSON.stringify(new URL("./fixtures/postern-babysit.mjs", import.meta.url).href)};
+const fetch = fixtureFetch(${JSON.stringify(statePath)});
+globalThis.fetch = (input, options = {}) => {
+  const body = options.body ? JSON.parse(options.body) : null;
+  if (body?.query?.includes("query PosternIssues(")) return Promise.resolve(new Response(JSON.stringify({ data: { repository: { issues: { nodes: [], pageInfo: { hasNextPage: false, endCursor: null } } } } }), { headers: { "content-type": "application/json" } }));
+  return fetch(input, options);
+};
+`,
+  );
+  writeFileSync(
+    join(directory, "gh"),
+    "#!/bin/sh\nprintf '%s' fixture-credential\n",
+    { mode: 0o755 },
+  );
+  const script = join(root, "scripts/issue-contract-cutoff.mjs");
+  for (const args of [
+    ["evaluate", "--issue", "42"],
+    [
+      "activate",
+      "--release",
+      "v1",
+      "--sha",
+      "a".repeat(40),
+      "--epoch",
+      "2026-11-09T00:00:00Z",
+      "--publication-frozen",
+    ],
+  ]) {
+    const result = spawnSync(
+      process.execPath,
+      ["--import", preload, script, ...args, "--repo", "example/repository"],
+      {
+        cwd: directory,
+        encoding: "utf8",
+        env: { ...process.env, PATH: `${directory}:${process.env.PATH}` },
+        timeout: 10000,
+      },
+    );
+    assert.equal(result.status, 1, result.stderr);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /no runner receiver/);
+    if (args[0] === "activate")
+      assert.match(result.stderr, /Activation did not occur/);
+  }
+  const state = JSON.parse(readFileSync(statePath, "utf8"));
+  assert.equal(
+    state.requests.some(
+      (request) =>
+        request.startsWith("PUT ") ||
+        request.includes("/git/refs") ||
+        request.includes("/dispatches"),
+    ),
+    false,
+  );
 });

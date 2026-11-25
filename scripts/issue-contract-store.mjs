@@ -1,5 +1,11 @@
 import { readFileSync } from "node:fs";
 import { PlatformError } from "../vendor/postern/postern.mjs";
+import { pinnedFiles } from "../.agents/skills/babysit/platform.mjs";
+import {
+  checkLocation,
+  parseRequiredChecks,
+  requiredChecksTarget,
+} from "../.agents/skills/babysit/required-checks.mjs";
 import {
   cutoffFormat,
   digest,
@@ -358,7 +364,7 @@ export async function recordContractPublication(
       revision: digest(comment.body),
     },
   };
-  if (
+  const recorded =
     facts.record.publication &&
     same(
       {
@@ -366,22 +372,27 @@ export async function recordContractPublication(
         attestation: facts.record.publication.attestation,
       },
       proof,
-    )
-  ) {
-    await requestContractEvaluation(connection, number);
-    return;
-  }
-  if (facts.record.publication?.attestation.id === String(comment.id))
-    throw new Error(
-      "Publication evidence is immutable; an edited or replaced attestation needs fresh person acceptance or a new body revision.",
     );
-  await saveContractSourceRecord(connection, number, facts, {
-    ...facts.record,
-    migrated: true,
-    retired: true,
-    publication: proof,
-  });
-  await requestContractEvaluation(connection, number);
+  if (!recorded) {
+    if (facts.record.publication?.attestation.id === String(comment.id))
+      throw new Error(
+        "Publication evidence is immutable; an edited or replaced attestation needs fresh person acceptance or a new body revision.",
+      );
+    await saveContractSourceRecord(connection, number, facts, {
+      ...facts.record,
+      migrated: true,
+      retired: true,
+      publication: proof,
+    });
+  }
+  try {
+    await requestContractEvaluation(connection, number);
+  } catch (error) {
+    throw new Error(
+      `Publication proof remains saved and needs evaluation, not republication. ${error.message}`,
+      { cause: error },
+    );
+  }
 }
 
 // Operator capture enumerates every open issue through the complete port list,
@@ -415,6 +426,13 @@ export async function captureContractCutoff(connection, identity, inventory) {
 export async function installContractCutoff(connection, receipt, inventory) {
   if (!validReceipt(receipt, connection.repository.path))
     throw new Error("Invalid complete cutoff receipt.");
+  try {
+    await evaluationDispatchAvailable(connection);
+  } catch (error) {
+    throw new Error(`Activation did not occur. ${error.message}`, {
+      cause: error,
+    });
+  }
   const current = await inventory();
   if (!current.complete || !same(current.issues, receipt.issues))
     throw new Error(
@@ -467,7 +485,7 @@ export async function installContractCutoff(connection, receipt, inventory) {
     repository.default_branch,
   );
   for (const entry of receipt.issues)
-    await requestContractEvaluation(connection, entry.number);
+    await dispatchContractEvaluation(connection, entry.number);
   return cutoff;
 }
 
@@ -475,8 +493,37 @@ export async function installContractCutoff(connection, receipt, inventory) {
 // persistence. Its only effect is a fresh trusted evaluation, never acceptance.
 // Retry even when proof was already recorded, so a failed wake is recoverable.
 export async function requestContractEvaluation(connection, number) {
-  if (!Number.isSafeInteger(number) || number < 1)
-    throw new Error("A positive issue number is required for evaluation.");
+  validateEvaluationNumber(number);
+  await evaluationDispatchAvailable(connection);
+  await dispatchContractEvaluation(connection, number);
+}
+
+// Seam (deferred): direct off-Actions evaluation adapter; consumers: 1; extract at 3.
+async function evaluationDispatchAvailable(connection) {
+  const snapshot = await pinnedFiles(connection, {
+    requiredChecks: requiredChecksTarget,
+  });
+  if (snapshot.files.requiredChecks === null)
+    throw new Error(
+      `${snapshot.evidence}: ${requiredChecksTarget} is missing.`,
+    );
+  let names;
+  try {
+    names = parseRequiredChecks(snapshot.files.requiredChecks);
+  } catch (error) {
+    throw new Error(`${snapshot.evidence}: ${error.message}`, { cause: error });
+  }
+  if (checkLocation(names) === "runner")
+    throw new Error(
+      `${snapshot.evidence}: Repo Canon's repository dispatch has no runner receiver. ` +
+        "Use the off-Actions entry point: node vendor/repo-canon/validate.mjs <neutral-input.json>, " +
+        "with POSTERN_TOKEN for the runner account named by REPO_CANON_RUNNER_ACCOUNT. " +
+        "See docs/development/issue-contract-validation.md#runner-evaluation for the neutral issue-contract input.",
+    );
+}
+
+async function dispatchContractEvaluation(connection, number) {
+  validateEvaluationNumber(number);
   await request(connection, {
     method: "POST",
     path: `${base(connection)}/dispatches`,
@@ -485,4 +532,9 @@ export async function requestContractEvaluation(connection, number) {
       client_payload: { issue: number },
     },
   });
+}
+
+function validateEvaluationNumber(number) {
+  if (!Number.isSafeInteger(number) || number < 1)
+    throw new Error("A positive issue number is required for evaluation.");
 }

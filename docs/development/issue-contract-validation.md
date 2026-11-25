@@ -941,6 +941,59 @@ interface. Neither path substitutes a later event snapshot for current port
 reads. The PR metadata path uses `kind: "pr-metadata"` and
 `pullRequest: { title, body }`.
 
+### Runner evaluation
+
+Repo Canon's `repo-canon-issue-contract` repository dispatch has no receiver at
+`runner`. The cutoff operator's `evaluate` and `activate` commands refuse it;
+use the existing off-Actions validator for evaluation.
+
+From a trusted checkout of the destination's default branch with Node.js
+installed, save this as `neutral-input.json`. Replace `example/repository`,
+issue `42` and `contract-runner[bot]` with the destination, issue number and
+actual acting account. Set `actor.bot` to match that account's type. This is the
+same neutral `edited` event synthesized by the repository-dispatch adapter;
+it fabricates no readiness transition:
+
+```json
+{
+  "kind": "issue-contract",
+  "repository": "https://github.com/example/repository",
+  "event": {
+    "platform": "github",
+    "repository": "example/repository",
+    "issue": 42,
+    "kind": "edited",
+    "actor": { "login": "contract-runner[bot]", "bot": true },
+    "label": null,
+    "openingLabels": null,
+    "bodyChanged": null,
+    "comment": null
+  }
+}
+```
+
+Supply the runner account's token through `POSTERN_TOKEN`, then run:
+
+```sh
+node vendor/repo-canon/validate.mjs neutral-input.json
+```
+
+The token needs the issue, relationship, role and source reads used by validation,
+Issues write for feedback and labels, and Contents write for active body-mode
+ledger records. Readers accept the result only when the repository variable
+`REPO_CANON_RUNNER_ACCOUNT` names that account. The validator uses its acting
+login and does not read the variable.
+
+Inspect that account's feedback comment on the issue: its
+`repo-canon:issue-contract-state` line must name the current contract revision
+and source; in body mode, also check the current observation and any publication
+proof association. The [published-result contract](#published-result) describes
+the versioned fields. The cutoff operator's `inspect --repo OWNER/REPO --issue 42`
+also reports the trusted account, notice and body-mode observation freshness.
+Evaluation itself neither approves a contract nor activates body mode: existing
+review, notice and readiness-event requirements still apply. At `self-reported`,
+this procedure adds no result producer; readiness remains with the owner.
+
 The exact [published Postern bundle](../../vendor/postern/README.md), license
 and provenance are installed resources, shared by both validator paths and
 `babysit`. Updating the version is a reviewed source change, and adopters
