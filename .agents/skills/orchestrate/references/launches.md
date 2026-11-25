@@ -13,7 +13,7 @@ Generate each hand launch's brief with [`workbench brief`](#the-workbench-script
 stage exactly as the Canonical stages table does, its issue or PR as target (else its plan row; a Close
 review as [close](close.md#run-the-close-reviews) says), and the plan row. It copies the
 stage's hand skill, refuses a stage without one and derives the workspace, report and duties; run a
-refused gap by hand under its gap line and note the missing skill once under Findings. Write only its
+gap missing its hand skill by hand under its gap line and note the missing skill once under Findings. Write only its
 Context on standard input: issue links, evidence (including status JSON), recorded decisions with dates
 and quoted words, scope and deliverables, and destinations beyond the workspace. Start the session with
 the brief's skill invocation and the printed brief. The brief and its report are the launch's wait; on
@@ -95,7 +95,7 @@ keeps any expedited pause, and [reconciles the inbox](templates.md#inboxmd) befo
 With Node.js 24 or 26 and current GitHub CLI credentials, run from records only:
 
 ```sh
-node <skill>/workbench.mjs status <workbench> --stale-after <seconds>
+node <skill>/workbench.mjs status <workbench> --stale-after <seconds> --stages <installed factory-workflow rules>
 node <skill>/workbench.mjs brief <stage> <target> --plan <plan directory> --row <row> --model <model>@<effort> --reason <one line> --stages <installed factory-workflow rules> < <context>
 node <skill>/workbench.mjs wait <workbench> --interval <seconds> --max-duration <seconds>
 ```
@@ -103,7 +103,17 @@ node <skill>/workbench.mjs wait <workbench> --interval <seconds> --max-duration 
 Durations are caller-chosen, with no defaults. Status prints the orchestrator, each
 active plan's Done means (●/○) and every watched item by who moves next, with its link
 and plan/row; Stale lists quiet items unchanged on the tracker past `--stale-after`.
-A failed read prints `unavailable: <item> (<reason>)`, never "nothing changed". The
+Status requires `--stages` and a Grill hand skill in its Canonical stages table.
+Each open watched `state:grill` issue gets a My move action to start or resume its
+Grill session with that skill; an unfinished Grill launch for the issue stays
+under Running and suppresses that action. An Open inbox entry linking the issue
+or naming its exact plan/row refuses status, naming the issue, row and entry;
+other operational decisions and chores stay under Owner's move.
+Brief reads tracker targets live before writing: Specification, Tickets and
+Implement refuse closed issues and closed or merged pull requests. Close and
+Grill still allow closed targets; non-tracker targets need no tracker read.
+An unreadable tracker target refuses any brief with its target and reason and
+writes nothing. A failed status read prints `unavailable: <item> (<reason>)`, never "nothing changed". The
 [records](templates.md) are the watches, from the moment a row names an issue: link a
 row's blockers on it. Wait wakes on file events for local records, launch reports and
 `incoming/`, and polls GitHub items and the workbench upstream on the interval. Both save

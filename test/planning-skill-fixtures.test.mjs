@@ -77,6 +77,8 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
           join(target, workbench),
           "--stale-after",
           "86400",
+          "--stages",
+          join(root, ".repo-standards/rules/factory-workflow.md"),
         ],
         { cwd: target, encoding: "utf8" },
       ),

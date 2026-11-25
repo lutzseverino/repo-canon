@@ -47,6 +47,7 @@ A **plan update** includes proposals and heartbeat replies. Open with
 lists or a second view. Act on each My move line or turn it into a real wait: launch,
 factory, owner, named third party or date. Show Owner's move and every choice made
 alone since the last update, with dated sources for veto; log each.
+Route every observed unresolved grill request to its grill session; the inbox holds operational owner decisions and chores.
 Link every row/decision code and issue number to its row, record or issue;
 expand unfamiliar codes once per owner-facing message.
 
@@ -69,8 +70,8 @@ recurs after the fix, and name the rule it replaces or deletes. A **new requirem
   deletes existing text or code; a row that adds a mechanism (script, port,
   record kind, label or ticket family) needs a grill. Add and log it, and list
   it in the next update.
-- **Amendment:** changes goal or scope; grill it, possibly one round in the
-  orchestrating thread. Apply only after owner approval, with a new approval
+- **Amendment:** changes goal or scope; route it to its grill session, even
+  for a short one-round grill. Apply only after owner approval, with a new approval
   line superseding the old, and publication under the contribution guide.
 - **Idea:** outside the goal and not a Finding; follow the guide's Findings rule for parking ideas.
 
@@ -97,7 +98,7 @@ Paths are relative to each repository or the workbench.
 
 - `CONTRIBUTING.md` and `.repo-standards/rules/comments.md`: the sections and
   comment rules named above. When either is missing, carry out this method as
-  written, and put each rule it leaves to it in `inbox.md` for the owner.
+  written, and route unresolved questions through [intake](references/intake.md#questions).
 - `AGENTS.md`: delegation, naming and workstation convention. If missing, pass
   context only and name sessions for operation/target where naming is supported.
 - The workbench, whose format this skill owns: its `index.md`, `inbox.md`,
