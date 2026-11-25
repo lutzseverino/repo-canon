@@ -42,6 +42,7 @@ export async function runChild(command, args, { kind, boundMs, cwd, env }) {
   const childEnv = nested
     ? {
         ...(env ?? process.env),
+        REPO_CANON_TEST_SCRATCH: scratchRoot,
         TMPDIR: temporary,
         TMP: temporary,
         TEMP: temporary,

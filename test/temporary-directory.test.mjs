@@ -221,3 +221,53 @@ test(
     await cleaned(f);
   },
 );
+
+test(
+  "SIGHUP to the runner stops a nested run with a minimal environment",
+  { timeout: 20000 },
+  async (t) => {
+    const f = fixture(
+      t,
+      ({ root }) => `
+      const { runChild } = await import(${JSON.stringify(runner)});
+      const result = await runChild(process.execPath, ["--test", ${JSON.stringify(join(root, "nested.test.mjs"))}], { kind: "nested", boundMs: 5000, env: {} });
+      if (result.timeout) throw new Error("nested run unexpectedly hit its bound");
+    `,
+    );
+    const nestedReady = join(f.root, "nested-ready");
+    writeFileSync(
+      join(f.root, "nested.test.mjs"),
+      `
+      import ${JSON.stringify(lifecycle)};
+      import test from "node:test";
+      import { mkdtempSync, writeFileSync } from "node:fs";
+      import { tmpdir } from "node:os";
+      import { join } from "node:path";
+      test("held nested fixture", async () => {
+        mkdtempSync(join(tmpdir(), "nested-held-"));
+        setInterval(() => {}, 1000);
+        writeFileSync(${JSON.stringify(nestedReady)}, JSON.stringify({ pid: process.pid, runner: process.ppid }));
+        ${hold}
+      });
+    `,
+    );
+    const run = start(t, f);
+    await until(() => existsSync(nestedReady), "nested fixture did not start");
+    const { pid, runner: nestedRunner } = JSON.parse(
+      readFileSync(nestedReady, "utf8"),
+    );
+    t.after(() => {
+      try {
+        process.kill(-nestedRunner, "SIGKILL");
+      } catch (error) {
+        if (error.code !== "ESRCH") throw error;
+      }
+    });
+    assert.equal(run.child.kill("SIGHUP"), true);
+    const [code, signal] = await run.closed;
+    assert.ok(code !== 0 || signal, "the interruption must fail the run");
+    await cleaned(f);
+    assert.equal(alive(pid), false, "nested test process stopped");
+    assert.equal(alive(nestedRunner), false, "nested runner stopped");
+  },
+);
