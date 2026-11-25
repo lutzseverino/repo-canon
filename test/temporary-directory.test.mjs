@@ -26,6 +26,28 @@ const cleanup = new URL(
 ).href;
 const hold = "await new Promise(() => {});";
 
+test("every test-side temporary directory site imports the scratch lifecycle", () => {
+  // Interrupted runs clean up only files that load the lifecycle module, so a
+  // new fixture file must not create scratch in the inherited TMPDIR.
+  const helpers = new URL("./helpers/", import.meta.url);
+  const files = [
+    ...readdirSync(new URL(".", import.meta.url)).map(
+      (name) => new URL(name, import.meta.url),
+    ),
+    ...readdirSync(helpers).map((name) => new URL(name, helpers)),
+  ].filter((file) => file.pathname.endsWith(".mjs") && file.href !== lifecycle);
+  const missing = files
+    .filter((file) => {
+      const source = readFileSync(file, "utf8");
+      return (
+        /TMPDIR|mkdtemp|tmpdir/.test(source) &&
+        !/"\.\.?\/(helpers\/)?temporary-directory\.mjs";$/m.test(source)
+      );
+    })
+    .map((file) => file.pathname);
+  assert.deepEqual(missing, []);
+});
+
 test("temporary cleanup confirms removal after a concurrent descendant disappears", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-cleanup-race-"));
   mkdirSync(join(directory, "descendant"));
