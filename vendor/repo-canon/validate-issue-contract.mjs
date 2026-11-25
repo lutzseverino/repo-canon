@@ -38,7 +38,7 @@ import {
 // The on-Actions acting login and the sole fallback for result readers.
 export const actionsValidatorLogin = "github-actions[bot]";
 
-// Seam (deferred): trusted result-account resolution; consumers: 2 (readiness, cutoff); extract at 3.
+// Seam (deferred): trusted result-account resolution; consumers: 3 (readiness, cutoff, babysit wait and merge); extraction proposed for the owner.
 // The repository owns the runner login. Readers share this resolution; the
 // validator never uses it to identify its own results.
 export async function readTrustedResultAccount(connection) {

@@ -58,6 +58,7 @@ export async function validate(
   );
 }
 
+// Seam (deferred): off-Actions status contexts, also read by .agents/skills/babysit/required-checks.mjs; consumers: 2; extract at 3.
 const checkContexts = { runner: "Runner checks", review: "Review rerun" };
 
 async function runCheckCommand(input, connection, credential) {

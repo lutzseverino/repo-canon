@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import {
+  checkLocation,
   parseRequiredChecks,
   requiredCheckStates,
   requiredChecksTarget,
@@ -186,5 +187,77 @@ test("new attempts supersede old successes, in either order, and ambiguous evide
   assert.equal(
     requiredCheckStates([check], ["Test"], [attempt])[0].state,
     "pending",
+  );
+});
+
+test("the declaration tells the check location and cannot name both off-Actions contexts", (t) => {
+  for (const [checks, location] of [
+    [["PR metadata", "Test"], "github"],
+    [["PR metadata", "Runner checks"], "runner"],
+    [["Review rerun", "PR metadata"], "self-reported"],
+    [["runner checks", "Review rerun "], "github"],
+  ])
+    assert.equal(
+      checkLocation(
+        parseRequiredChecks(JSON.stringify({ version: 1, checks })),
+      ),
+      location,
+    );
+  const both = JSON.stringify({
+    version: 1,
+    checks: ["PR metadata", "Runner checks", "Review rerun"],
+  });
+  assert.throws(
+    () => parseRequiredChecks(both),
+    (error) =>
+      error instanceof Error &&
+      error.message.includes(requiredChecksTarget) &&
+      /Runner checks.*Review rerun/.test(error.message),
+  );
+  const project = fixture({ [requiredChecksTarget]: both });
+  t.after(project.close);
+  const result = invokeCheck(script, project.root);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.result.status, "failed");
+  assert.match(result.result.message, /Runner checks.*Review rerun/);
+});
+
+test("a trusted creator limits declared names to its own commit statuses", () => {
+  const runner = "contract-runner[bot]";
+  const by = (login, state = "SUCCESS") => ({
+    ...status(state),
+    creator: login,
+  });
+  assert.equal(
+    requiredCheckStates([by(runner)], ["Test"], [], runner)[0].state,
+    "pass",
+  );
+  for (const rollup of [
+    [by("someone-else")],
+    [by(null)],
+    [status()],
+    [run()],
+    [by(runner.toUpperCase())],
+  ])
+    assert.equal(
+      requiredCheckStates(rollup, ["Test"], [], runner)[0].state,
+      "pending",
+    );
+  // Another creator's later failure cannot replace the runner's own result.
+  assert.equal(
+    requiredCheckStates(
+      [
+        by(runner),
+        { ...by("someone-else", "FAILURE"), createdAt: "2026-11-09T11:00:00Z" },
+      ],
+      ["Test"],
+      [],
+      runner,
+    )[0].state,
+    "pass",
+  );
+  assert.equal(
+    requiredCheckStates([by("someone-else")], ["Test"])[0].state,
+    "pass",
   );
 });

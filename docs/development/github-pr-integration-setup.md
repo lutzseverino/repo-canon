@@ -4,7 +4,8 @@ The GitHub PR integration setup is a repeat-safe Repository Standards fixes
 operation. It requires the stable `PR metadata` check from the
 [pull request metadata workflow](pr-metadata-validation.md) on the default
 branch wherever GitHub offers branch protection or rulesets for the repository
-and the default branch carries that workflow. It enables GitHub's up-to-date-branch
+and, at the `github` check location, the default branch carries that workflow.
+It enables GitHub's up-to-date-branch
 requirement alongside the required check and configures these repository merge settings:
 
 | Setting               | Required value           |
@@ -48,7 +49,17 @@ return that response. Any other 403, the plan-limit response on a public
 repository or on only one of the two reads, or a reworded message returns
 `blocked`.
 
-Where the requirement is available, the operation then reads whether the
+The operation takes the check location from the request's optional `checks`
+field, which the
+[script protocol](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/script-protocol.md#json-input-on-stdin)
+documents as the selected location; its absence means `github`. It is the one
+Repo Canon operation that reads the selection. Any value other than `github`,
+`runner` or `self-reported` returns `blocked` without mutation. At `runner` and
+`self-reported`, the runner or the review run posts `PR metadata` as a commit
+status, so the operation requires the check without reading or waiting for the
+workflow and makes no Actions event policy request.
+
+At `github`, where the requirement is available, the operation then reads whether the
 default branch on GitHub carries the workflow at its installed path,
 `.github/workflows/pr-metadata.yml`, through the repository contents API. The
 workflow triggers on `pull_request_target`, which GitHub runs only from a
@@ -73,7 +84,7 @@ title, description, issue references, and any breaking-change explanation.
 
 ## Public repository Actions event policy
 
-On a public repository whose default branch carries the workflow, the fix also
+At `github`, on a public repository whose default branch carries the workflow, the fix also
 manages one repository Actions policy named `Repo Canon PR metadata events`.
 It keeps `pull_request_target` running after GitHub's default block of that
 event on public repositories. The workflow keeps its trusted base checkout,
@@ -96,7 +107,8 @@ conditions, rules and allowed events. Other policies stay untouched. A final
 readback must confirm active targeting and the allowance before `changed`;
 matching policy, check and merge settings return `unchanged` without writes.
 
-Private and internal repositories receive no policy reads or writes. When the
+Private and internal repositories, and every repository at `runner` and
+`self-reported`, receive no policy reads or writes. When the
 workflow is absent from default, policy setup is deferred with the required
 check; the next adoption or update establishes both.
 
@@ -114,9 +126,9 @@ a successful workflow run remain separate from the offline setup fixtures.
 The operation requires Node.js 24 or 26, Git 2.18.0 or newer, and GitHub CLI 2.57.0
 or newer. `gh` must have an authenticated active account for `github.com`, and
 that account must have admin access to edit branch or ruleset policy and
-repository merge settings. The `PR metadata validation` workflow must be on the
-default branch before the operation requires the check, so that the check can
-report a result.
+repository merge settings. At `github`, the `PR metadata validation` workflow
+must be on the default branch before the operation requires the check, so that
+the check can report a result.
 
 The gh minimum is retained for `gh auth token --hostname github.com`, which
 supplies the current credential to one connection through the vendored Postern
@@ -225,12 +237,17 @@ When the `PR metadata` requirement is unavailable, the operation applies only
 missing merge settings and reads them back, returning `changed` when it updated
 them and `unchanged` when they already matched. Its message says the
 integration matches what GitHub offers the repository, names the unavailable
-requirement and its reason, and asks to upgrade the plan or make the repository
-public; the next adoption or update then requires the check as usual.
-The operation also reads workflow presence on default on this path. When it
-is absent, the result explicitly hands delivery to the owner and stops
+requirement and its reason. At `github`, it asks to upgrade the plan or make
+the repository public, after which the next adoption or update requires the
+check as usual, and the operation also reads workflow presence on default on
+this path.
+When it is absent, the result explicitly hands delivery to the owner and stops
 unattended merging; it does not promise ordinary plan-limited delivery.
-An unreadable workflow blocks setup before merge-setting changes.
+An unreadable workflow blocks setup before merge-setting changes. At `runner`
+and `self-reported`, the operation reads no workflow and asks for neither an
+upgrade nor an owner bootstrap: its message reports that merge's trusted
+`.github/required-checks.json` enforces the gate on this proven private-plan
+path, with the accepted residual concurrent-base race.
 
 On a confirmed private repository, merging-agent freshness verification requires
 recognized plan-limit 403 responses on the branch-rules and rulesets-list reads.
@@ -241,8 +258,9 @@ plan-limited branch-rules read; every other permission refusal grants no excepti
 After slow gates, immediately before the expected-head merge, verify the live
 default destination, unchanged validated/reviewed head, successful applicable
 validation on that exact head, and current default-tip ancestry. Missing or
-unreadable evidence, all other permission refusals, missing workflow and deferred
-setup grant no exception. Another writer can advance the base after this final
+unreadable evidence, all other permission refusals, deferred setup and, at
+`github`, a missing PR metadata workflow grant no exception; at `runner` and
+`self-reported` the path reads no workflow. Another writer can advance the base after this final
 check and the merge can succeed: the owner accepts this residual concurrent-base
 race only on this proven plan-limited path. Immediate checks narrow the window;
 they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
@@ -253,8 +271,8 @@ refusal on either stops setup.
 Setup preserves bypass actors and admin-enforcement settings. Its point-in-time
 readback does not replace babysit's live merge evidence.
 
-When the default branch does not carry the workflow, requiring `PR metadata` is
-deferred. The operation creates no ruleset, adds no classic required check, and
+At `github`, when the default branch does not carry the workflow, requiring
+`PR metadata` is deferred. The operation creates no ruleset, adds no classic required check, and
 leaves existing branch protection and rulesets as they are, including an
 inactive managed ruleset. It applies only missing merge settings and reads them
 back, returning `changed` when it updated them and `unchanged` when they
@@ -269,8 +287,8 @@ Before first remote project adoption, establish the repository-owned trusted
 required-check declaration through the owner procedure in a separate policy
 change, outside the adoption commit and PR, as the
 [adoption guidance](../../guidance/github-repository-configuration.md#required-checks)
-directs. Missing trusted declarations and missing default workflows remain
-helper refusals, even with green checks and a local or proposed declaration.
+directs. Missing trusted declarations, and at `github` missing default
+workflows, remain helper refusals, even with green checks and a local or proposed declaration.
 The owner handoff retains the exact reviewed head, pre-commit adoption record
 and verdict, validation outcomes, missing prerequisites and continuation.
 Only confirmed owner delivery or correction allows continuation from updated
@@ -291,7 +309,8 @@ Postern adapter with an injected fetch transport (`test/fixtures/postern-setup.m
 backed by stateful GitHub responses. The gh fixture answers only version and
 token reads. They exercise classic branch protection, repository rulesets,
 merge settings, the plan-limit response on either read, a workflow that is
-present, absent, or unreadable on the default branch, identity, permissions,
+present, absent, or unreadable on the default branch, each request check
+location, identity, permissions,
 partial effects, strict freshness, confirmation, readback, partial freshness failures, retry, and unchanged repetition without contacting
 GitHub or mutating live settings:
 

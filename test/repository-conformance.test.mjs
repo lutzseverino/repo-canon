@@ -1538,6 +1538,13 @@ test("babysit leaves review and no-check outcome rules to the GitHub rules", () 
   );
 });
 
+test("babysit leaves merge eligibility to the GitHub rules", () => {
+  assert.doesNotMatch(
+    read(".agents/skills/babysit/SKILL.md").replaceAll(/\s+/g, " "),
+    /plan-limit 403|Resource not accessible by integration|bootstrap bypass|positive current-head success/,
+  );
+});
+
 test("readiness mechanics and brief syntax live only in the GitHub rules", () => {
   assert.doesNotMatch(
     read("CONTRIBUTING.md"),

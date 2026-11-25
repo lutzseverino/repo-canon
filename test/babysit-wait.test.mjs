@@ -3189,3 +3189,57 @@ test("standalone and installed wait fail closed on missing and invalid trusted r
     }
   }
 });
+
+const runnerStatus = (
+  context,
+  creator = { __typename: "Bot", login: "contract-runner" },
+) => ({
+  __typename: "StatusContext",
+  context,
+  state: "SUCCESS",
+  targetUrl: "https://example.com/runner",
+  createdAt: "2026-11-20T10:00:00Z",
+  creator,
+});
+const atRunner = {
+  head,
+  pushedAt: "2026-11-20T09:00:00Z",
+  requiredChecks: { version: 1, checks: ["PR metadata", "Runner checks"] },
+  runnerAccount: "contract-runner[bot]",
+  checks: [runnerStatus("PR metadata"), runnerStatus("Runner checks")],
+};
+
+test("at runner, wait settles only on the trusted runner account's statuses", async (t) => {
+  const installed = installedValidator(t, ".agents/skills/babysit/wait.mjs");
+  for (const target of [undefined, installed]) {
+    const settled = await run(atRunner, ["12"], null, target);
+    assert.equal(settled.code, 0, settled.stderr);
+    const other = await run(
+      {
+        ...atRunner,
+        checks: [
+          runnerStatus("PR metadata"),
+          runnerStatus("Runner checks", { __typename: "User", login: "x" }),
+        ],
+      },
+      ["12", "--limit", "1", "--interval", "1"],
+      null,
+      target,
+    );
+    assert.equal(other.code, 5, other.stderr);
+    assert.match(other.stdout, /still waiting on checks/);
+  }
+});
+
+test("at runner, wait refuses for the owner without a readable account variable", async () => {
+  for (const [state, pattern] of /** @type {[object, RegExp][]} */ ([
+    [{ runnerAccount: undefined }, /REPO_CANON_RUNNER_ACCOUNT is unset/],
+    [{ runnerAccountStatus: 403 }, /"Variables: read"/],
+  ])) {
+    const result = await run({ ...atRunner, ...state }, ["12"], null);
+    assert.equal(result.code, 7, result.stderr);
+    assert.match(result.stderr, /Owner handoff required/);
+    assert.match(result.stderr, pattern);
+    assert.equal(result.stdout, "");
+  }
+});

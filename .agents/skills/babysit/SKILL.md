@@ -66,8 +66,7 @@ body was checked. Link-free bodies need no reconstruction.
    root and wait until it exits, in the foreground whenever its exit cannot
    resume the session. It silently waits for checks and the configured
    reviewer's review of the head. Use 600000 ms command timeouts where
-   supported. Wait requires positive current-head success for every name in
-   trusted `.github/required-checks.json`; no-check timeouts never qualify.
+   supported.
 
    | Exit | Outcome and action |
    | --- | --- |
@@ -115,14 +114,11 @@ body was checked. Link-free bodies need no reconstruction.
    | `1` | For permission refusal, follow `CONTRIBUTING.md`'s Credentials section; otherwise fix the invocation or platform error and rerun. |
 6. Stop.
 
-Wait and merge require `.github/required-checks.json` from the pinned trusted
-default branch; absent, invalid or unreadable declarations refuse delivery.
-Correct the declaration on that trusted branch through the applicable owner
-procedure, then invoke again. Local or PR-branch files supply no bootstrap bypass.
-Merge independently checks every declared name for positive current-head success
-and all configured-reviewer threads for resolution, on both freshness paths.
-Unreadable or incomplete check/thread evidence permits no merge. After slow
-gates it rechecks the head, live destination and current-base ancestry.
+Which results make a head eligible, at each check location, is the
+`github-repository-configuration` rules' Required-check authority and merge
+gate section; wait and merge apply it. When either refuses the trusted
+declaration or the location's result account, correct it through the
+applicable owner procedure, then invoke again.
 
 The merge command independently checks current `gate:` labels on the PR and
 all platform closing issues, including without factory configuration or a prior
@@ -157,21 +153,9 @@ Every owner handoff in this section and in step 5 posts its question as
 `.repo-standards/rules/comments.md#owner-questions` says.
 
 Follow the `github-repository-configuration` rules' Required-check freshness
-section: strict non-bypassable GitHub enforcement wherever available. On a
-confirmed private repository, merging-agent verification requires recognized
-plan-limit 403s on the branch-rules and rulesets-list reads. The classic-protection
-probe must return either the recognized plan-limit 403 or HTTP 403 with the
-platform message `Resource not accessible by integration`. Accept that integration
-refusal only on the protection probe after the plan-limited branch-rules read;
-every other permission refusal grants no exception. After slow gates, immediately
-before expected-head merge, verify the live default destination, unchanged
-validated/reviewed head, successful applicable validation on that exact head
-and current default-tip ancestry. Missing/unreadable evidence, all other
-permission refusals, missing workflow and deferred setup grant no exception.
-Only on this proven plan-limited path does the owner accept the concurrent-base
-race: another writer may advance the base after verification and merge can succeed. Immediate
-checks narrow that window without GitHub's atomic protection. Exit `4` means
-stale base, distinct from head change or owner-only failure; no merge succeeded.
+section, which sets the enforcement merge confirms and the proven private-plan
+path with its accepted concurrent-base race. Exit `4` means stale base,
+distinct from head change or owner-only failure; no merge succeeded.
 
 The first update is unconditional. There are at most 2 further updates for a non-overlapping advance; the next stale base goes to the owner
 with "base did not settle". Count updates across this invocation, including entry
@@ -252,17 +236,19 @@ Paths are relative to the repository root.
   skill looks up. When they are missing, the commands' own behavior stands, no
   rule prescribes a worker handoff or owner approval,
   and `CONTRIBUTING.md` alone sets the merge rules.
-- `.github/required-checks.json`: the required-name authority for wait and merge.
-  Missing, invalid or unreadable at the selected trusted commit stops delivery
-  and requires correction on the destination default branch before reinvocation.
+- `.github/required-checks.json`: the required-name authority for wait and
+  merge, which also tells the check location. Missing, invalid or unreadable
+  at the selected trusted commit stops delivery and requires correction on the
+  destination default branch before reinvocation.
 - `.github/pull-request-reviewer.json`: the optional reviewer declaration.
   When it is missing at the selected commit, no reviewer is configured.
 - `.github/factory-review-policy.json`: the optional app-author review policy.
   When it is missing at the selected commit, configured reviewer behavior
   applies.
-- `.github/workflows/pr-metadata.yml`: the workflow whose presence the merge
-  command verifies on the live default branch for plan-limited delivery. When
-  missing or unreadable, that path permits no merge.
+- `.github/workflows/pr-metadata.yml`: at `github` only, the workflow the
+  merge command reads on the live default branch for the rules' proven
+  private-plan path. When it is missing there, merge needs the owner; at
+  `runner` and `self-reported` it is never read.
 - `.scriptorium/config.json`: its `labels.hold` and `labels.releaseHold`, which the
   merge command reads. When the file or a key is missing, that hold does not apply.
 - `.agents/skills/` and `rules/` at the pull request's head and merge base: the

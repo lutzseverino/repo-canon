@@ -3,6 +3,19 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const requiredChecksTarget = ".github/required-checks.json";
+
+// Seam (deferred): off-Actions status contexts, also posted by the neutral validator's check command; consumers: 2; extract at 3.
+const locationContexts = {
+  runner: "Runner checks",
+  "self-reported": "Review rerun",
+};
+
+// The declaration tells the check location; no run reads the selection.
+export const checkLocation = (names) =>
+  Object.entries(locationContexts).find(([, context]) =>
+    names.includes(context),
+  )?.[0] ?? "github";
+
 export const readRequiredChecks = (root = process.cwd()) =>
   parseRequiredChecks(readFileSync(join(root, requiredChecksTarget), "utf8"));
 
@@ -25,6 +38,10 @@ export function parseRequiredChecks(text) {
     if (typeof name !== "string" || !name.trim())
       invalid(`checks[${index}] must be a nonempty string.`);
   });
+  if (Object.values(locationContexts).every((name) => value.checks.includes(name)))
+    invalid(
+      `checks must not name both ${Object.values(locationContexts).join(" and ")}; each names a different check location.`,
+    );
   return value.checks;
 }
 
@@ -98,9 +115,15 @@ export const checkStates = (rollup, positiveOnly = false) => {
 // Keep the existing observed-check/attempt protections, and additionally require
 // positive success for each exact declared name. Duplicate identities must all
 // succeed; conflicting evidence at an indistinguishable attempt fails closed.
-export function requiredCheckStates(rollup, names, runs = []) {
+// A trusted creator counts only the commit statuses that account created.
+export function requiredCheckStates(rollup, names, runs = [], creator = null) {
   return names.flatMap((name) => {
-    let matches = rollup.filter((item) => (item.name ?? item.context) === name);
+    let matches = rollup.filter(
+      (item) =>
+        (item.name ?? item.context) === name &&
+        (creator === null ||
+          (item.__typename === "StatusContext" && item.creator === creator)),
+    );
     const statuses = matches.filter(
       (item) => item.__typename === "StatusContext",
     );
@@ -159,9 +182,9 @@ export function requiredCheckStates(rollup, names, runs = []) {
   });
 }
 
-export function validationCheckStates(rollup, names, runs) {
+export function validationCheckStates(rollup, names, runs, creator = null) {
   return [
     ...checkStates(rollup).filter((check) => !names.includes(check.name)),
-    ...requiredCheckStates(rollup, names, runs),
+    ...requiredCheckStates(rollup, names, runs, creator),
   ];
 }

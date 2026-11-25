@@ -277,6 +277,7 @@ const look = async (
   requiredChecks,
   connection,
   updatedFrom,
+  resultAccount,
 ) => {
   const path = `/repos/${connection.repository.path}`;
   if (reviewer && !connection.pullRequests.capabilities.reviewCommits)
@@ -317,7 +318,12 @@ const look = async (
   return {
     head: pull.headCommit,
     reviewHead,
-    checks: validationCheckStates(rollup, requiredChecks, workflowRuns(runs)),
+    checks: validationCheckStates(
+      rollup,
+      requiredChecks,
+      workflowRuns(runs),
+      resultAccount,
+    ),
     runs: workflowRuns(runs),
     reviewer,
     policy,
@@ -355,10 +361,11 @@ export const main = async (argv = process.argv.slice(2), connection) => {
   let policy;
   let evidence;
   let requiredChecks;
+  let resultAccount;
   try {
     options = parseArguments(argv);
     connection ??= connectionFor(options.repo);
-    ({ reviewer, policy, evidence, requiredChecks } =
+    ({ reviewer, policy, evidence, requiredChecks, resultAccount } =
       await trustedReviewConfiguration(connection, { requiredChecks: true }));
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
@@ -377,6 +384,7 @@ export const main = async (argv = process.argv.slice(2), connection) => {
         requiredChecks,
         connection,
         options["updated-from"],
+        resultAccount,
       );
     } catch (error) {
       process.stderr.write(
