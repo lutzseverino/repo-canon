@@ -1,3 +1,4 @@
+import "./helpers/temporary-directory.mjs";
 // Updates that keep or change the check location, through the public CLIs.
 // A deliberate update switching from `github` to `runner` or `self-reported`
 // reports and applies the ordinary owned-workflow removals, and switching back

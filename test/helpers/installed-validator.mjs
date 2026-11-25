@@ -1,3 +1,4 @@
+import "./temporary-directory.mjs";
 import { declarations } from "../../scripts/standards-declarations.mjs";
 import {
   cpSync,

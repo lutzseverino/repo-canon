@@ -1,3 +1,6 @@
+import { scratchRoot } from "./temporary-directory.mjs";
+import { mkdtempSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
@@ -31,127 +34,145 @@ export async function runChild(command, args, { kind, boundMs, cwd, env }) {
         ...args,
       ]
     : args;
-  const started = performance.now();
-  return await new Promise((resolve) => {
-    const child = spawn(command, childArgs, {
-      cwd,
-      env,
-      stdio: nested
-        ? ["ignore", "pipe", "pipe", "pipe"]
-        : ["ignore", "pipe", "pipe"],
-      // A process group lets a timeout terminate descendants holding output pipes.
-      // The child remains awaited through close; it never runs in the background.
-      detached: process.platform !== "win32",
-    });
-    let stdout = "";
-    let stderr = "";
-    let liveStdout = "";
-    let liveStderr = "";
-    /** @type {Error | undefined} */
-    let error;
-    /** @type {Timeout | undefined} */
-    let timeout;
-    /** @type {NestedTest | undefined} */
-    let lastCompleted;
-    const unfinished = new Map();
-    const terminate = () => {
-      if (process.platform === "win32") child.kill("SIGKILL");
-      else {
-        try {
-          process.kill(-child.pid, "SIGKILL");
-        } catch (cause) {
-          if (cause.code !== "ESRCH") throw cause;
-        }
+  // The caller owns this directory even when the nested group is SIGKILLed.
+  // Keep it beside fixture trees so hostile-Git byte checks remain meaningful.
+  const temporary = nested
+    ? mkdtempSync(join(scratchRoot, "nested-"))
+    : undefined;
+  const childEnv = nested
+    ? {
+        ...(env ?? process.env),
+        TMPDIR: temporary,
+        TMP: temporary,
+        TEMP: temporary,
       }
-    };
-    // The detached group misses signals sent to this process's group, so stop
-    // the child first and then let the signal take its usual effect.
-    const signals = ["SIGHUP", "SIGINT", "SIGTERM"];
-    const forward = (/** @type {NodeJS.Signals} */ signal) => {
-      release();
-      terminate();
-      process.kill(process.pid, signal);
-    };
-    const release = () => {
-      process.off("exit", terminate);
-      for (const signal of signals) process.off(signal, forward);
-    };
-    process.once("exit", terminate);
-    for (const signal of signals) process.on(signal, forward);
-    const timer = setTimeout(() => {
-      timeout = {
-        bound: nested ? "no-progress" : "total",
-        boundMs,
-        command: [command, ...childArgs],
-        elapsedMs: performance.now() - started,
-        lastCompleted,
-        unfinished: [...unfinished.values()],
-      };
-      terminate();
-    }, boundMs);
-    const progress = () => {
-      if (nested && !timeout) timer.refresh();
-    };
-    child.stdout.setEncoding("utf8").on("data", (data) => {
-      stdout += data;
-      progress();
-    });
-    child.stderr.setEncoding("utf8").on("data", (data) => {
-      stderr += data;
-      progress();
-    });
-    if (nested) {
-      let pending = "";
-      const events = /** @type {import("node:stream").Readable} */ (
-        child.stdio[3]
-      );
-      events.setEncoding("utf8").on("data", (data) => {
-        pending += data;
-        let newline;
-        while ((newline = pending.indexOf("\n")) !== -1) {
-          const event = JSON.parse(pending.slice(0, newline));
-          pending = pending.slice(newline + 1);
-          if (event.test) {
-            const key = JSON.stringify([
-              event.test.entryFile,
-              event.test.file,
-              event.test.testId,
-              event.test.line,
-              event.test.column,
-            ]);
-            if (event.type === "test:dequeue") unfinished.set(key, event.test);
-            else {
-              unfinished.delete(key);
-              lastCompleted = event.test;
-              progress();
-            }
-          } else {
-            if (event.type === "test:stdout") liveStdout += event.message;
-            else liveStderr += event.message;
-            progress();
+    : env;
+  const started = performance.now();
+  try {
+    return await new Promise((resolve) => {
+      const child = spawn(command, childArgs, {
+        cwd,
+        env: childEnv,
+        stdio: nested
+          ? ["ignore", "pipe", "pipe", "pipe"]
+          : ["ignore", "pipe", "pipe"],
+        // A process group lets a timeout terminate descendants holding output pipes.
+        // The child remains awaited through close; it never runs in the background.
+        detached: process.platform !== "win32",
+      });
+      let stdout = "";
+      let stderr = "";
+      let liveStdout = "";
+      let liveStderr = "";
+      /** @type {Error | undefined} */
+      let error;
+      /** @type {Timeout | undefined} */
+      let timeout;
+      /** @type {NestedTest | undefined} */
+      let lastCompleted;
+      const unfinished = new Map();
+      const terminate = () => {
+        if (process.platform === "win32") child.kill("SIGKILL");
+        else {
+          try {
+            process.kill(-child.pid, "SIGKILL");
+          } catch (cause) {
+            if (cause.code !== "ESRCH") throw cause;
           }
         }
+      };
+      // The detached group misses signals sent to this process's group, so stop
+      // the child first and then let the signal take its usual effect.
+      const signals = ["SIGHUP", "SIGINT", "SIGTERM"];
+      const forward = (/** @type {NodeJS.Signals} */ signal) => {
+        release();
+        terminate();
+        process.kill(process.pid, signal);
+      };
+      const release = () => {
+        process.off("exit", terminate);
+        for (const signal of signals) process.off(signal, forward);
+      };
+      process.once("exit", terminate);
+      for (const signal of signals) process.on(signal, forward);
+      const timer = setTimeout(() => {
+        timeout = {
+          bound: nested ? "no-progress" : "total",
+          boundMs,
+          command: [command, ...childArgs],
+          elapsedMs: performance.now() - started,
+          lastCompleted,
+          unfinished: [...unfinished.values()],
+        };
+        terminate();
+      }, boundMs);
+      const progress = () => {
+        if (nested && !timeout) timer.refresh();
+      };
+      child.stdout.setEncoding("utf8").on("data", (data) => {
+        stdout += data;
+        progress();
       });
-    }
-    child.on("error", (cause) => {
-      error = cause;
-    });
-    child.on("close", (status, signal) => {
-      clearTimeout(timer);
-      release();
-      const elapsedMs = performance.now() - started;
-      if (timeout)
-        error = new Error(
-          `${timeout.bound} bound (${boundMs} ms) tripped after ${timeout.elapsedMs.toFixed(1)} ms: ${JSON.stringify(timeout.command)}\n` +
-            (nested
-              ? `Last completed: ${JSON.stringify(lastCompleted ?? null)}\nStarted, unfinished: ${JSON.stringify(timeout.unfinished)}\n`
-              : "") +
-            `stdout:\n${stdout}\nstderr:\n${stderr}` +
-            (nested
-              ? `\nLive nested stdout:\n${liveStdout}\nLive nested stderr:\n${liveStderr}`
-              : ""),
+      child.stderr.setEncoding("utf8").on("data", (data) => {
+        stderr += data;
+        progress();
+      });
+      if (nested) {
+        let pending = "";
+        const events = /** @type {import("node:stream").Readable} */ (
+          child.stdio[3]
         );
-      resolve({ status, signal, stdout, stderr, elapsedMs, error, timeout });
+        events.setEncoding("utf8").on("data", (data) => {
+          pending += data;
+          let newline;
+          while ((newline = pending.indexOf("\n")) !== -1) {
+            const event = JSON.parse(pending.slice(0, newline));
+            pending = pending.slice(newline + 1);
+            if (event.test) {
+              const key = JSON.stringify([
+                event.test.entryFile,
+                event.test.file,
+                event.test.testId,
+                event.test.line,
+                event.test.column,
+              ]);
+              if (event.type === "test:dequeue")
+                unfinished.set(key, event.test);
+              else {
+                unfinished.delete(key);
+                lastCompleted = event.test;
+                progress();
+              }
+            } else {
+              if (event.type === "test:stdout") liveStdout += event.message;
+              else liveStderr += event.message;
+              progress();
+            }
+          }
+        });
+      }
+      child.on("error", (cause) => {
+        error = cause;
+      });
+      child.on("close", (status, signal) => {
+        clearTimeout(timer);
+        release();
+        const elapsedMs = performance.now() - started;
+        if (timeout)
+          error = new Error(
+            `${timeout.bound} bound (${boundMs} ms) tripped after ${timeout.elapsedMs.toFixed(1)} ms: ${JSON.stringify(timeout.command)}\n` +
+              (nested
+                ? `Last completed: ${JSON.stringify(lastCompleted ?? null)}\nStarted, unfinished: ${JSON.stringify(timeout.unfinished)}\n`
+                : "") +
+              `stdout:\n${stdout}\nstderr:\n${stderr}` +
+              (nested
+                ? `\nLive nested stdout:\n${liveStdout}\nLive nested stderr:\n${liveStderr}`
+                : ""),
+          );
+        resolve({ status, signal, stdout, stderr, elapsedMs, error, timeout });
+      });
     });
-  });
+  } finally {
+    if (temporary) rmSync(temporary, { recursive: true, force: true });
+  }
 }
