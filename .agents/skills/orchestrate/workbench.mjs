@@ -2,14 +2,14 @@
 
 // The orchestrating agent's status and wait, read from the workbench records
 // that references/templates.md shapes and from live tracker state.
-// Usage: node workbench.mjs status <workbench> --stale-after <seconds>
+// Usage: node workbench.mjs status <workbench> --stale-after <seconds> --stages <factory-workflow rules file>
 //        node workbench.mjs brief <stage> <target> --plan <plan directory> --row <row>
 //          --model <model>@<effort> --reason <one line> --stages <rules file> < <context>
 //        node workbench.mjs wait <workbench> --interval <seconds> --max-duration <seconds>
 // Durations are required positive finite caller choices, without defaults.
 // Both save the facts they observed in the workbench's Git directory; wait
 // compares against them, so a change after the last status or wait wakes it.
-// Brief writes a new launch brief into the plan directory and prints it.
+// Brief checks tracker targets live, then writes and prints a new launch brief.
 // Exit 0: status or brief printed, or a change, finished report or maximum duration
 // (re-arm); exit 1: usage, refusal, read or platform error.
 // Tracker requests and upstream fetches retain their 45-second timeout.
@@ -32,9 +32,9 @@ import { connectionFor, executedAsScript } from "../babysit/platform.mjs";
 class UsageError extends Error {}
 
 const usage =
-  "usage: workbench.mjs status <workbench> --stale-after <seconds> | workbench.mjs brief <stage> <target> --plan <plan directory> --row <row> --model <model>@<effort> --reason <one line> --stages <factory-workflow rules file> < <context> | workbench.mjs wait <workbench> --interval <seconds> --max-duration <seconds>";
+  "usage: workbench.mjs status <workbench> --stale-after <seconds> --stages <factory-workflow rules file> | workbench.mjs brief <stage> <target> --plan <plan directory> --row <row> --model <model>@<effort> --reason <one line> --stages <factory-workflow rules file> < <context> | workbench.mjs wait <workbench> --interval <seconds> --max-duration <seconds>";
 const commands = {
-  status: { positional: ["workbench"], options: ["stale-after"] },
+  status: { positional: ["workbench"], options: ["stale-after", "stages"] },
   brief: {
     positional: ["stage", "target"],
     options: ["plan", "row", "model", "reason", "stages"],
@@ -42,9 +42,9 @@ const commands = {
   wait: { positional: ["workbench"], options: ["interval", "max-duration"] },
 };
 
-// Each option's value: durations are seconds, brief's options are text.
+// Durations are seconds; stage rules and brief options are text.
 const optionValue = (command, argument, value) => {
-  if (command === "brief") {
+  if (command === "brief" || argument === "--stages") {
     if (!value.trim()) throw new UsageError(`${argument} needs a value`);
     return value;
   }
@@ -129,6 +129,12 @@ const anchor = (heading) =>
 
 const trackerPattern =
   /https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/(?:issues|pull)\/([1-9]\d*)\b|(?<![\w./-])([\w.-]+)\/([\w.-]+)#([1-9]\d*)\b/g;
+const trackerTarget = (target) => {
+  const match = new RegExp(`^(?:${trackerPattern.source})$`).exec(target);
+  if (!match) return null;
+  const [owner, repository, number] = match[1] ? match.slice(1, 4) : match.slice(4, 7);
+  return { repository: `${owner}/${repository}`, number: Number(number), key: `${owner}/${repository}#${number}`.toLowerCase() };
+};
 const metPattern =
   / met (?:\[[^\]]+\]\([^)\s]+\)|<[^>\s]+>|https?:\/\/\S+)$/;
 const ending = /^(?:closed|merged|moved|dropped \(owner\))(?![\w-])/;
@@ -259,13 +265,18 @@ function readRecords(workbench) {
       for (const entry of readdirSync(directory, { withFileTypes: true })) {
         if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
         if (["plan.md", "log.md"].includes(entry.name)) continue;
-        const named = reportOf(readFileSync(join(directory, entry.name), "utf8"));
+        const brief = readFileSync(join(directory, entry.name), "utf8");
+        const named = reportOf(brief);
         if (!named) continue;
         const path = resolve(directory, named);
         const known = records.launches.some((launch) => launch.path === path);
         if (known || names(log, basename(path))) continue;
         records.launches.push(
-          local("launch", path, { brief: `${name}/${entry.name}` }),
+          local("launch", path, {
+            brief: `${name}/${entry.name}`,
+            operation: /^Operation:[ \t]*(.+?)\s*$/m.exec(brief)?.[1],
+            target: trackerTarget(/^Target:[ \t]*(.+?)\s*$/m.exec(brief)?.[1] ?? "")?.key,
+          }),
         );
       }
     });
@@ -279,9 +290,12 @@ function readRecords(workbench) {
     for (const line of open) {
       const heading = /^### (.+?)\s*$/.exec(line)?.[1];
       if (heading)
-        records.inbox.push((entry = { heading, link: `inbox.md#${anchor(heading)}`, plan: "—" }));
+        records.inbox.push((entry = { heading, link: `inbox.md#${anchor(heading)}`, plan: "—", keys: [] }));
       const plan = /^(?:[-*] +)?(?:\*\*)?Plan:(?:\*\*)?[ \t]*(\S.*?)\s*$/.exec(line)?.[1];
       if (entry && plan) entry.plan = plain(plan);
+      if (entry)
+        for (const match of line.matchAll(trackerPattern))
+          entry.keys.push(trackerTarget(match[0]).key);
     }
   });
   record("incoming/", () => {
@@ -534,6 +548,7 @@ const place = (facts) => {
 
 const status = async (options, { connectionOf, now, stdout }) => {
   const { workbench } = options;
+  const grillSkill = handSkill(options.stages, "Grill");
   const records = readRecords(workbench);
   const observed = new Map();
   const reads = new Map();
@@ -571,11 +586,19 @@ const status = async (options, { connectionOf, now, stdout }) => {
       continue;
     }
     if (facts.state !== "open") continue;
+    if (!facts.pull && facts.labels.includes("state:grill")) {
+      const conflicts = records.inbox.filter((entry) => entry.keys.includes(item.key) || item.rows.includes(entry.plan));
+      if (conflicts.length)
+        throw new Error(`${link(item, facts)} (${where}) grill is in the Open inbox: ${conflicts.map((entry) => `${entry.link} ${entry.heading}`).join(", ")}; route it to its Grill session`);
+    }
     const [group, what] = place(facts);
     if (group === "quiet") {
       quiet[what] += 1;
       if (now() - Date.parse(updatedAt) > options["stale-after"] * 1000)
         line(stale, `${link(item, facts)} unchanged since ${updatedAt}`, where);
+    } else if (!facts.pull && facts.labels.includes("state:grill")) {
+      if (!records.launches.some((launch) => launch.operation === "Grill" && launch.target === item.key && observed.get(launch.key) === false))
+        line(mine, `${link(item, facts)} start or resume its Grill session with ${grillSkill}`, where);
     } else line(group === "owner" ? owner : mine, `${link(item, facts)} ${what}`, where);
   }
   for (const row of records.rows)
@@ -656,7 +679,7 @@ const slug = (text) =>
     .replaceAll(/[^\p{L}\p{N}]+/gu, "-")
     .replaceAll(/^-|-$/g, "");
 
-const brief = async (options, { input, now, stdout }) => {
+const brief = async (options, { connectionOf, input, now, stdout }) => {
   const { stage, target, plan, row, model, reason } = options;
   if (!/^[^@\s]+@[^@\s]+$/.test(model))
     throw new Error(
@@ -670,9 +693,21 @@ const brief = async (options, { input, now, stdout }) => {
   const skill = handSkill(options.stages, stage);
   const context = (await input()).replace(/^(?:[ \t]*\r?\n)+/, "").trimEnd();
   if (!context) throw new Error("refused: an empty Context on standard input");
-  const tracked = new RegExp(`^(?:${trackerPattern.source})$`).exec(target);
+  const tracked = trackerTarget(target);
+  if (tracked) {
+    let facts;
+    try {
+      ({ facts } = await readTracker(tracked, connectionOf(tracked.repository)));
+      if (!["open", "closed", "merged"].includes(facts.state))
+        throw new Error(`unavailable target state: ${facts.state}`);
+    } catch (error) {
+      throw new Error(`cannot read target ${target}: ${error.message}`, { cause: error });
+    }
+    if (["Specification", "Tickets", "Implement"].includes(stage) && facts.state !== "open")
+      throw new Error(`stage ${stage} is refused for target ${target}: ${facts.state}`);
+  }
   const repository = tracked
-    ? `${tracked[1] ?? tracked[4]}/${tracked[2] ?? tracked[5]}`
+    ? tracked.repository
     : /^[\w.-]+\/[\w.-]+$/.test(target) && target;
   // Numbered until neither the brief nor its report exists.
   const date = new Date(now()).toISOString().slice(0, 10);
@@ -897,7 +932,7 @@ export const main = async (
   };
   try {
     if (options.command === "brief")
-      return await brief(options, { input, now, stdout });
+      return await brief(options, { connectionOf, input, now, stdout });
     return options.command === "status"
       ? await status(options, { connectionOf, now, stdout })
       : await wait(options, { connectionOf, pause: pauseFor, now, stdout });

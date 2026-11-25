@@ -115,7 +115,7 @@ Once it holds, [accept it](#accept-a-brief-that-holds).
 
 2. **Infer what you can cite.** Answer each intent question the contribution guide's inference test lets you answer, and record it as that test says. When you infer every one, have the research run write the brief from the facts and your inferred answers, then go to step 6.
 
-3. **Grill the owner** on the one-way doors or unchosen values the full inference test cannot settle, in a grilling session of its own. Open it with `/grill-with-docs` using the session's supported invocation, followed by the request's issue. When the owner cannot join a grill now, put the request in your decision inbox with your recommendation.
+3. **Grill the owner** on the one-way doors or unchosen values the full inference test cannot settle, in a grilling session of its own. Open it with `/grill-with-docs` using the session's supported invocation, followed by the request's issue. When the owner cannot join now, leave the request in `state:grill` waiting for its grill session.
 
 4. **Decide the split** as the contribution guide's Triage section says. Inspect granularity, dependencies and factual/test-seam evidence, and use its correction and fact-finding routes.
 
@@ -189,8 +189,9 @@ Every question reaches you first, whoever raises it: a research run, a grill, or
 
 - **An answer you can give**, from code, logs, or a reproduction, or under the inference test: post it on the issue as `.repo-standards/rules/comments.md#disclaimers` says.
 - **A fact only an outside reporter holds**: ask them with the reporter template below, and move the issue to `state:reporter`.
-- **An owner-only question**: put it in your decision inbox with your recommendation, and move the issue to the state the guide names.
-- **An agent's question to the owner**, posted as `.repo-standards/rules/comments.md#owner-questions` says: read it first. When you can answer it, answer on the issue, and apply the next state the stop names, as the installed Questions and stops rule says, such as `state:ready` through [Apply and confirm readiness](#accept-a-brief-that-holds). Otherwise put it in your decision inbox.
+- **An owner-intent question**: move the issue to `state:grill` and route it to its grill session on the [intent-bound path](#intent-bound-path).
+- **Other owner-only questions**: put operational decisions and chores in your decision inbox with your recommendation, and move the issue to `state:owner`.
+- **An agent's question to the owner**, posted as `.repo-standards/rules/comments.md#owner-questions` says: read it first. When you can answer it, answer on the issue, and apply the next state the stop names, as the installed Questions and stops rule says, such as `state:ready` through [Apply and confirm readiness](#accept-a-brief-that-holds). Otherwise route it by the question types above.
 
 When an answer changes the implementation contract, follow the contribution guide's Owner questions section: a separate writer edits it.
 

@@ -807,7 +807,10 @@ test("reloading records watches new launches without restarting the deadline", a
   );
   // Reloads keep the overall deadline.
   bench.write("review/log.md", "# Log\n\n- report-02.md and report-03.md.\n");
-  await main(["status", bench.root, "--stale-after", "60"], { connect });
+  await main(
+    ["status", bench.root, "--stale-after", "60", "--stages", installedStages],
+    { connect },
+  );
   let elapsed = 0;
   pauses = 0;
   output.stdout = "";
@@ -886,10 +889,20 @@ test("invalid records fail the wait by name and show as unavailable in status", 
     assert.match(output.stderr, pattern, name);
     assert.equal(output.stdout, "", name);
     assert.equal(
-      await main(["status", bench.root, "--stale-after", "60"], {
-        ...output.streams,
-        connect: unreachable,
-      }),
+      await main(
+        [
+          "status",
+          bench.root,
+          "--stale-after",
+          "60",
+          "--stages",
+          installedStages,
+        ],
+        {
+          ...output.streams,
+          connect: unreachable,
+        },
+      ),
       0,
       name,
     );
@@ -1090,7 +1103,7 @@ test("the installed script runs with plain node and reports each exit", (t) => {
   const generated = run(
     "brief",
     "Review",
-    "example/tracker#5",
+    "example/tracker",
     "--plan",
     "review",
     "--row",
@@ -1104,7 +1117,14 @@ test("the installed script runs with plain node and reports each exit", (t) => {
   );
   assert.equal(generated.status, 0, generated.stderr);
   assert.match(generated.stdout, /\n## Context\n\nCheck the guide\.\n/);
-  const status = run("status", ".", "--stale-after", "86400");
+  const status = run(
+    "status",
+    ".",
+    "--stale-after",
+    "86400",
+    "--stages",
+    stages,
+  );
   assert.equal(status.status, 0, status.stderr);
   assert.match(status.stdout, /^Orchestrator: thread-a\n/);
   const timeout = run(
@@ -1178,11 +1198,21 @@ test("status groups every item by who moves next, with its link and plan/row", a
   };
   const output = capture();
   assert.equal(
-    await main(["status", bench.root, "--stale-after", "172800"], {
-      ...output.streams,
-      connect: tracker(items).connect,
-      now: () => Date.parse("2026-11-20T00:00:00Z"),
-    }),
+    await main(
+      [
+        "status",
+        bench.root,
+        "--stale-after",
+        "172800",
+        "--stages",
+        installedStages,
+      ],
+      {
+        ...output.streams,
+        connect: tracker(items).connect,
+        now: () => Date.parse("2026-11-20T00:00:00Z"),
+      },
+    ),
     0,
     output.stderr,
   );
@@ -1194,7 +1224,7 @@ audit/plan.md · Done means ○
 
 My move
 - ${issue(1)} state:triage · review/intake, review/finished
-- ${issue(2)} state:grill · review/grill
+- ${issue(2)} start or resume its Grill session with \`grill-with-docs\` · review/grill
 - ${issue(13)} no state the rules place · review/unlabeled
 - unavailable: ${issue(14)} (GitHub answered GET /repos/example/tracker/issues/14 with 404: Not Found) · review/broken
 - review/report-a.md finished; read the report · review/brief-a.md
@@ -1213,11 +1243,21 @@ Stale (unchanged for over 172800 seconds)
   // Once every linked issue on a row closes, the row is the orchestrator's.
   items["example/tracker#1"].state = "closed";
   output.stdout = "";
-  await main(["status", bench.root, "--stale-after", "172800"], {
-    ...output.streams,
-    connect: tracker(items).connect,
-    now: () => Date.parse("2026-11-20T00:00:00Z"),
-  });
+  await main(
+    [
+      "status",
+      bench.root,
+      "--stale-after",
+      "172800",
+      "--stages",
+      installedStages,
+    ],
+    {
+      ...output.streams,
+      connect: tracker(items).connect,
+      now: () => Date.parse("2026-11-20T00:00:00Z"),
+    },
+  );
   for (const code of ["intake", "finished"])
     assert.match(
       output.stdout,
@@ -1239,10 +1279,20 @@ test("status reads no tracker for local rows and names a missing orchestrator", 
   );
   const output = capture();
   assert.equal(
-    await main(["status", bench.root, "--stale-after", "60"], {
-      ...output.streams,
-      connect: unreachable,
-    }),
+    await main(
+      [
+        "status",
+        bench.root,
+        "--stale-after",
+        "60",
+        "--stages",
+        installedStages,
+      ],
+      {
+        ...output.streams,
+        connect: unreachable,
+      },
+    ),
     0,
     output.stderr,
   );
@@ -1269,10 +1319,20 @@ test("status saves its observation, so the wait wakes at once for a change befor
   const items = { "example/tracker#7": { labels: ["state:ready"] } };
   const output = capture();
   const status = () =>
-    main(["status", bench.root, "--stale-after", "60"], {
-      ...output.streams,
-      connect: tracker(items).connect,
-    });
+    main(
+      [
+        "status",
+        bench.root,
+        "--stale-after",
+        "60",
+        "--stages",
+        installedStages,
+      ],
+      {
+        ...output.streams,
+        connect: tracker(items).connect,
+      },
+    );
   assert.equal(await status(), 0, output.stderr);
   assert.ok(existsSync(join(bench.root, ".git/workbench-observation.json")));
   assert.doesNotMatch(
@@ -1399,13 +1459,18 @@ const briefArgs = (plan, stage, target, extra = {}) => {
 };
 
 // Runs brief with the Context on its standard input on 2026-11-20.
-const runBrief = async (args, context = "Route the guide's grill.\n") => {
+const runBrief = async (
+  args,
+  context = "Route the guide's grill.\n",
+  dependencies = {},
+) => {
   const output = capture();
   const code = await main(args, {
     ...output.streams,
     connect: unreachable,
     input: async () => context,
     now: () => Date.parse("2026-11-20T09:30:00Z"),
+    ...dependencies,
   });
   return { code, ...output };
 };
@@ -1430,6 +1495,8 @@ test("brief writes and prints each hand-skill stage's brief, copying its skill c
   for (const { stage, skill } of stages) {
     const { code, stdout, stderr } = await runBrief(
       briefArgs(plan, stage, "example/tracker#12"),
+      undefined,
+      { connect: tracker({ "example/tracker#12": {} }).connect },
     );
     assert.equal(code, 0, `${stage}: ${stderr}`);
     const slug = stage.toLowerCase().replaceAll(" ", "-");
@@ -1501,6 +1568,8 @@ test("a Close brief gives the retro no worktree and an architecture review its r
   );
   const url = await runBrief(
     briefArgs(plan, "Review", "https://github.com/example/other/pull/7"),
+    undefined,
+    { connect: tracker({ "example/other#7": { pull: true } }).connect },
   );
   assert.match(fields(url.stdout).Workspace, /worktree of example\/other\b/);
 });
@@ -1601,10 +1670,20 @@ test("a generated brief runs under status until its report finishes, then waits 
   const status = async () => {
     const output = capture();
     assert.equal(
-      await main(["status", bench.root, "--stale-after", "60"], {
-        ...output.streams,
-        connect: unreachable,
-      }),
+      await main(
+        [
+          "status",
+          bench.root,
+          "--stale-after",
+          "60",
+          "--stages",
+          installedStages,
+        ],
+        {
+          ...output.streams,
+          connect: unreachable,
+        },
+      ),
       0,
       output.stderr,
     );
@@ -1627,4 +1706,225 @@ test("a generated brief runs under status until its report finishes, then waits 
   );
   bench.write("review/log.md", `# Log\n\n- Consumed ${name}-report.md.\n`);
   assert.doesNotMatch(await status(), new RegExp(`${name}-report`));
+});
+
+test("status routes a grill-only row through the supplied Grill hand skill", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  bench.write(
+    "stages.md",
+    "# Rules\n\n## Canonical stages\n\n| Stage | Hand skill |\n| --- | --- |\n| Grill | `local-grill` |\n",
+  );
+  const output = capture();
+  assert.equal(
+    await main(
+      [
+        "status",
+        bench.root,
+        "--stale-after",
+        "60",
+        "--stages",
+        bench.path("stages.md"),
+      ],
+      {
+        ...output.streams,
+        connect: tracker({ "example/tracker#7": { labels: ["state:grill"] } })
+          .connect,
+      },
+    ),
+    0,
+    output.stderr,
+  );
+  assert.match(
+    output.stdout,
+    /My move\n- https:\/\/github.com\/example\/tracker\/issues\/7 .*start or resume.*Grill session.*`local-grill`.*review\/check/,
+  );
+});
+
+test("status reuses an unfinished Grill launch and restores its action when the report ends", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  const connect = tracker({
+    "example/tracker#7": { labels: ["state:grill"] },
+  }).connect;
+  bench.write(
+    "review/brief-grill.md",
+    "Operation: Grill\nTarget: https://github.com/EXAMPLE/tracker/issues/7\nLaunch report: grill-report.md\n",
+  );
+  for (const finished of [false, true]) {
+    if (finished)
+      bench.write(
+        "review/grill-report.md",
+        "Decisions recorded.\nstatus: done\n",
+      );
+    const output = capture();
+    assert.equal(
+      await main(
+        [
+          "status",
+          bench.root,
+          "--stale-after",
+          "60",
+          "--stages",
+          installedStages,
+        ],
+        {
+          ...output.streams,
+          connect,
+        },
+      ),
+      0,
+      output.stderr,
+    );
+    if (finished) {
+      assert.match(output.stdout, /start or resume its Grill session/);
+      assert.match(output.stdout, /grill-report.md finished; read the report/);
+    } else {
+      assert.doesNotMatch(output.stdout, /start or resume/);
+      assert.match(
+        output.stdout,
+        /Running\n- review\/grill-report.md report pending/,
+      );
+    }
+  }
+});
+
+test("status refuses an Open inbox entry for a watched grill issue or its exact row", async (t) => {
+  for (const entry of [
+    "### Decide the intent\n\nQuestion: [issue](https://github.com/EXAMPLE/tracker/issues/7)\n",
+    "### Decide the intent\n\nQuestion: EXAMPLE/tracker#7\n",
+    "### Decide the intent\n\nPlan: `review/check`\n",
+    "### Decide the intent\n\n**Plan:** [review/check](review/plan.md#check)\n",
+  ]) {
+    const bench = watching(t, "example/tracker#7");
+    bench.write("inbox.md", `# Inbox\n\n## Open\n\n${entry}\n## Answered\n`);
+    const output = capture();
+    assert.equal(
+      await main(
+        [
+          "status",
+          bench.root,
+          "--stale-after",
+          "60",
+          "--stages",
+          installedStages,
+        ],
+        {
+          ...output.streams,
+          connect: tracker({ "example/tracker#7": { labels: ["state:grill"] } })
+            .connect,
+        },
+      ),
+      1,
+      entry,
+    );
+    assert.equal(output.stdout, "");
+    assert.match(
+      output.stderr,
+      /https:\/\/github.com\/example\/tracker\/issues\/7/,
+    );
+    assert.match(output.stderr, /review\/check/);
+    assert.match(output.stderr, /inbox.md#decide-the-intent/);
+  }
+});
+
+test("status requires stages and refuses a Grill row without a hand skill", async (t) => {
+  const bench = workbench(t);
+  bench.write(
+    "stages.md",
+    "# Rules\n\n## Canonical stages\n\n| Stage | Hand skill |\n| --- | --- |\n| Grill | None yet (gap) |\n",
+  );
+  for (const options of [[], ["--stages", bench.path("stages.md")]]) {
+    const output = capture();
+    assert.equal(
+      await main(["status", bench.root, "--stale-after", "60", ...options], {
+        ...output.streams,
+        connect: unreachable,
+      }),
+      1,
+    );
+    assert.equal(output.stdout, "");
+    assert.match(
+      output.stderr,
+      /--stages is required|stage Grill is refused.*names no skill/,
+    );
+  }
+});
+
+test("brief refuses publication and implementation on closed or merged tracker targets before writing", async (t) => {
+  for (const stage of ["Specification", "Tickets", "Implement"]) {
+    for (const item of [
+      { state: "closed" },
+      { state: "closed", pull: true },
+      { state: "closed", pull: true, mergedAt: "2026-11-20T00:00:00Z" },
+    ]) {
+      const bench = workbench(t);
+      const plan = bench.path("review");
+      const target = item.pull
+        ? "https://github.com/example/tracker/pull/7"
+        : "example/tracker#7";
+      const output = await runBrief(briefArgs(plan, stage, target), undefined, {
+        connect: tracker({ "example/tracker#7": item }).connect,
+      });
+      assert.equal(output.code, 1, `${stage}: ${JSON.stringify(item)}`);
+      assert.equal(output.stdout, "");
+      assert.ok(output.stderr.includes(stage), output.stderr);
+      assert.ok(output.stderr.includes(target), output.stderr);
+      assert.match(output.stderr, item.mergedAt ? /merged/ : /closed/);
+      assert.deepEqual(
+        readdirSync(plan).filter((name) => name.startsWith("brief-")),
+        [],
+      );
+    }
+  }
+});
+
+test("brief allows closed targets for Close and Grill, and open targets for publication", async (t) => {
+  for (const [stage, target, item] of [
+    ["Close", "example/tracker#7", { state: "closed" }],
+    [
+      "Grill",
+      "https://github.com/example/tracker/issues/7",
+      { state: "closed" },
+    ],
+    ["Specification", "example/tracker#7", {}],
+    ["Tickets", "https://github.com/example/tracker/issues/7", {}],
+    ["Implement", "https://github.com/example/tracker/pull/7", { pull: true }],
+  ]) {
+    const bench = workbench(t);
+    const plan = bench.path("review");
+    const connection = tracker({ "example/tracker#7": item });
+    const output = await runBrief(
+      briefArgs(plan, stage, target),
+      undefined,
+      connection,
+    );
+    assert.equal(output.code, 0, output.stderr);
+    assert.equal(fields(output.stdout).Operation, stage);
+    assert.equal(fields(output.stdout).Target, target);
+    assert.ok(connection.requests.includes("/repos/example/tracker/issues/7"));
+    const files = readdirSync(plan).filter((name) => name.startsWith("brief-"));
+    assert.equal(files.length, 1);
+    assert.equal(readFileSync(join(plan, files[0]), "utf8"), output.stdout);
+  }
+});
+
+test("brief reports unreadable tracker targets and writes nothing, even for Grill and Close", async (t) => {
+  for (const stage of ["Implement", "Grill", "Close"]) {
+    const bench = workbench(t);
+    const plan = bench.path("review");
+    const output = await runBrief(
+      briefArgs(plan, stage, "example/missing#7"),
+      undefined,
+      tracker({}),
+    );
+    assert.equal(output.code, 1);
+    assert.equal(output.stdout, "");
+    assert.match(
+      output.stderr,
+      /cannot read target example\/missing#7.*404: Not Found/,
+    );
+    assert.deepEqual(
+      readdirSync(plan).filter((name) => name.startsWith("brief-")),
+      [],
+    );
+  }
 });
