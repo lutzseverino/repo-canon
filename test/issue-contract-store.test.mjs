@@ -1,7 +1,14 @@
+import { main as cutoff } from "../scripts/issue-contract-cutoff.mjs";
 import { resolveBoundary } from "./helpers/contract-decision.mjs";
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+  readFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PlatformError } from "../vendor/postern/postern.mjs";
@@ -35,7 +42,9 @@ const receipt = {
   complete: true,
   issues: [],
 };
-function store() {
+/** @param {any} [checks] */
+function store(checks = ["Test"]) {
+  const reads = [];
   const files = new Map();
   const writes = [];
   const nodes = {};
@@ -46,6 +55,35 @@ function store() {
     access: {
       async request(input) {
         const [path, query] = input.path.split("?");
+        if (path === "/graphql" && input.body.query.includes("PinnedFiles")) {
+          reads.push(input);
+          const revision = "d".repeat(40);
+          return {
+            data: {
+              data: {
+                repository: input.body.query.includes("PinnedFilesRevision")
+                  ? {
+                      nameWithOwner: connection.repository.path,
+                      defaultBranchRef: {
+                        name: "main",
+                        target: { __typename: "Commit", oid: revision },
+                      },
+                    }
+                  : {
+                      commit: { __typename: "Commit", oid: revision },
+                      requiredChecks:
+                        checks === null
+                          ? null
+                          : {
+                              __typename: "Blob",
+                              isTruncated: false,
+                              text: JSON.stringify({ version: 1, checks }),
+                            },
+                    },
+              },
+            },
+          };
+        }
         if (path === "/graphql")
           return {
             data: {
@@ -82,7 +120,7 @@ function store() {
             },
           };
         }
-        writes.push(input);
+        if (input.method && input.method !== "GET") writes.push(input);
         if (path === "/repos/owner/repo")
           return { data: { default_branch: "main" } };
         if (path.includes("/git/ref/heads/"))
@@ -93,7 +131,7 @@ function store() {
       },
     },
   };
-  return { connection, files, writes, nodes };
+  return { connection, files, writes, nodes, reads };
 }
 test("configuration absence is prepared; a downloaded release cannot activate body mode", async (t) => {
   const dir = mkdtempSync(join(tmpdir(), "mode-"));
@@ -715,7 +753,7 @@ test("fenced Brief/Original request examples stay intake rather than becoming pr
   );
 });
 
-test("proof-persistence retries request evaluation even when evidence is already recorded", async () => {
+async function publicationFixture(checks = ["Test"]) {
   const fixture = JSON.parse(
     readFileSync(
       new URL("./fixtures/issue-contract-v2.json", import.meta.url),
@@ -723,7 +761,7 @@ test("proof-persistence retries request evaluation even when evidence is already
     ),
   ).cases.find((c) => c.name === "exact body factory approval");
   const s = structuredClone(fixture.snapshot);
-  const { connection, writes, nodes } = store();
+  const { connection, writes, nodes, files } = store(checks);
   connection.repository.path = s.repository;
   const issue = {
     ...s.issue,
@@ -762,6 +800,11 @@ test("proof-persistence retries request evaluation even when evidence is already
     issue: async () => issue,
     comments: async () => comments,
   };
+  return { s, connection, comments, writes, files };
+}
+
+test("proof-persistence retries request evaluation even when evidence is already recorded", async () => {
+  const { s, connection, comments, writes } = await publicationFixture();
   s.triageResult.author = "Factory[bot]";
   for (const author of [
     "other[bot]",
@@ -942,4 +985,257 @@ test("a missing inventoried record cannot reset migration history or restore leg
     false,
     "recover history; never initialize an inventoried issue as unmigrated",
   );
+});
+
+test("runner evaluation refuses undelivered dispatch with the runnable recovery path", async () => {
+  const { connection, writes, reads } = store(["PR metadata", "Runner checks"]);
+  await assert.rejects(
+    () => requestContractEvaluation(connection, 42),
+    (error) => {
+      assert.ok(error instanceof Error);
+      assert.match(error.message, /runner/i);
+      assert.match(error.message, /dispatch.*no.*receiver/i);
+      assert.match(
+        error.message,
+        /node vendor\/repo-canon\/validate\.mjs <neutral-input\.json>/,
+      );
+      assert.match(error.message, /POSTERN_TOKEN/);
+      assert.match(error.message, /REPO_CANON_RUNNER_ACCOUNT/);
+      assert.match(
+        error.message,
+        /issue-contract-validation\.md#runner-evaluation/,
+      );
+      return true;
+    },
+  );
+  assert.equal(writes.length, 0);
+  assert.equal(reads.length, 2);
+  assert.equal(
+    reads[1].body.variables.requiredChecks,
+    `${"d".repeat(40)}:.github/required-checks.json`,
+  );
+});
+
+test("runner activation refuses before any ledger or mode write for empty and nonempty inventories", async () => {
+  for (const issues of [
+    [],
+    [{ number: 42, issue: "I42", intake: null, legacy: null }],
+  ]) {
+    const { connection, writes, files } = store(["Runner checks"]);
+    await assert.rejects(
+      () =>
+        installContractCutoff(connection, { ...receipt, issues }, async () => ({
+          complete: true,
+          issues,
+        })),
+      /activation did not occur/i,
+    );
+    assert.equal(writes.length, 0);
+    assert.equal(files.size, 0);
+  }
+});
+
+test("runner publication saves proof before refusing and identical retries preserve authenticated evidence", async () => {
+  const { s, connection, writes, files } = await publicationFixture([
+    "Runner checks",
+  ]);
+  delete s.contractSources.record.publication;
+  s.contractSources.recordSha = null;
+  const publish = () =>
+    recordContractPublication(
+      connection,
+      42,
+      s.contractSources,
+      s.triageResult,
+      { attestationId: 20 },
+    );
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await assert.rejects(publish, (error) => {
+      assert.ok(error instanceof Error);
+      assert.match(error.message, /proof remains saved/i);
+      assert.match(error.message, /needs evaluation, not republication/i);
+      assert.match(error.message, /no runner receiver/i);
+      return true;
+    });
+    assert.equal(writes.length, 1);
+    assert.equal(writes[0].method, "PUT");
+    const loaded = await loadContractSources(connection, 42, {
+      mode: "body",
+      cutoff: s.contractSources.cutoff,
+    });
+    assert.deepEqual(
+      loaded.record.publication,
+      s.contractSources.record.publication,
+    );
+    assert.equal(files.size, 1);
+  }
+});
+
+test("invalid trusted declarations refuse evaluation and activation without writes", async () => {
+  for (const checks of [
+    null,
+    [],
+    ["Runner checks", "Review rerun"],
+    [""],
+    42,
+  ]) {
+    const { connection, writes } = store(checks);
+    await assert.rejects(
+      () => requestContractEvaluation(connection, 42),
+      /required-checks\.json/,
+    );
+    await assert.rejects(
+      () =>
+        installContractCutoff(connection, receipt, async () => ({
+          complete: true,
+          issues: [],
+        })),
+      /Activation did not occur/,
+    );
+    assert.equal(writes.length, 0);
+  }
+  for (const failure of ["unreadable", "malformed", "truncated"]) {
+    const { connection, writes } = store();
+    const original = connection.access.request;
+    connection.access.request = async (input) => {
+      if (input.body?.query?.includes("query PinnedFiles(")) {
+        if (failure === "unreadable")
+          throw new Error("Declaration unavailable");
+        const result = await original(input);
+        const blob = result.data.data.repository.requiredChecks;
+        if (failure === "malformed") blob.text = "{";
+        else blob.isTruncated = true;
+        return result;
+      }
+      return original(input);
+    };
+    await assert.rejects(() => requestContractEvaluation(connection, 42));
+    await assert.rejects(
+      () =>
+        installContractCutoff(connection, receipt, async () => ({
+          complete: true,
+          issues: [],
+        })),
+      /Activation did not occur/,
+    );
+    assert.equal(writes.length, 0);
+  }
+});
+
+test("github and self-reported evaluation preserve the dispatch payload and reject nonpositive issue numbers", async () => {
+  for (const checks of [["Test"], ["Review rerun"]]) {
+    const { connection, writes } = store(checks);
+    await requestContractEvaluation(connection, 42);
+    assert.deepEqual(
+      writes.map(({ method, body }) => ({ method, body })),
+      [
+        {
+          method: "POST",
+          body: {
+            event_type: "repo-canon-issue-contract",
+            client_payload: { issue: 42 },
+          },
+        },
+      ],
+    );
+    for (const number of [0, -1, 1.5, NaN])
+      await assert.rejects(
+        () => requestContractEvaluation(connection, number),
+        /positive issue number/,
+      );
+    assert.equal(writes.length, 1);
+  }
+});
+
+test("operator runner evaluation and activation refuse without printing success", async (t) => {
+  const { connection, writes } = store(["Runner checks"]);
+  const output = [];
+  t.mock.method(console, "log", (...args) => output.push(args));
+  await assert.rejects(
+    () =>
+      cutoff(
+        ["evaluate", "--repo", "owner/repo", "--issue", "42"],
+        () => connection,
+      ),
+    /no runner receiver/,
+  );
+  connection.issueTracker = { issues: async () => [] };
+  await assert.rejects(
+    () =>
+      cutoff(
+        [
+          "activate",
+          "--repo",
+          "owner/repo",
+          "--release",
+          identity.release,
+          "--sha",
+          identity.sha,
+          "--epoch",
+          identity.epoch,
+          "--publication-frozen",
+        ],
+        () => connection,
+      ),
+    /Activation did not occur/,
+  );
+  assert.deepEqual(output, []);
+  assert.equal(writes.length, 0);
+});
+
+test("destination declarations govern dispatch independently of a conflicting checkout", async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "contract-location-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  mkdirSync(join(directory, ".github"));
+  const previous = process.cwd();
+  try {
+    process.chdir(directory);
+    writeFileSync(
+      join(directory, ".github/required-checks.json"),
+      JSON.stringify({ version: 1, checks: ["Runner checks"] }),
+    );
+    const remote = store(["Review rerun"]);
+    await requestContractEvaluation(remote.connection, 42);
+    assert.equal(remote.writes.length, 1);
+    writeFileSync(
+      join(directory, ".github/required-checks.json"),
+      JSON.stringify({ version: 1, checks: ["Test"] }),
+    );
+    const runner = store(["Runner checks"]);
+    await assert.rejects(
+      () => requestContractEvaluation(runner.connection, 42),
+      /no runner receiver/,
+    );
+    assert.equal(runner.writes.length, 0);
+  } finally {
+    process.chdir(previous);
+  }
+});
+
+test("inspection remains read-only at every check location", async (t) => {
+  const output = [];
+  t.mock.method(console, "log", (text) => output.push(JSON.parse(text)));
+  for (const checks of [["Test"], ["Runner checks"], ["Review rerun"]]) {
+    const { connection, writes } = store(checks);
+    await cutoff(["inspect", "--repo", "owner/repo"], () => connection);
+    assert.equal(output.at(-1).mode, "prepared");
+    assert.equal(writes.length, 0);
+  }
+});
+
+test("non-runner activation dispatches every inventoried issue using one pinned declaration", async () => {
+  for (const checks of [["Test"], ["Review rerun"]]) {
+    const { connection, writes, reads } = store(checks);
+    const issues = [{ number: 42, issue: "I42", intake: null, legacy: null }];
+    await installContractCutoff(
+      connection,
+      { ...receipt, issues },
+      async () => ({ complete: true, issues }),
+    );
+    assert.deepEqual(writes.at(-1).body, {
+      event_type: "repo-canon-issue-contract",
+      client_payload: { issue: 42 },
+    });
+    assert.equal(reads.length, 2);
+  }
 });
