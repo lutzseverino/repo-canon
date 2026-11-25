@@ -258,8 +258,9 @@ plan-limited branch-rules read; every other permission refusal grants no excepti
 After slow gates, immediately before the expected-head merge, verify the live
 default destination, unchanged validated/reviewed head, successful applicable
 validation on that exact head, and current default-tip ancestry. Missing or
-unreadable evidence, all other permission refusals, missing workflow and deferred
-setup grant no exception. Another writer can advance the base after this final
+unreadable evidence, all other permission refusals, deferred setup and, at
+`github`, a missing PR metadata workflow grant no exception; at `runner` and
+`self-reported` the path reads no workflow. Another writer can advance the base after this final
 check and the merge can succeed: the owner accepts this residual concurrent-base
 race only on this proven plan-limited path. Immediate checks narrow the window;
 they do not provide GitHub's atomic protection. Strict non-bypassable GitHub

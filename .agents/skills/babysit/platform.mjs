@@ -503,13 +503,8 @@ export async function unresolvedReviewerThreads(connection, number, reviewer) {
         throw new Error(
           "Could not read a configured-reviewer thread opener or resolution.",
         );
-      const author = comments[0].author;
-      // GraphQL omits the bot suffix that REST and reviewer declarations use,
-      // matching Postern's GraphQL account interpretation.
-      const login =
-        author.__typename === "Bot" && !author.login.endsWith("[bot]")
-          ? `${author.login}[bot]`
-          : author.login;
+      // Matches Postern's GraphQL account interpretation.
+      const login = restLogin(comments[0].author);
       if (
         login.toLowerCase() === reviewer.account.toLowerCase() &&
         !thread.isResolved
