@@ -20,7 +20,46 @@ const lifecycle = new URL("./helpers/temporary-directory.mjs", import.meta.url)
   .href;
 const runner = new URL("./helpers/child-runner.mjs", import.meta.url).href;
 const release = new URL("../scripts/release/support.mjs", import.meta.url).href;
+const cleanup = new URL(
+  "./helpers/temporary-directory-cleanup.mjs",
+  import.meta.url,
+).href;
 const hold = "await new Promise(() => {});";
+
+test("temporary cleanup confirms removal after a concurrent descendant disappears", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "repo-canon-cleanup-race-"));
+  mkdirSync(join(directory, "descendant"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const child = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      `
+    import assert from "node:assert/strict";
+    import fs from "node:fs";
+    import { syncBuiltinESMExports } from "node:module";
+    import { removeTemporaryDirectory } from ${JSON.stringify(cleanup)};
+    const directory = ${JSON.stringify(directory)};
+    const remove = fs.rmSync;
+    let first = true;
+    fs.rmSync = (path, options) => {
+      if (path === directory && first) {
+        first = false;
+        remove(directory + "/descendant", { recursive: true, force: true });
+        return;
+      }
+      return remove(path, options);
+    };
+    syncBuiltinESMExports();
+    removeTemporaryDirectory(directory);
+    assert.equal(fs.existsSync(directory), false);
+  `,
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(child.status, 0, child.stderr);
+});
 
 /** @param {(paths: {root: string, scratch: string, ready: string, commandReady: string}) => string} body */
 function fixture(t, body = () => hold) {

@@ -1,4 +1,5 @@
-import { readFileSync, readdirSync, rmSync } from "node:fs";
+import { removeTemporaryDirectory } from "./temporary-directory-cleanup.mjs";
+import { readFileSync, readdirSync } from "node:fs";
 import { sep } from "node:path";
 
 const [root, owner, parent] = process.argv.slice(2);
@@ -40,7 +41,7 @@ function stopCommands() {
 function cleanup() {
   clearInterval(watch);
   stopCommands();
-  rmSync(root, { recursive: true, force: true });
+  removeTemporaryDirectory(root);
   process.exit();
 }
 const watch = setInterval(() => {

@@ -1,5 +1,6 @@
 import { scratchRoot } from "./temporary-directory.mjs";
-import { mkdtempSync, rmSync } from "node:fs";
+import { removeTemporaryDirectory } from "./temporary-directory-cleanup.mjs";
+import { mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { performance } from "node:perf_hooks";
@@ -174,6 +175,6 @@ export async function runChild(command, args, { kind, boundMs, cwd, env }) {
       });
     });
   } finally {
-    if (temporary) rmSync(temporary, { recursive: true, force: true });
+    if (temporary) removeTemporaryDirectory(temporary);
   }
 }
