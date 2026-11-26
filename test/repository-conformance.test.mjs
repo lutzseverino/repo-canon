@@ -1724,6 +1724,19 @@ test("readiness mechanics and brief syntax live only in the GitHub rules", () =>
   );
 });
 
+test("opening a pull request leaves a cut-off local run to github or runner checks", () => {
+  const opening = interpretMarkdown(read("CONTRIBUTING.md"))
+    .sections(["Opening a pull request"])
+    .values()
+    .next().value[0];
+  assert.ok(opening, "Opening a pull request section exists");
+  const exception = opening.source
+    .split(/\n\s*\n/)
+    .find((paragraph) => paragraph.startsWith("Exception:"));
+  assert.ok(exception, "Opening a pull request states the exception");
+  assert.doesNotMatch(exception, /timeout|fallback|bypass/i);
+});
+
 test("delivery and triage requirements keep their single homes", () => {
   /** @type {[string[], RegExp][]} */
   const homes = [
