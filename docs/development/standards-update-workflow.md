@@ -98,7 +98,8 @@ for caller permissions, triggers, opt-in, token selection, action pins, shared
 runner and checkout conventions, declaration placement, and interpolation
 checks. `test/repository-wide-rules.test.mjs` also adopts both of them with
 public CLI 12.0.0 and checks the installed workflow byte for byte.
-`test/standards-update-command.test.mjs` runs the declared command against a
-stub executable, and `test/check-locations.test.mjs` checks what the pinned
+`test/standards-update-command.test.mjs` checks that the declared command, the
+rules and this workflow name one release and runs the command against a stub
+executable, and `test/check-locations.test.mjs` checks what the pinned
 CLI reports after adoption at each location. These tests
 do not enable scheduled updates, create an App, or mutate live GitHub settings.

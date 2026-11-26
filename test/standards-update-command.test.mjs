@@ -14,10 +14,37 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { parseStandards } from "../scripts/standards-declarations.mjs";
 
-test("the declared update command launches the pinned executable in the adopter checkout with its token", () => {
-  const { "update-command": command } = parseStandards(
-    readFileSync(new URL("../standards.yaml", import.meta.url), "utf8"),
+const read = (path) =>
+  readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+
+// The release the standards update workflow pins, from its tag comment.
+function workflowRelease() {
+  const pin =
+    /uses: lutzseverino\/repo-standards@[0-9a-f]{40} # v(\d+\.\d+\.\d+)\n/.exec(
+      read(".github/workflows/standards-update.yml"),
+    );
+  assert.ok(pin, "the workflow pins Repository Standards with a release tag");
+  return pin[1];
+}
+
+test("the declared update command, the rules and the workflow name one Repository Standards release", () => {
+  const { "update-command": command } = parseStandards(read("standards.yaml"));
+  assert.equal(
+    command,
+    `npm exec --yes --package @lutzseverino/repo-standards@${workflowRelease()} -- repo-standards-update`,
   );
+  for (const path of [
+    "rules/github-repository-configuration.md",
+    "docs/development/standards-update-workflow.md",
+  ])
+    assert.ok(
+      read(path).includes(`\n${command}\n`),
+      `${path} shows the command`,
+    );
+});
+
+test("the declared update command launches the pinned executable in the adopter checkout with its token", () => {
+  const { "update-command": command } = parseStandards(read("standards.yaml"));
   assert.equal(typeof command, "string");
 
   const checkout = realpathSync(
@@ -33,7 +60,7 @@ test("the declared update command launches the pinned executable in the adopter 
     join(packageDir, "package.json"),
     JSON.stringify({
       name: "@lutzseverino/repo-standards",
-      version: "12.0.0",
+      version: workflowRelease(),
       bin: { "repo-standards-update": "update.cjs" },
     }),
   );
