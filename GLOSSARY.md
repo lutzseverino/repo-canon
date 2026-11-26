@@ -95,25 +95,33 @@ _Avoid_: Bug, when meaning the triage path
 An intake request whose missing answer concerns intent, policy or a trade-off,
 whatever its category label, so its Agent Brief relies on recorded decisions
 and qualifying inferred intent. Reserved decisions require the maintainer;
-other downstream choices belong to their delegated agent.
+other downstream choices belong to their delegated agent. Without a delegated
+agent, the maintainer decides.
 _Avoid_: Feature request, when meaning the triage path
 
 **Orchestrating agent**:
-The maintainer's delegated agent that takes approved goals through strategic
-implementation and an evidenced close, deciding downstream with independent
-review by a different provider and listing decisions for veto in its next
-update. Reserved decisions go to the maintainer; silence on listed decisions
-stands.
+An agent the maintainer runs to take approved goals through strategic
+implementation and an evidenced close; it can hold the role of the maintainer's
+delegated agent. That role decides downstream with independent review by a
+different provider and lists decisions for veto in its next update, with silence
+standing and reserved decisions going to the maintainer; it does not require an
+orchestrator.
 _Avoid_: Factory, factory session, research run
 
 **Reserved decision**:
-One of five cases requiring a grill with the maintainer: they ask; the
-choice changes their goal, Done means or something they wanted; it is hard to
-reverse and reaches outside their own repositories (including external names
-or formats, a breaking release for outside users, repository or data deletion,
-money or new accounts, or an adopter security trade-off); it needs their taste,
-credential, device or presence; or recorded maintainer decisions conflict and
-neither code nor records settle which wins.
+One of five cases requiring a grill with the maintainer:
+
+1. The maintainer asks.
+2. A decision changes what the maintainer asked for: the goal, a Done-means
+   clause, or dropping something wanted.
+3. It is hard to reverse and reaches outside the maintainer's own repositories:
+   names or formats others' code depends on, a breaking release for outside
+   users, deleting repositories or data, money or new accounts, or a security
+   trade-off adopters live with.
+4. It needs the maintainer's taste, credential, device or presence.
+5. Two recorded maintainer decisions conflict and neither code nor records
+   settle which wins.
+
 _Avoid_: Every grill question; every persistent implementation choice
 
 **Owner values**:
@@ -157,7 +165,9 @@ _Avoid_: Conversational amendment
 **Factory gap**:
 A pipeline stage the factory cannot perform for a repository, which the
 maintainer or their delegated agent arranges through that stage's hand skill
-to the same contract. It does not require a separate factory session.
+to the same contract. Intake and the grill, which need the maintainer or their
+delegated agent, are never factory gaps; a gap does not require a separate
+factory session.
 _Avoid_: Manual override, workaround
 
 **Factory session**:

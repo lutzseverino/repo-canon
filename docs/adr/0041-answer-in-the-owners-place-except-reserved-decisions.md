@@ -1,9 +1,10 @@
 # Answer in the owner's place except reserved decisions, by one bundled operating model
 
-Superseded (2026-11-26) by
+Status: superseded in part (2026-11-26) by
 [ADR 0055](0055-delegate-downstream-decisions-with-five-maintainer-escalations.md):
-the five maintainer escalation cases, downstream delegation, strategic review
-and veto reporting replace this decision boundary and operating model. The
+its decision boundary (the reserved-decision list), the end of veto lists and
+the bundled operating model are superseded. Plan approval and approval reuse,
+and `state:owner` for what only the maintainer can decide, still hold. The
 validated owner-values engine was dropped with #1048 (owner, 2026-11-19,
 "yes to all"). The original decision text below is kept as history.
 

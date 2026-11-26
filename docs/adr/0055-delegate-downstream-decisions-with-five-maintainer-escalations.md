@@ -1,8 +1,13 @@
 # Delegate downstream decisions with five maintainer escalation cases
 
-Status: accepted (2026-11-26); supersedes
-[ADR 0041](0041-answer-in-the-owners-place-except-reserved-decisions.md) and
-[#1039 GO-D3](https://github.com/lutzseverino/repo-canon/issues/1039).
+Status: accepted (2026-11-26); supersedes the decision boundary (the
+reserved-decision list), the end of veto lists and the bundled operating model
+of [ADR 0041](0041-answer-in-the-owners-place-except-reserved-decisions.md),
+and [#1039 GO-D3](https://github.com/lutzseverino/repo-canon/issues/1039).
+ADR 0041's plan approval and approval reuse, and `state:owner` for what only
+the maintainer can decide, still hold. The 2026-11-19 fates recorded here
+supersede [ADR 0040](0040-watch-instead-of-launching.md) and
+[ADR 0046](0046-start-owner-facing-work-and-bridge-factory-gaps.md).
 
 The maintainer originates ideas and approves each plan's goal and Done means.
 Their delegated agent decides downstream technical design, mechanisms,

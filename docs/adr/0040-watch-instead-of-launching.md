@@ -1,11 +1,10 @@
 # Watch instead of launching; a factory session performs the factory gaps
 
-Superseded (2026-11-26): the owner dropped #1040, #1045 and #1048 on
-2026-11-19 ("yes to all"), ending the watch-only orchestrator and factory-session
-bridge. The surviving decision-rights design is recorded in
-[ADR 0055](0055-delegate-downstream-decisions-with-five-maintainer-escalations.md)
-and [#1039](https://github.com/lutzseverino/repo-canon/issues/1039).
-The original decision text below is kept as history.
+Status: superseded (2026-11-26) by
+[ADR 0055](0055-delegate-downstream-decisions-with-five-maintainer-escalations.md), which records the owner's
+2026-11-19 drop of #1040, #1045 and #1048 ("yes to all"), ending the watch-only
+orchestrator and factory-session bridge. The original decision text below is
+kept as history.
 
 Status: supersedes [ADR 0037](0037-act-in-repositories-only-through-launches.md)
 and the launch and intake-model-label responsibilities in
