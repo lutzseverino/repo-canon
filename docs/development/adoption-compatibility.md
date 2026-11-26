@@ -6,16 +6,22 @@ product leaves a gap.
 
 ## Supported source and discovery route
 
-Use `repo-standards/v2` and the installed public CLI 11.0.0 with Node.js 24 or 26 as
+Use `repo-standards/v2` and the installed public CLI 12.0.0 with Node.js 24 or 26 as
 the current validation and adoption baseline. Declare a minimum that was
 actually validated against the released source bytes: `requires.repo-standards`
-is the open-ended minimum `>=11.0.0`, the first public CLI that understands
-[check locations](#check-location-support).
+is the open-ended minimum `>=12.0.0`, the first public CLI that accepts the
+[`update-command` source field](#check-location-support).
 [ADR 0005](../adr/0005-require-an-open-ended-minimum-cli-version.md) states the
 requirement as a minimum rather than an exact version, because the requirement
 gates selection only and an exact one strands adopters. Format version and CLI
 version are distinct, and the format version carries compatibility with CLI
 releases above the floor.
+
+Repository Standards CLI 12 updates the adoption records written by CLI 11.
+To carry a CLI 10 adoption forward, first update with CLI 11 to a Repo Canon
+release it supports, then update to this release with CLI 12. For other
+retired record formats, see the CLI's
+[fresh-adoption procedure](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/reference/adoption-run.md#adopt-fresh-from-a-retired-format).
 
 | Accepted requirement                                            | Supported mapping                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -33,9 +39,9 @@ root write scope, and subtraction of exact descendants are not discovered
 targets, and an empty scope retains its declaration and operations. Only an
 optional declaration confirmed with no scope drops its rules and operations.
 
-Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/author-format.md),
-[inspection](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/inspection.md),
-and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/script-protocol.md)
+Use the versioned [author format](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/reference/author-format.md),
+[inspection](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/reference/inspection.md),
+and [operation protocol](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/reference/script-protocol.md)
 contracts when implementing. Discovery supplies scope resolution; contextual
 project agent guidance and authored GitHub setup use the routes below.
 The [release procedure](release.md) states what each release requires.
@@ -88,12 +94,17 @@ account or process posts each result:
 
 At both off-Actions locations, PR integration setup requires `PR metadata`
 without the workflow or an Actions event policy, and merge reads no PR
-metadata workflow. Automated standards updates off Actions remain separate
-[check-execution work](https://github.com/lutzseverino/repo-canon/issues/1231).
+metadata workflow. At `runner` and `self-reported`, the
+[standards update command](standards-update-workflow.md#run-outside-actions)
+keeps the repository current. The runner or maintainer schedules it.
+Repository Standards retains the source's `update-command` at adoption and
+reports it through `outdated` at both locations. The `repository-standards`
+skill names the command when an update is available. At `github`, updates
+use the opt-in workflow and `outdated` omits the command.
 Sources:
-[author format](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/author-format.md#check-locations),
-[adoption run](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/adoption-run.md#choose-the-check-location),
-[script protocol](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/reference/script-protocol.md#json-input-on-stdin).
+[author format](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/reference/author-format.md#check-locations),
+[adoption run](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/reference/adoption-run.md#choose-the-check-location),
+[script protocol](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/reference/script-protocol.md#json-input-on-stdin).
 
 ## Required check invocation support
 

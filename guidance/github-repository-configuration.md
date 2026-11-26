@@ -178,9 +178,10 @@ At `runner`, the runner posts issue-contract results, `PR metadata` and
 count only statuses from the account `REPO_CANON_RUNNER_ACCOUNT` names. At
 `self-reported`, the worker and the separate review run post `PR metadata`,
 the review run posts `Review rerun`, and nobody posts issue-contract results,
-so the owner applies readiness. Neither location gets automated standards
-updates. Report these limits; merge gates refuse rather than pass without the
-declared results.
+so the owner applies readiness. At both locations, the standards update
+command in the rules' **Automated standards updates** section keeps the
+repository current. The runner or maintainer schedules it. Merge gates
+require the declared results.
 
 The `REPO_CANON_RUNS_ON` variable is retired: the run neither reads nor sets,
 changes, or deletes it, and repository-owned workflows that read it keep their

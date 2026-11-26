@@ -3,9 +3,9 @@ import "./helpers/temporary-directory.mjs";
 // A deliberate update switching from `github` to `runner` or `self-reported`
 // reports and applies the ordinary owned-workflow removals, and switching back
 // adds them; repository-owned workflows and unrelated files survive. A
-// headless update keeps the recorded location, and a legacy CLI 10 selection
-// without `checks` continues at `github`. No selection, lock or remote
-// variable is edited to make a transition.
+// headless update keeps the recorded location. A legacy CLI 10 selection
+// without `checks` continues at `github` through CLI 11 and CLI 12. No
+// selection, lock or remote variable is edited to make a transition.
 
 import assert from "node:assert/strict";
 import {
@@ -29,6 +29,7 @@ import {
   invoke,
   legacyVersion,
   nextVersion,
+  previousVersion,
   repoCanonWorkflows,
   runnerVariable,
   sourceUrl,
@@ -57,7 +58,7 @@ function adopt(cli, directory, label, profile, options) {
     sourceUrl,
     version,
     profile,
-    "11.0.0",
+    "12.0.0",
     fixture,
     options,
   );
@@ -109,7 +110,7 @@ function addOwnFiles(project) {
   commitAll(project, "Repository-owned files");
 }
 
-test("public CLI 11.0.0 updates remove and restore Repo Canon's workflows when the check location changes", (t) => {
+test("public CLI 12.0.0 updates remove and restore Repo Canon's workflows when the check location changes", (t) => {
   const { cli, directory } = setup(t);
   for (const [profile, away] of [
     ["factory", "runner"],
@@ -149,7 +150,7 @@ test("a headless update keeps the recorded check location", (t) => {
   assert.ok(rejected.errors?.length, JSON.stringify(rejected).slice(0, 1000));
 });
 
-test("a legacy CLI 10 selection without a check location continues at github", (t) => {
+test("a legacy CLI 10 selection continues at github through CLI 11 and CLI 12", (t) => {
   const { cli, directory } = setup(t);
   const cli10 = installCli(join(directory, "cli-10"), "10.0.0");
   const fixture = join(directory, "legacy");
@@ -177,14 +178,25 @@ test("a legacy CLI 10 selection without a check location continues at github", (
     /^checks:/m,
   );
   commitAll(project, "Adopt with CLI 10");
+
+  // CLI 12 updates lock/v2 adoptions from CLI 11. Use CLI 11 first to
+  // carry the CLI 10 adoption and its implicit github choice forward.
+  const cli11 = installCli(join(directory, "cli-11"), "11.0.0");
   const { first } = updateAdoption(
-    cli,
+    cli11,
     project,
-    ["--standards-version", version],
+    ["--standards-version", previousVersion],
     { profile: "standard", checks: "runner" },
   );
   assert.equal(first.selection.checks, "github");
   assert.ok(!(first.missing ?? []).includes("checks"));
+  assert.equal(statusLocation(cli11, project), "github");
+  commitAll(project, "Update with CLI 11");
+
+  updateAdoption(cli, project, ["--standards-version", version], {
+    profile: "standard",
+    checks: "runner",
+  });
   assert.equal(statusLocation(cli, project), "github");
   assert.match(
     readFileSync(join(project, ".repo-standards/selection.yaml"), "utf8"),

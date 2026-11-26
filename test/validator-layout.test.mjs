@@ -230,19 +230,14 @@ test("public CLI relocates validators in every fresh profile and preceding-relea
       );
       for (const path of retired)
         assert.equal(Object.hasOwn(lock.files, path), false);
-      // Check every exact file and whole selected skill, and CLI-retained inputs.
+      // CLI 12 keeps exact bytes at the installed target. Verify each exact
+      // file and each file in a selected skill against the released source.
       for (const declaration of selected) {
         if (declaration.exact) {
           assert.deepEqual(
             readFileSync(join(project, declaration.target)),
             readFileSync(join(source, declaration.exact)),
             declaration.target,
-          );
-          assert.deepEqual(
-            readFileSync(
-              join(project, ".repo-standards/inputs/source", declaration.exact),
-            ),
-            readFileSync(join(source, declaration.exact)),
           );
         }
         if (declaration.kind === "skill") {

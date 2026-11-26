@@ -166,7 +166,7 @@ test("standards updates use an App token only with both credentials, else the wo
   assert.ok(checkout.includes(token));
   assert.ok(
     text.endsWith(
-      `uses: lutzseverino/repo-standards@8ae21e7fec4492397640ed459dfd7a8a4ad6f251 # v10.0.0\n        with:\n          ${token}\n`,
+      `uses: lutzseverino/repo-standards@3bacfecf3f5695e58036926faba04aeb1c55f624 # v12.0.0\n        with:\n          ${token}\n`,
     ),
   );
   assert.doesNotMatch(text, /agent-command:/);

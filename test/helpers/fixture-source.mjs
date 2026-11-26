@@ -11,15 +11,15 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const sourceUrl = "https://github.com/fixture/repo-canon";
 
-// The public CLI 11.0.0 under `REPO_STANDARDS_PREFIX`, or installed in
+// The public CLI 12.0.0 under `REPO_STANDARDS_PREFIX`, or installed in
 // `directory` when the variable is unset.
 export function publicCli(directory) {
   const prefix = process.env.REPO_STANDARDS_PREFIX;
-  if (!prefix) return installCli(join(directory, "cli"), "11.0.0");
+  if (!prefix) return installCli(join(directory, "cli"), "12.0.0");
   const cli = join(prefix, "node_modules/.bin/repo-standards");
   assert.equal(
     execFileSync(cli, ["--version"], { encoding: "utf8" }).trim(),
-    "11.0.0",
+    "12.0.0",
   );
   return cli;
 }
@@ -113,7 +113,10 @@ export function fixtureSource(directory, validation) {
     }));
     // An initial `adopt` lists the releases by page, and an update through
     // Postern without one.
-    const github = {
+    const responsesByUrl = {
+      "https://registry.npmjs.org/@lutzseverino%2frepo-standards": {
+        versions: { "12.0.0": {} },
+      },
       [api]: { private: false, full_name: "fixture/repo-canon" },
       [`${api}/releases?per_page=100&page=1`]: releases,
       [`${api}/releases?per_page=100`]: releases,
@@ -128,7 +131,13 @@ export function fixtureSource(directory, validation) {
             /^(\d+) (\w+) ([a-f0-9]+)\t(.+)$/.exec(line);
           return { mode, type, sha, path };
         });
-      Object.assign(github, {
+      Object.assign(responsesByUrl, {
+        [`${api}/contents/standards.yaml?ref=${tag}`]: {
+          type: "file",
+          content: Buffer.from(
+            git(source, "show", `${tag}:standards.yaml`),
+          ).toString("base64"),
+        },
         [`${api}/git/ref/tags/${tag}`]: {
           ref: `refs/tags/${tag}`,
           object: { type: "commit", sha },
@@ -141,7 +150,7 @@ export function fixtureSource(directory, validation) {
         },
       });
     }
-    writeFileSync(responses, JSON.stringify(github));
+    writeFileSync(responses, JSON.stringify(responsesByUrl));
     Object.assign(env, {
       NODE_OPTIONS: `--import=${join(root, "test/fixtures/github-source.mjs")}`,
       FIXTURE_GITHUB_RESPONSES: responses,
