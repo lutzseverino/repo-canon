@@ -6,7 +6,7 @@ question adoption needs; this guide covers profiles, check locations, caller com
 stacks, remote setup, opting into automated updates, orchestrating plans, and
 the personal skills adoption leaves to you. The
 CLI's
-[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v11.0.0/docs/usage/guides/adopt.md)
+[adoption guide](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/guides/adopt.md)
 describes `adopt` itself, at a terminal and through an agent.
 
 ## Choose a profile
@@ -94,8 +94,10 @@ names its results, and tells wait and merge the location:
 
 A declaration may not name both `Runner checks` and `Review rerun`. Off Actions,
 merge needs no PR metadata workflow, and the first-adoption owner handoff in
-[Remote setup](#remote-setup) applies only at `github`. Standards updates and
-event delivery off Actions remain separate
+[Remote setup](#remote-setup) applies only at `github`. At `runner` and
+`self-reported`, the [standards update command](#automated-updates) keeps the
+repository current. The runner or maintainer schedules it. Event delivery
+off Actions remains separate
 [check-execution work](https://github.com/lutzseverino/repo-canon/issues/1225).
 Nothing bypasses the required-check, freshness or review gates.
 
@@ -109,8 +111,8 @@ ownership, leaving repository-owned workflows and other files in place.
 
 ### Migrate from the runner variable
 
-Check locations need Repository Standards CLI 11 or newer, the minimum this
-source requires. They replace the `REPO_CANON_RUNS_ON` repository variable,
+Use Repository Standards CLI 12 or newer to adopt this source. The check
+location replaces the `REPO_CANON_RUNS_ON` repository variable,
 which is retired: installed jobs no longer read it, and adoption never reads,
 creates, changes or deletes it. A repository whose variable selected
 self-hosted runner labels runs its installed jobs on GitHub-hosted runners
@@ -314,6 +316,13 @@ merging to apply it. The installed caller does not wire `agent-command`;
 write your own caller workflow if you want an agent to finish contextual work.
 The [workflow development document](../development/standards-update-workflow.md)
 describes its pins and validation.
+
+At `runner` and `self-reported`, use the
+[standards update command](../development/standards-update-workflow.md#run-outside-actions)
+from a clean, dedicated checkout of your default branch with
+`REPO_STANDARDS_TOKEN` set. It runs the same rolling update as the workflow.
+The `repository-standards` skill names the command when an update is
+available. The runner or maintainer schedules any recurring runs.
 
 ## Orchestrate plans
 

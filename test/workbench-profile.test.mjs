@@ -136,7 +136,7 @@ test("the workbench profile excludes every default but the workflow skills, thei
     assert.ok(excluded.includes(id), `the workbench profile excludes ${id}`);
 });
 
-test("public CLI 11.0.0 adopts the workbench profile into an empty repository and updates it in one direct commit", (t) => {
+test("public CLI 12.0.0 adopts the workbench profile into an empty repository and updates it in one direct commit", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-workbench-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const cli = publicCli(directory);

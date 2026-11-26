@@ -1,6 +1,7 @@
 // Disposable public-CLI fixtures for the check-location selection. The source
 // serves the candidate at v1.0.0 and v1.1.0 and, at v0.9.0, the same content
-// without check-location keys and with the CLI 10 minimum, so CLI 10 can record
+// without check-location keys or the update command and with the CLI 10
+// minimum, so CLI 10 can record
 // a legacy selection without `checks`. Only GitHub HTTP and Git transport use
 // local fixtures; the adoptions and updates run the published CLI.
 
@@ -45,7 +46,7 @@ export const nextVersion = "v1.1.0";
 export const runnerVariable = ["vars", "REPO_CANON_RUNS_ON"].join(".");
 
 // Publishes the source tags and routes this process's CLI runs through the
-// fixtures until the test `t` ends. Returns the public CLI 11.0.0 and the
+// fixtures until the test `t` ends. Returns the public CLI 12.0.0 and the
 // source validation.
 export function checkLocationSource(t, root, directory) {
   const saved = { ...process.env };
@@ -64,8 +65,9 @@ export function checkLocationSource(t, root, directory) {
   const manifestPath = join(source, "standards.yaml");
   const manifest = readFileSync(manifestPath, "utf8");
   const legacy = manifest
-    .replace('repo-standards: ">=11.0.0"', 'repo-standards: ">=10.0.0"')
-    .replace(/^ *check-locations: .*\n/gm, "");
+    .replace('repo-standards: ">=12.0.0"', 'repo-standards: ">=10.0.0"')
+    .replace(/^ *check-locations: .*\n/gm, "")
+    .replace(/^update-command: .*\n/m, "");
   assert.notEqual(legacy, manifest);
   assert.doesNotMatch(legacy, /check-locations/);
   const commit = (...args) =>

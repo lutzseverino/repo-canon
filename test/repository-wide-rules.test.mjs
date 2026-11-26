@@ -269,7 +269,7 @@ for (const [
     },
   ],
 ])) {
-  test(`public CLI 11.0.0 adopts and updates with repository-wide and stack rules: ${label}`, (t) => {
+  test(`public CLI 12.0.0 adopts and updates with repository-wide and stack rules: ${label}`, (t) => {
     const directory = mkdtempSync(join(tmpdir(), "repo-canon-workflow-"));
     t.after(() => rmSync(directory, { recursive: true, force: true }));
     const cli = publicCli(directory);

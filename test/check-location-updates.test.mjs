@@ -57,7 +57,7 @@ function adopt(cli, directory, label, profile, options) {
     sourceUrl,
     version,
     profile,
-    "11.0.0",
+    "12.0.0",
     fixture,
     options,
   );
@@ -109,7 +109,7 @@ function addOwnFiles(project) {
   commitAll(project, "Repository-owned files");
 }
 
-test("public CLI 11.0.0 updates remove and restore Repo Canon's workflows when the check location changes", (t) => {
+test("public CLI 12.0.0 updates remove and restore Repo Canon's workflows when the check location changes", (t) => {
   const { cli, directory } = setup(t);
   for (const [profile, away] of [
     ["factory", "runner"],

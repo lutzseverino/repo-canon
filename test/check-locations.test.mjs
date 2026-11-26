@@ -2,7 +2,7 @@ import "./helpers/temporary-directory.mjs";
 // The check-location selection: the source offers all three locations in the
 // standard and factory profiles, Repo Canon's workflows apply only at
 // `github`, and the retired runner variable has no operative use. The public
-// CLI 11.0.0 validates the source, resolves each location and adopts both
+// CLI 12.0.0 validates the source, resolves each location and adopts both
 // project profiles at each, through the flag and the answers routes.
 
 import assert from "node:assert/strict";
@@ -20,6 +20,7 @@ import {
   installedWorkflows,
   invoke,
   locations,
+  nextVersion,
   projectFiles,
   repoCanonWorkflows,
   runnerVariable,
@@ -55,7 +56,7 @@ test("the source offers every check location in the project profiles and install
     readFileSync(join(root, "standards.yaml"), "utf8"),
   );
   assert.equal(manifest.format, "repo-standards/v2");
-  assert.equal(manifest.requires["repo-standards"], ">=11.0.0");
+  assert.equal(manifest.requires["repo-standards"], ">=12.0.0");
   for (const profile of ["standard", "factory"])
     assert.deepEqual(manifest.profiles[profile]["check-locations"], locations);
   assert.equal(manifest.profiles.workbench["check-locations"], undefined);
@@ -101,7 +102,7 @@ test("no source file uses the retired runner variable", () => {
   assert.deepEqual(mentioning.sort(), [...retirementMentions].sort());
 });
 
-test("public CLI 11.0.0 resolves and adopts the standard and factory profiles at every check location", (t) => {
+test("public CLI 12.0.0 resolves and adopts the standard and factory profiles at every check location", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "repo-canon-locations-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const { cli, validation } = checkLocationSource(t, root, directory);
@@ -169,6 +170,11 @@ test("public CLI 11.0.0 resolves and adopts the standard and factory profiles at
     locations,
   );
 
+  const { "update-command": updateCommand } = parseStandards(
+    readFileSync(join(root, "standards.yaml"), "utf8"),
+  );
+  assert.equal(typeof updateCommand, "string");
+
   // Installed output: the flag selects `runner`, the answers file the others.
   for (const profile of ["standard", "factory"]) {
     const installed = {};
@@ -180,7 +186,7 @@ test("public CLI 11.0.0 resolves and adopts the standard and factory profiles at
         sourceUrl,
         version,
         profile,
-        "11.0.0",
+        "12.0.0",
         fixture,
         checks === "runner"
           ? {
@@ -202,6 +208,19 @@ test("public CLI 11.0.0 resolves and adopts the standard and factory profiles at
         checks === "github" ? repoCanonWorkflows[profile] : [],
         `${profile} at ${checks}`,
       );
+      const outdated = invoke(cli, project, ["outdated"]);
+      assert.equal(outdated.format, "repo-standards/outdated/v3");
+      assert.equal(outdated.cli.update, "none");
+      assert.deepEqual(outdated.standards.adopterActions, [
+        { version: nextVersion, action: null },
+      ]);
+      assert.equal(outdated.standards.update, "available");
+      assert.equal(outdated.standards.newest, nextVersion);
+      if (checks === "github") {
+        assert.ok(!Object.hasOwn(outdated.standards, "updateCommand"));
+      } else {
+        assert.equal(outdated.standards.updateCommand, updateCommand);
+      }
       assertHostedRunners(project, workflows);
       installed[checks] = projectFiles(project);
     }

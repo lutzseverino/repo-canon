@@ -316,8 +316,10 @@ one of those locations instead. Results come from these posters:
   the separate review run posts `Review rerun` and `PR metadata`. Nobody
   posts issue-contract results, so the owner applies readiness.
 
-Neither off-Actions location gets automated standards updates, and the merge
-gate above refuses rather than passes without the declared results.
+At both off-Actions locations, the command in
+[Automated standards updates](#automated-standards-updates) keeps the
+repository current. The runner or maintainer schedules it. The merge gate
+requires the declared results.
 
 The `REPO_CANON_RUNS_ON` repository variable is retired. Installed jobs never
 read it, so an existing value has no effect on them: a repository whose value
@@ -357,6 +359,23 @@ or one rolling issue with open questions on a stop or refused push. A newer
 target refreshes the item; the same target leaves it untouched. Remote setup
 waits for the next local `adopt`. The installed caller never sets
 `agent-command`; that input needs a repository-owned caller workflow.
+
+At `runner` and `self-reported`, run the same rolling update from a clean,
+dedicated checkout of the default branch. Use Node.js 24 or 26, Git, `bash`,
+and access to npm and GitHub. Supply `REPO_STANDARDS_TOKEN` in the environment
+with Contents, Pull requests and Issues write permissions, plus Workflows
+write permission if the update changes workflow files.
+
+```sh
+npm exec --yes --package @lutzseverino/repo-standards@12.0.0 -- repo-standards-update
+```
+
+The executable uses the current checkout and derives the repository from its
+GitHub `origin`. The token authorizes API calls and HTTPS pushes. An SSH
+`origin` uses the runner's SSH credentials for pushes. The executable commits
+and pushes `repo-standards/update`. The runner or maintainer schedules and
+serializes recurring runs. The `repository-standards` skill names this
+command when an update is available.
 
 ## Trusted review configuration
 

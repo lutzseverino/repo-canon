@@ -1,8 +1,9 @@
 format: repo-standards/v2
 name: repo-canon
 description: Repository documentation, contribution, agent workflow, and GitHub validation standards
+update-command: npm exec --yes --package @lutzseverino/repo-standards@12.0.0 -- repo-standards-update
 requires:
-  repo-standards: ">=11.0.0"
+  repo-standards: ">=12.0.0"
 
 defaults:
   declarations:

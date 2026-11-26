@@ -77,12 +77,12 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Install the public CLI once for this job
         env:
-          REPO_STANDARDS_PREFIX: ${{ runner.temp }}/repo-standards-cli-11.0.0
+          REPO_STANDARDS_PREFIX: ${{ runner.temp }}/repo-standards-cli-12.0.0
         run: |
           echo "REPO_STANDARDS_PREFIX=$REPO_STANDARDS_PREFIX" >> "$GITHUB_ENV"
           npm install --prefix "$REPO_STANDARDS_PREFIX" --ignore-scripts \
             --registry=https://registry.npmjs.org \
-            @lutzseverino/repo-standards@11.0.0
+            @lutzseverino/repo-standards@12.0.0
           "$REPO_STANDARDS_PREFIX/node_modules/.bin/repo-standards" --version
       - name: Format, lint, syntax check and typecheck
         if: matrix.suite.name == 'remaining tests'
