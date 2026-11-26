@@ -13,6 +13,12 @@
 // Exit 0: status or brief printed, or a change, finished report or maximum duration
 // (re-arm); exit 1: usage, refusal, read or platform error.
 // Tracker requests and upstream fetches retain their 45-second timeout.
+// One command queues all tracker HTTP exchanges at 8 in flight; queue time
+// does not consume the request timeout. Wait persists its tracker poll cadence
+// across re-arms; status reads fresh without moving that cadence.
+// Rate limits print `rate limited until <retryAt>` or `rate limited` and persist
+// a cooldown apart from saved facts. Wait keeps watching local records during
+// cooldown, using one interval after a refusal without retryAt.
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
@@ -30,6 +36,107 @@ import { promisify } from "node:util";
 import { connectionFor, executedAsScript } from "../babysit/platform.mjs";
 
 class UsageError extends Error {}
+class TrackerPaused extends Error {
+  name = "TrackerPaused";
+}
+
+// Seam (deferred): tracker read concurrency; consumers: 1; extract at 3
+// Slots cover the response body too. Let Postern classify each completed
+// exchange before dispatching queued work, so its rateLimited verdict stops
+// the whole pass without duplicating its HTTP/GraphQL error classification.
+const trackerReader = (connect, transport, now) => {
+  const pending = [];
+  const connections = new Map();
+  let active = 0;
+  let refusal;
+  const dispatch = () => {
+    while (pending.length && active < 8) {
+      const { input, options, resolve, reject } = pending.shift();
+      if (refusal) {
+        reject(new TrackerPaused("Tracker reads paused by rate limit"));
+        continue;
+      }
+      active += 1;
+      const exchange = async () => {
+        try {
+          const response = await transport(input, {
+            ...options,
+            signal: AbortSignal.timeout(45_000),
+          });
+          const body = await response.text();
+          resolve({
+            status: response.status,
+            headers: response.headers,
+            text: async () => body,
+          });
+        } catch (error) {
+          reject(error);
+        } finally {
+          setImmediate(() => {
+            active -= 1;
+            dispatch();
+          });
+        }
+      };
+      void exchange();
+    }
+  };
+  const fetch = (input, options) =>
+    new Promise((resolve, reject) => {
+      pending.push({ input, options, resolve, reject });
+      dispatch();
+    });
+  const connectionOf = (repository) => {
+    const key = repository.toLowerCase();
+    if (!connections.has(key))
+      connections.set(key, connect(repository, { fetch }));
+    return connections.get(key);
+  };
+  const paused = (error) =>
+    error?.name === "TrackerPaused" || (error?.cause && paused(error.cause));
+  const refused = (error) => {
+    if (error.reason !== "rateLimited") return;
+    const retryAt = [refusal?.retryAt, error.retryAt]
+      .filter(Boolean)
+      .sort()
+      .at(-1);
+    refusal = { observedAt: now(), ...(retryAt ? { retryAt } : {}) };
+  };
+  return async (items, cooldown) => {
+    // Every pass settles before another starts; slots released on the next
+    // event-loop turn are still counted across pass boundaries.
+    refusal = cooldown;
+    const reads = await Promise.all(
+      items.map(async (item) => {
+        try {
+          if (refusal) return { cooldown: refusal };
+          return await readTracker(
+            item,
+            connectionOf(item.repository),
+            refused,
+          );
+        } catch (error) {
+          if (error.reason === "rateLimited") {
+            return { cooldown: refusal };
+          }
+          return paused(error) ? { cooldown: refusal } : { error };
+        }
+      }),
+    );
+    return { reads, cooldown: refusal };
+  };
+};
+
+const cooldownUntil = (cooldown, interval) =>
+  cooldown
+    ? cooldown.retryAt
+      ? Date.parse(cooldown.retryAt)
+      : interval === undefined
+        ? 0
+        : cooldown.observedAt + interval
+    : 0;
+const rateLimitLine = (item, cooldown) =>
+  `${cooldown.retryAt ? `rate limited until ${cooldown.retryAt}` : "rate limited"}: ${link(item)} · ${item.rows.join(", ")}`;
 
 const usage =
   "usage: workbench.mjs status <workbench> --stale-after <seconds> --stages <factory-workflow rules file> | workbench.mjs brief <stage> <target> --plan <plan directory> --row <row> --model <model>@<effort> --reason <one line> --stages <factory-workflow rules file> < <context> | workbench.mjs wait <workbench> --interval <seconds> --max-duration <seconds>";
@@ -340,14 +447,32 @@ const launchFinished = (path) =>
 
 const byId = (entries) => entries.toSorted((a, b) => String(a.id).localeCompare(String(b.id)));
 
-const readTracker = async (item, connection) => {
-  const { data } = await connection.access.request({
-    path: `/repos/${item.repository}/issues/${item.number}`,
-  });
+// Settle sibling reads before ending the pass, including when one fails.
+/** @param {any[]} reads */
+const together = async (reads) => {
+  const settled = await Promise.allSettled(reads);
+  const failed = settled.find((result) => result.status === "rejected");
+  if (failed) throw failed.reason;
+  return settled.map((result) =>
+    result.status === "fulfilled" ? result.value : undefined,
+  );
+};
+
+const readTracker = async (item, connection, refused = (_error) => {}) => {
+  const read = (promise) =>
+    promise.catch((error) => {
+      refused(error);
+      throw error;
+    });
+  const { data } = await read(
+    connection.access.request({
+      path: `/repos/${item.repository}/issues/${item.number}`,
+    }),
+  );
   const pull = data.pull_request !== undefined;
-  const [comments, linked] = await Promise.all([
-    connection.issueTracker.comments(item.number),
-    pull ? [] : connection.pullRequests.closing(item.number),
+  const [comments, linked] = await together([
+    read(connection.issueTracker.comments(item.number)),
+    pull ? [] : read(connection.pullRequests.closing(item.number)),
   ]);
   const facts = {
     pull,
@@ -359,15 +484,19 @@ const readTracker = async (item, connection) => {
     linked: linked.map(({ url, state }) => ({ url, state })),
   };
   if (pull) {
-    const { data: detail } = await connection.access.request({
-      path: `/repos/${item.repository}/pulls/${item.number}`,
-    });
+    const { data: detail } = await read(
+      connection.access.request({
+        path: `/repos/${item.repository}/pulls/${item.number}`,
+      }),
+    );
     const head = detail.head.sha;
-    const [runs, statuses] = await Promise.all(
+    const [runs, statuses] = await together(
       ["check-runs?filter=all", "status"].map((path) =>
-        connection.access.requestPages({
-          path: `/repos/${item.repository}/commits/${head}/${path}`,
-        }),
+        read(
+          connection.access.requestPages({
+            path: `/repos/${item.repository}/commits/${head}/${path}`,
+          }),
+        ),
       ),
     );
     facts.head = head;
@@ -375,7 +504,12 @@ const readTracker = async (item, connection) => {
       runs: byId(
         runs
           .flatMap((page) => page.data.check_runs)
-          .map(({ id, name, status, conclusion }) => ({ id, name, status, conclusion })),
+          .map(({ id, name, status, conclusion }) => ({
+            id,
+            name,
+            status,
+            conclusion,
+          })),
       ),
       statuses: byId(
         statuses
@@ -418,10 +552,16 @@ const observationPath = async (workbench) => {
   return resolve(workbench, path.trim());
 };
 
-const saveObservation = async (workbench, facts) => {
+const loadObservation = async (workbench) =>
+  JSON.parse(readText(await observationPath(workbench)) ?? "{}");
+
+const saveObservation = async (workbench, facts, schedule) => {
   const path = await observationPath(workbench);
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, `${JSON.stringify({ facts: Object.fromEntries(facts) })}\n`);
+  writeFileSync(
+    path,
+    `${JSON.stringify({ ...schedule, facts: Object.fromEntries(facts) })}\n`,
+  );
 };
 
 // The workbench checkout's upstream, or null without a branch upstream.
@@ -537,10 +677,11 @@ const place = (facts) => {
   return ["mine", "no state the rules place"];
 };
 
-const status = async (options, { connectionOf, now, stdout }) => {
+const status = async (options, { readTrackers, now, stdout }) => {
   const { workbench } = options;
   const grillSkill = handSkill(options.stages, "Grill");
   const records = readRecords(workbench);
+  const { facts: saved = {}, ...schedule } = await loadObservation(workbench);
   const observed = new Map();
   const reads = new Map();
   const mine = [];
@@ -555,23 +696,33 @@ const status = async (options, { connectionOf, now, stdout }) => {
     } catch (error) {
       if (item.kind !== "launch")
         records.unavailable.push({ item: item.label, reason: error.message });
-      else line(running, `unavailable: ${item.label} (${error.message})`, item.brief);
+      else
+        line(
+          running,
+          `unavailable: ${item.label} (${error.message})`,
+          item.brief,
+        );
     }
-  await Promise.all(
-    records.watches
-      .filter(({ kind }) => kind === "tracker")
-      .map(async (item) => {
-        try {
-          reads.set(item.key, await readTracker(item, connectionOf(item.repository)));
-          observed.set(item.key, reads.get(item.key).facts);
-        } catch (error) {
-          reads.set(item.key, { error });
-        }
-      }),
+  const trackers = records.watches.filter(({ kind }) => kind === "tracker");
+  const result = await readTrackers(
+    trackers,
+    now() < cooldownUntil(schedule.cooldown) ? schedule.cooldown : undefined,
   );
+  if (result.cooldown) schedule.cooldown = result.cooldown;
+  for (const [index, item] of trackers.entries()) {
+    const read = result.reads[index];
+    reads.set(item.key, read);
+    if (read.facts) observed.set(item.key, read.facts);
+    else if (read.cooldown && Object.hasOwn(saved, item.key))
+      observed.set(item.key, saved[item.key]);
+  }
   for (const item of records.watches.filter(({ kind }) => kind === "tracker")) {
     const where = item.rows.join(", ");
-    const { facts, updatedAt, error } = reads.get(item.key);
+    const { facts, updatedAt, error, cooldown } = reads.get(item.key);
+    if (cooldown) {
+      mine.push(`- ${rateLimitLine(item, result.cooldown)}`);
+      continue;
+    }
     if (error) {
       line(mine, `unavailable: ${link(item)} (${error.message})`, where);
       continue;
@@ -606,9 +757,12 @@ const status = async (options, { connectionOf, now, stdout }) => {
   for (const entry of records.inbox)
     line(owner, `${entry.link} ${entry.heading}`, entry.plan);
   try {
-    await saveObservation(workbench, observed);
+    await saveObservation(workbench, observed, schedule);
   } catch (error) {
-    records.unavailable.push({ item: "observation file", reason: error.message });
+    records.unavailable.push({
+      item: "observation file",
+      reason: error.message,
+    });
   }
   for (const { item, reason } of records.unavailable)
     line(mine, `unavailable: ${item} (${reason})`, "—");
@@ -625,7 +779,10 @@ const status = async (options, { connectionOf, now, stdout }) => {
       ...group("Owner's move", owner),
       ...group("Running", running),
       `Waiting quietly: ${quiet.pickup} state:ready (pickup), ${quiet.delivery} open pull request (delivery), ${quiet["third party"]} state:reporter or state:carried (third party)`,
-      ...group(`Stale (unchanged for over ${options["stale-after"]} seconds)`, stale),
+      ...group(
+        `Stale (unchanged for over ${options["stale-after"]} seconds)`,
+        stale,
+      ),
     ].join("\n") + "\n",
   );
   return 0;
@@ -804,20 +961,21 @@ const existingAncestor = (path) => {
   return path;
 };
 
-const wait = async (options, { connectionOf, pause: pauseFor, now, stdout }) => {
+const wait = async (
+  options,
+  { readTrackers, pause: pauseFor, now, stdout },
+) => {
   const { workbench } = options;
   const startedAt = now();
   const limitMs = options["max-duration"] * 1000;
-  const baseline = new Map(
-    Object.entries(
-      JSON.parse(readText(await observationPath(workbench)) ?? "{}").facts ?? {},
-    ),
-  );
+  const { facts: saved = {}, ...schedule } = await loadObservation(workbench);
+  const baseline = new Map(Object.entries(saved));
+  const intervalMs = options.interval * 1000;
   const upstream = await upstreamOf(workbench);
   let held = [];
   const events = watchers();
-  let reason = "poll";
-  let pollAt;
+  let upstreamPollAt = startedAt;
+  const reportedLimits = new Set();
   try {
     for (;;) {
       events.consume();
@@ -854,39 +1012,72 @@ const wait = async (options, { connectionOf, pause: pauseFor, now, stdout }) => 
         baseline.set(item.key, facts);
       };
       for (const item of local) compare(item, readLocal(item), item.label);
+      const retryAt = cooldownUntil(schedule.cooldown, intervalMs);
+      const blocked = now() < retryAt;
+      const fullPoll = schedule.cooldown
+        ? !blocked
+        : schedule.trackerPollAt === undefined ||
+          now() >= schedule.trackerPollAt + intervalMs;
       const polled = items.filter(
         (item) =>
-          item.kind === "tracker" &&
-          (reason === "poll" || !baseline.has(item.key)),
+          item.kind === "tracker" && (fullPoll || !baseline.has(item.key)),
       );
-      const read = await Promise.all(
-        polled.map((item) => readTracker(item, connectionOf(item.repository))),
+      const result = await readTrackers(
+        polled,
+        blocked ? schedule.cooldown : undefined,
       );
-      for (const [index, item] of polled.entries())
-        compare(item, read[index].facts, link(item, read[index].facts));
-      if (upstream && reason === "poll") {
-        const commits = await unheldCommits(upstream, local);
-        for (const commit of commits)
-          if (!held.includes(commit))
-            lines.push(`upstream commit ${commit} not yet pulled`);
-        held = commits;
+      if (result.cooldown) schedule.cooldown = result.cooldown;
+      const failure = result.reads.find((read) => read.error);
+      if (failure) {
+        await saveObservation(workbench, baseline, schedule);
+        throw failure.error;
       }
-      if (reason === "poll") pollAt = now() + options.interval * 1000;
+      if (fullPoll && !blocked) {
+        schedule.trackerPollAt = now();
+        if (!result.cooldown) delete schedule.cooldown;
+      }
+      for (const [index, item] of polled.entries()) {
+        const read = result.reads[index];
+        if (read.facts) compare(item, read.facts, link(item, read.facts));
+      }
+      if (blocked || result.cooldown) {
+        for (const item of items.filter(({ kind }) => kind === "tracker")) {
+          const index = polled.indexOf(item);
+          if (index >= 0 && result.reads[index].facts) continue;
+          const line = rateLimitLine(item, schedule.cooldown);
+          if (!reportedLimits.has(line)) {
+            stdout.write(`${line}\n`);
+            reportedLimits.add(line);
+          }
+        }
+      }
+      if (now() >= upstreamPollAt) {
+        if (upstream) {
+          const commits = await unheldCommits(upstream, local);
+          for (const commit of commits)
+            if (!held.includes(commit))
+              lines.push(`upstream commit ${commit} not yet pulled`);
+          held = commits;
+        }
+        upstreamPollAt = now() + intervalMs;
+      }
+      await saveObservation(workbench, baseline, schedule);
       const deadline = startedAt + limitMs;
       if (!lines.length && now() >= deadline)
         lines.push(
           `no item changed within the maximum duration of ${options["max-duration"]} seconds; arm the wait again`,
         );
       if (lines.length) {
-        await saveObservation(workbench, baseline);
         stdout.write(`${lines.join("\n")}\n`);
         return 0;
       }
-      const woke = await pauseFor(
-        Math.max(Math.min(pollAt, deadline) - now(), 0),
+      const trackerPollAt = schedule.cooldown
+        ? cooldownUntil(schedule.cooldown, intervalMs)
+        : (schedule.trackerPollAt ?? -Infinity) + intervalMs;
+      await pauseFor(
+        Math.max(Math.min(trackerPollAt, upstreamPollAt, deadline) - now(), 0),
         events.next(),
       );
-      reason = woke === "event" ? "event" : "poll";
     }
   } finally {
     events.close();
@@ -897,11 +1088,13 @@ const wait = async (options, { connectionOf, pause: pauseFor, now, stdout }) => 
 // the GitHub CLI's current credential; `pause` waits a number of
 // milliseconds, resolving "event" early when the given file-event promise
 // does; `input` reads brief's Context; `now` gives the time; `stdout` and `stderr` receive the lines. Each is
-// replaceable for fixtures.
+// replaceable for fixtures. `fetch` is the underlying transport, always behind
+// this command's shared queue; `connect` forwards its fetch option to Postern.
 export const main = async (
   argv = process.argv.slice(2),
   {
     connect = connectionFor,
+    fetch = globalThis.fetch,
     pause: pauseFor = pause,
     stdout = process.stdout,
     stderr = process.stderr,
@@ -916,18 +1109,18 @@ export const main = async (
     stderr.write(`${error.message}\n`);
     return 1;
   }
-  const connections = new Map();
-  const connectionOf = (repository) => {
-    const key = repository.toLowerCase();
-    if (!connections.has(key)) connections.set(key, connect(repository));
-    return connections.get(key);
-  };
+  const readTrackers = trackerReader(connect, fetch, now);
   try {
     if (options.command === "brief")
-      return await brief(options, { connectionOf, input, now, stdout });
+      return await brief(options, {
+        connectionOf: connect,
+        input,
+        now,
+        stdout,
+      });
     return options.command === "status"
-      ? await status(options, { connectionOf, now, stdout })
-      : await wait(options, { connectionOf, pause: pauseFor, now, stdout });
+      ? await status(options, { readTrackers, now, stdout })
+      : await wait(options, { readTrackers, pause: pauseFor, now, stdout });
   } catch (error) {
     stderr.write(`workbench.mjs: ${error.message}\n`);
     return 1;
