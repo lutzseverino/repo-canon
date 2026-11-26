@@ -1,9 +1,8 @@
-// Disposable public-CLI fixtures for the check-location selection. The source
-// serves the candidate at v1.0.0 and v1.1.0 and, at v0.9.0, the same content
-// without check-location keys or the update command and with the CLI 10
-// minimum, so CLI 10 can record
-// a legacy selection without `checks`. Only GitHub HTTP and Git transport use
-// local fixtures; the adoptions and updates run the published CLI.
+// Disposable public-CLI fixtures for the check-location selection. The
+// candidate is published at v1.0.0 and v1.1.0. The CLI 11 baseline at v0.10.0
+// has no update command. The older v0.9.0 also lacks check locations, so CLI 10
+// can record a legacy selection without `checks`. Only GitHub HTTP and Git
+// transport use local fixtures; the adoptions and updates run published CLIs.
 
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -40,6 +39,7 @@ export const repoCanonWorkflows = {
   ],
 };
 export const legacyVersion = "v0.9.0";
+export const previousVersion = "v0.10.0";
 export const version = "v1.0.0";
 export const nextVersion = "v1.1.0";
 // The operative runner expression the retired variable needed.
@@ -64,11 +64,12 @@ export function checkLocationSource(t, root, directory) {
   const { source, env, git, publish } = fixtureSource(directory, validation);
   const manifestPath = join(source, "standards.yaml");
   const manifest = readFileSync(manifestPath, "utf8");
-  const legacy = manifest
-    .replace('repo-standards: ">=12.0.0"', 'repo-standards: ">=10.0.0"')
-    .replace(/^ *check-locations: .*\n/gm, "")
+  const previous = manifest
+    .replace('repo-standards: ">=12.0.0"', 'repo-standards: ">=11.0.0"')
     .replace(/^update-command: .*\n/m, "");
-  assert.notEqual(legacy, manifest);
+  const legacy = previous
+    .replace('repo-standards: ">=11.0.0"', 'repo-standards: ">=10.0.0"')
+    .replace(/^ *check-locations: .*\n/gm, "");
   assert.doesNotMatch(legacy, /check-locations/);
   const commit = (...args) =>
     git(source, "-c", "commit.gpgsign=false", "commit", "--quiet", ...args);
@@ -76,12 +77,15 @@ export function checkLocationSource(t, root, directory) {
   writeFileSync(manifestPath, legacy);
   commit("-am", "Legacy selection");
   tag(legacyVersion);
-  writeFileSync(manifestPath, manifest);
+  writeFileSync(manifestPath, previous);
   commit("-am", "Check locations");
+  tag(previousVersion);
+  writeFileSync(manifestPath, manifest);
+  commit("-am", "Off-Actions update command");
   tag(version);
   commit("--allow-empty", "-m", "Next release");
   tag(nextVersion);
-  publish([nextVersion, version, legacyVersion]);
+  publish([nextVersion, version, previousVersion, legacyVersion]);
   Object.assign(process.env, env);
   return { cli, validation };
 }

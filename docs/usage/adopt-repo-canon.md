@@ -103,7 +103,9 @@ Nothing bypasses the required-check, freshness or review gates.
 
 A fresh adoption asks for the location. An adoption recorded before Repo Canon
 offered locations carries no choice and continues at `github`; its next
-completed run records `github` explicitly. Later updates, including headless
+completed run records `github` explicitly. For a CLI 10 adoption, first update
+with CLI 11 to a Repo Canon release it supports to carry the adoption record
+into CLI 12. Later updates, including headless
 automated updates, keep the recorded location. To change it, run `adopt` with
 `--checks <location>` or answer `checks` differently: the update reports the
 changed location and removes or adds Repo Canon's workflow files under ordinary

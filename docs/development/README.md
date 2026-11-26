@@ -128,8 +128,8 @@ locations through `--checks` and the `checks` answer, the off-Actions command
 in `outdated --json`, and location switches that
 remove and restore Repo Canon's workflows while repository-owned files
 survive, a headless update that keeps its location, and a legacy selection
-recorded by public CLI 10 that continues at `github`. They also inventory the source
-for the retired runner variable.
+recorded by public CLI 10 that continues at `github` through CLI 11 and CLI 12.
+They also inventory the source for the retired runner variable.
 Run `node --test test/workbench-profile.test.mjs` for the `workbench` profile.
 It reads `standards.yaml` and fails when the profile would select any default
 declaration besides the workflow skills, the files their executables import

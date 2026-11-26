@@ -17,6 +17,12 @@ gates selection only and an exact one strands adopters. Format version and CLI
 version are distinct, and the format version carries compatibility with CLI
 releases above the floor.
 
+Repository Standards CLI 12 updates the adoption records written by CLI 11.
+To carry a CLI 10 adoption forward, first update with CLI 11 to a Repo Canon
+release it supports, then update to this release with CLI 12. For other
+retired record formats, see the CLI's
+[fresh-adoption procedure](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/reference/adoption-run.md#adopt-fresh-from-a-retired-format).
+
 | Accepted requirement                                            | Supported mapping                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Exact shared files and complete skill directories               | Exact file and skill declarations; retain disjoint ownership.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -93,8 +99,8 @@ metadata workflow. At `runner` and `self-reported`, the
 keeps the repository current. The runner or maintainer schedules it.
 Repository Standards retains the source's `update-command` at adoption and
 reports it through `outdated` at both locations. The `repository-standards`
-skill names the command when an update is available. At `github`, the
-workflow runs updates and `outdated` omits the command.
+skill names the command when an update is available. At `github`, updates
+use the opt-in workflow and `outdated` omits the command.
 Sources:
 [author format](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/reference/author-format.md#check-locations),
 [adoption run](https://github.com/lutzseverino/repo-standards/blob/v12.0.0/docs/usage/reference/adoption-run.md#choose-the-check-location),
