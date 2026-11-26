@@ -1,5 +1,11 @@
 # Watch instead of launching; a factory session performs the factory gaps
 
+Status: superseded (2026-11-26) by
+[ADR 0055](0055-delegate-downstream-decisions-with-five-maintainer-escalations.md), which records the owner's
+2026-11-19 drop of #1040, #1045 and #1048 ("yes to all"), ending the watch-only
+orchestrator and factory-session bridge. The original decision text below is
+kept as history.
+
 Status: supersedes [ADR 0037](0037-act-in-repositories-only-through-launches.md)
 and the launch and intake-model-label responsibilities in
 [ADR 0036](0036-launch-hand-stages-with-identifiers-only.md). Amended by

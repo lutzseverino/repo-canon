@@ -1,5 +1,11 @@
 # Start owner-facing work; the factory session is a bridge with removal conditions
 
+Status: superseded (2026-11-26) by
+[ADR 0055](0055-delegate-downstream-decisions-with-five-maintainer-escalations.md), which records the owner's
+2026-11-19 drop of #1040, #1045 and #1048 ("yes to all"), ending the
+factory-session bridge. Owner-facing work continues under its surviving
+decision-rights rule. The original decision text below is kept as history.
+
 Status: accepted (2026-11-13); amends
 [ADR 0040](0040-watch-instead-of-launching.md).
 

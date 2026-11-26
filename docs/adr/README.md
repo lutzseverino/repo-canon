@@ -152,10 +152,13 @@ involve real alternatives.
 - [Watch instead of launching; a factory session performs the factory gaps](0040-watch-instead-of-launching.md):
   the orchestrating agent launches only the factory session, which works from
   the tracker and the factory's status alone; supersedes ADR 0037; amended by
-  ADR 0046.
+  ADR 0046; superseded by the recorded fates in ADR 0055.
 - [Answer in the owner's place except reserved decisions, by one bundled operating model](0041-answer-in-the-owners-place-except-reserved-decisions.md):
   the skill holds decision rights, principles and format; the workbench holds
-  only owner values and decision records.
+  only owner values and decision records; its decision boundary, end of veto
+  lists and bundled operating model are superseded by ADR 0055. Plan approval
+  and approval reuse, and `state:owner` for what only the maintainer can decide,
+  still hold.
 - [Keep agent guidance a stable map](0042-keep-agent-guidance-a-stable-map.md):
   `AGENTS.md` links where each rule lives, including the installed rules at
   the start of work, and holds no rule text.
@@ -173,7 +176,7 @@ involve real alternatives.
 - [Start owner-facing work; the factory session is a bridge with removal conditions](0046-start-owner-facing-work-and-bridge-factory-gaps.md):
   the grill, retro, Done check and architecture review stay with the
   orchestrating agent; each factory-session stage names what removes it;
-  amends ADR 0040.
+  amends ADR 0040; superseded by the recorded fates in ADR 0055.
 - [Read nothing Scriptorium owns](0047-read-nothing-scriptorium-owns.md):
   Repo Canon's scripts use its own labels and contract sections, and
   Scriptorium owns the formats of its configuration, model policy and footer;
@@ -202,3 +205,10 @@ involve real alternatives.
 - [Trust the runner account a repository variable names](0054-trust-the-runner-account-a-repository-variable-names.md):
   `REPO_CANON_RUNNER_ACCOUNT` names the only account whose results count at
   `runner`, and readiness at `self-reported` stays with the owner; amends ADR 0034.
+- [Delegate downstream decisions with five maintainer escalation cases](0055-delegate-downstream-decisions-with-five-maintainer-escalations.md):
+  the maintainer approves goals and Done means; their agent decides downstream
+  with different-provider review and next-update veto reporting; supersedes
+  ADR 0041's decision boundary, end of veto lists and bundled operating model,
+  and #1039 GO-D3. Plan approval and approval reuse, and `state:owner` for what
+  only the maintainer can decide, still hold; its recorded 2026-11-19 fates
+  supersede ADRs 0040 and 0046.

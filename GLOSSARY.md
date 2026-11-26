@@ -92,43 +92,49 @@ Brief.
 _Avoid_: Bug, when meaning the triage path
 
 **Intent-bound request**:
-An intake request whose missing answer is the owner's intent, a policy, or a
-trade-off they choose, whatever its category label, so its Agent Brief is
-written from the owner's recorded decisions and any inferred intent.
+An intake request whose missing answer concerns intent, policy or a trade-off,
+whatever its category label, so its Agent Brief relies on recorded decisions
+and qualifying inferred intent. Reserved decisions require the maintainer;
+other downstream choices belong to their delegated agent. Without a delegated
+agent, the maintainer decides.
 _Avoid_: Feature request, when meaning the triage path
 
 **Orchestrating agent**:
-The agent a maintainer runs to talk with them: it takes their ideas through
-intake, schedules grilling sessions, answers questions in their place except
-reserved decisions, and watches the work through the tracker and the factory's
-status. It starts only the factory session and owner-facing work, changes no
-label and runs no repository's scripts; on an issue it posts only the record
-of an owner decision, a superseded issue's fate, or new evidence on an
-existing finding.
+An agent the maintainer runs to take approved goals through strategic
+implementation and an evidenced close; it can hold the role of the maintainer's
+delegated agent. That role decides downstream with independent review by a
+different provider and lists decisions for veto in its next update, with silence
+standing and reserved decisions going to the maintainer; it does not require an
+orchestrating agent.
 _Avoid_: Factory, factory session, research run
 
 **Reserved decision**:
-A decision the orchestrating agent never takes in the owner's place: intent a
-grill settles, unless the owner hands that grill over; a grant, credential,
-billing step or one needing the owner's device or presence; a change to the
-orchestrating agent's own powers or operating model, which always goes to a
-grill with the owner even when other grill questions are delegated; a major
-release or a second deferral of release scope; and anything that would carry the owner's
-private setup into a repository.
-_Avoid_: Owner question, when meaning the class; veto item
+One of five cases requiring a grill with the maintainer:
+
+1. The maintainer asks.
+2. A decision changes what the maintainer asked for: the goal, a Done-means
+   clause, or dropping something wanted.
+3. It is hard to reverse and reaches outside the maintainer's own repositories:
+   names or formats others' code depends on, a breaking release for outside
+   users, deleting repositories or data, money or new accounts, or a security
+   trade-off adopters live with.
+4. It needs the maintainer's taste, credential, device or presence.
+5. Two recorded maintainer decisions conflict and neither code nor records
+   settle which wins.
+
+_Avoid_: Every grill question; every persistent implementation choice
 
 **Owner values**:
-The owner's settings for the orchestrating agent, such as their timezone,
-quiet hours and additions to or narrowings of the reserved decisions, kept in
-the workbench in the format the orchestrating agent's skill defines and its
-scripts validate. They hold values, never rules.
-_Avoid_: Standing rules, preferences
+A historical term for the validated settings store in the dropped bundled
+operating model. The surviving design uses recorded maintainer decisions,
+without that engine.
+_Avoid_: Current configuration contract, standing rules
 
 **Inferred intent**:
-An answer to an intent question settled under the contribution guide's
-inference test, which the Agent Brief states as behavior and its triage notes
-cite with a date.
-_Avoid_: Assumption, agent's choice
+An answer a triager settles under the planning inference test, stated as
+behavior in the Agent Brief and cited with a date in triage notes. The test
+limits the triager, while remaining questions follow the decision-rights rule.
+_Avoid_: Assumption, every delegated agent decision
 
 **Decision inbox**:
 The single list of decisions open for the owner, kept by the orchestrating
@@ -157,20 +163,17 @@ amendment requirements.
 _Avoid_: Conversational amendment
 
 **Factory gap**:
-A pipeline stage the factory cannot yet perform for a repository, which the
-factory session performs by hand in that repository with the stage's hand
-skill, to the same contract, and logs. Intake and the grill, which need the
-owner, are never factory gaps.
+A pipeline stage the factory cannot perform for a repository, which the
+maintainer or their delegated agent arranges through that stage's hand skill
+to the same contract. Intake and the grill, which need the maintainer or their
+delegated agent, are never factory gaps; a gap does not require a separate
+factory session.
 _Avoid_: Manual override, workaround
 
 **Factory session**:
-An agent session that performs the factory gaps, reading only the tracker and
-the factory's status and writing only to the tracker; the orchestrating agent
-starts it and revives it when it stops. It is a bridge: each stage it performs
-names the factory ticket that removes it, or a recorded decision that keeps
-the stage outside the factory. On a host without a factory, every stage is its
-gap.
-_Avoid_: Gap session, back session, orchestrator
+The historical bridge that performed factory gaps from tracker state and
+factory status; it was dropped with the watch-only operating model.
+_Avoid_: Current executor, orchestrating agent
 
 **Launch report**:
 The workbench record of a launched stage whose output is a workbench record,
@@ -208,10 +211,10 @@ the Done check is a gate before Close, never a Close review.
 _Avoid_: Done gate, completion audit, closing check
 
 **Owner-facing work**:
-Work the orchestrating agent starts because it reads the owner or the private
-plans: the grill, the retro, the Done check and the architecture review, a
-closed list. It is never a pipeline stage or a factory gap.
-_Avoid_: Workbench stage; hand launch, when meaning this work
+Work grounded in the maintainer's ideas or private plans, such as a grill,
+retro, Done check or architecture review. A reserved decision determines when
+the maintainer must answer; downstream grills can be answered by their agent.
+_Avoid_: Every grill, factory gap
 
 **Fate**:
 The recorded outcome, posted on an open issue, of a newer decision that

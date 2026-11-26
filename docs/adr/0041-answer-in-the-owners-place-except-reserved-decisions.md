@@ -1,5 +1,13 @@
 # Answer in the owner's place except reserved decisions, by one bundled operating model
 
+Status: superseded in part (2026-11-26) by
+[ADR 0055](0055-delegate-downstream-decisions-with-five-maintainer-escalations.md):
+its decision boundary (the reserved-decision list), the end of veto lists and
+the bundled operating model are superseded. Plan approval and approval reuse,
+and `state:owner` for what only the maintainer can decide, still hold. The
+validated owner-values engine was dropped with #1048 (owner, 2026-11-19,
+"yes to all"). The original decision text below is kept as history.
+
 Status: supersedes the orchestrating agent's inference-test decision boundary
 and owner-veto reporting in
 [ADR 0025](0025-infer-cited-intent-and-route-owner-questions-through-one-inbox.md).
