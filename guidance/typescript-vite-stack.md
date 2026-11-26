@@ -26,10 +26,10 @@ question through the orchestrator.
 ## Check and assessment boundary
 
 The read-only check verifies Node's package-manager, lockfile, engines,
-oxlint, Prettier and per-Project `validate` facts. It also checks the Astro
-formatter plugin's availability for Sites and shadcn at the evidenced holder:
+oxlint, Prettier and per-Project `validate` facts. It also checks shadcn at the
+evidenced holder:
 `components.json`, `base-*`, lucide, an exact major-4 shadcn devDependency and
-`ui:add`, `ui:update`, `ui:check`. A Site/App without a holder fails. A shared
+`ui:add`, `ui:update`, `ui:check`. An App without a holder fails. A shared
 package without UI needs no registry or scripts of its own. Workspace dependency
 edges evidence a centralized holder without duplicate consumer registries;
 confirm that relationship contextually. Default/named catalogs resolve tools
