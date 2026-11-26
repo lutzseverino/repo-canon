@@ -105,7 +105,7 @@ implementation and an evidenced close; it can hold the role of the maintainer's
 delegated agent. That role decides downstream with independent review by a
 different provider and lists decisions for veto in its next update, with silence
 standing and reserved decisions going to the maintainer; it does not require an
-orchestrator.
+orchestrating agent.
 _Avoid_: Factory, factory session, research run
 
 **Reserved decision**:
