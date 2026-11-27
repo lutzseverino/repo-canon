@@ -18,8 +18,11 @@ gap missing its hand skill by hand under its gap line and note the missing skill
 Context on standard input: issue links, evidence (including status JSON), recorded decisions with dates
 and quoted words, scope and deliverables, and destinations beyond the workspace. Start the session with
 the brief's skill invocation and the printed brief. The brief and its report are the launch's wait; on
-resumption generate a fresh brief. The report's final line is the only completion mark: record the
-row's new state when you consume it.
+resumption generate a fresh brief. On every hand launch, append a dated, free-form
+announcement to the plan's `log.md`, naming the brief and its pending report. The
+announcement is never parsed and cannot consume the report. The report's final line
+is the only completion mark; consume it by appending its
+[receipt](templates.md#planmd-and-logmd) with the row's new state.
 Immediately before **every** launch, read validated Scriptorium status **once**, from that host's
 installation:
 

@@ -134,7 +134,21 @@ merges point rows at one issue, only the owner drops one. A row ends when its St
 starts with `closed` (its issue), `merged` (an expedited row's PR), `moved` or `dropped (owner)`;
 status watches every issue and PR linked on other rows. A launch brief, which `workbench brief` writes, is a plan-directory file with a
 `Launch report: <path>` line, absolute or relative to that directory; its report finishes at its exact
-final `status: done` line. Consume a report by naming its file in `log.md`, only then, with the row's new state. State holds its latest step/session/PR; expedited states start with `expedited`. Close only once every Done-means clause is met; end remaining open rows as `moved` or `dropped (owner)` as the Close reference says.
+final `status: done` line. Consume a completed report by appending a receipt to that
+plan's `log.md`, with the row's new state:
+
+```markdown
+- 2026-11-27T03:00Z Consumed: report-01.md Row ready for review.
+```
+
+The receipt starts with `Consumed:`, optionally preceded by a Markdown list marker
+and then an optional UTC timestamp (`YYYY-MM-DDTHH:MMZ`). Name the report path as
+the brief's `Launch report:` gives it, bare, in backticks or as a Markdown link's
+target. A bare path ends at the first whitespace; wrap paths containing whitespace.
+Text after the path is free. Resolve the path against this plan's directory; only
+a receipt for the complete resolved report path consumes that launch.
+
+State holds its latest step/session/PR; expedited states start with `expedited`. Close only once every Done-means clause is met; end remaining open rows as `moved` or `dropped (owner)` as the Close reference says.
 Count/report open issues at start/close with no limit. Append to `log.md`, never rewrite: record every plan-filed issue with repository,
 number and creation evidence, including one a run opens outside the goal; retain each factory/direct run's issue, run and PR. Date entries from the UTC
 clock (`date -u +%Y-%m-%dT%H:%MZ`), never by hand.

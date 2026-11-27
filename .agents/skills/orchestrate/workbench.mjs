@@ -259,10 +259,15 @@ const readText = (path) => {
   }
 };
 
-// Whether the text names the file as a whole name, so `report.md` is not
-// named by `grill-report.md`.
-const names = (text, file) =>
-  new RegExp(`(?<![\\w.-])${RegExp.escape(file)}(?![\\w-])`).test(text);
+// Receipts belong to the brief's plan and name the complete resolved report path.
+// Seam (deferred): plan-log receipts; consumers: 1 (launch scan); extract at 3.
+const receiptPattern =
+  /^[ \t]*(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z[ \t]+)?Consumed:[ \t]+(?:`([^`]+)`|\[[^\]]*\]\(([^)]+)\)|(\S+))/;
+const consumed = (log, directory, path) =>
+  log.split(/\r?\n/).some((line) => {
+    const receipt = receiptPattern.exec(line);
+    return receipt && resolve(directory, receipt[1] ?? receipt[2] ?? receipt[3]) === path;
+  });
 
 // The report a brief names, relative to the brief's own directory.
 const reportOf = (brief) => {
@@ -372,7 +377,7 @@ function readRecords(workbench) {
         if (!named) continue;
         const path = resolve(directory, named);
         const known = records.launches.some((launch) => launch.path === path);
-        if (known || names(log, basename(path))) continue;
+        if (known || consumed(log, directory, path)) continue;
         records.launches.push(
           local("launch", path, {
             brief: `${name}/${entry.name}`,
