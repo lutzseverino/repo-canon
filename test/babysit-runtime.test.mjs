@@ -17,6 +17,7 @@ import {
   runtimeFiles,
   runtimeContents,
   runtimeDirectory,
+  runtimePath,
 } from "../scripts/babysit-runtime.mjs";
 import { skillProblems } from "../scripts/owned-skill-reads.mjs";
 import { fileURLToPath } from "node:url";
@@ -54,10 +55,14 @@ test("shipped runtime matches every canonical owner and retains all license noti
       join(entry.parentPath, entry.name).slice(fileURLToPath(directory).length),
     )
     .sort();
-  assert.deepEqual(files, [...runtimeFiles, "package.json"].sort());
+  assert.deepEqual(files, runtimeFiles.map(runtimePath).sort());
+  assert.ok(
+    !files.some((path) => path.endsWith("package.json")),
+    "runtime must not introduce a discoverable Project manifest",
+  );
   for (const path of runtimeFiles) {
     assert.equal(
-      readFileSync(new URL(path, directory), "utf8"),
+      readFileSync(new URL(runtimePath(path), directory), "utf8"),
       runtimeContents(fileURLToPath(root), path),
       path,
     );

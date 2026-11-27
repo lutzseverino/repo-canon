@@ -183,7 +183,9 @@ startup and exact runtime-copy and license preservation. When a canonical
 runtime dependency changes, regenerate the mirror with
 `node scripts/babysit-runtime.mjs write`; the test refuses stale or extra files.
 The generator preserves upstream bundle bytes and rewrites only the contract
-store's imports back to the installed babysit connection and check helpers.
+store's imports back to the installed babysit connection and check helpers,
+and parser imports to explicit `.mjs` copies. No package manifest is shipped,
+so installation adds no project-discovery question.
 Run
 `node --test test/babysit-wait.test.mjs` for the `babysit` wait script's
 decision, driven by reviewer data fixtures (including real summary comments),

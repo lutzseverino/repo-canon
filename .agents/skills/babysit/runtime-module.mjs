@@ -7,5 +7,5 @@ const adopted = existsSync(new URL("./postern/postern.mjs", canonicalVendor));
 export function runtimeModule(path) {
   return adopted
     ? new URL(path.slice("vendor/".length), canonicalVendor).href
-    : new URL(`./runtime/${path}`, import.meta.url).href;
+    : new URL(`./runtime/${path.replace(/(?<=\.)js$/, "mjs")}`, import.meta.url).href;
 }

@@ -4,7 +4,7 @@ import { setTimeout as wait } from "node:timers/promises";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { PlatformError } from "../postern/postern.mjs";
-import { lexer } from "../marked/marked.esm.js";
+import { lexer } from "../marked/marked.esm.mjs";
 import { canonicalLabelName } from "../../operations/lib/canonical-labels.mjs";
 import {
   interpretMarkdown,

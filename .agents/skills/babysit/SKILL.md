@@ -20,7 +20,7 @@ continuation rules first. An authorized stopped-run continuation enters
 retaining the waiting marker as installed rules direct.
 
 Use Node.js 24 or 26, Git 2.38 or newer, and the authenticated GitHub CLI.
-Install this entire skill directory, including its shipped [runtime](runtime/package.json) and
+Install this entire skill directory, including its shipped [runtime](runtime/LICENSE) and
 license notices; no npm install or adoption is needed for command startup.
 If a command cannot start, stop and report the startup error, the PR and full
 head SHA left untouched, and the remedy: repair the runtime, then rerun.

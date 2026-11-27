@@ -26,11 +26,21 @@ export const runtimeFiles = [
 ];
 export const runtimeDirectory = ".agents/skills/babysit/runtime";
 
+export function runtimePath(path) {
+  return path.replace(/\.js$/, ".mjs");
+}
+
 export function runtimeContents(root, path) {
   let contents = readFileSync(join(root, path), "utf8");
   if (path === "scripts/issue-contract-store.mjs") {
     // Reuse the installed skill's connection and check interpretation in cycles.
     contents = contents.replaceAll("../.agents/skills/babysit/", "../../");
+  }
+  if (path.endsWith(".mjs")) {
+    // Explicit ESM extensions avoid a package manifest that discovery treats as a Project.
+    contents = contents
+      .replaceAll('/marked.esm.js"', '/marked.esm.mjs"')
+      .replaceAll('/parse5.esm.js"', '/parse5.esm.mjs"');
   }
   return contents;
 }
@@ -43,12 +53,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
   rmSync(join(root, runtimeDirectory), { recursive: true, force: true });
   for (const path of runtimeFiles) {
-    const destination = join(root, runtimeDirectory, path);
+    const destination = join(root, runtimeDirectory, runtimePath(path));
     mkdirSync(dirname(destination), { recursive: true });
     writeFileSync(destination, runtimeContents(root, path));
   }
-  writeFileSync(
-    join(root, runtimeDirectory, "package.json"),
-    '{"type":"module"}\n',
-  );
 }

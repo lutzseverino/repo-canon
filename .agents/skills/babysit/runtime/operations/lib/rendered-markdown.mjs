@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { marked, Renderer } from "../../vendor/marked/marked.esm.js";
-import { parseFragment } from "../../vendor/parse5/parse5.esm.js";
+import { marked, Renderer } from "../../vendor/marked/marked.esm.mjs";
+import { parseFragment } from "../../vendor/parse5/parse5.esm.mjs";
 
 const blockElements = new Set([
   "address",
