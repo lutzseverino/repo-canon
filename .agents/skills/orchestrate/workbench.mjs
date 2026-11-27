@@ -1019,9 +1019,13 @@ const brief = async (options, { connectionOf, input, now, stdout }) => {
     if (["Specification", "Tickets", "Implement"].includes(stage) && facts.state !== "open")
       throw new Error(`stage ${stage} is refused for target ${target}: ${facts.state}`);
   }
+  // Only a Close review's architecture review names a bare <owner>/<name>.
   const repository = tracked
     ? tracked.repository
-    : /^[\w.-]+\/[\w.-]+$/.test(target) && target;
+    : stage === "Close" &&
+      row === "Close reviews" &&
+      /^[\w.-]+\/[\w.-]+$/.test(target) &&
+      target;
   // Numbered until neither the brief nor its report exists.
   const date = new Date(now()).toISOString().slice(0, 10);
   const stem = `brief-${slug(stage)}-${slug(target)}-${date}`;

@@ -3451,6 +3451,30 @@ test("brief never names an existing brief or report, numbering the name instead"
   );
 });
 
+test("brief gives plan rows and bare repositories outside a Close review no worktree", async (t) => {
+  const plan = workbench(t).path("review");
+  for (const [stage, target, row, name] of [
+    ["Grill", "plan-a/skill-size", "skill-size", "grill-plan-a-skill-size"],
+    ["Close", "plan-a/skill-size", "skill-size", "close-plan-a-skill-size"],
+    ["Grill", "example/tracker", "Close reviews", "grill-example-tracker"],
+  ]) {
+    await t.test(`${stage} ${target} in ${row}`, async () => {
+      const { code, stdout, stderr } = await runBrief(
+        briefArgs(plan, stage, target, { "--row": row }),
+      );
+      assert.equal(code, 0, stderr);
+      assert.equal(
+        fields(stdout).Workspace,
+        "no worktree; read the workbench and the tracker, and write in the workbench only the report",
+      );
+      assert.equal(
+        readFileSync(join(plan, `brief-${name}-2026-11-20.md`), "utf8"),
+        stdout,
+      );
+    });
+  }
+});
+
 test("a Close brief gives the retro no worktree and an architecture review its repository's worktree", async (t) => {
   const bench = workbench(t);
   const plan = bench.path("review");
