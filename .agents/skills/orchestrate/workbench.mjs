@@ -1019,6 +1019,7 @@ const brief = async (options, { connectionOf, input, now, stdout }) => {
     if (["Specification", "Tickets", "Implement"].includes(stage) && facts.state !== "open")
       throw new Error(`stage ${stage} is refused for target ${target}: ${facts.state}`);
   }
+  // Only a Close review's architecture review names a bare <owner>/<name>.
   const repository = tracked
     ? tracked.repository
     : stage === "Close" &&

@@ -3451,7 +3451,7 @@ test("brief never names an existing brief or report, numbering the name instead"
   );
 });
 
-test("brief gives row-scoped work no repository worktree", async (t) => {
+test("brief gives plan rows and bare repositories outside a Close review no worktree", async (t) => {
   const plan = workbench(t).path("review");
   for (const [stage, target, row, name] of [
     ["Grill", "plan-a/skill-size", "skill-size", "grill-plan-a-skill-size"],
