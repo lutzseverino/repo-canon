@@ -188,9 +188,12 @@ skill's `workbench` status and wait over fixture workbenches: status grouping,
 Done-means marks, unavailable facts and Stale; tracker, record, launch report and
 `incoming/` wakes; the saved observation baseline; live record reload; and real
 file-system events waking well below the interval. Published Postern transport
-fixtures preserve issue/PR state, comments, linked-PR, head and raw check
-observations; real temporary Git repositories cover incoming upstream commits
-(including fetched-but-unpulled commits), nested-only changes and fetch
+fixtures cover per-repository GraphQL batches, complete connection pagination
+and chunk boundaries, closed-state reads and reopen refreshes, explicit partial
+failures with alias-scoped errors isolated to their items, and the shared HTTP
+cap and persisted cadence/cooldown. They preserve issue/PR state, comments,
+linked-PR, head and raw check observations; real temporary Git repositories
+cover incoming upstream commits (including fetched-but-unpulled commits), nested-only changes and fetch
 failures. Fixtures cover required finite positive durations, timeout exit 0,
 errors exit 1 and plain Node execution without runtime packages.
 Run `node --test test/required-checks.test.mjs test/babysit-merge.test.mjs`

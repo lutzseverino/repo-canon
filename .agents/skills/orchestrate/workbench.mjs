@@ -40,10 +40,10 @@ class TrackerPaused extends Error {
   name = "TrackerPaused";
 }
 
-// Seam (deferred): tracker read concurrency; consumers: 1; extract at 3
-// Slots cover the response body too. Let Postern classify each completed
-// exchange before dispatching queued work, so its rateLimited verdict stops
-// the whole pass without duplicating its HTTP/GraphQL error classification.
+// Seam (deferred): tracker batching and transport concurrency; consumers: 1; extract at 3
+// Slots cover the response body too. Let each completed exchange be classified
+// before dispatching queued work: Postern handles HTTP errors and the tracker
+// adapter handles GraphQL envelopes, sharing the same rate-limit refusal.
 const trackerReader = (connect, transport, now) => {
   const pending = [];
   const connections = new Map();
@@ -101,27 +101,29 @@ const trackerReader = (connect, transport, now) => {
       { cooldown: { observedAt: now(), ...(error.retryAt ? { retryAt: error.retryAt } : {}) } },
     ).cooldown;
   };
-  return async (items, cooldown) => {
+  return async (items, cooldown, saved = {}) => {
     // Every pass settles before another starts; slots released on the next
     // event-loop turn are still counted across pass boundaries.
     refusal = cooldown;
-    const reads = await Promise.all(
-      items.map(async (item) => {
-        try {
-          if (refusal) return { cooldown: refusal };
-          return await readTracker(
-            item,
-            connectionOf(item.repository),
-            refused,
-          );
-        } catch (error) {
-          if (error.reason === "rateLimited") {
-            return { cooldown: refusal };
-          }
-          return paused(error) ? { cooldown: refusal } : { error };
-        }
-      }),
+    const reads = Array.from({ length: items.length });
+    const repositories = new Map();
+    for (const item of items) {
+      const key = item.repository.toLowerCase();
+      if (!repositories.has(key)) repositories.set(key, []);
+      repositories.get(key).push(item);
+    }
+    const batches = [...repositories.values()].flatMap((group) =>
+      Array.from({ length: Math.ceil(group.length / trackerBatchSize) }, (_, index) => group.slice(index * trackerBatchSize, (index + 1) * trackerBatchSize)),
     );
+    await Promise.all(batches.map(async (batch) => {
+      let result;
+      try {
+        result = refusal ? batch.map(() => ({ cooldown: refusal })) : await readTrackerBatch(batch, connectionOf(batch[0].repository), saved, refused, now);
+      } catch (error) {
+        result = batch.map(() => error.reason === "rateLimited" || paused(error) ? { cooldown: refusal } : { error });
+      }
+      batch.forEach((item, index) => { reads[items.indexOf(item)] = result[index]; });
+    }));
     return { reads, cooldown: refusal };
   };
 };
@@ -460,6 +462,150 @@ const together = async (reads) => {
   );
 };
 
+// Each batch stays below GitHub's node ceiling even at the nested suite/run
+// maximum. These are page sizes, never observation limits.
+const trackerBatchSize = 20;
+const trackerPageSize = 50;
+const trackerFields = {
+  labels: "name",
+  comments: "databaseId url",
+  closedByPullRequestsReferences: "url state",
+  checkRuns: "databaseId name status conclusion",
+  checkSuites: `id checkRuns(first:${trackerPageSize},filterBy:{checkType:ALL}) { nodes { databaseId name status conclusion } pageInfo { hasNextPage endCursor } }`,
+};
+const trackerConnection = (field, after = null) =>
+  `${field}(first:${trackerPageSize}${after === null ? "" : `,after:${JSON.stringify(after)}`}${field === "checkRuns" ? ",filterBy:{checkType:ALL}" : ""}${field === "closedByPullRequestsReferences" ? ",includeClosedPrs:true" : ""}) { nodes { ${trackerFields[field]} } pageInfo { hasNextPage endCursor } }`;
+const trackerSelection = (details) => `
+  __typename
+  ... on Issue { id state updatedAt ${details ? `${trackerConnection("labels")} ${trackerConnection("comments")} ${trackerConnection("closedByPullRequestsReferences")}` : ""} }
+  ... on PullRequest { id state updatedAt ${details ? `${trackerConnection("labels")} ${trackerConnection("comments")} headRefOid commits(last:1) { nodes { commit { id ${trackerConnection("checkSuites")} status { contexts { id context state } } } } }` : ""} }
+`;
+const incompleteTracker = (what) => new Error(`GitHub returned incomplete tracker ${what}`);
+const trackerText = (value, what) => {
+  if (typeof value !== "string" || !value) throw incompleteTracker(what);
+  return value;
+};
+const trackerState = (value) => {
+  if (!["OPEN", "CLOSED", "MERGED"].includes(value)) throw incompleteTracker("state");
+  return value.toLowerCase();
+};
+// An aliased query may answer errors scoped to single aliases, such as a
+// missing or forbidden number, beside the other aliases' complete data.
+const trackerGraphql = async (connection, query, variables, refused, now, aliased = false) => {
+  try {
+    const { data: result, headers } = await connection.access.request({ path: "/graphql", method: "POST", body: { query, variables } });
+    if (!result || (result.errors !== undefined && (!Array.isArray(result.errors) || result.errors.some((error) => !error || typeof error.message !== "string")))) throw incompleteTracker("GraphQL result");
+    if (result.errors?.length) {
+      const message = result.errors.map(({ message }) => message).join("; ");
+      const error = new Error(`GitHub's GraphQL API answered: ${message}`);
+      // Raw access requests retain GraphQL envelopes. Classify their errors at
+      // this adapter; the existing command queue owns refusal and cooldown.
+      const type = result.errors[0].type;
+      const rateLimited = result.errors.some(({ type }) => ["RATE_LIMITED", "RATE_LIMIT"].includes(type)) ||
+        (!["NOT_FOUND", "FORBIDDEN", "INSUFFICIENT_SCOPES"].includes(type) &&
+          (headers["x-ratelimit-remaining"] === "0" || headers["retry-after"] !== undefined || /rate limit/i.test(message)));
+      if (rateLimited) {
+        Object.assign(error, { reason: "rateLimited" });
+        const retry = headers["retry-after"]?.trim();
+        const reset = headers["x-ratelimit-reset"]?.trim();
+        const date = Date.parse(retry);
+        const after = retry === undefined ? NaN : /^\d+$/.test(retry) ? now() + Number(retry) * 1000 : Number.isFinite(date) && new Date(date).toUTCString() === retry ? date : NaN;
+        const at = Number.isFinite(after) ? after : headers["x-ratelimit-remaining"] === "0" && /^\d+$/.test(reset ?? "") ? Number(reset) * 1000 : NaN;
+        if (Number.isFinite(at) && Math.abs(at) <= 864e13) Object.assign(error, { retryAt: new Date(at).toISOString() });
+      }
+      const alias = ({ path }) => Array.isArray(path) && path[0] === "repository" && /^item\d+$/.test(path[1]) ? path[1] : undefined;
+      if (rateLimited || !aliased || !result.data?.repository || result.errors.some((entry) => alias(entry) === undefined)) throw error;
+      const failed = new Map();
+      for (const entry of result.errors) failed.set(alias(entry), [...(failed.get(alias(entry)) ?? []), entry.message]);
+      return { data: result.data, failed };
+    }
+    if (!result.data || typeof result.data !== "object") throw incompleteTracker("GraphQL data");
+    return { data: result.data, failed: new Map() };
+  } catch (error) {
+    refused(error);
+    throw error;
+  }
+};
+
+// A repository batch succeeds only after every nested page is complete. A
+// failed alias/page never replaces the saved facts with a partial observation.
+const readTrackerBatch = async (items, connection, saved, refused, now) => {
+  const [owner, name] = items[0].repository.split("/");
+  const detailed = (item) => !saved[item.key] || saved[item.key].state === "open";
+  const query = `query($owner:String!,$name:String!) { repository(owner:$owner,name:$name) { ${items.map((item, index) => `item${index}:issueOrPullRequest(number:${item.number}) { ${trackerSelection(detailed(item))} }`).join("\n")} } }`;
+  const { data, failed } = await trackerGraphql(connection, query, { owner, name }, refused, now, true);
+  if (!data.repository) throw incompleteTracker("repository");
+  const pages = [];
+  const consume = (node, field, type, receive, after = null, cursors = new Set()) => {
+    const page = node?.[field];
+    if (!Array.isArray(page?.nodes) || page.nodes.some((entry) => !entry) || typeof page.pageInfo?.hasNextPage !== "boolean") throw incompleteTracker(field);
+    page.nodes.forEach(receive);
+    if (page.pageInfo.hasNextPage) {
+      const cursor = trackerText(page.pageInfo.endCursor, `${field} cursor`);
+      if (cursor === after || cursors.has(cursor)) throw incompleteTracker(`${field} repeated cursor`);
+      cursors.add(cursor);
+      pages.push({ id: trackerText(node.id, `${field} node id`), field, type, receive, after: cursor, cursors });
+    }
+  };
+  const reads = items.map((item, index) => {
+    try {
+      if (failed.has(`item${index}`)) throw new Error(`GitHub's GraphQL API answered: ${failed.get(`item${index}`).join("; ")}`);
+      const node = data.repository[`item${index}`];
+      if (!node || !["Issue", "PullRequest"].includes(node.__typename)) throw incompleteTracker(`${item.repository}#${item.number}`);
+      const state = trackerState(node.state);
+      const pull = node.__typename === "PullRequest";
+      const facts = { ...(saved[item.key] ?? { labels: [], comments: [], linked: [] }), pull, state };
+      if (!detailed(item)) return { facts, updatedAt: node.updatedAt, reopened: state === "open" };
+      facts.labels = [];
+      facts.comments = [];
+      facts.linked = [];
+      consume(node, "labels", node.__typename, ({ name }) => facts.labels.push(trackerText(name, "label")));
+      consume(node, "comments", node.__typename, ({ databaseId, url }) => {
+        if (!Number.isSafeInteger(databaseId) || databaseId < 1) throw incompleteTracker("comment id");
+        facts.comments.push({ id: databaseId, url: trackerText(url, "comment URL") });
+      });
+      if (!pull) consume(node, "closedByPullRequestsReferences", "Issue", ({ url, state }) => facts.linked.push({ url: trackerText(url, "closing pull URL"), state: trackerState(state) }));
+      else {
+        facts.head = trackerText(node.headRefOid, "pull head");
+        facts.checks = { runs: [], statuses: [] };
+        const commit = node.commits?.nodes?.[0]?.commit;
+        if (!commit) throw incompleteTracker("head commit");
+        const run = ({ databaseId, name, status, conclusion }) => {
+          if (!Number.isSafeInteger(databaseId) || databaseId < 1) throw incompleteTracker("check id");
+          if (conclusion !== null && typeof conclusion !== "string") throw incompleteTracker("check conclusion");
+          facts.checks.runs.push({ id: databaseId, name: trackerText(name, "check name"), status: trackerText(status, "check status").toLowerCase(), conclusion: conclusion?.toLowerCase() ?? null });
+        };
+        consume(commit, "checkSuites", "Commit", (suite) => consume(suite, "checkRuns", "CheckSuite", run));
+        if (commit.status !== null) {
+          if (!Array.isArray(commit.status?.contexts)) throw incompleteTracker("status contexts");
+          facts.checks.statuses = commit.status.contexts.map(({ id, context, state }) => ({ id: trackerText(id, "status id"), context: trackerText(context, "status context"), state: trackerText(state, "status state").toLowerCase() }));
+        }
+      }
+      return { facts, updatedAt: trackerText(node.updatedAt, "updated time") };
+    } catch (error) { return { error }; }
+  });
+  while (pages.length) {
+    const batch = pages.splice(0, trackerBatchSize);
+    const query = `{ ${batch.map((page, index) => `page${index}:node(id:${JSON.stringify(page.id)}) { ... on ${page.type} { id ${trackerConnection(page.field, page.after)} } }`).join("\n")} }`;
+    const { data } = await trackerGraphql(connection, query, {}, refused, now);
+    batch.forEach((page, index) => consume(data[`page${index}`], page.field, page.type, page.receive, page.after, page.cursors));
+  }
+  for (const read of reads) {
+    if (!read.facts) continue;
+    read.facts.labels.sort();
+    if (read.facts.checks) {
+      read.facts.checks.runs = byId(read.facts.checks.runs);
+      read.facts.checks.statuses = byId(read.facts.checks.statuses);
+    }
+  }
+  const reopens = items.filter((_item, index) => reads[index].reopened);
+  if (reopens.length) {
+    const refresh = await readTrackerBatch(reopens, connection, {}, refused, now);
+    reopens.forEach((item, index) => { reads[items.indexOf(item)] = refresh[index]; });
+  }
+  return reads;
+};
+
 const readTracker = async (item, connection, refused = (_error) => {}) => {
   const read = (promise) =>
     promise.catch((error) => {
@@ -725,6 +871,7 @@ const status = async (options, { readTrackers, now, stdout }) => {
   const result = await readTrackers(
     trackers,
     now() < cooldownUntil(schedule.cooldown) ? schedule.cooldown : undefined,
+    saved,
   );
   if (result.cooldown) schedule.cooldown = result.cooldown;
   for (const [index, item] of trackers.entries()) {
@@ -1037,6 +1184,7 @@ const wait = async (
       const result = await readTrackers(
         polled,
         blocked ? schedule.cooldown : undefined,
+        Object.fromEntries(baseline),
       );
       if (result.cooldown) schedule.cooldown = result.cooldown;
       const failure = result.reads.find((read) => read.error);
