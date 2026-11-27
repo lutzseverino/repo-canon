@@ -261,10 +261,11 @@ const readText = (path) => {
 
 // Receipts belong to the brief's plan and name the complete resolved report path.
 // Seam (deferred): plan-log receipts; consumers: 1 (launch scan); extract at 3.
+const receiptPattern =
+  /^[ \t]*(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z[ \t]+)?Consumed:[ \t]+(?:`([^`]+)`|\[[^\]]*\]\(([^)]+)\)|(\S+))/;
 const consumed = (log, directory, path) =>
   log.split(/\r?\n/).some((line) => {
-    const receipt =
-      /^[ \t]*(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z[ \t]+)?Consumed:[ \t]+(?:`([^`]+)`|\[[^\]]*\]\(([^)]+)\)|(\S+))/.exec(line);
+    const receipt = receiptPattern.exec(line);
     return receipt && resolve(directory, receipt[1] ?? receipt[2] ?? receipt[3]) === path;
   });
 

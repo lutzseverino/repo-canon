@@ -146,8 +146,7 @@ and then an optional UTC timestamp (`YYYY-MM-DDTHH:MMZ`). Name the report path a
 the brief's `Launch report:` gives it, bare, in backticks or as a Markdown link's
 target. A bare path ends at the first whitespace; wrap paths containing whitespace.
 Text after the path is free. Resolve the path against this plan's directory; only
-a receipt for the complete resolved report path consumes that launch. Other report
-mentions, including launch announcements and older consumption prose, do not count.
+a receipt for the complete resolved report path consumes that launch.
 
 State holds its latest step/session/PR; expedited states start with `expedited`. Close only once every Done-means clause is met; end remaining open rows as `moved` or `dropped (owner)` as the Close reference says.
 Count/report open issues at start/close with no limit. Append to `log.md`, never rewrite: record every plan-filed issue with repository,
