@@ -113,9 +113,9 @@ winner across axes.
 
 Paths are relative to the repository root.
 
-- `.repo-standards/rules/planning.md`: planning policy. If absent, use
-  `CONTRIBUTING.md`; if both are absent, report the missing policy and stop
-  the dependent step.
+- `.repo-standards/rules/planning.md` in the target repository: planning
+  policy. If absent, use that repository's `CONTRIBUTING.md`; if both are
+  absent, report the missing policy and stop the dependent step.
 - `docs/agents/issue-tracker.md`: issue fetching and authoritative contract
   selection. When missing and no tracker was provided, use step 2's other
   spec sources without blocking review.
