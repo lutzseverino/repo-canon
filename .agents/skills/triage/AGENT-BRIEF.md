@@ -71,7 +71,8 @@ has non-placeholder content.
 
 ### Decisions, not options
 
-The implementing agent can't ask the owner anything, so a brief settles every question of intent before it is accepted. State each owner decision as behavior. A brief that needs one of these is not finished; its question is routed as [SKILL.md](SKILL.md) says, to be inferred under the inference test or answered by the owner:
+The implementing agent can't ask the owner anything, so a brief settles every question of intent before it is accepted. State each owner decision as behavior. A brief that needs one of these is not finished; its question is routed as [SKILL.md](SKILL.md) says, under the target planning rules' inference test and Decision rights (its
+contribution guide when those rules are absent):
 
 - **Bad:** "Retry for a reasonable period (agent's choice)"
 - **Bad:** "Either drop the row or fail the export"

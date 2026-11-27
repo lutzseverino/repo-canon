@@ -2,7 +2,7 @@
 
 These rules apply to all work in a repository a factory serves, including
 tracker work that changes no file. The contribution guide holds the general
-implementation contract, readiness, owner-question, credential and pull request
+implementation contract, credential and pull request
 requirements, and the `comments` rules hold what agents and the factory post on
 issues and pull requests. The `factory` skill holds the method for handing work
 to the factory, interpreting holds, delivering skipped work, and pausing or
@@ -16,8 +16,8 @@ uncovered stages are factory gaps.
 | Stage                      | Configured factory coverage                                                                                                                                                                                                                                       | Hand skill                                                                            | Input                                                                 |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | Intake                     | An owner's idea enters through conversation with the orchestrating agent, then a grill unless the owner approves a shorter path. No run kind covers ideas. Filed requests enter through triage; its run covers them where enabled, within Triage run's limits.    | `triage` for filed requests; ideas stay conversation, with no launch                  | The filed issue                                                       |
-| Grill                      | No run kind conducts the owner grill. Triage can gather facts and prepare questions; the owner answers under the contribution guide.                                                                                                                              | `grill-with-docs`                                                                     | The request's issue; owner-facing, started by the orchestrating agent |
-| Specification              | No run kind publishes the grill's specification; the contribution guide governs publication.                                                                                                                                                                      | `to-spec`                                                                             | The grill's decision record                                           |
+| Grill                      | No run kind conducts the owner grill. Triage can gather facts and prepare questions; the decision maker answers under the planning rules.                                                                                                                         | `grill-with-docs`                                                                     | The request's issue; owner-facing, started by the orchestrating agent |
+| Specification              | No run kind publishes the grill's specification; the planning rules govern publication.                                                                                                                                                                           | `to-spec`                                                                             | The grill's decision record                                           |
 | Tickets                    | No run kind publishes the ticket split; retain native parent and blocking links.                                                                                                                                                                                  | `to-tickets`                                                                          | The specification issue                                               |
 | Brief review and readiness | Triage accepts its own brief or a direct contract it reviewed and did not write under Triage run's exception. Other direct contracts need independent authorized acceptance of exact revisions. Plan approval remains the owner's gate; Parent readiness applies. | `triage` in accept mode                                                               | The contract's issue                                                  |
 | Implement                  | Implement takes an eligible ready ticket through code and checks to a draft PR. Readiness never bypasses blockers.                                                                                                                                                | `implement`                                                                           | The ticket issue                                                      |
@@ -29,7 +29,7 @@ uncovered stages are factory gaps.
 
 Owner grills, plan approval, independent contract acceptance outside Triage
 run's direct-contract exception, and live access retain their existing gates.
-The contribution guide owns publication authority and amendment rules.
+The planning rules own decision rights, publication, acceptance and amendments.
 Consumers reference this definition.
 
 ## Run kinds
@@ -116,7 +116,7 @@ A parent (a specification or any issue with sub-issues) never runs; its
 readiness releases its tickets, which each also need their own readiness.
 Parenthood grants no Agent Brief exemption: a non-specification parent with a
 `type:` label needs its own complete Agent Brief and revision-bound
-readiness under the contribution guide and issue-contract validator.
+readiness under the planning rules and issue-contract validator.
 
 With complete sub-issue link actor history, later links preserve the parent's
 readiness only when every addition at or after readiness was made by a person
@@ -176,15 +176,15 @@ workbench or decision inbox. It only reads: no posts, labels, pushes or fixes.
 Its result asks the factory to post its brief, question or cited carrier and
 apply its chosen labels, never a `gate:` label.
 
-It applies the contribution guide's inference test with sources recorded only
+It applies the planning rules' inference test with sources recorded only
 in the repository: its ADRs, its glossary, and linked issues and their
 decisions, each cited with its date. The brief's triage notes list every
-inferred answer for the owner to veto, in place of the orchestrating agent's
+inferred answer for veto, in place of the orchestrating agent's
 report. Every other intent question, and any it is unsure of, moves the issue
 to `state:grill` with the facts gathered and the open questions. A fact only
 an outside reporter holds moves it to `state:reporter`, and one only the owner
 holds to `state:owner`, each with its question. A disposition no record
-settles is the owner's. When the records settle it, the run asks for
+settles takes the planning rules' Decision rights route. When the records settle it, the run asks for
 `state:carried`, citing the carrier: the change on the default branch, the
 duplicate, the ticket whose pull request closes it, or a past rejection the
 request adds nothing to. A request that brings a new argument against a
@@ -211,8 +211,9 @@ findings. A run that wrote the issue refuses acceptance and stops in
 `state:owner`, naming `state:triage` for an independent run to review it.
 A body that needs correction stops in `state:owner`, naming
 the correction a separate writer makes before the issue returns to
-`state:triage`, as the contribution guide's Owner questions section says. An
-open intent question stops in `state:grill`. Without a notice naming the
+`state:triage`, as the planning rules' Owner questions section says. An
+open intent question stops in `state:grill` for the decision maker selected by
+the planning rules' Decision rights. Without a notice naming the
 revision, the run stops in `state:owner` and says the notice is missing.
 
 ## Gates
@@ -224,7 +225,7 @@ triage never sets one. A contract that designates owner review under the
 `github-repository-configuration` rules' Designated owner review section gets
 `gate:owner-review` with its readiness. A taste call in copy, UI or look is
 the owner's intent, which a grill settles before the work under the
-contribution guide's Triage section, never a gate.
+planning rules' Triage section, never a gate.
 
 A `gate:` label on a pull request or its issue stops its review at
 ready-to-merge: the pull request is ready for review with its current head
@@ -301,7 +302,7 @@ Any head change returns it to `state:owner` until renewed approval.
 
 An owner question on skipped work keeps `factory:skip` and the question's
 workflow state while unanswered, and the worker or merging agent stops under
-the contribution guide's owner-question handoff. Once the issue is back in
+the planning rules' owner-question handoff. Once the issue is back in
 `state:ready`, as Questions and stops says, the orchestrating agent resumes or
 relaunches the worker, or continues the same open PR from its handoff. This is
 not a factory retry and needs no factory pickup.
@@ -358,7 +359,7 @@ supplied-credential restrictions still apply.
 ## Questions and stops
 
 When an agent needs an answer only the owner can give, it follows the
-contribution guide's owner-question handoff and moves the issue's workflow
+planning rules' owner-question handoff and moves the issue's workflow
 state to whoever must answer: `state:owner` for the owner's answer,
 `state:grill` for the owner's intent, or `state:reporter` for a fact only its
 outside reporter holds. A factory run asks for that state in its run result.
@@ -373,7 +374,7 @@ state that answers it, one of these:
   is open or closed unmerged; the factory never opens a replacement. An answer
   that changes the implementation contract first needs the edited revision's
   validator notice, independent review and renewed readiness under the
-  contribution guide; an unchanged contract needs none. Skipped work resumes
+  planning rules; an unchanged contract needs none. Skipped work resumes
   as Skipped work says.
 - `state:triage` starts triage again.
 - `state:carried` holds the request, as State labels says.

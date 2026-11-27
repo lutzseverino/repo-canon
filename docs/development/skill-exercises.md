@@ -217,8 +217,12 @@ expose GitHub repository configuration rules without factory workflow rules.
 
 For `planning`, follow the five checkpoints in its exercise and use
 `.scratch/planning/scenarios.json` as controlled local inputs. Review the settled
-cross-repository specification/ticket publication, inferred list and owner-only
-questions, native-edge failure, delta amendment and renewed revision readiness.
+cross-repository specification/ticket publication, triager inference and the
+selected grill decision maker, native-edge failure, delta amendment and renewed
+revision readiness. The controlled probes cover downstream persistent choices,
+all five maintainer escalation cases, no delegated agent, different-provider
+review and next-update veto. Repeat policy lookup with installed rules and no
+guide, then with the target guide alone; record the actual route and source.
 Record graph writes separately from body references; native responses are
 simulations, never live tracker evidence. Check coverage against the canonical
 stage definition in the source factory rules. Report the scenario walkthrough
@@ -363,7 +367,7 @@ results: no tracker file changed, no label or comment was written, and no run
 ran `ready.mjs`.
 
 Check produced briefs against the discovered GitHub rules' shape and ordering,
-and readiness decisions against those rules and `CONTRIBUTING.md`. Record the
+and readiness decisions against the installed planning and GitHub rules. Record the
 rule paths and sections used with each observed outcome. Review inputs are
 explicit participant-controlled simulations: a contract revision must lose
 readiness until renewed review. All issue and PR artifacts remain Markdown;
@@ -407,7 +411,7 @@ protect skill invocation and grill/workbench delivery contracts.
 The planning builder's `repositories.front-door` fixture copies the shared
 `AGENTS.md`, links `triage`, `grill-with-docs`, `orchestrate` and their support
 skills, and installs the factory rules, so routing reaches the Canonical
-stages; the contribution guide's Triage route without them is shown in an
+stages; the planning rules' Triage route without them is shown in an
 adopter without the factory. Its tracker holds a ready ticket and a filed bug
 in `state:triage`. The manifest's separate workbench names a running
 orchestrator for an active plan in `index.md` and has an empty `incoming/`.
@@ -487,7 +491,7 @@ UTF-8 crash note links the existing open issue; and that no issue is filed for
 the stale option, which neither blocks the documentation goal nor causes harm,
 so `.scratch/tooling/issues/` keeps only its existing issue. The linked tooling
 idea likewise gains no issue and no wish. The method follows the
-contribution guide's Findings section; neither observation delays the
+planning rules' Findings section; neither observation delays the
 documentation plan.
 Turns 6d–6e bring the owner's "do this now" while ticket 01's factory run and
 ticket 03's research run are running and ticket 02's worker launch is due. Check

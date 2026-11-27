@@ -14,9 +14,9 @@ Any agent, whichever account it uses, and the factory post only on these
 occasions, and only to record a decision, an outcome, or a question that needs
 an answer, never to narrate progress. Everything to say on one occasion goes
 into one comment, or for a worker handoff into the body's Delivery subsection.
-The contribution guide, the `github-repository-configuration` rules and, where
-installed, the `factory-workflow` rules say when each occasion arises; these
-rules say what the post holds:
+The planning rules, contribution guide, `github-repository-configuration` rules
+and, where installed, `factory-workflow` rules say when each occasion arises;
+these rules say what the post holds:
 
 | Occasion                                         | Where                                       | Shape                                                               |
 | ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------- |
@@ -136,7 +136,7 @@ contain secret, token, or credential values. Write `<REDACTED>` in their place.
 Post a question only the owner can answer as one comment on the issue the work
 belongs to, linking the open pull request when there is one. Work without an
 issue asks on its pull request instead. Its lead line asks the question and
-addresses the owner. The contribution guide's owner-question
+addresses the owner. The planning rules' owner-question
 handoff says what the agent does once the question is posted.
 
 An answer or recorded decision answers only the question asked, in at most 150
@@ -201,8 +201,8 @@ findings, optional evidence and the footer.
   comma and a short note; an axis fails only with an open finding.
 - **Findings table:** one row per finding: its axis, code-formatted
   `path:line`, the finding and `🔁 Open`, `✅ Fixed in <commit>` for this
-  round's fix, or `↗️ Filed <issue>` for one filed under the contribution
-  guide's Findings section. Omit it without findings.
+  round's fix, or `↗️ Filed <issue>` for one filed under the
+  planning rules' Findings section. Omit it without findings.
 - **Evidence:** optional, behind `<details>` as Layout says.
 - **Footer:** the round and the reviewed head's full SHA, with no provider or
   model. It is the disclosure and closes the review; only a reassessment's
@@ -279,7 +279,7 @@ Each other delivery record that the `github-repository-configuration` or
 
 ## Findings
 
-Out-of-scope notes go where the contribution guide's Findings section says,
+Out-of-scope notes go where the planning rules' Findings section says,
 never in a comment of their own. An adoption pull request's check-outcomes
 comment holds what its adoption rules list. A review lists an issue it opens as
 a [Filed row](#reviews), and a factory-filed issue's body cites its filing run.

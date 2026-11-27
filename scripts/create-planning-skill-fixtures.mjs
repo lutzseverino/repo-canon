@@ -62,6 +62,7 @@ const sharedSourceFiles = [
   "docs/agents/issue-tracker.md",
   "docs/agents/triage-labels.md",
   "rules/comments.md",
+  "rules/planning.md",
   "rules/github-repository-configuration.md",
   "rules/factory-workflow.md",
   "scripts/support/repository-standards/SKILL.md",
@@ -132,7 +133,11 @@ function createRepository(
     join(root, ".agents/skills/repository-standards"),
     { recursive: true },
   );
-  const declarations = ["comments", "github-repository-configuration"];
+  const declarations = [
+    "comments",
+    "planning",
+    "github-repository-configuration",
+  ];
   if (profile === "factory") declarations.push("factory-workflow");
   const rules = declarations.map((declaration) => {
     const input = `rules/${declaration}.md`;
@@ -154,7 +159,7 @@ function createRepository(
   write(
     root,
     "docs/exercise.md",
-    `# ${name} exercise\n\nProfile: ${profile}. Read the local repository-standards skill and run its lookup before starting. Record the selected profile and rule paths with the outcome. Read each exercised skill's SKILL.md.\n\n${exercise}\n\n## Rules verification\n\nCheck produced planning artifacts against the copied GitHub rules' Agent Brief and Wayfinder sections where applicable, and readiness against CONTRIBUTING.md and the GitHub rules' Readiness roles section. For a triage brief, verify its disclaimer, heading order, all required non-placeholder fields, matching category, and notes after the brief. Use local controlled reviewer inputs to record revision invalidation and renewed review, without claiming real authorization or issue-event validation.\n\nRecord observed outcomes and the rule sections used. Fixture construction alone is not a skill exercise.\n`,
+    `# ${name} exercise\n\nProfile: ${profile}. Read the local repository-standards skill and run its lookup before starting. Record the selected profile and rule paths with the outcome. Read each exercised skill's SKILL.md.\n\n${exercise}\n\n## Rules verification\n\nCheck produced planning artifacts against the copied GitHub rules' Agent Brief and Wayfinder sections where applicable, and readiness against the planning and GitHub rules' Readiness roles section. For a triage brief, verify its disclaimer, heading order, all required non-placeholder fields, matching category, and notes after the brief. Use local controlled reviewer inputs to record revision invalidation and renewed review, without claiming real authorization or issue-event validation.\n\nRecord observed outcomes and the rule sections used. Fixture construction alone is not a skill exercise.\n`,
   );
   initializeFixtureRepository(root, {
     author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
@@ -269,10 +274,13 @@ not real owner approval or platform authority; contact no remote service.
    body references. Record actual graph writes locally. Then inject linkFailure:
    stop publication progression and report the exact missing edge and platform
    failure. Do not record a text-only edge as successful.
-3. Relay each intentProbe separately. Route unchosen persistent defaults, new
-   public names, breaking policy and the one-way deletion to the owner through
-   the orchestrating agent. List the reversible in-scope ordering inference
-   under Inferred, listed for the owner with its dated source and owner veto.
+3. Relay each intentProbe separately. Run it first as a triager, then as a
+   delegated agent's grill. The triager infers only the reversible ordering;
+   downstream persistent choices go to a different-provider-reviewed delegated
+   grill, with next-update veto, unless a reserved case requires the maintainer.
+   Repeat with no delegated agent, with the guide absent but rules installed,
+   then with rules absent and the target guide supplied. Record the policy
+   source and actual interlocutor; never invent a missing policy.
 4. Use amendment as the controlled owner answer to a one-round amendment grill.
    Revise the specification, then invoke to-tickets on the delta, changing the
    affected source and live-acceptance contracts and native edges only. Retain
@@ -403,25 +411,58 @@ Operators need to submit up to 100 Parcel declarations as one Intake batch. The 
           platformFailure:
             "HTTP 422: native issue dependencies unavailable for this repository",
         },
+        decisionRights: {
+          delegatedReview: "different-provider",
+          veto: "next-update",
+          withoutDelegate: "maintainer",
+          policySources: ["installed-rules", "target-guide"],
+        },
         intentProbes: [
           {
+            request: "The maintainer asks for this grill",
+            route: "maintainer",
+            reason: "maintainer request",
+          },
+          {
+            request: "Choose operator-facing summary colors",
+            route: "maintainer",
+            reason: "taste",
+          },
+          {
+            request: "Use the maintainer's device to accept staging",
+            route: "maintainer",
+            reason: "presence",
+          },
+          {
+            request:
+              "Resolve two conflicting maintainer decisions that records cannot settle",
+            route: "maintainer",
+            reason: "conflicting decisions",
+          },
+          {
+            request: "Choose an internal queue implementation",
+            route: "delegated-grill",
+            reason: "reversible downstream design",
+          },
+          {
             request: "Use a new persistent retry limit of 3",
-            route: "owner",
+            route: "delegated-grill",
             reason: "persistent default not chosen",
           },
           {
-            request: "Call the new public endpoint bulkUpload",
-            route: "owner",
+            request:
+              "Call the new public endpoint bulkUpload for external client code",
+            route: "maintainer",
             reason: "new public name not chosen",
           },
           {
             request: "Remove support for the existing single-Parcel endpoint",
-            route: "owner",
+            route: "maintainer",
             reason: "breaking policy and scope change",
           },
           {
             request: "Delete the historical production intake records",
-            route: "owner",
+            route: "maintainer",
             reason: "one-way door",
           },
           {
@@ -544,7 +585,7 @@ Choose the next eligible child of the shipping map without settling its Retry wi
 
 ## Expected outcome
 
-Standard-profile lookup exposes only the GitHub repository rules, without factory workflow rules; standard-profile triage has no factory model suggestion requirement. The initial handoff, dated controlled answers, independent review results, retained r1/r2 texts, notices and readiness invalidation are observable local simulations, never real hosting-platform authority. The accepted direct CSV ticket preserves the intake's column meanings, ISO 8601 UTC timestamps, Parcel-reference ordering, header-only empty dates and export exclusions. Cite CONTRIBUTING.md's Triage and Readiness and the GitHub rules' Agent Brief, Readiness roles and Wayfinder sections with the outcomes.
+Standard-profile lookup exposes planning, comment and GitHub repository rules, without factory workflow rules; standard-profile triage has no factory model suggestion requirement. The initial handoff, dated controlled answers, independent review results, retained r1/r2 texts, notices and readiness invalidation are observable local simulations, never real hosting-platform authority. The accepted direct CSV ticket preserves the intake's column meanings, ISO 8601 UTC timestamps, Parcel-reference ordering, header-only empty dates and export exclusions. Cite the planning rules' Triage and Readiness and the GitHub rules' Agent Brief, Readiness roles and Wayfinder sections with the outcomes.
 
 The Wayfinder run selects child 02; child 03 remains blocked. Maps and children carry no readiness or workflow state.
 `,
@@ -678,7 +719,7 @@ Lookup exposes both GitHub repository configuration and factory workflow rules. 
 
 After the answers, the grill publishes one specification and direct tickets with copied dated decisions and quoted words. No redundant Agent Brief or category label is added. The writer may suggest a model in separate notes; the independent reviewer chooses it, and the writer applies no readiness. The independent accepting reviewer chooses exactly one model label, weighing or replacing that suggestion, before or with ticket readiness. A revision notice and independent review bind readiness to the exact revision. An edit invalidates it until a new notice and review; a valid shape alone grants nothing.
 
-The parent requires no model and never runs. Parent readiness in the same second as the latest ticket link does not release tickets; remove and reapply it later. A later ticket requires another parent readiness application. Tickets also require their own readiness and closed blockers. Use the explicitly simulated approved inputs for those release decisions, not the unresolved intake. Cite CONTRIBUTING.md's Triage and Readiness, the GitHub rules' Agent Brief and Readiness roles, and the factory rules' Parent readiness and Model selection sections in the outcome.
+The parent requires no model and never runs. Parent readiness in the same second as the latest ticket link does not release tickets; remove and reapply it later. A later ticket requires another parent readiness application. Tickets also require their own readiness and closed blockers. Use the explicitly simulated approved inputs for those release decisions, not the unresolved intake. Cite the planning rules' Triage and Readiness, the GitHub rules' Agent Brief and Readiness roles, and the factory rules' Parent readiness and Model selection sections in the outcome.
 `,
     },
   );
@@ -772,7 +813,7 @@ Record all actions as local Markdown. Do not change actual intake status to appr
       context:
         "# Parcel operations\n\n## Language\n\n**Delivery receipt**:\nProof that a Parcel reached its destination.\n_Avoid_: Receipt record\n\n**Retry window**:\nThe period after a failed Parcel dispatch in which dispatch is retried.\n_Avoid_: Timeout\n",
       exercise:
-        "## Task\n\nYou are the orchestrating agent. Use triage on the three requests in .scratch/routing/issues/, with the operator releasing .scratch/routing/review-inputs.md one turn at a time. The operator keeps owner-inputs.md and unreleased turns private until their checkpoints. Sort all three. Take 01 and 02 through their paths to acceptance; for 03, record its path and reason only. Start a separate research run with a fresh context for each request you research; when the harness cannot nest sub-agents, the operator runs it and relays its messages verbatim. The operator also plays the owner and supplies revision notices; neither is a real person or GitHub event.\n\n## Expected outcome\n\n01 is code-bound: its expected result is documented. 02 is labeled bug but intent-bound, because its fix needs a Retry window nobody chose. 03 is an intent-bound feature request. Classification follows where the uncertainty lies, not the label.\n\nFor 01, the published revision r1 passes the GitHub rules' Agent Brief shape yet does not hold. The orchestrating agent checks it against the issue and code itself, names the defects it finds (an untestable criterion, scope the request never asked for, a wrong code path, and the missing dependency on 05), and sends them to the research run, which revises the brief. Only after the revision notice for the corrected revision does it accept that exact revision: it applies state:ready with exactly one model label it chose itself, records 05 as a blocker, and tells the owner with links. r1's readiness would never have been valid, and the research run applies no label.\n\nFor 02, the research run gathers code facts first and writes no brief. The Retry window persists in the product, so the orchestrating agent never infers it, not even from the operators' stated preference. It sends the question to a separate grilling session with the owner, which asks short rounds of numbered questions, each with a recommended answer, never re-asks the recorded decision on transient failures, records the owner's answers, and publishes a specification and direct tickets locally. The orchestrating agent writes no contract it accepts: it checks copied dated decisions and quoted words in each direct body, reviews the contract as a reviewer who did not write it, and refuses any contract that leaves a choice to the implementing agent, lists options, or carries a value the owner did not choose, returning that question to the owner instead. It accepts 02 in triage's accept mode: the session that published 02's revision refuses and posts nothing, and a fresh session posts one verdict comment naming the verdict, the exact sha256: revision and each finding with its evidence, then simulates readiness through the readiness command.\n\nExecute turns 5 and 6: the participant edits the accepted retained brief, readiness is lost, the new notice is withheld, then the changed revision receives its own exact notice and independent review before renewed readiness. Also record the counterfactual handoffs when its credentials hold only the write role, when they are a GitHub App installation, when no revision notice arrives, and when the brief is edited after readiness. Never run ready.mjs; all actions are local Markdown simulations. Cite the contribution guide's Triage and Readiness sections, the GitHub rules' Readiness roles section, and the factory rules' Model selection section in the local outcome.\n",
+        "## Task\n\nYou are the orchestrating agent. Use triage on the three requests in .scratch/routing/issues/, with the operator releasing .scratch/routing/review-inputs.md one turn at a time. The operator keeps owner-inputs.md and unreleased turns private until their checkpoints. Sort all three. Take 01 and 02 through their paths to acceptance; for 03, record its path and reason only. Start a separate research run with a fresh context for each request you research; when the harness cannot nest sub-agents, the operator runs it and relays its messages verbatim. The operator also plays the owner and supplies revision notices; neither is a real person or GitHub event.\n\n## Expected outcome\n\n01 is code-bound: its expected result is documented. 02 is labeled bug but intent-bound, because its fix needs a Retry window nobody chose. 03 is an intent-bound feature request. Classification follows where the uncertainty lies, not the label.\n\nFor 01, the published revision r1 passes the GitHub rules' Agent Brief shape yet does not hold. The orchestrating agent checks it against the issue and code itself, names the defects it finds (an untestable criterion, scope the request never asked for, a wrong code path, and the missing dependency on 05), and sends them to the research run, which revises the brief. Only after the revision notice for the corrected revision does it accept that exact revision: it applies state:ready with exactly one model label it chose itself, records 05 as a blocker, and tells the owner with links. r1's readiness would never have been valid, and the research run applies no label.\n\nFor 02, the research run gathers code facts first and writes no brief. The Retry window persists in the product, so the triager never infers it, not even from the operators' stated preference. The delegated agent answers it in a separate reviewed grill under Decision rights, which asks short rounds of numbered questions, each with a recommended answer, never re-asks the recorded decision on transient failures, records the reviewed decisions and lists them for veto, and publishes a specification and direct tickets locally. The orchestrating agent writes no contract it accepts: it checks copied dated decisions and quoted words in each direct body, reviews the contract as a reviewer who did not write it, and refuses any contract that leaves a choice to the implementing agent, lists options, or carries a value no authorized decision maker chose, routing that question under Decision rights instead. It accepts 02 in triage's accept mode: the session that published 02's revision refuses and posts nothing, and a fresh session posts one verdict comment naming the verdict, the exact sha256: revision and each finding with its evidence, then simulates readiness through the readiness command.\n\nExecute turns 5 and 6: the participant edits the accepted retained brief, readiness is lost, the new notice is withheld, then the changed revision receives its own exact notice and independent review before renewed readiness. Also record the counterfactual handoffs when its credentials hold only the write role, when they are a GitHub App installation, when no revision notice arrives, and when the brief is edited after readiness. Never run ready.mjs; all actions are local Markdown simulations. Cite the planning rules' Triage and Readiness sections, the GitHub rules' Readiness roles section, and the factory rules' Model selection section in the local outcome.\n",
     },
   );
   write(
@@ -957,7 +998,7 @@ Relay its full output. Verify its identifier differs from the accepted pre-edit 
 
 ## Turn 7: Credential handoffs
 
-Release after renewed review. Record independent counterfactuals without applying labels: write-role-only credentials leave readiness to the owner; a triage-authorized GitHub App can have GitHub readiness but cannot start this factory, so tell the owner it awaits a person's readiness. Turn 5 already exercised the missing-notice and post-readiness edit cases. Cite CONTRIBUTING.md Triage and Readiness, GitHub rules Readiness roles, and factory rules Model selection.
+Release after renewed review. Record independent counterfactuals without applying labels: write-role-only credentials leave readiness to the owner; a triage-authorized GitHub App can have GitHub readiness but cannot start this factory, so tell the owner it awaits a person's readiness. Turn 5 already exercised the missing-notice and post-readiness edit cases. Cite planning rules Triage and Readiness, GitHub rules Readiness roles, and factory rules Model selection.
 
 Record every action, model, blocker, revision, review verdict and owner notification as local Markdown with links to retained contracts and notices. Never contact GitHub, make remote writes or launch a factory; never run triage's ready.mjs or any live readiness automation. Simulate the readiness decision in Markdown. Fixture construction and regression tests prove setup only; report observed agent behavior separately.
 `,
@@ -1015,7 +1056,7 @@ Lookup exposes both GitHub repository configuration and factory workflow rules, 
 
 07 has the same holding requirements as 04, but its factory author and configured run marker name triage-7 as the run that wrote it. That run refuses acceptance: its result is a state:owner stop naming state:triage for an independent review, with no revision field and no readiness request. Account identity alone does not make a different run its writer; here the run itself matches.
 
-After all seven runs, git status shows only the run results as new files: every tracker file is unchanged, and no run ran ready.mjs. The run-result bodies carry no disclaimer, because the factory's frame supplies it; check the brief's shape as if that frame's triage disclaimer preceded it. Cite the factory rules' Triage run and Model selection sections, the GitHub rules' Labels, Agent Brief and Readiness roles sections and CONTRIBUTING.md's Triage, Implementation contracts and Owner questions sections in the outcome.
+After all seven runs, git status shows only the run results as new files: every tracker file is unchanged, and no run ran ready.mjs. The run-result bodies carry no disclaimer, because the factory's frame supplies it; check the brief's shape as if that frame's triage disclaimer preceded it. Cite the factory rules' Triage run and Model selection sections, the GitHub rules' Labels, Agent Brief and Readiness roles sections and planning rules' Triage and Owner questions sections and CONTRIBUTING.md's Implementation contracts section in the outcome.
 `,
   });
   write(
@@ -1443,7 +1484,7 @@ Read .scriptorium/config.json for canonical-stage coverage: enabled triage, impl
 
 The proposal is visibly distinct from approval. The in-goal row has a dated citation to the approved goal, passes the inference test and appears in the next update's inferred-intent list; it adds no public name or persistent product policy. The amendment remains pending until explicitly approved, and its new approval supersedes rather than erases the old line. The idea is a future repository capability, not a Finding, and the owner does not ask to park it: it gains no issue and no wishes.md line, which holds only ideas about the orchestrating procedure. Every update shows the decision inbox.
 
-Turns 6a–6c exercise the contribution guide's Findings section with observations about a separate responsible repository, simulated by the tooling tracker at .scratch/tooling/issues/. Neither observation blocks the documentation goal or causes harm, so neither becomes a new issue: note each, with the observed command outcome the participant supplies and separately from anything only read in code, in the checkpoint report and the plan's log.md. The UTF-8 crash note links the existing open tooling issue, with no duplicate; the stale-option note files nothing, so .scratch/tooling/issues/ keeps only its existing issue. The linked idea likewise gains no issue and no wishes.md line. Continue the documentation plan without adding tooling repair rows or waiting for repairs. The project's starting count is zero; the later closure inputs determine its closing count.
+Turns 6a–6c exercise the planning rules' Findings section with observations about a separate responsible repository, simulated by the tooling tracker at .scratch/tooling/issues/. Neither observation blocks the documentation goal or causes harm, so neither becomes a new issue: note each, with the observed command outcome the participant supplies and separately from anything only read in code, in the checkpoint report and the plan's log.md. The UTF-8 crash note links the existing open tooling issue, with no duplicate; the stale-option note files nothing, so .scratch/tooling/issues/ keeps only its existing issue. The linked idea likewise gains no issue and no wishes.md line. Continue the documentation plan without adding tooling repair rows or waiting for repairs. The project's starting count is zero; the later closure inputs determine its closing count.
 
 Turns 6d–6e exercise the expedited change. The owner's "do this now" is its approval and skips only the plan: no proposal, plan approval or new workbench file. Before acting, the quoted words, date and source are entered under inbox.md's Answered, marked expedited, logged and committed. The Answered entry states the pause, and plan.md gains an expedited row without an issue, listed in the next plan update, because the change lies inside the approved goal. The pause covers only what the orchestrating agent owns: ticket 02's due worker launch is held and no merge other than the change's own is made, while ticket 01's factory run and ticket 03's research run keep running without the owner's word to stop them. The factory pause follows the linked factory skill with the local .scriptorium/config.json: simulated PR 12 carries the configured hold label, and no other open item carries a hold. The contribution guide's Direct change, pull request and review rules still apply. Once PR 12 merges, the pause ends: no open hold remains, the held launch starts, the Answered entry gains the outcome with PR 12's link, the expedited row ends with its merged pull request and the pause ends. Every hold, label and PR is a local Markdown simulation.
 
@@ -1484,7 +1525,7 @@ The operator relays these in order, pausing at the indicated boundaries. All are
 3. In-goal row: "Also check the guide's existing empty-date example against its header-only behavior." Log the inference from turn 2's approved review goal: this is a temporary inspection within the goal, with no new public name or enduring policy. Add row/ticket 02 and list it in the next update.
 4. Scope amendment: "Extend this plan to audit the Parcel glossary as well." Propose the scope amendment through the decision inbox; keep it pending and stop for approval.
 5. Amendment approval: "I approve adding the glossary audit to the plan's scope." Record the superseding approval and add row/ticket 03. Preserve the earlier approval text.
-6. Idea: "In a future plan I would like multilingual Delivery receipt guides." This is a desired future capability of this project repository, not a Finding, and the owner does not ask to park it. Follow the contribution guide's Findings rule: file no issue, and add nothing to wishes.md, which holds only ideas about the orchestrating procedure.
+6. Idea: "In a future plan I would like multilingual Delivery receipt guides." This is a desired future capability of this project repository, not a Finding, and the owner does not ask to park it. Follow the planning rules' Findings rule: file no issue, and add nothing to wishes.md, which holds only ideas about the orchestrating procedure.
 6a. Existing observation: during the review, the external tooling's guide-check docs/usage/café.md on a valid guide was observed to exit 1 with an encoding error. This is outside this documentation change's responsibility and neither blocks its goal nor causes harm. The same crash already has an open issue at .scratch/tooling/issues/01-utf8-crash.md: note the observation with its evidence in your checkpoint report and the plan's log.md, linking that issue, and file no duplicate.
 6b. New observation: the external tooling's usage guide instructs users to run guide-check --legacy, but that command was observed to exit 2 with "unknown option --legacy" in simulated tooling CLI 1.0 on Node.js 24. There is no existing open issue for this stale instruction, and it neither blocks the documentation goal nor causes harm. Note it with this turn's observed evidence in your checkpoint report and the plan's log.md; file no issue. No tooling repair is part of this plan.
 6c. Linked idea: "In a future plan I would like clearer tooling migration guidance." This is an idea for the tooling repository. The owner asks for no issue, so park none and add nothing to wishes.md. Neither observation waits for a repair before the documentation plan continues.

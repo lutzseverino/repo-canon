@@ -1017,7 +1017,7 @@ without writes. Execution reports each successful removal. Both modes print
 per-repository scanned, needing-cleanup, removed-label and failure counts.
 Any failure yields exit status 1; otherwise the command exits 0. A permission
 refusal stops the whole run immediately, without another mutation or identity;
-follow the contribution guide's owner-question handoff. Other failures are
+follow the planning rules' owner-question handoff. Other failures are
 reported and remaining issues and repositories are processed.
 
 The sweep enumerates all closed issues through the platform adapter's paginated

@@ -41,7 +41,7 @@ refusal; otherwise fix the cause and run it again.
    under `CONTRIBUTING.md`'s Implementation contracts section, the whole issue
    and its discussion, the PR body's Delivery subsection, which holds the
    worker's handoff, every earlier round's review and the grill's decision,
-   including acceptance of any contract revision the guide requires. Without
+   including acceptance of any contract revision the planning rules require. Without
    a settled contract, retain the contract-finding stop. A PR without an issue
    takes its decision-bearing body as its contract. Done when you hold the
    head, the round number, the contract and the issue.
@@ -54,7 +54,7 @@ refusal; otherwise fix the cause and run it again.
    drops or invents what the issue and its recorded decisions ask, or leaves it
    ambiguous. A PR without an issue has no such check. Verify every finding
    against the source and drop those that do not hold. Route a defect outside
-   the change's responsibility under `CONTRIBUTING.md`'s Findings section;
+   the change's responsibility under the planning rules' Findings section;
    an issue it opens is a Filed row of this review. Sort each remaining finding as **contract**,
    **larger** or **small**, by the rules' section. Done when every finding
    from both axes is dropped with its reason or sorted.
@@ -91,7 +91,7 @@ refusal; otherwise fix the cause and run it again.
    - A **contract** finding: post the question a grill must settle as
      `.repo-standards/rules/comments.md#owner-questions` says, move the issue
      to `state:grill`, leave the PR a draft and stop under
-     `CONTRIBUTING.md`'s owner-question handoff.
+     the planning rules' owner-question handoff.
 5. **Deliver.** Mark the PR ready with `round.mjs <number> --ready`; exit `2`
    means the review has not held, so return to step 1. Then run `babysit` on
    the PR, posting each internal review round it calls for with
@@ -139,8 +139,12 @@ error: fix the cause and run it again. A permission refusal follows
 
 Paths are relative to the repository root.
 
-- `CONTRIBUTING.md`: the implementation contract, Findings, Credentials and
-  owner-question handoff the steps name, and the development guide's required
+- `.repo-standards/rules/planning.md` in the target repository: planning policy
+  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
+  if both are absent, report the missing policy and stop the dependent step.
+
+- `CONTRIBUTING.md`: the implementation contract, Credentials and delivery requirements
+  the steps name, and the development guide's required
   checks. When it is missing, take the issue body as the contract, run the
   checks the repository documents, and hand off to the owner in one PR comment
   for any rule the steps leave to the guide.
@@ -169,5 +173,5 @@ Paths are relative to the repository root.
   that the reruns need it. When the sandbox image entry point is missing, skip
   that step.
 - The `codebase-design` skill: the check used through Standards above. When
-  missing, report the gap through the contribution guide's Findings route, or
+  missing, report the gap through the planning rules' Findings route, or
   in the handoff without the guide; retain the recorded contract as the baseline.

@@ -16,6 +16,8 @@ features, the action for implementation tickets, and the capability being
 specified for specifications. Avoid redundant type prefixes, issue numbers,
 and trailing periods; aim for roughly 72 characters without a hard limit.
 
+For intake and triage, follow the [planning rules](.repo-standards/rules/planning.md#triage).
+
 ## Implementation contracts
 
 A directly authored specification or implementation ticket carries its
@@ -45,95 +47,11 @@ closes only on its recorded live acceptance.
 
 ## Triage
 
-Triage routes an intake request by where its uncertainty lies, not by its
-category label. A request is code-bound when its expected result is clear and
-code, logs, or a reproduction can answer the rest. It is intent-bound when an
-open question needs the owner's intent, a policy, a trade-off they choose, or
-their taste in copy, UI or look, as when its brief would otherwise leave an owner question, offer options, or
-set a value nobody chose, including for a bug. Missing evidence or access never
-licenses inventing policy.
-
-The orchestrating agent runs triage and starts a research run, a separate
-agent, for each request. For a code-bound request, the research run verifies
-the claim and posts the Agent Brief. For an intent-bound request, it first
-gathers the facts from the code. Where a factory runs triage itself, the
-factory workflow rules' Triage run section sets that run's limits.
-
-Under the inference test, whoever answers for the maintainer may settle a
-question that would otherwise go to the owner only when all three hold: it can
-cite the answer's source, the owner's approved goal for the work, a recorded
-owner decision or wish, or the owner's
-quoted words, each with its date; the choice is reversible within that work, so
-no value or policy outlives it, and it adds no public name and no breaking
-change; and it changes neither the goal nor the scope. A default, limit,
-timeout, or fallback that persists in the product is never inferred. The brief
-states each inferred answer as behavior, and its triage notes list it with its
-citation under **Inferred intent**. A veto is an owner decision, and the brief
-is revised from it.
-
-Owner ideas take conversation and a grill unless the owner approves a shorter
-path for that idea; filed requests take triage. Grills reuse answers and ask
-only about one-way doors or unchosen values. List other answers passing the
-inference test under **Inferred, listed for the owner**, with dated sources
-and veto. Grill answers and plan approval remain gates.
-
-The grill writer invokes `to-spec`, then `to-tickets`, publishing direct body
-contracts for independent review. Each states `Supersedes:` (ADRs, issues),
-`Adds:` and `Deletes:` (durable surfaces, never paths) lines; readiness waits
-for a fate on each open issue a specification supersedes, directly or by ADR.
-One specification lives in the repository containing most work; tickets in
-their responsible repositories are its native sub-issues with blockers. Copy
-relied-on decisions, dates and quotes into every contract. A failed native
-edge stops progression: report the exact missing relationship and platform
-failure.
-
-The orchestrating agent decides the final split, merging, splitting, dropping
-or setting aside drafts, and never accepts its own contract. Substantial split
-changes return to the writer; missing code facts go to independent research.
-Review checks evidence, scope, granularity, dependencies, acceptance criteria,
-test seams and open questions without an owner quiz or settled-seam
-confirmation. Reject unresolved or disguised owner intent; correct settled
-questions. Structure and publication grant no readiness. Apply Readiness to
-each exact contract, parent readiness after tickets under installed later-link
-rules, and closed blockers before implementation. Without notice or authority,
-leave readiness to the owner, reporting links under comment rules.
-
-Changes to a plan's goal, Done means or row scope require an amendment grill,
-possibly one round: revise the specification, then run `to-tickets` on the
-delta, updating affected contracts and native links. Edited accepted contracts
-need independent review again. Findings, follow-ups passing the inference test
-and reorderings already permitted by blockers need no amendment.
-
-Grills edit domain documents on their own branch and checkout, never a shared
-default-branch checkout. Open one draft PR per repository with domain changes,
-delivered by separate `review`, run by the orchestrating agent unless a
-factory reviews it. Return contracts for acceptance.
-
-A fact only an outside reporter holds goes to the reporter, with the issue in
-`state:reporter`. A question only the owner can answer goes to the owner with
-its recommendation, with the issue in `state:owner`, or in `state:grill` when
-a grill must settle the owner's intent.
+Triagers and grill sessions follow the [planning rules](.repo-standards/rules/planning.md#triage).
 
 ## Readiness
 
-Applying `state:ready` is the review action, and the
-`github-repository-configuration` rules name the roles it needs, the factory
-triage run's exception to them for its own brief and for a direct contract it
-reviewed, and the labels. After revising a contract or
-posting an Agent Brief, wait for the issue-contract workflow's revision notice
-before applying readiness. Editing a contract removes its readiness. The workflow keeps one workflow state label on
-an issue, a `state:` label or the closing `wontfix` in its place: authorized
-readiness or a newly applied state replaces the previous one, and an issue left with none gets
-`state:triage` on every run, even if it has never carried a state. This applies
-to open intake requests, specifications, tickets, and unrecognized issues;
-Wayfinder maps and children stay outside workflow states. The validator's own
-`state:triage` is a fallback and never supersedes authorized readiness bound to
-the current revision, even when applied after its review. A person's later
-workflow state still supersedes readiness. A closed issue loses every
-`state:`, `gate:` and `factory:` label, preserving `wontfix`, `type:`,
-`priority:`, `model:`, unrelated labels and feedback. Reopening restores no
-removed labels; normal validation applies.
-A specification or ticket can be ready while its blockers are open.
+Reviewers accept exact contract revisions under the [planning rules](.repo-standards/rules/planning.md#readiness).
 
 ## Development setup
 
@@ -147,18 +65,7 @@ checks documented in the development guide before requesting review.
 
 ## Findings
 
-Note out-of-scope observations in the pull request body or the run's result,
-not as issues. Open an issue only for one that blocks an active goal or causes
-harm (security, data loss, a broken default branch), after checking for an
-existing one, in the responsible repository with `state:triage`.
-
-Park a person's idea as an issue only when they ask. Search the responsible
-repository's tracker first and reuse an existing issue. File it with
-`state:grill` only when they want it decided; otherwise file an ordinary issue
-at `priority:low`.
-
-A factory run cites its filing run in each issue it files, and never opens a
-separate unticketed pull request for out-of-scope work, however small.
+Contributors route out-of-scope observations and requested ideas under the [planning rules](.repo-standards/rules/planning.md#findings).
 
 ## Titles and commits
 
@@ -372,16 +279,7 @@ keep this record out of the internal review template.
 
 ## Owner questions
 
-When an agent needs an answer only the owner can give, it posts the question as
-the [comment rules](.repo-standards/rules/comments.md#owner-questions) say, and stops without a
-pull request if none is open, or leaving the open pull request unmerged and
-linked from the question. This owner handoff ends the agent's babysitting of
-the pull request. The agent neither closes the pull request nor waits for the
-answer. Subsequent continuation follows applicable installed rules.
-
-If the answer changes the implementation contract, have a separate writer edit
-it; await its validator notice, independent review and renewed readiness before
-continuation.
+Contributors route questions to the responsible decision maker under the [planning rules](.repo-standards/rules/planning.md#owner-questions).
 
 ## Comments
 

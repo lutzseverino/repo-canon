@@ -6,31 +6,32 @@ disable-model-invocation: true
 
 A prompt or brief naming this skill is its invocation.
 
-Read the contribution guide's Triage rules for publication, inference and
-amendments. Invoke `grilling` and `domain-modeling` through the session's
-supported skill mechanism, with the request, recorded decisions and dated
-sources as context. Apply the guide's Triage inference and question-routing
-rules during the interview, and gather missing facts yourself.
-Invoke `codebase-design` and apply its [Ownership check](../codebase-design/SKILL.md#ownership-check) to proposed designs during the interview.
+Read the target repository's planning rules, or its contribution guide when
+those rules are absent, for Decision rights, Publication and amendments and
+Readiness. Invoke `grilling` and `domain-modeling` with the request, recorded
+decisions and dated sources. Make domain edits on a branch and checkout you
+own; deliver one draft PR per
+repository through separate `review`, arranged by the caller unless factory
+review is configured. Gather missing facts yourself and apply
+`codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check).
 
-Once the interview and the guide's applicable owner gates are complete, invoke
-`to-spec`, then `to-tickets`. Pass the dated decisions and quoted words to both
-publication steps. Return the issue links, actual native parent/blocker
-relationships, inferences and open factual verification to the orchestrating
-agent for the guide's split decision and independent acceptance. At each native
-write, inspect the response; on failure, stop and report the exact missing edge
-and platform failure under the guide's publication rule.
-
-For an amendment under the guide's Triage rules, interview, record the
-specification revision and invoke `to-tickets` on the delta. Return the changed
-contracts and native links for acceptance under the guide's Readiness section.
+Follow the planning rules' publication route when the interview's gates are
+complete. Pass dated decisions and quoted words to the publication skills.
+Return published links, revisions, native-link responses, inferences and open
+factual verification to the caller for the rules' split and acceptance route.
+For an amendment, pass the revised specification and delta as that section
+requires.
 
 ## Reads
 
 Paths are relative to each responsible repository root.
 
-- `CONTRIBUTING.md`: Triage, implementation contracts and readiness. If missing,
-  use this method with independent review and `grilling`'s missing-guide fallback.
+- `.repo-standards/rules/planning.md` in the target repository: planning policy
+  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
+  if both are absent, report the missing policy and stop the dependent step.
+
+- `CONTRIBUTING.md`: implementation contracts. If missing, use the published
+  issue bodies as contracts.
 - The `grilling`, `domain-modeling`, `to-spec` and `to-tickets` skills:
   interview, domain documents and publication methods.
   If one is missing, report it and stop that step rather than inventing a substitute.

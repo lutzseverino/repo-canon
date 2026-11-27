@@ -342,6 +342,7 @@ test("the standards retire the in-repository factory, its sandbox base, and the 
 // declaration's entry to `rules` or `both`.
 const requirementOutcomes = {
   comments: "both",
+  planning: "both",
   documentation: "both",
   "factory-workflow": "both",
   "factory-sandbox-image": "both",
@@ -402,6 +403,48 @@ test("each declaration with rules or adoption guidance has its decided outcome",
       ]),
   );
   assert.deepEqual(outcomes, requirementOutcomes);
+});
+
+test("planning policy has a declared home reached by guide pointers and entry points", () => {
+  for (const profile of ["standard", "factory"]) {
+    const planning = declarations(root)[profile].find(
+      ({ id }) => id === "planning",
+    );
+    assert.equal(planning?.rules, "rules/planning.md");
+  }
+  assert.ok(!declarations(root).workbench.some(({ id }) => id === "planning"));
+  const guide = interpretMarkdown(read("CONTRIBUTING.md"));
+  const rules = interpretMarkdown(read("rules/planning.md"));
+  for (const heading of [
+    "Triage",
+    "Readiness",
+    "Findings",
+    "Owner questions",
+  ]) {
+    const section = guide.sections([heading]).values().next().value[0];
+    assert.ok(section, heading);
+    const blocks = marked
+      .lexer(section.source)
+      .filter(({ type }) => type !== "space");
+    assert.deepEqual(
+      blocks.map(({ type }) => type),
+      ["paragraph"],
+      heading,
+    );
+    const [target] = section.content.text().links;
+    assert.equal(
+      target?.split("#")[0],
+      ".repo-standards/rules/planning.md",
+      heading,
+    );
+    assert.ok(
+      rules.headings.some(({ name }) => name === heading),
+      heading,
+    );
+  }
+  const tree = directoryTree(root);
+  for (const name of entryPoints)
+    assert.ok(readSet(tree, name).members.includes("rules/planning.md"), name);
 });
 
 test("the contribution guide leaves documentation rules to their declaration", () => {

@@ -320,10 +320,15 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       factory
         ? [
             "rules/comments.md",
+            "rules/planning.md",
             "rules/github-repository-configuration.md",
             "rules/factory-workflow.md",
           ]
-        : ["rules/comments.md", "rules/github-repository-configuration.md"],
+        : [
+            "rules/comments.md",
+            "rules/planning.md",
+            "rules/github-repository-configuration.md",
+          ],
     );
     for (const input of repository.ruleInputs) {
       assert.equal(
@@ -398,6 +403,20 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "utf8",
     ),
   );
+  assert.deepEqual(
+    new Set(scenarios.intentProbes.map(({ route }) => route)),
+    new Set(["maintainer", "delegated-grill", "inference"]),
+  );
+  assert.deepEqual(scenarios.decisionRights, {
+    delegatedReview: "different-provider",
+    veto: "next-update",
+    withoutDelegate: "maintainer",
+    policySources: ["installed-rules", "target-guide"],
+  });
+  for (const { request, reason } of scenarios.intentProbes) {
+    assert.ok(request.trim());
+    assert.ok(reason.trim());
+  }
   const contracts = new Map(
     [...scenarios.contracts, scenarios.amendment.newTicket].map((contract) => [
       contract.id,

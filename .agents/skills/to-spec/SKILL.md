@@ -18,24 +18,16 @@ The issue tracker and triage label vocabulary should have been provided to you.
 
 Reuse recorded test-seam decisions and plan approval with their dates and
 quoted words. Gather missing code facts and record seam evidence for review.
-Before proposing an unanswered decision, read and apply the contribution
-guide's Triage inference test, inferred-list and owner-question rules.
+Before proposing an unanswered decision, apply the target planning rules'
+Decision rights and Owner questions sections.
 
-3. Write the spec using the template below. Copy every relied-on owner decision
-with its date and quoted words into the issue-facing contract; private records
-are not required inputs. Publish one specification issue in the repository
-containing most of the work, reading `.repo-standards/rules/comments.md#disclaimers`
-first on a hosted tracker. Cross-repository tickets remain children of that one
-specification. Use the guide's direct-body-contract publication route. Return
-the exact published contract and factual/test-seam evidence to the orchestrating
-agent for its split decision and acceptance under the guide's Triage and
-Readiness sections and the installed parent-readiness rules.
-
-Return the published specification's link and exact revision to the caller,
-which starts or resumes its ticket-publication step. For an amendment under
-the guide's Triage rules, consume the amendment grill's decisions, revise the
-specification and return its link and revision for the caller's delta-ticket
-step and the guide's acceptance process.
+3. Write the spec using the template below, following the target repository's
+planning rules' Publication and amendments section. Read
+`.repo-standards/rules/comments.md#disclaimers` before publishing on a hosted
+tracker. Return the published link, exact revision and factual/test-seam
+evidence to the caller for the rules' split and acceptance route. For an
+amendment, consume its decisions and return the revised specification for the
+delta-ticket step.
 
 <spec-template>
 
@@ -97,6 +89,10 @@ Any further notes about the feature.
 
 Paths are relative to the repository root.
 
+- `.repo-standards/rules/planning.md` in the target repository: planning policy
+  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
+  if both are absent, report the missing policy and stop the dependent step.
+
 - `docs/agents/issue-tracker.md` and `docs/agents/triage-labels.md`: the
   issue tracker and its triage label vocabulary. When the tracker config is
   missing and no tracker was provided, ask the user where to publish the
@@ -111,9 +107,3 @@ Paths are relative to the repository root.
   which the `repository-standards` skill looks up: the companion labels
   readiness needs. When they are missing, readiness carries no companion
   labels.
-- `CONTRIBUTING.md`: Triage inference, publication, amendments and readiness.
-  If missing, use `grilling`'s missing-guide fallback, independent exact-revision
-  review and the tracker rules provided; route unresolved owner choices to the
-  user without repeating recorded answers.
-- The `grilling` skill: the inference fallback, only when the contribution
-  guide is missing. If also missing, report it and stop for the missing policy.
