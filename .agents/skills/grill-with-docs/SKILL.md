@@ -16,7 +16,7 @@ strategic close review and reusing applicable recorded approval. Make domain
 edits on a branch and checkout you own; deliver one draft PR per
 repository through separate `review`, arranged by the caller unless factory
 review is configured. Gather missing facts yourself and apply
-`codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check).
+`codebase-design`'s [Ownership check](../codebase-design/OWNERSHIP.md).
 
 Follow the planning rules' publication route when the interview's gates are
 complete. Pass dated decisions and quoted words to the publication skills.

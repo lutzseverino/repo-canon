@@ -48,7 +48,7 @@ refusal; otherwise fix the cause and run it again.
 2. **Review.** Check out the head in a checkout you own and run `code-review`
    with the merge-base of the PR's base branch as the fixed point and the
    contract as the spec.
-   Apply `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check) through `code-review`'s Standards axis, judging against the recorded contract.
+   Apply `codebase-design`'s [Ownership check](../codebase-design/OWNERSHIP.md) through `code-review`'s Standards axis, judging against the recorded contract.
    Give its Spec axis this task context: also read the
    contract against the issue, and report where the contract contradicts,
    drops or invents what the issue and its recorded decisions ask, or leaves it

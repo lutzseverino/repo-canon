@@ -26,9 +26,9 @@ When launched by the orchestrating agent, explore, write the candidates in Markd
 **Scope before you scan: YAGNI.** Deepening a module pays off by making future changes to it easier, so put extra weight on the parts of the codebase that have recently changed. Decide *where* to look before you look:
 
 - If the user named a direction (a module, a subsystem, a pain point), take it, and skip the inference below.
-  **Ownership** is a named direction: use `codebase-design`'s **Ownership check**
-  section to explore misplaced values, configuration kinds and surprising
-  layout. Pass that section to the exploring sub-agent; it supplies the
+  **Ownership** is a named direction: use `codebase-design`'s [Ownership check](../codebase-design/OWNERSHIP.md)
+  to explore misplaced values, configuration kinds and surprising
+  layout. Pass that reference to the exploring sub-agent; it supplies the
   judgments and recording routes rather than a second rule set here.
 - Otherwise, walk back a good stretch of the commit history (`git log --oneline`) to find the codebase's hot spots, the files and areas that keep coming up, and let those paths pull your attention first. If the changes are scattered with no clear hot spot, widen the net.
 

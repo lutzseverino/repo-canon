@@ -10,7 +10,7 @@ validation requirements. Implement the work described in the spec or tickets.
 When the input is review findings on an existing pull request, read the
 findings and continue on that pull request's branch.
 
-Apply `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check) to the change, including its contract-disagreement route.
+Apply `codebase-design`'s [Ownership check](../codebase-design/OWNERSHIP.md) to the change, including its contract-disagreement route.
 
 Before delegating, read [delegation and session naming](DELEGATION.md).
 

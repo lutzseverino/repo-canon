@@ -120,7 +120,7 @@ labels remain separate from intake labels.
 
 New Agent Brief revisions require non-placeholder **Seams** after Out of scope.
 The writer and independent reviewer use `codebase-design`'s
-[Ownership check](../../.agents/skills/codebase-design/SKILL.md#ownership-check).
+[Ownership check](../../.agents/skills/codebase-design/OWNERSHIP.md).
 `No trigger` passes structure; the validator makes no semantic ownership judgment.
 Native specifications and implementation tickets keep their existing shapes.
 
