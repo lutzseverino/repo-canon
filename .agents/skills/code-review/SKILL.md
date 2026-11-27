@@ -80,7 +80,7 @@ package-name guesses nor earlier additions in the same diff as the baseline.
 An empty list is valid; a failed command must be resolved before review.
 These are evidence, not a trigger classifier or an automatic ownership verdict.
 
-Read `codebase-design`’s [Ownership check](../codebase-design/OWNERSHIP.md).
+Read `codebase-design`'s [Ownership check](../codebase-design/OWNERSHIP.md).
 Pass that reference and the fact list to Standards; pass the reference to Spec for
 its cleanup allowance. If that skill is missing, report the missing dependency
 rather than inventing ownership rules.
