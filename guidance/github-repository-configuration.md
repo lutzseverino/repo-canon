@@ -55,8 +55,8 @@ and squash merge. The standard profile has no configured PR reviewer by
 default; follow its contribution-guide delivery without imposing factory
 review-agent configuration.
 
-For a first remote project adoption that installs the workflow absent from
-default, deliver through the owner, including when both protection mechanisms are proven
+For a first remote project adoption that installs the PR metadata validation
+workflow absent from default, deliver through the owner, including when both protection mechanisms are proven
 unavailable on the private plan. After separate review, leave the PR open and
 stop with its exact reviewed head, pre-commit ready-to-commit summary and
 verdict, validation outcomes, missing prerequisites and owner action. Record
@@ -86,7 +86,8 @@ adoption PR, or a direct workbench commit.
 
 ## Required-check freshness
 
-The fix establishes and reads back strict required-check freshness through
+The `pull-request-integration` fix establishes and reads back strict
+required-check freshness through
 classic protection or its managed ruleset when it establishes the required
 check, preserving other checks, rules and bypass settings. Changes to existing
 policy require confirmation. Adoption deferrals do not authorize unattended
@@ -142,13 +143,13 @@ absence, malformed data, an empty list or a list naming both `Runner checks`
 and `Review rerun`. At `runner`, declare `PR metadata` and `Runner checks`; at
 `self-reported`, `PR metadata` and `Review rerun`. For remote GitHub project
 adoption, have the owner establish repository-chosen exact names on the
-destination default branch after the README-only founding commit, in a
-separate repository-policy change outside the adoption commit and PR. A
-local or proposed declaration cannot satisfy this trusted-default prerequisite.
-If it is missing or invalid, stop before adoption, report that owner action
-and retain the repository and interview answers for continuation. Local-only
-and workbench adoption use their delivery paths above without this remote
-prerequisite.
+destination default branch before starting adoption, in a separate
+repository-policy change outside the adoption commit and PR; for a new
+repository, after its founding commit. A local or proposed declaration cannot
+satisfy this trusted-default prerequisite. If it is missing or invalid, stop
+before adoption, report that owner action and retain the repository and any
+gathered answers for continuation. Local-only and workbench adoption use their
+delivery paths above without this remote prerequisite.
 
 An absent trusted declaration stops wait and merge: correct it on the destination
 default branch through the applicable owner procedure, then invoke again.
