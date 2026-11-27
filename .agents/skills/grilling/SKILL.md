@@ -42,12 +42,13 @@ of another provider where the harness offers one, reads ADRs as history, not
 constraints. Ask its findings as the final round, before the decision maker's final
 approval and publication. A grill that only drops or moves work skips this
 strategic-close step; delegated decisions still need the planning rules'
-independent review.
+independent review. Reuse an applicable recorded approval instead of asking
+again.
 
 For a publishing grill, include the last decisions and ticket check in that
 same final round: specification repository, ticket split with repositories and
-blockers, testing seams, and publication go-ahead. Reuse an applicable recorded
-approval and cite it in the round instead of asking again. The delegated agent
+blockers, testing seams, and publication go-ahead. Cite any reused approval in
+the round. The delegated agent
 answers this round with the review above when it is the other party.
 
 Complete the interview only when every required answer is recorded or listed
