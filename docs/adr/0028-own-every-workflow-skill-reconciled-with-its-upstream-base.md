@@ -1,5 +1,7 @@
 # Own every workflow skill, reconciled with its upstream base
 
+Amended by [ADR 0056](0056-cap-each-skill-file-and-ship-its-command-runtime.md) (2026-11-27): standalone skills are installed with the runtime their commands need; startup failure stops without an alternate merge path. The original decision is retained below.
+
 Every workflow skill Repo Canon installs is an owned skill: Repo Canon
 publishes it as its own, whether written for Repo Canon or taken from an
 upstream skill. A skill taken from upstream records its upstream base, the
