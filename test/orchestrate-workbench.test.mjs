@@ -2400,7 +2400,7 @@ test("record edits and incoming messages wake the wait; ended rows are not watch
 const brief = (report) =>
   `# Review launch\n\nLaunch report: \`${report}\`\n\n## Context\n\nCheck the guide.\n\nstatus: done\n`;
 
-test("launch reports wake only at their exact final line until the plan's log names them", async (t) => {
+test("launch reports wake only at their exact final line until the plan's log holds their receipt", async (t) => {
   for (const ending of ["status: done", "status: done\n", "status: done\r\n"]) {
     const bench = workbench(t);
     bench.write("review/brief-01.md", brief("report-01.md"));
@@ -2427,7 +2427,7 @@ test("launch reports wake only at their exact final line until the plan's log na
     );
     assert.equal(pauses, 5);
     assert.equal(output.stdout, "finished: read review/report-01.md\n");
-    // A finished report wakes at once until the log names it.
+    // A finished report wakes at once until the log holds its receipt.
     output.stdout = "";
     assert.equal(
       await main(waitArgs(bench.root), {
@@ -2438,7 +2438,7 @@ test("launch reports wake only at their exact final line until the plan's log na
       0,
     );
     assert.equal(output.stdout, "finished: read review/report-01.md\n");
-    bench.write("review/log.md", "# Log\n\n- Consumed report-01.md.\n");
+    bench.write("review/log.md", "# Log\n\n- Consumed: report-01.md\n");
     output.stdout = "";
     assert.equal(
       await main(waitArgs(bench.root), {
@@ -2452,11 +2452,11 @@ test("launch reports wake only at their exact final line until the plan's log na
   }
 });
 
-test("a log consumes a report only by its whole file name", async (t) => {
+test("a receipt for another report leaves the launch unconsumed", async (t) => {
   const bench = workbench(t);
   bench.write("review/brief-01.md", brief("report-01.md"));
   bench.write("review/report-01.md", "status: done\n");
-  bench.write("review/log.md", "# Log\n\n- Consumed grill-report-01.md.\n");
+  bench.write("review/log.md", "# Log\n\n- Consumed: grill-report-01.md\n");
   const output = capture();
   assert.equal(
     await main(waitArgs(bench.root), {
@@ -2468,6 +2468,141 @@ test("a log consumes a report only by its whole file name", async (t) => {
     output.stderr,
   );
   assert.equal(output.stdout, "finished: read review/report-01.md\n");
+});
+
+test("explicit receipts accept optional log prefixes and delimited report paths", async (t) => {
+  for (const { report, receipt } of [
+    { report: "report.md", receipt: "Consumed: report.md" },
+    { report: "report.md", receipt: "- Consumed: report.md Row ready." },
+    { report: "report.md", receipt: "2026-11-27T03:00Z Consumed: ./report.md" },
+    {
+      report: "report.md",
+      receipt: "* 2026-11-27T03:00Z Consumed: report.md Row ready.",
+    },
+    { report: "report.md", receipt: "1. Consumed: report.md" },
+    {
+      report: "report with spaces.md",
+      receipt: "Consumed: `report with spaces.md` Row ready.",
+    },
+    {
+      report: "report with spaces.md",
+      receipt: "Consumed: [the report](report with spaces.md) Row ready.",
+    },
+  ]) {
+    await t.test(receipt, async (t) => {
+      const bench = workbench(t);
+      bench.write("review/brief.md", brief(report));
+      bench.write("review/log.md", `# Log\n\n${receipt}\n`);
+      const output = capture();
+      assert.equal(
+        await main(
+          [
+            "status",
+            bench.root,
+            "--stale-after",
+            "60",
+            "--stages",
+            installedStages,
+          ],
+          { ...output.streams, connect: unreachable },
+        ),
+        0,
+        output.stderr,
+      );
+      assert.doesNotMatch(
+        output.stdout,
+        /report pending|finished; read the report/,
+      );
+    });
+  }
+});
+
+test("ordinary mentions and receipts for other paths do not consume a launch", async (t) => {
+  const bench = workbench(t);
+  bench.write("review/brief.md", brief("report-01.md"));
+  bench.write("review/report-01.md", "status: done\n");
+  for (const line of [
+    "- Consumed report-01.md.",
+    "- report-01.md consumed.",
+    "- Note. Consumed: report-01.md",
+    "- 2026-11-27T03:00Z Launched brief.md, pending report-01.md.",
+    "Consumed: elsewhere/report-01.md",
+    "Consumed: report-01.md.bak",
+  ]) {
+    bench.write("review/log.md", `# Log\n\n${line}\n`);
+    const output = capture();
+    assert.equal(
+      await main(waitArgs(bench.root), {
+        ...output.streams,
+        connect: unreachable,
+        pause: unreachable,
+      }),
+      0,
+      output.stderr,
+    );
+    assert.match(output.stdout, /finished: read review\/report-01\.md\n/, line);
+  }
+});
+
+test("a bare receipt path ends at the first whitespace", async (t) => {
+  const bench = workbench(t);
+  bench.write("review/brief.md", brief("report.md"));
+  bench.write("review/brief-spaces.md", brief("report.md with spaces"));
+  bench.write(
+    "review/log.md",
+    "# Log\n\nConsumed: report.md with spaces Row ready.\n",
+  );
+  const output = capture();
+  assert.equal(
+    await main(
+      [
+        "status",
+        bench.root,
+        "--stale-after",
+        "60",
+        "--stages",
+        installedStages,
+      ],
+      { ...output.streams, connect: unreachable },
+    ),
+    0,
+    output.stderr,
+  );
+  assert.doesNotMatch(output.stdout, /review\/report\.md report pending/);
+  assert.match(output.stdout, /review\/report\.md with spaces report pending/);
+});
+
+test("receipts match resolved report paths within their own plan log", async (t) => {
+  const bench = workbench(t, {
+    plans: { review: planText(), other: planText() },
+  });
+  bench.write("review/brief-a.md", brief("a/report.md"));
+  bench.write("review/brief-b.md", brief("b/report.md"));
+  bench.write("other/brief.md", brief("report.md"));
+  bench.write(
+    "review/log.md",
+    "# Log\n\nConsumed: ./a/../a/report.md Row ready.\n",
+  );
+  bench.write("other/log.md", "# Log\n\nConsumed: ../review/b/report.md\n");
+  const output = capture();
+  assert.equal(
+    await main(
+      [
+        "status",
+        bench.root,
+        "--stale-after",
+        "60",
+        "--stages",
+        installedStages,
+      ],
+      { ...output.streams, connect: unreachable },
+    ),
+    0,
+    output.stderr,
+  );
+  assert.doesNotMatch(output.stdout, /review\/a\/report\.md/);
+  assert.match(output.stdout, /review\/b\/report\.md report pending/);
+  assert.match(output.stdout, /other\/report\.md report pending/);
 });
 
 test("reloading records drops an ended row's watch and keeps other baselines", async (t) => {
@@ -2559,7 +2694,7 @@ test("reloading records watches new launches without restarting the deadline", a
   output.stdout = "";
   bench.write("review/brief-03.md", brief("report-03.md"));
   bench.write("review/report-03.md", "status: done\n");
-  bench.write("review/log.md", "# Log\n\n- report-02.md consumed.\n");
+  bench.write("review/log.md", "# Log\n\n- Consumed: report-02.md\n");
   assert.equal(
     await main(waitArgs(bench.root), {
       ...output.streams,
@@ -2573,7 +2708,10 @@ test("reloading records watches new launches without restarting the deadline", a
     "review/log.md: changed\nfinished: read review/report-03.md\n",
   );
   // Reloads keep the overall deadline.
-  bench.write("review/log.md", "# Log\n\n- report-02.md and report-03.md.\n");
+  bench.write(
+    "review/log.md",
+    "# Log\n\n- Consumed: report-02.md\n- Consumed: report-03.md\n",
+  );
   await main(
     ["status", bench.root, "--stale-after", "60", "--stages", installedStages],
     { connect },
@@ -2968,7 +3106,7 @@ test("status groups every item by who moves next, with its link and plan/row", a
   bench.write("review/report-a.md", "Done.\nstatus: done\n");
   bench.write("review/report-b.md", "Working.\n");
   bench.write("review/report-c.md", "status: done\n");
-  bench.write("review/log.md", "# Log\n\n- Consumed report-c.md.\n");
+  bench.write("review/log.md", "# Log\n\n- Consumed: report-c.md\n");
   const items = {
     "example/tracker#1": { labels: ["state:triage"] },
     "example/tracker#2": { labels: ["state:grill"] },
@@ -3458,6 +3596,8 @@ test("a generated brief runs under status until its report finishes, then waits 
   assert.equal(code, 0);
   const report = fields(stdout)["Launch report"];
   const name = "brief-grill-routing-2026-11-20";
+  const announcement = `# Log\n\n- 2026-11-20T10:00Z Launched ${name}.md, pending ${name}-report.md.\n`;
+  bench.write("review/log.md", announcement);
   const status = async () => {
     const output = capture();
     assert.equal(
@@ -3495,8 +3635,42 @@ test("a generated brief runs under status until its report finishes, then waits 
       "m",
     ),
   );
-  bench.write("review/log.md", `# Log\n\n- Consumed ${name}-report.md.\n`);
+  const output = capture();
+  assert.equal(
+    await main(waitArgs(bench.root), {
+      ...output.streams,
+      connect: unreachable,
+      pause: unreachable,
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(output.stdout, `finished: read review/${name}-report.md\n`);
+  bench.write(
+    "review/log.md",
+    `${announcement}- 2026-11-20T10:01Z Consumed: ${report} Row is ready.\n`,
+  );
   assert.doesNotMatch(await status(), new RegExp(`${name}-report`));
+  let elapsed = 0;
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "1", "2"), {
+      ...output.streams,
+      connect: unreachable,
+      now: () => elapsed,
+      pause: async (ms) => {
+        elapsed += ms;
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.match(output.stdout, /maximum duration of 2 seconds/);
+  assert.doesNotMatch(output.stdout, /finished:/);
+  assert.equal(
+    readFileSync(bench.path("review/log.md"), "utf8"),
+    `${announcement}- 2026-11-20T10:01Z Consumed: ${report} Row is ready.\n`,
+  );
 });
 
 test("status routes a grill-only row through the supplied Grill hand skill", async (t) => {
