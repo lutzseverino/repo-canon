@@ -36,8 +36,8 @@ Take only your entry branch and the references it names:
 Retain relied-on decisions with dates and quoted words in repository-facing
 records; cite those records, never private workbench URLs or host paths.
 Before delegating, follow `.agents/skills/implement/DELEGATION.md`.
-Without subagents, research and publish yourself, then link the owner to the
-contract for accept mode in another session.
+Without subagents, research and publish yourself, then stop and link the owner
+to the contract for accept mode in another session.
 
 ## Publication mode
 
@@ -46,8 +46,9 @@ source. Read `.repo-standards/rules/github-repository-configuration.md#agent-bri
 and, for factory publication,
 `.repo-standards/rules/factory-workflow.md#contract-publication-mode`.
 Those sections own the body-contract, legacy-cutoff and exact-revision policy;
-use the selected route in every writer handoff. Research notes and questions
-remain comments.
+use the selected route in every writer handoff. An unknown mode or missing or
+ambiguous original input holds publication and readiness. Research notes and
+questions remain comments.
 
 ## Gather context
 
@@ -81,7 +82,8 @@ When it holds, use [Accept a brief that holds](ACCEPT.md#accept-a-brief-that-hol
 
 ## Other outcomes
 
-For missing facts or decisions, use the planning rules' Owner questions and
+A claim that fails verification or lacks detail waits on whoever holds the
+missing fact. For missing facts or decisions, use the planning rules' Owner questions and
 [question routing](ORCHESTRATING.md#route-questions); factory runs use their
 own outcome table instead.
 For `wontfix`, close with the reason: already implemented names its existing
@@ -119,7 +121,8 @@ Repository Standards' [rules reference](https://github.com/lutzseverino/repo-sta
   create on first rejection under [OUT-OF-SCOPE.md](OUT-OF-SCOPE.md).
 - `vendor/repo-canon/validate-issue-contract.mjs`, `operations/lib/factory-labels.mjs`
   and the `babysit` skill's GitHub connection: `ready.mjs` runtime; if missing,
-  report startup failure and stop at acceptance until repaired.
+  report the startup failure and stop at acceptance as [ACCEPT.md](ACCEPT.md#accept-a-brief-that-holds)
+  says for credentials that cannot apply readiness; rerun once repaired.
 - `.repo-standards/rules/factory-workflow.md` and `.scriptorium/config.json`
   at the destination default branch: `ready.mjs` model applicability/prefix;
   missing rules require no model label.

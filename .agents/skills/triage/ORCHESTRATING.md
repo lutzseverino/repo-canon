@@ -45,7 +45,7 @@ Route redundancy, failed verification, missing facts and rejection through
 
 5. **Check publication** against the planning rules' Publication and amendments section. Inspect bodies, native links and copied decisions. The original intake's revised contract follows [Publication mode](SKILL.md#publication-mode); keep one authoritative contract for the work.
 
-6. **Review and accept** each exact contract independently under [contract review](REVIEW.md), using the direct specification/ticket shape rather than Agent Brief fields where applicable. Route open questions as [Route questions](#route-questions) says, and return settled questions to the writer for correction. Apply the planning rules' Readiness section and installed parent-readiness rules. For amendments, check the revised specification and delta contracts through this same review process under the planning rules' Publication and amendments amendment rules.
+6. **Review and accept** each exact contract independently under [contract review](REVIEW.md) and [accept](ACCEPT.md#accept-a-brief-that-holds) it, using the direct specification/ticket shape rather than Agent Brief fields where applicable. Route open questions as [Route questions](#route-questions) says, and return settled questions to the writer for correction. Apply the planning rules' Readiness section and installed parent-readiness rules. For amendments, check the revised specification and delta contracts through this same review process under the planning rules' Publication and amendments amendment rules.
 
 ## Route questions
 

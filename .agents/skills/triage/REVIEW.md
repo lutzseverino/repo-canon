@@ -10,5 +10,3 @@ Read the published brief as a reviewer who did not write it. Check it against th
 - **Open questions**: none remain, including missing required inputs. Route unavailable material as [Route questions](ORCHESTRATING.md#route-questions) says. An open intent question means the request is intent-bound; switch paths.
 
 Passing the issue-contract check proves the shape, never that the brief holds. When it does not hold, send the research run the specific corrections; it edits the brief, and you review the new revision from the top.
-
-Once it holds, [accept it](ACCEPT.md#accept-a-brief-that-holds).
