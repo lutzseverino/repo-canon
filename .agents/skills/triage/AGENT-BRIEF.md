@@ -1,28 +1,20 @@
 # Writing Agent Briefs
 
-An agent brief is the implementation contract accepted before `state:ready`.
-Read the validator's source/mode first: prepared mode publishes a brief comment;
-after explicit body-mode activation, new/revised briefs replace the issue body.
-Only an exact unchanged inventoried legacy comment remains authoritative until
-its next revision. Readiness follows independent acceptance, as
-[SKILL.md](SKILL.md) describes. Never pick a competing comment after migration.
-
-In body mode, preserve the reporter's request verbatim once under
-`## Original request` at the end, after the brief, its triage notes and, in a
-hand post, the comment rules' disclosure footer. On first
-conversion capture the original before replacing intake; reuse a correctly
-preserved original on later revisions. Never nest a previous brief/body or
-invent missing text. Missing or ambiguous original input blocks publication
-and readiness. Progress and questions remain comments. The host captures
-intake author/run-writer proof independently before body replacement.
-
-The brief states **what the agent should do**, which stretches to both surfaces: for an issue, that's building the change from nothing; for a PR, it's what's left to do _to the existing diff_: finish it, close gaps, address review points. Same principles either way; the PR example below shows the difference.
+Before publication or acceptance, follow [Publication mode](SKILL.md#publication-mode).
+For issues, describe the change to build; for PRs, describe what remains to
+finish or fix in the existing diff.
 
 ## Principles
 
 ### Available inputs
 
-A brief's required implementation material must be in the repository, the issue and its comments, or public URLs. A host-only path cannot be the sole required source. Before readiness, check host material for secrets and post the non-secret material on the issue, quoted or attached, then cite it from the brief. Copy every relied-on decision into the repository-facing record with its date and quoted words, even when this duplicates a private record. Never cite or require the private workbench: no URL, host path or instruction to consult it, including for provenance. Repository records may cite one another. Independent acceptance review rejects a private-workbench reference as a substitute for copied decision content and verifies input availability along with the brief's other requirements.
+Required inputs belong in the repository, issue/comments or public URLs.
+Check host material for secrets, publish its non-secret content on the issue,
+then cite it. Copy relied-on decisions with dates and quoted words into the
+repository-facing record, including private-source decisions; cite repository
+records, never a private workbench, host path or instruction, even as provenance.
+Independent review verifies availability and rejects private references
+substituted for decision content.
 
 ### Durability over precision
 
@@ -32,10 +24,7 @@ contracts that survive renames, moves and refactors while the issue waits in
 
 ### Behavioral, not procedural
 
-Describe **what** the system should do, not **how** to implement it. The agent will explore the codebase fresh and make its own implementation decisions.
-
-- **Good:** "`SkillConfig` accepts an optional `schedule: CronExpression`"; "`/triage` without arguments shows issues needing attention."
-- **Bad:** "Add the field in src/types/skill.ts at line 42"; "Add a switch statement in the main handler."
+State what the system should do; leave implementation decisions to the agent.
 
 ### Short fields
 
@@ -50,64 +39,68 @@ as "`gh issue list --label state:triage` returns classified issues", not "Triage
 
 ### Progress stays out of the brief
 
-After readiness, nobody edits the brief to record progress, ticking its acceptance criteria included: editing it removes its readiness. Progress lives in linked pull requests, sub-issue states and comments, and the issue closes when its own acceptance criteria hold.
+Follow the contribution guide's Implementation contracts: after readiness,
+progress belongs in linked PRs, sub-issue states and comments, not brief edits
+or checked acceptance boxes.
 
 ### Live evidence and split tickets
 
-When work must be shown on a live system, follow the contribution guide's Implementation contracts paragraph: put the live evidence in the source brief's acceptance criteria. In its split case, write two briefs instead: the live-acceptance brief, blocked by the source ticket, makes the recorded live evidence its acceptance criteria, and the source pull request links it without a closing reference. Its readiness follows the installed rules for work whose live steps need host access.
+Apply the contribution guide's Implementation contracts to live evidence:
+source acceptance carries it unless the guide's split case needs a blocked
+live-acceptance ticket. The source PR links that ticket without closing it;
+its readiness follows installed host-access rules.
 
 ### Design acceptance criteria
 
-For UI, visual and icon work, add these outcomes to the issue's contract so
-review can check the evidence on the pull request:
+For UI, visual and icon work, add these outcomes for PR review:
 
-- A token plan, written before building, records a small colour set, type roles, a layout sketch and the design principles.
-- A self-review against generic design tells of its own choosing names each tell it checked and its verdict.
-- Built screens have screenshots and a critique recorded before review.
+- A token plan before building records a small colour set, type roles, layout sketch and design principles.
+- A self-review names generic design tells of its own choosing and each verdict.
+- Built screens have screenshots and a critique before review.
 - Icon work has a vector master judged against a named reference icon of the same family.
 
-These are acceptance outcomes, not an implementation procedure, and need no
-installed design skill.
+These outcomes require no installed design skill.
 
 ### Explicit scope boundaries
 
-State what is out of scope. This prevents the agent from gold-plating or making assumptions about adjacent features.
+Name adjacent work that is out of scope.
 
 ### Seams
 
-After Out of scope, the writer supplies **Seams** using
+After Out of scope, record **Seams** under
 `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check):
-`No trigger`, or the triggered read and selected default or accepted override.
-Independent brief review assesses the claim's honesty, Value owner, consumers,
-reversibility and cost read. Structural validation checks only that the field
-has non-placeholder content.
+`No trigger`, or the triggered read and chosen default or accepted override.
+Review assesses honesty, Value owner, consumers, reversibility and cost;
+validation checks non-placeholder content only.
 
 ### Decisions, not options
 
-The implementing agent can't ask the owner anything, so a brief settles every question of intent before it is accepted. State each owner decision as behavior. A brief that needs one of these is not finished; its question is routed as [SKILL.md](SKILL.md) says, under the target planning rules' inference test and Decision rights (its
-contribution guide when those rules are absent):
-
-- **Bad:** "Retry for a reasonable period (agent's choice)"
-- **Bad:** "Either drop the row or fail the export"
-- **Bad:** "Fall back to 60 minutes when no window is configured", when nobody chose 60 minutes
-- **Bad:** "Open question: should admins be exempt?"
-- **Good:** "Retry for 30 minutes after the first failure, then mark the Parcel failed", with the owner's dated, quoted decision in the triage notes
-
-When the owner has reserved review before merge, state that designation as contract behavior and retain its dated decision source in the triage notes for the worker's PR handoff. Use the recorded reservation, not a routing label, as its source. Follow the `github-repository-configuration` rules' Designated owner review gate in both profiles; applicable installed rules retain merge ownership and continuation.
-
-Implementation choices that don't change what users or operators see stay with the agent; leave them out.
+Settle intent before acceptance; state decisions as behavior. Route unresolved
+questions through [SKILL.md](SKILL.md) under the planning rules' inference test
+and Decision rights (the contribution guide when absent).
+“Reasonable retry period”, unchosen fallbacks and alternatives leave intent
+open; a chosen retry limit needs the owner's dated, quoted decision in notes.
+Leave invisible implementation choices to the agent.
+For reserved owner review, state the designation as contract behavior and
+retain its dated decision source in notes, rather than using a routing label
+as provenance. Apply the installed GitHub rules' Designated owner review gate;
+installed rules retain merge ownership and continuation.
 
 ## Triage notes
 
-The triage notes that accompany a brief follow it in the selected body or eligible legacy comment, never between the lead line and the `## Agent Brief` heading. Fact-finding and owner decisions posted before the brief exists are separate triage notes comments. Collapse a brief's notes in `<details>` behind the summary the [template](#template) shows, with its owner-question and inferred-intent counts and the model. Owner questions and inferred intent stay visible above the collapsed notes whenever there are any. A brief's notes cover:
+Notes follow the brief; earlier fact-finding and decisions use separate notes
+comments. Keep notes collapsed under the [template](#template)'s summary with
+owner-question/inferred-intent counts and model; show questions and inferred
+intent above it when present. Apply installed publication and comment rules
+for placement and disclosure. Cover:
 
-- **Path**: code-bound or intent-bound, with a one-line reason.
-- **Verification**: what was checked and how (reproduction, code path, tests run), and where the redundancy search looked.
-- **Owner decisions**: each decision the brief relies on, including any owner-review reservation, with its date and quoted words; for a grill's brief, copied from the grill record. Cite a repository record when available, never the private workbench.
-- **Inferred intent**: each answer inferred under the inference test, which the brief states as behavior, with its date, quoted decision content and repository citation when available; copy private-source content without referencing the private record. In the factory's triage run, it cites a repository record, as the installed factory workflow rules' Triage run section says.
-- **Dependencies**: issues that must land first, for the reviewer to record as blockers.
-- **Model**: when the installed rules ask for it, one `model:` label and the one-line reason their Model selection rule requires: a suggestion for the reviewer to apply or replace, or, in the factory's triage run, the label its run result asks for.
-- **Owner questions**: none, for a brief ready for review.
+- **Path:** code-bound or intent-bound and why.
+- **Verification:** reproduction, code paths, tests and redundancy-search locations.
+- **Owner decisions:** every relied-on decision, including reserved review, dated and quoted; copy grill decisions and cite repository records.
+- **Inferred intent:** each behavioral answer with dated, quoted source and repository citation; copy private-source content without its private reference; factory runs follow the installed Triage run source limits.
+- **Dependencies:** issues that must land first, for native blockers.
+- **Model:** when required, one `model:` label with the installed Model selection rule's guidance-based reason; a reviewer suggestion, or the factory run's chosen label.
+- **Owner questions:** none for a brief ready for review.
 
 ## Template
 
