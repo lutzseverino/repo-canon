@@ -43,8 +43,20 @@ policies can still block execution; repository-level readback cannot detect
 that. See the [setup policy documentation](../docs/development/github-pr-integration-setup.md#public-repository-actions-event-policy)
 for API and reconciliation details.
 
-For a first adoption that installs the workflow absent from default, deliver
-through the owner, including when both protection mechanisms are proven
+## Adoption delivery
+
+Once a run starts, use its pinned runtime for completion and recovery. Before
+committing each completed run, preserve that runtime's `status --summary`
+output and `status` ready-to-commit verdict.
+
+For a remote project, deliver one completed run per adoption PR under the new
+`CONTRIBUTING.md`: adoption branch, complete adoption record, separate review
+and squash merge. The standard profile has no configured PR reviewer by
+default; follow its contribution-guide delivery without imposing factory
+review-agent configuration.
+
+For a first remote project adoption that installs the workflow absent from
+default, deliver through the owner, including when both protection mechanisms are proven
 unavailable on the private plan. After separate review, leave the PR open and
 stop with its exact reviewed head, pre-commit ready-to-commit summary and
 verdict, validation outcomes, missing prerequisites and owner action. Record
@@ -52,6 +64,27 @@ absent hosted checks as absent, not passed. This bootstrap step grants no agent
 merge exception and changes no wait or merge refusal. Once owner delivery or
 correction is confirmed, continue from clean updated default with the next
 full adoption, preserving its own pre-commit evidence and ordinary gates.
+
+For local-only project adoption, commit the completed run on its adoption
+branch and leave it ready to push and open its adoption PR once a remote
+exists. Report that branch, saved pre-commit evidence, remaining review/merge
+steps and the later `adopt` continuation. Keep the adopted tree for vision
+work on a separate deliverable branch if needed; a remote PR waits for a
+remote.
+
+A workbench commits each completed adoption directly on its default branch,
+including local-only adoption. It installs no project remote setup.
+
+After remote adoption is delivered, return to the clean, updated default
+branch and run `adopt` again without a source. Inspect its actual selection:
+it may propose a newer CLI or standards release. This is a fresh full adoption
+run, including scope and contextual assessment; even an unchanged selection
+can write adoption bookkeeping. Complete it, apply available remote setup or
+record the documented deferral, and preserve its own pinned pre-commit summary
+and verdict before committing changed files. Deliver those files as another
+adoption PR, or a direct workbench commit.
+
+## Required-check freshness
 
 The fix establishes and reads back strict required-check freshness through
 classic protection or its managed ruleset when it establishes the required
@@ -107,8 +140,16 @@ Required-check authority and merge gate schema. The declaration owns no file or
 names and adoption never creates or rewrites it. Its read-only check fails on
 absence, malformed data, an empty list or a list naming both `Runner checks`
 and `Review rerun`. At `runner`, declare `PR metadata` and `Runner checks`; at
-`self-reported`, `PR metadata` and `Review rerun`. Establish repository-chosen names before starting adoption, in
-a separate repository-policy change outside the adoption commit and PR.
+`self-reported`, `PR metadata` and `Review rerun`. For remote GitHub project
+adoption, have the owner establish repository-chosen exact names on the
+destination default branch after the README-only founding commit, in a
+separate repository-policy change outside the adoption commit and PR. A
+local or proposed declaration cannot satisfy this trusted-default prerequisite.
+If it is missing or invalid, stop before adoption, report that owner action
+and retain the repository and interview answers for continuation. Local-only
+and workbench adoption use their delivery paths above without this remote
+prerequisite.
+
 An absent trusted declaration stops wait and merge: correct it on the destination
 default branch through the applicable owner procedure, then invoke again.
 Do not infer names from observed results or GitHub settings, or bypass the gate
