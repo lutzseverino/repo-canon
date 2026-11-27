@@ -2495,17 +2495,10 @@ test("explicit receipts accept optional log prefixes and delimited report paths"
       bench.write("review/log.md", `# Log\n\n${receipt}\n`);
       const output = capture();
       assert.equal(
-        await main(
-          [
-            "status",
-            bench.root,
-            "--stale-after",
-            "60",
-            "--stages",
-            installedStages,
-          ],
-          { ...output.streams, connect: unreachable },
-        ),
+        await main(statusArgs(bench.root), {
+          ...output.streams,
+          connect: unreachable,
+        }),
         0,
         output.stderr,
       );
@@ -2554,17 +2547,10 @@ test("a bare receipt path ends at the first whitespace", async (t) => {
   );
   const output = capture();
   assert.equal(
-    await main(
-      [
-        "status",
-        bench.root,
-        "--stale-after",
-        "60",
-        "--stages",
-        installedStages,
-      ],
-      { ...output.streams, connect: unreachable },
-    ),
+    await main(statusArgs(bench.root), {
+      ...output.streams,
+      connect: unreachable,
+    }),
     0,
     output.stderr,
   );
@@ -2586,17 +2572,10 @@ test("receipts match resolved report paths within their own plan log", async (t)
   bench.write("other/log.md", "# Log\n\nConsumed: ../review/b/report.md\n");
   const output = capture();
   assert.equal(
-    await main(
-      [
-        "status",
-        bench.root,
-        "--stale-after",
-        "60",
-        "--stages",
-        installedStages,
-      ],
-      { ...output.streams, connect: unreachable },
-    ),
+    await main(statusArgs(bench.root), {
+      ...output.streams,
+      connect: unreachable,
+    }),
     0,
     output.stderr,
   );
@@ -3601,20 +3580,10 @@ test("a generated brief runs under status until its report finishes, then waits 
   const status = async () => {
     const output = capture();
     assert.equal(
-      await main(
-        [
-          "status",
-          bench.root,
-          "--stale-after",
-          "60",
-          "--stages",
-          installedStages,
-        ],
-        {
-          ...output.streams,
-          connect: unreachable,
-        },
-      ),
+      await main(statusArgs(bench.root), {
+        ...output.streams,
+        connect: unreachable,
+      }),
       0,
       output.stderr,
     );
