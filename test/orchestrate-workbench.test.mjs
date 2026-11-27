@@ -81,13 +81,21 @@ function tracker(items) {
           data: {
             repository: {
               issue: {
-                closedByPullRequestsReferences: connection(item.linked ?? []),
+                closedByPullRequestsReferences: connection(
+                  (item.linked ?? []).filter(
+                    (entry) =>
+                      entry.state !== "CLOSED" ||
+                      /closedByPullRequestsReferences\([^)]*includeClosedPrs:\s*true/.test(
+                        query,
+                      ),
+                  ),
+                ),
               },
             },
           },
         });
       }
-      const nodeFor = (id) => {
+      const nodeFor = (id, includeClosedPrs = false) => {
         const key = id.replace(/^(commit|suite):/, "").replace(/:\d+$/, "");
         const item = items[key];
         if (!item) return null;
@@ -151,10 +159,14 @@ function tracker(items) {
               }
             : {
                 closedByPullRequestsReferences: page(
-                  (item.linked ?? []).map((entry) => ({
-                    url: entry.url,
-                    state: entry.state.toUpperCase(),
-                  })),
+                  (item.linked ?? [])
+                    .filter(
+                      (entry) => entry.state !== "CLOSED" || includeClosedPrs,
+                    )
+                    .map((entry) => ({
+                      url: entry.url,
+                      state: entry.state.toUpperCase(),
+                    })),
                 ),
               }),
         };
@@ -162,10 +174,13 @@ function tracker(items) {
       if (query.includes("page0:node")) {
         const data = {};
         for (const match of query.matchAll(
-          /(page\d+):node\(id:("[^"]+")\) \{ \.\.\. on \w+ \{ id (\w+)\(first:\d+,after:("[^"]+")/g,
+          /(page\d+):node\(id:("[^"]+")\) \{ \.\.\. on \w+ \{ id (\w+)\(first:\d+,after:("[^"]+")([^)]*)\)/g,
         )) {
-          const [, alias, encoded, field, after] = match;
-          const node = nodeFor(JSON.parse(encoded));
+          const [, alias, encoded, field, after, argumentsText] = match;
+          const node = nodeFor(
+            JSON.parse(encoded),
+            /includeClosedPrs:\s*true/.test(argumentsText),
+          );
           const page = node[field];
           const start = Number(JSON.parse(after));
           const end = start + page.size;
@@ -188,10 +203,15 @@ function tracker(items) {
       ];
       for (const [index, match] of matches.entries()) {
         const [, alias, number] = match;
-        const node = nodeFor(`${variables.owner}/${variables.name}#${number}`);
         const selection = query.slice(
           match.index,
           matches[index + 1]?.index ?? query.length,
+        );
+        const node = nodeFor(
+          `${variables.owner}/${variables.name}#${number}`,
+          /closedByPullRequestsReferences\([^)]*includeClosedPrs:\s*true/.test(
+            selection,
+          ),
         );
         if (node && !selection.includes("labels")) {
           for (const field of [
@@ -431,7 +451,11 @@ test("tracker batches retain every connection page and chunk boundary", async (t
     facts["example/tracker#43"].comments.map(({ id }) => id),
     [1, 2, 3],
   );
-  assert.equal(facts["example/tracker#43"].linked.length, 3);
+  assert.deepEqual(facts["example/tracker#43"].linked, [
+    { url: "https://github.com/example/tracker/pull/81", state: "open" },
+    { url: "https://github.com/example/tracker/pull/82", state: "closed" },
+    { url: "https://github.com/example/tracker/pull/83", state: "merged" },
+  ]);
   assert.deepEqual(
     facts["example/tracker#20"].checks.runs.map(({ id }) => id),
     [1, 2, 3],
@@ -448,6 +472,7 @@ test("tracker batches retain every connection page and chunk boundary", async (t
         items["example/tracker#20"].suites[1][0].status = "completed";
         items["example/tracker#40"].comments.push(comment(4));
         items["example/tracker#43"].labels.push("state:owner");
+        items["example/tracker#42"].linked[1].state = "OPEN";
       },
     }),
     0,
@@ -456,6 +481,10 @@ test("tracker batches retain every connection page and chunk boundary", async (t
   assert.match(output.stdout, /pull\/20: checks changed/);
   assert.match(output.stdout, /issues\/40: new comment .*issuecomment-4/);
   assert.match(output.stdout, /issues\/43: labels added state:owner/);
+  assert.match(
+    output.stdout,
+    /issues\/42: linked pull request https:\/\/github.com\/example\/tracker\/pull\/82 changed from closed to open/,
+  );
   assert.ok(platform.requests.every((path) => path === "/graphql"));
 });
 

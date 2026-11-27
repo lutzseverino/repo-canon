@@ -474,7 +474,7 @@ const trackerFields = {
   checkSuites: `id checkRuns(first:${trackerPageSize},filterBy:{checkType:ALL}) { nodes { databaseId name status conclusion } pageInfo { hasNextPage endCursor } }`,
 };
 const trackerConnection = (field, after = null) =>
-  `${field}(first:${trackerPageSize}${after === null ? "" : `,after:${JSON.stringify(after)}`}${field === "checkRuns" ? ",filterBy:{checkType:ALL}" : ""}) { nodes { ${trackerFields[field]} } pageInfo { hasNextPage endCursor } }`;
+  `${field}(first:${trackerPageSize}${after === null ? "" : `,after:${JSON.stringify(after)}`}${field === "checkRuns" ? ",filterBy:{checkType:ALL}" : ""}${field === "closedByPullRequestsReferences" ? ",includeClosedPrs:true" : ""}) { nodes { ${trackerFields[field]} } pageInfo { hasNextPage endCursor } }`;
 const trackerSelection = (details) => `
   __typename
   ... on Issue { id state updatedAt ${details ? `${trackerConnection("labels")} ${trackerConnection("comments")} ${trackerConnection("closedByPullRequestsReferences")}` : ""} }
