@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Generate the standalone installation from the canonical runtime owners.
-// Seam (deferred): standalone runtime packaging; consumers: babysit; extract at 3.
+// Seam (deferred): standalone runtime packaging; consumers: 1 (babysit); extract at 3.
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

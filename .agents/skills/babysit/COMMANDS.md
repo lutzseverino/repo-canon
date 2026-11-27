@@ -1,14 +1,13 @@
 # Command outcomes
 
 Read the relevant table when request, wait or merge exits.
-All commands run from the repository root with Node.js 24 or 26.
+All commands run from the repository root.
 For a startup failure, follow the stop in [SKILL.md](SKILL.md).
 
 ## Request
 
-`node <this skill's directory>/request.mjs <number>`; add `--fixes-review`
-when fixing a review finding, or the verified `--updated-from` argument from
-[branch-update recovery](BRANCH-UPDATE.md).
+`node <this skill's directory>/request.mjs <number>`; for a verified unchanged
+update, add `--updated-from` from [branch-update recovery](BRANCH-UPDATE.md).
 
 | Exit | Action |
 | --- | --- |
@@ -19,9 +18,8 @@ when fixing a review finding, or the verified `--updated-from` argument from
 
 ## Wait
 
-`node <this skill's directory>/wait.mjs <number>`; wait in the foreground
-when its exit cannot resume the session. Use 600000 ms command timeouts where
-supported. For a verified unchanged update, use `--updated-from` from recovery.
+`node <this skill's directory>/wait.mjs <number>`; for a verified unchanged
+update, use `--updated-from` from recovery.
 
 | Exit | Outcome and action |
 | --- | --- |
@@ -30,14 +28,12 @@ supported. For a verified unchanged update, use `--updated-from` from recovery.
 | `3`, `4` | Checks passed; reviewer did not review this head (`3`: unavailable; `4`: reason in output). Continue with findings; apply the rules for merging without review and record its absence under `.repo-standards/rules/comments.md#delivery-records`. |
 | `5` | Still waiting; rerun wait. |
 | `6` | Checks passed; app-author policy skipped external review. Continue with findings; after both internal reviews, read `.repo-standards/rules/comments.md#reviews`, fill every placeholder in the printed full-head template and post it as a PR review. An unfilled template is not completed evidence. |
-| `7` | Invalid trusted configuration. Post an owner question under `.repo-standards/rules/comments.md#owner-questions`, naming the diagnostic's destination repository, selected revision, declaration, validation problem and needed correction. Follow installed continuation rules, leave the PR open and stop babysitting; no unchanged-configuration retry or merge. |
+| `7` | Invalid trusted configuration. Post an owner question under `.repo-standards/rules/comments.md#owner-questions`, naming the diagnostic's destination repository, selected revision, declaration, validation problem and needed correction. Correct it under the installed GitHub rules' Trusted review configuration section, follow installed continuation rules, leave the PR open and stop babysitting; no unchanged-configuration retry or merge. |
 | `1` | For permission refusal, follow `CONTRIBUTING.md`'s Credentials section; otherwise fix the invocation or platform error and rerun. |
-
 
 ## Merge
 
-`node <this skill's directory>/merge.mjs <number> <SHA>`; use the full SHA
-starting the latest wait outcome.
+`node <this skill's directory>/merge.mjs <number> <SHA>`
 
 | Exit | Outcome and action |
 | --- | --- |

@@ -9,7 +9,8 @@ wait and merge retries do not reset the count.
 1. Preserve committed, staged, unstaged and untracked work and PR review and
    handoff context. Keep the previously integrated full base and head SHAs;
    before the first update use the merge-base and current head, count `0`.
-2. Fetch origin, resolve its default branch again, and run
+2. Fetch origin, resolve its default branch again, inspect outgoing history,
+   including each merge parent, and the whole diff, then run
    `node <this skill's directory>/branch-update.mjs <previous-base> <previous-head> <new-base> <updates-used>`.
 
    | Exit | Action |

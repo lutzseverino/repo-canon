@@ -30,12 +30,14 @@ There is no alternate merge path.
 
 1. From the repository root, run
    `node <this skill's directory>/request.mjs <number>` before the first wait
-   and each later or resumed head. Add `--fixes-review` when fixing a review
-   finding. On any nonzero exit, read the request [exit actions](COMMANDS.md#request)
+   and each later or resumed head. Add `--fixes-review` when the head fixes a
+   finding that requires a new request under the installed rules. On any
+   nonzero exit, read the request [exit actions](COMMANDS.md#request)
    and complete its action before proceeding.
 2. Run `node <this skill's directory>/wait.mjs <number>` and wait for its
-   exit. Read the wait [exit actions](COMMANDS.md#wait); perform the action
-   for the actual outcome.
+   exit, in the foreground whenever its exit cannot resume the session, with
+   600000 ms command timeouts where supported. Read the wait
+   [exit actions](COMMANDS.md#wait); perform the action for the actual outcome.
 3. Verify failing checks and review findings against the source, including
    findings arriving after a policy skip. Apply the installed rules' internal
    Standards and Spec reviews, recording actual outcomes under the comment
@@ -59,10 +61,11 @@ There is no alternate merge path.
 Paths are relative to the repository root.
 
 - `.repo-standards/rules/planning.md`: planning policy. When absent, use
-  `CONTRIBUTING.md`; if both are absent, stop the dependent step.
+  `CONTRIBUTING.md`; if both are absent, report the missing policy and stop
+  the dependent step.
 - `CONTRIBUTING.md`: merge, validation, findings and credential requirements.
-  When missing, follow the commands and hand off rules left to the guide
-  to the owner in one PR comment.
+  When missing, carry out the steps and the commands' own checks as written,
+  and hand off to the owner in one PR comment any rule left to the guide.
 - `.repo-standards/rules/comments.md`: sections named above and by exit
   actions. When missing, keep the handoff in the PR body's Evidence, each
   other record or question in one comment, and reviews in wait's printed shape.
