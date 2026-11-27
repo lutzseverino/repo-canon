@@ -28,6 +28,12 @@ defaults:
       guidance: guidance/comments.md
       discovery: discovery/comments.md
 
+    planning:
+      kind: repository
+      rules: rules/planning.md
+      guidance: guidance/planning.md
+      discovery: discovery/planning.md
+
     contribution-guidance:
       kind: file
       target: CONTRIBUTING.md
@@ -685,6 +691,7 @@ profiles:
       agent-guidance: { exclude: true }
       bug-report-template: { exclude: true }
       comments: { exclude: true }
+      planning: { exclude: true }
       contribution-guidance: { exclude: true }
       documentation: { exclude: true }
       domain-configuration: { exclude: true }

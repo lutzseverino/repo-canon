@@ -5,7 +5,8 @@ description: Hand ready tickets to the factory, resolve holds, resume stopped wo
 
 A prompt or brief naming this skill is its invocation.
 
-Work in the repository the factory serves. Read `CONTRIBUTING.md`, the
+Work in the repository the factory serves. Read its planning rules (its
+contribution guide if absent), `CONTRIBUTING.md` for delivery, the
 installed `factory-workflow`, `github-repository-configuration` and `comments`
 rules, and `.scriptorium/config.json` before acting. The guide and rules hold the requirements;
 this skill supplies the method. Use the configured label roles rather than
@@ -80,7 +81,7 @@ it: it ends when the last of them reports back, or at its own time bound.
 
 ## Resume stopped work
 
-Answer the question through the guide's owner-question route, posting as
+Answer the question through the planning rules' owner-question route, posting as
 `.repo-standards/rules/comments.md#disclaimers` says, and meet the installed
 Questions and stops rule's conditions for a changed contract. Then apply the
 exact next state the stop names, or close the issue, as that rule says: never
@@ -119,7 +120,11 @@ continue as Take the skip route says instead.
 
 Paths are relative to the repository root.
 
-- `CONTRIBUTING.md`: contract, readiness, delivery, question and credential
+- `.repo-standards/rules/planning.md` in the target repository: planning policy
+  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
+  if both are absent, report the missing policy and stop the dependent step.
+
+- `CONTRIBUTING.md`: contract, delivery and credential
   requirements. When it is missing, use the installed rules and
   hand off any unresolved delivery or authorization question on the issue or PR.
 - The installed `factory-workflow` and `github-repository-configuration` rules,

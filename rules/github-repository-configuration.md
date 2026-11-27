@@ -4,9 +4,9 @@ These rules cover the repository's GitHub settings, the workflows Repo Canon
 installs, the optional pull request reviewer file, and the GitHub side of
 issue and pull request work. They apply to all work in the repository,
 including tracker work that changes no file. The contribution guide holds the
-general issue, implementation contract, readiness, check, review thread,
-findings, delivery and credential requirements, and the `comments` rules hold
-what agents post on issues and pull requests.
+general issue, implementation contract, check, review thread, delivery and
+credential requirements. The planning rules own planning policy; the `comments`
+rules hold what agents post on issues and pull requests.
 
 ## Labels
 
@@ -35,13 +35,13 @@ descriptions:
 | `wayfinder:task`      | `bfd4f2` | Task in a planning map                                     |
 
 An open issue carries exactly one `state:` label naming whom it waits on;
-the contribution guide's Readiness section governs its maintenance.
+the planning rules' Readiness section governs its maintenance.
 `state:reporter` is only for a fact the outside reporter holds. Facts the
 owner or filing agent lacks wait in `state:owner`, or `state:grill` for the
 owner's intent. `state:carried` waits on no one: another record or ticket
 carries the request's fate, the factory leaves it, and removing it starts
-nothing. Follow the guide's Triage section for question routing and
-inference. The repository owns `state:ready` readiness; `wontfix` marks an
+nothing. Follow the planning rules' Owner questions section for question
+routing and their Triage section for inference. The repository owns `state:ready` readiness; `wontfix` marks an
 issue closed as will not be actioned.
 
 A triaged request carries one `type:` label, its category.
@@ -143,7 +143,7 @@ base after this final check and the merge can succeed: the owner accepts this re
 race only on this proven plan-limited path. Immediate checks narrow the window;
 they do not provide GitHub's atomic protection. Strict non-bypassable GitHub
 enforcement remains required wherever available.
-Otherwise unconfirmed freshness requires the contribution guide's owner handoff;
+Otherwise unconfirmed freshness requires the planning rules' owner handoff;
 no alternate credential is permitted.
 
 A stale PR returns to branch update and validation. Preserve its work, rebase
@@ -204,10 +204,10 @@ and applicable replacement-head reviews, owner approval and review requests.
 Before the replacement head's review, post the conflict-resolution delivery
 record under the `comments` rules.
 
-Conflicts outside the class and uncertain ownership require the contribution
-guide's owner handoff. Name the conflicting files and why each conflict is
+Conflicts outside the class and uncertain ownership require the
+planning rules' owner handoff. Name the conflicting files and why each conflict is
 outside the class, including any ownership uncertainty. A failed branch update
-leaves the PR unmerged and requires the contribution guide's owner handoff with
+leaves the PR unmerged and requires the planning rules' owner handoff with
 its reason. A later stale base follows the overlap decision and bound above.
 
 ## Designated owner review
@@ -225,7 +225,7 @@ delivery record under the `comments` rules. Any head change requires renewed
 owner approval; approval of an earlier head does not authorize the new one.
 Passing checks, a configured external review, its absence or timeout, and an
 app-author review-policy skip never substitute for owner approval. When approval
-is missing, follow the contribution guide's owner-question handoff and leave the
+is missing, follow the planning rules' owner-question handoff and leave the
 PR unmerged.
 
 Verify designation and current-head approval from these records, including
@@ -512,7 +512,7 @@ acceptance criterion or large rework) return to implementation on the same PR
 with that round's review as input; whoever ran the review relaunches it. A later
 round still carrying a larger finding stops without converging, reports why
 and leaves the PR draft. Wrong or ambiguous contracts move the issue to
-`state:grill` under the guide's Triage section.
+`state:grill` under the planning rules' Owner questions section.
 
 After a recorded grill resolution requires no code change, an independent
 reviewer may reassess the unchanged head against the settled authoritative

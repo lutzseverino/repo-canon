@@ -87,15 +87,17 @@ repeated.
   [ADR 0030](docs/adr/0030-let-factory-triage-accept-its-own-brief.md).
   They preserve the rationale and supersession of the owner's initial
   finish-every-brief choice. Current policy lives in
-  [Triage](CONTRIBUTING.md#triage),
-  [Readiness](CONTRIBUTING.md#readiness), the
+  [Triage](rules/planning.md#triage),
+  [Readiness](rules/planning.md#readiness), the
   [GitHub rules](rules/github-repository-configuration.md#readiness-roles)
   and [factory rules](rules/factory-workflow.md#triage-run);
   the method lives in [triage](.agents/skills/triage/SKILL.md).
 - Publication, inference and intake decisions of 2026-11-06, 2026-11-08 and
   2026-11-09 are recorded in
   [#912](https://github.com/lutzseverino/repo-canon/issues/912#issuecomment-6750712597).
-  Their homes are [Triage](CONTRIBUTING.md#triage) and the factory rules'
+  Their homes are [Triage](rules/planning.md#triage),
+  [Publication and amendments](rules/planning.md#publication-and-amendments)
+  and the factory rules'
   [Canonical stages](rules/factory-workflow.md#canonical-stages).
 - Orchestration is a workflow method under ADRs 0016 and 0018, implemented by
   [orchestrate](.agents/skills/orchestrate/SKILL.md). Its decision records are:
@@ -195,7 +197,7 @@ repeated.
   request's description.
   [Pull request metadata validation](docs/development/pr-metadata-validation.md)
   states what the check enforces.
-- Readiness policy lives in [Readiness](CONTRIBUTING.md#readiness), the
+- Readiness policy lives in [Readiness](rules/planning.md#readiness), the
   [factory rules](rules/factory-workflow.md#parent-readiness) and the
   [GitHub rules](rules/github-repository-configuration.md#readiness-roles);
   [issue contract validation](docs/development/issue-contract-validation.md)
@@ -306,7 +308,7 @@ repeated.
   The seeds do not provision remote labels or repository branch rules.
 - Upstream recognizes an Agent Brief heading but provides no approval marker,
   approved-revision selector, or revision invalidation mechanism. Repo Canon's
-  readiness rules are its own convention and live in `CONTRIBUTING.md`, the
+  readiness rules are its own convention and live in the planning rules, the
   GitHub repository configuration rules, and its automation.
 
 ## Source profile

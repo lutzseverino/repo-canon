@@ -15,7 +15,7 @@ plan closure use this same method, lesson routes and gap routes.
 The `orchestrate` skill owns workbench formats and the launch-report protocol.
 Read its [templates](../orchestrate/references/templates.md) for the records you
 use; the brief's fixed duties finish the report. Read each responsible
-repository's `CONTRIBUTING.md` and installed comment rules before filing or
+repository's planning and comment rules before filing or
 reopening issues.
 
 ## Read the evidence
@@ -69,6 +69,10 @@ Seam (deferred): workbench record reads use orchestrate's format; consumers: 2
 ## Reads
 
 Paths are relative to the workbench or the responsible repository.
+
+- `.repo-standards/rules/planning.md` in the target repository: planning policy
+  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
+  if both are absent, report the missing policy and stop the dependent step.
 
 - The generated brief: its Context and the report its `Launch report:` line
   names. If missing, stop and ask for the brief; if its Context lacks evidence

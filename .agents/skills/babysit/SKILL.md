@@ -96,7 +96,7 @@ body was checked. Link-free bodies need no reconstruction.
    the PR body's Delivery subsection, and apply the `github-repository-configuration` rules' Designated owner review gate.
    Read PR comments carrying designation provenance and current-head approval;
    record approval there under `.repo-standards/rules/comments.md#delivery-records`.
-   Missing required approval means the guide's owner-question handoff under
+   Missing required approval means the planning rules' owner-question handoff under
    `.repo-standards/rules/comments.md#owner-questions`; stop with the
    PR unmerged. Once merge conditions hold on the latest head, run
    `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is
@@ -222,8 +222,11 @@ under the rules' Trusted review configuration section.
 
 Paths are relative to the repository root.
 
-- `CONTRIBUTING.md`: the merge conditions and the Merging, Owner questions and
-  Credentials sections the steps name. When it is missing, carry out the
+- `.repo-standards/rules/planning.md` in the target repository: planning policy
+  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
+  if both are absent, report the missing policy and stop the dependent step.
+
+- `CONTRIBUTING.md`: the merge conditions and the Merging and Credentials sections the steps name. When it is missing, carry out the
   steps and the commands' own checks as written, and hand off to the owner in
   one PR comment for any rule the steps leave to the guide.
 - `.repo-standards/rules/comments.md`: the installed comment rules, whose

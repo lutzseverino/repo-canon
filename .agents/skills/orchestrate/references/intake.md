@@ -3,15 +3,13 @@
 ## Questions
 
 Read every question first, from launch reports, issues and incoming messages; workers
-put questions in their report or on the issue, never `inbox.md`. For every choice
-(holds, skip routes, rows, filing, release wording, worker answers), answer alone
-what code, logs or installed rules settle, or what passes the guide's inference test,
-only to advance the approved Done path on verified facts and explicit authority.
-Applying an existing dated owner decision to a verified current operational stop
-is yours within that authority. Route missing intent, scope, your powers or durable
-policy to its grill session under [Grill queue](#grill-queue). Put remaining
-operational owner decisions and chores in the decision inbox with your
-recommendation; only you write that inbox.
+put questions in their report or on the issue, never `inbox.md`. For every choice, apply the target repository's planning rules' Decision rights
+and Owner questions, with its contribution guide only when those rules are
+absent. Settle facts from code, logs and records. Conduct downstream grills
+with independent review by a different provider and list each decision for
+veto in the next update as those rules require. Route a reserved case to its
+maintainer grill under [Grill queue](#grill-queue); put operational maintainer
+chores in the decision inbox with a recommendation. Only you write that inbox.
 An owner approval, including a plan's **Preapproves** line, names items ahead of time:
 a dated source the test may cite, covering what it names, with nothing inferred beyond it.
 A blanket yes covers each item listed, with its recommendation, in the message it
@@ -24,7 +22,7 @@ amendment of a named plan. Owner assent or a direct grill request schedules it.
 A grill is never an owner decision; `inbox.md` holds decisions only.
 The default is a grill. Suggest a shorter path (expedited change, issue straight to
 triage, direct change) only as an option; take it only on the owner's yes for that idea.
-Broken rules or contracts and parking an idea follow the guide's Findings rule, without a grill.
+Broken rules or contracts and parking an idea follow the planning rules' Findings rule, without a grill.
 
 ## Grill queue
 

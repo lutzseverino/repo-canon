@@ -8,8 +8,10 @@ A prompt or brief naming this skill is its invocation.
 
 # Orchestrate
 
-Follow each repository's `CONTRIBUTING.md` for triage, readiness, questions, findings
-and delivery, and installed comment rules for posts. `triage` handles one request;
+Follow each target repository's installed planning rules for planning, its
+`CONTRIBUTING.md` for delivery, and installed comment rules for posts. When
+planning rules are absent, use that target's contribution guide.
+`triage` handles one request;
 `factory` delivers factory tickets and held, stopped or skipped work.
 
 Read [templates](references/templates.md) before you write a workbench file,
@@ -28,7 +30,7 @@ retains its own sources. Its files:
 
 - `index.md`: repositories, active plans, the `Orchestrator:` field.
 - `inbox.md`: decisions and owner chores; [reconcile and process answers](references/templates.md#inboxmd) before other work.
-- `wishes.md`: ideas about this procedure, not repository ideas (guide's Findings rule).
+- `wishes.md`: ideas about this procedure, not repository ideas (planning rules' Findings rule).
 - `incoming/`: [other sessions' messages](references/templates.md#incoming).
 - `<plan>/`: current `plan.md`, append-only `log.md`, decision records, launch briefs and reports.
 
@@ -52,28 +54,28 @@ Link every row/decision code and issue number to its row, record or issue;
 expand unfamiliar codes once per owner-facing message.
 
 While two plans are being closed, propose no new plan or amendment and start no grill unless it is on their
-Done path or the owner asks for it now. Present goal, Done means, specifications, tickets and Close reviews for
-approval; [record proposal and approval](references/templates.md#planmd-and-logmd) before execution.
+Done path or the owner asks for it now. Present goal and Done means for maintainer
+approval; route specification, ticket and Close-review decisions under the planning rules' Decision rights; [record proposal and approval](references/templates.md#planmd-and-logmd) before execution.
 Research, filing and contract preparation may precede it; execution readiness
 waits for approval, which replaces no independent review or readiness condition. An owner's
 request for work now skips only the plan: [Expedited change](references/launches.md#expedited-change).
 
 Read [intake](references/intake.md) for ideas, `state:grill` issues, retro/architecture
-reports, or questions from launch reports, issues or incoming messages. After a grill, retain the
-contribution guide's writer publication, final split and independent acceptance
-responsibilities; launch `to-spec` and `to-tickets` with `workbench brief`.
+reports, or questions from launch reports, issues or incoming messages. Follow
+the target planning rules' Publication and amendments route; use
+`workbench brief` for publication launches.
 
 Log friction with evidence and route (row, finding or wish). Fix the instance; add a standing rule only when the same failure
 recurs after the fix, and name the rule it replaces or deletes. A **new requirement** mid-plan, unless wanted now, takes:
 
-- **Row:** serves the goal, passes the guide's inference test, and edits or
+- **Row:** serves the goal, is decided under the planning rules' Decision rights, and edits or
   deletes existing text or code; a row that adds a mechanism (script, port,
   record kind, label or ticket family) needs a grill. Add and log it, and list
   it in the next update.
 - **Amendment:** changes goal or scope; route it to its grill session, even
-  for a short one-round grill. Apply only after owner approval, with a new approval
-  line superseding the old, and publication under the contribution guide.
-- **Idea:** outside the goal and not a Finding; follow the guide's Findings rule for parking ideas.
+  for a short one-round grill. Follow the planning rules' Decision rights and
+  Publication and amendments sections; record the new approval superseding the old.
+- **Idea:** outside the goal and not a Finding; follow the planning rules' Findings rule for parking ideas.
 
 When every Done-means clause has evidence, [close](references/close.md): reconcile issues, run Close reviews and announce the close.
 
@@ -95,6 +97,10 @@ Other sessions write to `incoming/`.
 ## Reads
 
 Paths are relative to each repository or the workbench.
+
+- `.repo-standards/rules/planning.md` in the target repository: planning policy
+  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
+  if both are absent, report the missing policy and stop the dependent step.
 
 - `CONTRIBUTING.md` and `.repo-standards/rules/comments.md`: the sections and
   comment rules named above. When either is missing, carry out this method as

@@ -98,7 +98,7 @@ Evaluate every confirmed defect in a shipped installed script as a release
 candidate, including findings on adopters' installed copies. Link an existing
 issue for the defect, or file one in the responsible repository with
 `state:triage`: a release candidate is not an observation the
-[findings rules](../../CONTRIBUTING.md#findings) leave to notes. On that issue,
+[findings rules](../../rules/planning.md#findings) leave to notes. On that issue,
 record:
 
 - the finding and confirmation evidence;
@@ -110,7 +110,7 @@ record:
   of the correction changes.
 
 Bring this evidence to the owner for a patch-now versus next-ordinary-release
-decision through the [owner-question route](../../CONTRIBUTING.md#owner-questions).
+decision through the [owner-question route](../../rules/planning.md#owner-questions).
 The orchestrating agent routes the question to its decision inbox. Record the
 owner's decision and its source on the issue; follow the applicable handoff
 and continuation rules. Neither confirmation nor merging a correction

@@ -72,14 +72,14 @@ _Avoid_: Deployed, merged, done
 
 **Intake**:
 The first pipeline stage, in which an owner's idea or a filed request becomes
-work. Its entry paths are defined by [Triage](CONTRIBUTING.md#triage).
+work. Its entry paths are defined by [Triage](rules/planning.md#triage).
 _Avoid_: Idea capture, backlog grooming
 
 **Front door**:
 Any agent session a person opens in an adopted repository, with or without a
 factory, which routes what they ask for: to its stage's hand skill in the
 [Canonical stages](rules/factory-workflow.md#canonical-stages), or by
-[Triage](CONTRIBUTING.md#triage) where that table is not installed; to the
+[Triage](rules/planning.md#triage) where that table is not installed; to the
 running orchestrating agent if there is one; or to a parked idea when they ask
 for one. It answers a status question read-only and starts a full workflow
 only on the person's yes.
@@ -158,8 +158,9 @@ _Avoid_: Spec file, draft brief, plan
 
 **Amendment grill**:
 A grill, as small as one round, for a proposed change to a plan's goal, its
-Done means or a ticket's scope. See [Triage](CONTRIBUTING.md#triage) for
-amendment requirements.
+Done means or a ticket's scope. See
+[Publication and amendments](rules/planning.md#publication-and-amendments)
+for amendment requirements.
 _Avoid_: Conversational amendment
 
 **Factory gap**:
@@ -238,26 +239,28 @@ _Avoid_: Context, line count
 The private git repository of plain Markdown outside project checkouts in
 which the orchestrating agent keeps plans, the decision inbox and wishes.
 Repository ideas live in their trackers under
-[Findings](CONTRIBUTING.md#findings), not in the workbench.
+[Findings](rules/planning.md#findings), not in the workbench.
 [Orchestrate](.agents/skills/orchestrate/SKILL.md#workbench) owns its setup and layout.
 _Avoid_: Notes, memory
 
 **Wish**:
 An idea about the orchestrating agent's own procedure, recorded in the
 workbench with its date and source. A repository idea is no wish:
-[Findings](CONTRIBUTING.md#findings) owns when it is parked as an issue.
+[Findings](rules/planning.md#findings) owns when it is parked as an issue.
 _Avoid_: Backlog item, suggestion
 
 **Research run**:
 The sub-agent that gathers the facts for one request and writes its Agent
 Brief from settled intent unless a grilling session drafts it. Acceptance
-policy lives in [Triage](CONTRIBUTING.md#triage) and the
+policy lives in
+[Publication and amendments](rules/planning.md#publication-and-amendments)
+and the
 [factory triage rules](rules/factory-workflow.md#triage-run).
 _Avoid_: Orchestrating agent, reviewer
 
 **Readiness**:
 The reviewed state of an implementation contract considered sufficiently
-specified for work. See [Readiness](CONTRIBUTING.md#readiness), the
+specified for work. See [Readiness](rules/planning.md#readiness), the
 [GitHub authorization rules](rules/github-repository-configuration.md#readiness-roles)
 and the [factory readiness rules](rules/factory-workflow.md#parent-readiness).
 _Avoid_: Passing structural validation

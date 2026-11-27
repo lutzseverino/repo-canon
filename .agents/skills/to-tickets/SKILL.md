@@ -18,13 +18,9 @@ The issue tracker and triage label vocabulary should have been provided to you.
 
 Work from whatever is already in the conversation context. If the user passes a reference (a spec path, an issue number or URL) as an argument, fetch it and read its full body and comments.
 
-For a grill, consume the single specification published by `to-spec`; if it
-does not exist yet, invoke `to-spec` first. Keep that specification as the
-parent across repositories. Copy relied-on decisions with their dates and
-quoted words into every ticket contract, so private records are unnecessary.
-For an amendment, first apply the contribution guide's Triage amendment rule
-and consume the revised specification; work only the delta, revising affected
-contracts and native relationships.
+For a grill, consume the specification from the planning rules' publication
+route; invoke `to-spec` if it does not exist. For an amendment, consume the
+revised specification and work only the delta under Publication and amendments.
 
 ### 2. Explore the codebase (optional)
 
@@ -55,7 +51,7 @@ both edit. A shared file prompts that check and never serializes the tickets
 on its own; tickets writing different passages of one file take no overlap
 edge. The blocked ticket's **Blocked by** names the passage or inventory
 behind an overlap edge. Keep dependencies cycle-free. A ticket with no
-blockers uses the contribution guide's Readiness and installed
+blockers uses the planning rules' Readiness and installed
 parent-readiness rules.
 
 **Wide refactors are an exception to vertical slicing.** A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. Every ticket's change merges into its base branch on its own, with its checks passing: when even the batches can't stay green alone, fold the batches that can't into one ticket.
@@ -78,12 +74,10 @@ Attach evidence for granularity, real dependencies, independently mergeable
 slices, test seams and any cross-repository switch's intervening deployed
 states, and identify any factual verification the independent
 reviewer must finish. Reuse recorded answers and plan approval. Read and apply
-the contribution guide's Triage inference test, inferred-list and
-owner-question rules to unanswered choices.
+the planning rules' Decision rights and Owner questions sections to unanswered choices.
 
-Return the proposed split and evidence for the orchestrating agent's decision
-and independent acceptance under the guide's Triage rules. Use its correction
-and fact-finding routes for feedback rather than an owner breakdown quiz.
+Return the proposed split and evidence through the planning rules' split and
+acceptance route.
 
 ### 5. Publish the tickets to the configured tracker
 
@@ -94,10 +88,8 @@ edges changes:
 - **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
 - **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in its responsible repository, in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Link each ticket to the one specification parent and its blockers with the platform's native sub-issue and blocking relationships: the "Parent" and "Blocked by" sections restate those links for the reader and never stand in for them. If a native link can't be created, stop publication progression and report the exact missing parent/blocker relationship and platform failure. A text-only edge is never reported as established. Before publishing, read `.repo-standards/rules/comments.md#disclaimers`.
 
-Use the guide's direct-body-contract publication route. Return the proposed
-split, exact published contracts and established native links to the
-orchestrating agent for acceptance under the guide's Triage and Readiness
-sections and the installed parent-readiness rules, including after amendments.
+Return exact published contracts and native-link responses through the planning
+rules' Publication and amendments and Readiness route.
 
 Once reviewed, work the **frontier**: any ready ticket whose blockers are all done. For a purely linear chain that means top to bottom.
 
@@ -148,6 +140,10 @@ In either form, avoid specific file paths or code snippets: they go stale fast. 
 
 Paths are relative to the repository root.
 
+- `.repo-standards/rules/planning.md` in the target repository: planning policy
+  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
+  if both are absent, report the missing policy and stop the dependent step.
+
 - `docs/agents/issue-tracker.md` and `docs/agents/triage-labels.md`: the
   configured tracker and its triage label vocabulary. When the tracker config
   is missing and no tracker was provided, ask the user whether to publish to
@@ -165,11 +161,6 @@ Paths are relative to the repository root.
   ticket takes no route of its own.
 - `.scratch/`: the local-files tracker's tickets. When it is missing, create
   it as step 5 says.
-- `CONTRIBUTING.md`: inference, split authority, amendments and readiness. If
-  missing, use `grilling`'s missing-guide fallback and independent exact-revision review, and
-  ask the user only for unresolved owner choices.
-- The `grilling` skill: the inference fallback, only when the contribution
-  guide is missing. If also missing, report it and stop for the missing policy.
 - The `codebase-design` skill: the vocabulary a deepening ticket uses and its
   replace-don't-layer testing strategy. When it is missing, describe the
   deepened module in the codebase's own words.

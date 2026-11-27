@@ -60,6 +60,10 @@ is this report.
 
 Paths are relative to the repository root.
 
+- `.repo-standards/rules/planning.md` in the target repository: planning policy
+  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
+  if both are absent, report the missing policy and stop the dependent step.
+
 - `CONTRIBUTING.md`: branch, validation and pull request requirements. When
   it is missing, work on a branch dedicated to the change, run the available
   checks, and open a draft pull request with `pr` as above.
@@ -76,5 +80,5 @@ Paths are relative to the repository root.
   Canon's adoption installs. When it is missing at `self-reported`, record in
   the handoff that `PR metadata` was not posted.
 - The `codebase-design` skill: the check applied above. When missing, report
-  the gap through the contribution guide's Findings route, or in the handoff
-  when the guide is missing; retain the recorded contract.
+  the gap through the planning rules' Findings route, or in the handoff
+  when neither those rules nor the guide exists; retain the recorded contract.

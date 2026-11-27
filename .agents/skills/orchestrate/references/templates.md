@@ -81,7 +81,7 @@ its outcome. Step 2 applies only inside a plan's goal.
 
 ## `wishes.md`
 
-One line per idea about this procedure: date, quoted words, source link; repository ideas follow the guide's Findings rule.
+One line per idea about this procedure: date, quoted words, source link; repository ideas follow the planning rules' Findings rule.
 
 ## `incoming/`
 

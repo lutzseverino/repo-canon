@@ -142,6 +142,12 @@ export const workbenchFiles = {
 // The documentation declaration's script drafts its entry, which the
 // verification accepts.
 export const scopes = {
+  planning: {
+    coverage:
+      "Planning rules govern roles throughout the repository, not project content.",
+    candidates: [],
+    unresolved: [],
+  },
   comments: {
     coverage:
       "Comment rules govern what agents post on issues and pull requests and own no project content, so the scope is intentionally empty.",
@@ -177,6 +183,20 @@ const unchangedScope = (explanation, evidence) => ({
 });
 
 export const assessments = {
+  planning: {
+    status: "satisfied",
+    explanation:
+      "The fixture has no planning activity to reconcile; installed rules govern future planning.",
+    evidence: ["The disposable repository has no issues or contracts."],
+    scopeValidity: {
+      afterFixes: unchangedScope("Planning owns no content paths.", [
+        "Intentionally empty scope.",
+      ]),
+      current: unchangedScope("Contextual work adds no planning scope.", [
+        "Intentionally empty scope.",
+      ]),
+    },
+  },
   comments: {
     status: "satisfied",
     explanation:

@@ -122,7 +122,7 @@ route:
    behavior preserving, and listed on its own line in the PR body.
 2. Otherwise, note a seam the change does not need yet, or update its consumer
    count when adding a consumer; the third prompts the extraction proposal.
-3. Otherwise, use the contribution guide's **Findings** route.
+3. Otherwise, use the planning rules' **Findings** route.
 
 This permission covers that cleanup, not separate unticketed work or an
 expansion of factory-run authority. Reviewers check whether touched problems
@@ -130,12 +130,12 @@ were fixed, noted or filed, and judge the implementation against its contract.
 
 ### Disagreeing with a recorded contract
 
-For a **one-way door** the agent judges wrong, stop through the contribution
-guide's existing owner-question route (`state:grill`), with the trigger and
+For a **one-way door** the agent judges wrong, stop through the
+planning rules' owner-question route (`state:grill`), with the trigger and
 cost read. For a **two-way door**, implement the contract and record the
 deferred seam or finding. Never silently deviate, or silently comply with a
-one-way door judged wrong. Follow the guide's question and Findings routes;
-when the guide is absent, report the question and stop for a one-way door,
+one-way door judged wrong. Follow the planning rules' Owner questions and Findings routes;
+when both rules and guide are absent, report the question and stop for a one-way door,
 or report the finding with the handoff for a two-way door.
 
 ### Worked examples
@@ -222,7 +222,9 @@ Good interfaces make testing natural:
 
 Paths are relative to the repository root.
 
+- `.repo-standards/rules/planning.md` in the target repository: planning policy
+  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
+  if both are absent, report the missing policy and stop the dependent step.
+
 - `GLOSSARY.md`: the project's domain language for ownership and Design It
   Twice. When it is missing, use this skill's vocabulary.
-- `CONTRIBUTING.md`: Findings and owner-question routes. When it is missing,
-  use the ownership section's question and finding handoff above.

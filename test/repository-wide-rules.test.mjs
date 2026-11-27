@@ -52,6 +52,7 @@ const latestRelease = "v0.27.0";
 // the profiles that select them.
 const repositoryWide = {
   comments: ["standard", "factory"],
+  planning: ["standard", "factory"],
   "github-repository-configuration": ["standard", "factory"],
   "factory-workflow": ["factory"],
 };
@@ -289,7 +290,7 @@ for (const [
       const profile = validation.profiles[name];
       assert.equal(
         profile.declarations.length,
-        { standard: 66, factory: 72 }[name],
+        { standard: 67, factory: 73 }[name],
       );
       assert.deepEqual(
         profile.declarations.find(
