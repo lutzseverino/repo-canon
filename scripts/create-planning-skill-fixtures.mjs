@@ -222,7 +222,14 @@ const repositories = {};
 {
   const root = createRepository(
     "planning",
-    ["grill-with-docs", "to-spec", "to-tickets", "domain-modeling", "grilling"],
+    [
+      "grill-with-docs",
+      "to-spec",
+      "to-tickets",
+      "domain-modeling",
+      "grilling",
+      "codebase-design",
+    ],
     {
       exercise: `## Task
 
@@ -234,7 +241,18 @@ not real owner approval or platform authority; contact no remote service.
 ## Checkpoints
 
 1. Reuse the settled decisions, including the public HTTP test seam and plan
-   approval, without asking them again. Publish one specification followed by
+   approval, without asking them again. Use publishingClose for the last round:
+   carry the last decisions, specification repository, ticket split and its
+   repositories and blockers, testing seams and publication go-ahead alongside
+   the existing independent long-term-design review. Record the review session
+   and findings, ADRs read as history, answers and dated approval citation.
+   Run it through both grill-with-docs and standalone grilling, with a delegated
+   agent and without one. The delegated agent answers with different-provider
+   review and next-update veto. Inject the open question and then the reopened
+   seam: neither permits a settled or publishing announcement. Recompute the
+   frontier, settle the seam, and complete a new final round with the applicable
+   review and ticket check; reuse the still-applicable approval. Retain the
+   rounds and completion state as observed evidence. Publish one specification followed by
    independently mergeable tickets in their responsible simulated repositories.
    Copy decisions, dates and quoted words into each body. The orchestrating
    reviewer, a different session, checks the split, native dependencies and seam
@@ -387,6 +405,48 @@ Operators need to submit up to 100 Parcel declarations as one Intake batch. The 
           veto: "next-update",
           withoutDelegate: "maintainer",
           policySources: ["installed-rules", "target-guide"],
+        },
+        publishingClose: {
+          entryPaths: ["grill-with-docs", "grilling"],
+          decisionMakers: ["delegated-agent", "maintainer-without-delegate"],
+          specification: parent,
+          tickets: [
+            "example/parcel-api#11",
+            "example/parcel-ops#20",
+            "example/parcel-api#12",
+          ],
+          relationships: "nativeRelationships",
+          testingSeam: "public HTTP",
+          approval: decision,
+          strategicReview: {
+            session: "fresh",
+            delegatedProvider: "different-provider",
+            adrUse: "history",
+            finding:
+              "Confirm full-batch rejection tests cover duplicate carrier references.",
+          },
+          turns: [
+            {
+              question: "Where will full-batch rejection tests run?",
+              answer: null,
+              expected: "open",
+            },
+            {
+              answer: "Through public HTTP, including duplicate references.",
+              expected: "complete-with-recorded-approval",
+            },
+            {
+              question:
+                "The proposed tests call acceptParcel directly; can they exercise atomic rejection?",
+              answer: null,
+              expected: "reopened",
+            },
+            {
+              answer:
+                "Replace the direct-call proposal with public HTTP acceptance and rejection tests; the approved scope and seam still apply.",
+              expected: "new-final-round-with-recorded-approval",
+            },
+          ],
         },
         intentProbes: [
           {

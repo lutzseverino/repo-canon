@@ -133,6 +133,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "to-tickets",
       "domain-modeling",
       "grilling",
+      "codebase-design",
     ],
     "triage-wayfinder": [
       "implement",
@@ -427,6 +428,47 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       contract,
     ]),
   );
+  // The publishing round's controlled inputs reference the same approved
+  // contracts and graph as publication. This checks fixture integrity, not
+  // whether an agent has completed a grill or performed an actual review.
+  const close = scenarios.publishingClose;
+  assert.deepEqual(close.entryPaths, ["grill-with-docs", "grilling"]);
+  assert.deepEqual(close.decisionMakers, [
+    "delegated-agent",
+    "maintainer-without-delegate",
+  ]);
+  assert.equal(contracts.get(close.specification)?.kind, "specification");
+  assert.deepEqual(
+    [...close.tickets].sort(),
+    scenarios.nativeRelationships.subIssues.map(({ child }) => child).sort(),
+  );
+  assert.deepEqual(close.approval, scenarios.decision);
+  assert.ok(
+    close.approval.date && close.approval.source && close.approval.quote,
+  );
+  assert.ok(
+    contracts.get(close.specification).body.includes(close.testingSeam),
+  );
+  assert.equal(close.relationships, "nativeRelationships");
+  assert.equal(close.strategicReview.session, "fresh");
+  assert.equal(close.strategicReview.delegatedProvider, "different-provider");
+  assert.equal(close.strategicReview.adrUse, "history");
+  assert.ok(close.strategicReview.finding.trim());
+  assert.deepEqual(
+    close.turns.map(({ expected }) => expected),
+    [
+      "open",
+      "complete-with-recorded-approval",
+      "reopened",
+      "new-final-round-with-recorded-approval",
+    ],
+  );
+  for (const turn of close.turns) {
+    if (turn.expected === "open" || turn.expected === "reopened") {
+      assert.ok(turn.question.trim());
+      assert.equal(turn.answer, null);
+    } else assert.ok(turn.answer.trim());
+  }
   function nativeIssue(id) {
     const contract = contracts.get(id);
     assert.ok(contract, `native relationship target ${id}`);
