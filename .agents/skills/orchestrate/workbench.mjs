@@ -1061,7 +1061,8 @@ const wait = async (
           }
         }
       }
-      if (now() >= upstreamPollAt) {
+      const deadline = startedAt + limitMs;
+      if (now() >= upstreamPollAt || now() >= deadline) {
         if (upstream) {
           const commits = await unheldCommits(upstream, local);
           for (const commit of commits)
@@ -1072,7 +1073,6 @@ const wait = async (
         upstreamPollAt = now() + intervalMs;
       }
       schedule = await saveObservation(workbench, baseline, schedule);
-      const deadline = startedAt + limitMs;
       if (!lines.length && now() >= deadline)
         lines.push(
           `no item changed within the maximum duration of ${options["max-duration"]} seconds; arm the wait again`,

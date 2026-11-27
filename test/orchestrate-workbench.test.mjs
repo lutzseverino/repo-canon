@@ -2298,6 +2298,27 @@ test("an upstream commit touching a watched record wakes the wait, and other com
   }
 });
 
+test("the maximum-duration pass still fetches the upstream between intervals", async (t) => {
+  const output = capture();
+  const { workbench, sender } = workbenches(t);
+  const pauses = [];
+  let elapsed = 0;
+  let message;
+  const code = await main(waitArgs(workbench, "10", "15"), {
+    ...output.streams,
+    connect: unreachable,
+    now: () => elapsed,
+    pause: async (ms) => {
+      elapsed += ms;
+      pauses.push(ms);
+      if (pauses.length === 2) message = push(sender, "review/log.md", "Hi.\n");
+    },
+  });
+  assert.equal(code, 0, output.stderr);
+  assert.deepEqual(pauses, [10_000, 5_000]);
+  assert.equal(output.stdout, `upstream commit ${message} not yet pulled\n`);
+});
+
 test("an upstream message fetched but not pulled before arming wakes the wait, and pulling it shows the message", async (t) => {
   const output = capture();
   const { workbench, sender } = workbenches(t);

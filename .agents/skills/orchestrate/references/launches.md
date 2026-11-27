@@ -136,8 +136,9 @@ status reads fresh on demand. Wait prints the rate-limit lines and keeps watchin
 records during cooldown; a rate limit does not end it. Other read failures still end
 wait with exit `1`.
 
-A change after the last status or wait wakes the next eligible tracker poll or local
-read. Exit `0` (change, finished report or maximum duration):
+A change after the last status or wait wakes the next wait once it reads the item: a
+local record at once, a tracker item at its next allowed poll. Exit `0` (change,
+finished report or maximum duration):
 minimally reconcile and re-arm. Exit `1`: fix the usage, record or platform error and
 re-arm; refusals follow Credentials. Surface answered questions lacking continuation with
 current issue/run/PR evidence, including absent evidence. Installed recovery rules govern
