@@ -62,7 +62,7 @@ For UI, visual and icon work, add these outcomes to the issue's contract so
 review can check the evidence on the pull request:
 
 - A token plan, written before building, records a small colour set, type roles, a layout sketch and the design principles.
-- A self-review against generic design tells names each tell it checked and its verdict; the skill fixes no canonical list of tells.
+- A self-review against generic design tells of its own choosing names each tell it checked and its verdict.
 - Built screens have screenshots and a critique recorded before review.
 - Icon work has a vector master judged against a named reference icon of the same family.
 
