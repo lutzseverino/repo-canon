@@ -1,10 +1,17 @@
-import { marked } from "../../../vendor/marked/marked.esm.js";
-import { parseFragment } from "../../../vendor/parse5/parse5.esm.js";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, relative, sep } from "node:path";
 import { requestData } from "./platform.mjs";
+import { runtimeModule } from "./runtime-module.mjs";
+const { marked } =
+  /** @type {typeof import("../../../vendor/marked/marked.esm.js")} */ (
+    await import(runtimeModule("vendor/marked/marked.esm.js"))
+  );
+const { parseFragment } =
+  /** @type {typeof import("../../../vendor/parse5/parse5.esm.js")} */ (
+    await import(runtimeModule("vendor/parse5/parse5.esm.js"))
+  );
 
 // Parse rendered Markdown so references, autolinks and HTML use the same rule.
 function headLinks(body, repository, branch, definitions = body) {

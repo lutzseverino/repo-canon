@@ -44,21 +44,17 @@ does when the file is missing, so the skill works in a repository that lacks
 it. A skill that invokes another names it, as `grill-with-docs` does
 `grilling` and `domain-modeling`; install the skills it names with it.
 
-Some bundled commands import, directly or through other files, files that only
-adoption installs. `babysit`'s request command imports the Postern, marked and
-parse5 bundles under `vendor/`, and its wait command imports Postern and marked.
-`babysit`'s merge command imports all three bundles and the issue-contract
-validator, `vendor/repo-canon/validate-issue-contract.mjs`, which itself imports
-`scripts/issue-contract-sources.mjs`, `scripts/issue-contract-store.mjs`, the
-canonical label metadata in `operations/lib/canonical-labels.mjs` and the
-rendered-markdown runtime in `operations/lib/rendered-markdown.mjs`. `triage`'s
-`ready.mjs` imports the same adoption-only files as the merge command, together
-with the factory label metadata in `operations/lib/factory-labels.mjs`. Other
-skills' commands import `babysit`'s files: `ready.mjs`, `orchestrate`'s wait
-script and `review`'s `round.mjs` import `babysit`'s GitHub connection, which
-imports Postern, and `round.mjs` also imports `babysit`'s owner gates and its
-review outcome, which imports marked. On their own, these commands cannot
-start; each skill's Reads section says how to carry on without them.
+`babysit` ships its command runtime and license notices inside its complete
+skill directory. A standalone copy needs Node.js 24 or 26, Git 2.38 or newer
+and an authenticated GitHub CLI, with no adoption or npm install. Copy the
+whole directory, including `runtime/`. If a command cannot start, stop and
+report the startup error, the PR and head left untouched, and the remedy:
+repair the runtime, then rerun. There is no alternate merge path.
+
+Adopted installations share the canonical modules under `vendor/` with other
+skills. `triage`'s `ready.mjs`, `orchestrate`'s wait command and `review`'s
+`round.mjs` still need their adoption-installed dependencies; their standalone
+runtime contracts belong to their own trims. Follow each skill's Reads section.
 
 Each skill taken from Matt Pocock's skills keeps the upstream MIT License
 notice in its `CREDITS.md`, and `pr` also keeps HumanLayer's, so a copy

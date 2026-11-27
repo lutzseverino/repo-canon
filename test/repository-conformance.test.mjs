@@ -163,7 +163,9 @@ test("no source input names a label that ADR 0031 renamed or removed", () => {
     if (
       path.startsWith("vendor/") ||
       path.endsWith("/CREDITS.md") ||
-      path === "operations/lib/canonical-labels.mjs"
+      path === "operations/lib/canonical-labels.mjs" ||
+      path ===
+        ".agents/skills/babysit/runtime/operations/lib/canonical-labels.mjs"
     )
       continue;
     let text = readFileSync(join(root, path), "utf8");
@@ -376,7 +378,10 @@ test("self-adoption leaves Repo Canon's own installed source unvendored", () => 
     ".agents/skills/triage/ready.mjs",
     ".agents/skills/review/round.mjs",
     ".agents/skills/code-review/ownership-facts.mjs",
-    ...readdirSync(join(root, ".agents/skills/babysit"))
+    ...readdirSync(join(root, ".agents/skills/babysit"), {
+      recursive: true,
+      encoding: "utf8",
+    })
       .filter((name) => name.endsWith(".mjs"))
       .map((name) => `.agents/skills/babysit/${name}`),
   ];
@@ -1417,29 +1422,28 @@ test("adoption installs the model-invocable babysit skill in place of deliver", 
   assert.match(frontmatter, /^name: babysit$/m);
   assert.match(frontmatter, /^description: \S/m);
   assert.doesNotMatch(frontmatter, /disable-model-invocation/);
-  assert.deepEqual(
-    readdirSync(join(root, ".agents/skills/babysit"), {
-      recursive: true,
-    }).sort(),
-    [
-      "CREDITS.md",
-      "SKILL.md",
-      "body-links.mjs",
-      "branch-update.mjs",
-      "declared-deletions.mjs",
-      "merge.mjs",
-      "owner-gates.mjs",
-      "platform.mjs",
-      "pull-request-reviewer.mjs",
-      "request.mjs",
-      "required-checks.mjs",
-      "review-outcome.mjs",
-      "review-policy.mjs",
-      "reviewer.mjs",
-      "trusted-review-config.mjs",
-      "wait.mjs",
-    ],
-  );
+  assert.deepEqual(readdirSync(join(root, ".agents/skills/babysit")).sort(), [
+    "BRANCH-UPDATE.md",
+    "COMMANDS.md",
+    "CREDITS.md",
+    "SKILL.md",
+    "body-links.mjs",
+    "branch-update.mjs",
+    "declared-deletions.mjs",
+    "merge.mjs",
+    "owner-gates.mjs",
+    "platform.mjs",
+    "pull-request-reviewer.mjs",
+    "request.mjs",
+    "required-checks.mjs",
+    "review-outcome.mjs",
+    "review-policy.mjs",
+    "reviewer.mjs",
+    "runtime",
+    "runtime-module.mjs",
+    "trusted-review-config.mjs",
+    "wait.mjs",
+  ]);
 });
 
 test("adoption installs Repo Canon's own triage, with its retained files", () => {

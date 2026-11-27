@@ -7,7 +7,8 @@
     "vendor/**",
     "!vendor/repo-canon/**",
     ".repo-standards/**",
-    ".agents/skills/**"
+    ".agents/skills/**",
+    ".claude/skills/babysit/runtime/**"
   ],
   "rules": {
     "no-case-declarations": "error",

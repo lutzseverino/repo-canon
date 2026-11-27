@@ -9,6 +9,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  runtimeFiles,
+  runtimeContents,
+  runtimePath,
+} from "./babysit-runtime.mjs";
 import { files, ownedSkills } from "./upstream-bases.mjs";
 
 // File extensions that make a bare name, or a slash-separated name, a path.
@@ -163,6 +168,23 @@ export function skillProblems(directory, name) {
 
   for (const file of textFiles) {
     const text = readFileSync(join(directory, file), "utf8");
+    // Generated installation copies retain their owners' text, not agent instructions.
+    // Skip only byte-verified mirrors; edited copies still undergo every scan.
+    const runtimeSource =
+      name === "babysit" && file.startsWith("runtime/")
+        ? runtimeFiles.find(
+            (path) => runtimePath(path) === file.slice("runtime/".length),
+          )
+        : undefined;
+    if (
+      runtimeSource &&
+      text ===
+        runtimeContents(
+          fileURLToPath(new URL("..", import.meta.url)),
+          runtimeSource,
+        )
+    )
+      continue;
     const host = hostNames.exec(text) ?? cursorHost.exec(text);
     if (host) {
       const line = text.slice(0, host.index).split("\n").length;
