@@ -112,6 +112,7 @@ involve real alternatives.
   every workflow skill and skill setup file is Repo Canon's own, and each one
   taken from upstream records its upstream base and takes upstream updates by a
   three-way merge, superseding ADR 0019 and ADR 0008's verbatim rule.
+  ADR 0056 amends its standalone promise to include command runtime.
 - [Make the validator's posted result the only contract decision](0029-make-the-validators-posted-result-the-only-contract-decision.md):
   the issue-contract validator alone decides contracts and readiness and posts
   a versioned result, which the factory checks against platform facts without
@@ -185,7 +186,8 @@ involve real alternatives.
 - [Budget the computed read set, not files' lines](0048-budget-the-computed-read-set.md):
   bytes over what each entry-point skill makes an agent read, against the
   base branch; its wait-script and records-module decisions are superseded by
-  #1215's `workbench` script.
+  #1215's `workbench` script. ADR 0056 adds per-file word ceilings and
+  extends the byte ratchet to every owned skill.
 - [Show one-way changes as animatics in the pull request body](0049-show-one-way-changes-as-animatics.md):
   a one-way change's pull request body carries a narrated video made with the
   owned `animatic` skill, enforced by the pull request metadata check; the
@@ -213,3 +215,7 @@ involve real alternatives.
   and #1039 GO-D3. Plan approval and approval reuse, and `state:owner` for what
   only the maintainer can decide, still hold; its recorded 2026-11-19 fates
   supersede ADRs 0040 and 0046.
+- [Cap each skill file and ship its command runtime](0056-cap-each-skill-file-and-ship-its-command-runtime.md):
+  a per-file word guard supplements the all-skills byte ratchet; standalone
+  installations ship command runtime and startup failures stop; amends
+  ADRs 0048 and 0028.

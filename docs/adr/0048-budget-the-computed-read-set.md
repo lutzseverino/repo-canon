@@ -3,7 +3,10 @@
 Status: accepted (2026-11-13); its wait-script size criterion and records
 module are superseded by
 [#1215](https://github.com/lutzseverino/repo-canon/issues/1215), whose
-`workbench` script replaces both.
+`workbench` script replaces both. Amended (2026-11-27) by
+[ADR 0056](0056-cap-each-skill-file-and-ship-its-command-runtime.md): per-file
+word ceilings, and the byte ratchet for every owned skill instead of five entry
+points; the read-set ratchet stands.
 
 What an agent must read is measured in bytes over its **read set**, computed
 from an entry-point skill (`orchestrate`, `factory`, `triage`, `implement`,
