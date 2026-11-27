@@ -60,8 +60,11 @@ then push the default branch and any deliverable branches.
 
 ## Adopt, when enabled
 
-Before remote GitHub project adoption, satisfy the selected source's
-`guidance/github-repository-configuration.md` **Required checks** prerequisite.
+Before remote GitHub project adoption, satisfy the **Required checks**
+prerequisite in the selected source's `guidance/github-repository-configuration.md`.
+Repo Canon's
+[copy](https://github.com/lutzseverino/repo-canon/blob/21d48cf2687cde833594fdd34ce8765d94eebe90/guidance/github-repository-configuration.md)
+needs no checkout, including when workbench adoption prints none.
 
 In the new repository, invoke `adopt-repository-standards` from the clean
 default branch after any prerequisite policy change. Pass a source only when
@@ -72,11 +75,9 @@ one served by a host-installed factory, workbench for a workbench. Add no
 source or profile selector of your own. Pass the interview's license answer
 into contextual work, resolving any remaining license requirement there.
 
-Follow the CLI's printed guidance and the selected source's **Adoption
-delivery** guidance for project, first-remote, local-only or workbench delivery
-and continuation. Repo Canon's
-[source guidance](https://github.com/lutzseverino/repo-canon/blob/24f2309811b19f091ccd7e99edde4cb455f1b73f/guidance/github-repository-configuration.md#adoption-delivery)
-is available without a checkout, including when workbench adoption prints none.
+Follow the CLI's printed guidance and that file's **Adoption delivery**
+section for project, first-remote, local-only or workbench delivery and
+continuation.
 
 ## Vision and handoff
 
@@ -110,8 +111,7 @@ Paths are relative to the new repository root.
   their own branch as `domain-modeling` directs.
 - The selected source's `guidance/github-repository-configuration.md`:
   prerequisites before remote GitHub project adoption; delivery and continuation
-  for every adoption branch. When missing, retain the repository and answers
-  and stop adoption until its guidance can be read.
+  for every adoption branch. When missing, use Repo Canon's linked copy.
 - The pinned CLI runtime and adoption state under `.repo-standards/`, including
   the `status --summary` adoption record: completion, recovery and pre-commit
   evidence. When missing before adoption, let `adopt-repository-standards` start
