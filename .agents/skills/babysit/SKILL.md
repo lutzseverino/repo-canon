@@ -6,266 +6,82 @@ description: Babysit an opened pull request through checks and review to merge o
 A prompt or brief naming this skill is its invocation.
 
 Take the PR through authorized delivery under `CONTRIBUTING.md` and the
-`github-repository-configuration` merge rules. Before each post, read the
-`.repo-standards/rules/comments.md` section named by its step.
+installed `github-repository-configuration` merge rules. Before each post,
+read the applicable section of the installed comment rules.
 
-Before requesting or waiting, establish your role from `CONTRIBUTING.md`'s
-Merging section and applicable installed rules. Record any prescribed worker
-handoff in the open PR body's Delivery subsection under
-`.repo-standards/rules/comments.md#delivery-records` and stop. The designated merging agent resumes with its review requirements
+## Start
+
+Establish merge ownership from the guide and installed rules before requesting
+or waiting. Record a prescribed worker handoff in the PR body's Delivery
+subsection and stop; the designated merging agent resumes with its reviews
 and outstanding findings. For an owner-question pause, follow installed
-continuation rules before request and wait. For authorized delivery of a
-stopped run's open PR, enter Branch-update recovery first, using this
-invocation's branch update. Carry the handoff context and follow installed
-rules for retaining its waiting marker.
+continuation rules first. An authorized stopped-run continuation enters
+[branch-update recovery](BRANCH-UPDATE.md), carrying its handoff context and
+retaining the waiting marker as installed rules direct.
 
-The bundled scripts require Node.js 24 or 26. Request and wait read optional
-`.github/pull-request-reviewer.json` and `.github/factory-review-policy.json`
-under the `github-repository-configuration` rules' Trusted review configuration:
-both files come from one pinned destination default-branch full SHA, retained
-across wait polls and head changes. Each outcome identifies repository and revision.
-Proposed changes apply only after merging to that default branch. No reviewer
-file means checks only, unless app-author policy identifies a review skip;
-no policy means configured reviewer behavior, without an owner question.
-Invalid trusted declarations, including a plain human-login policy author,
-require the owner handoff (exit `7`, below).
+Use Node.js 24 or 26, Git 2.38 or newer, and the authenticated GitHub CLI.
+Install this entire skill directory, including its shipped [runtime](runtime/package.json) and
+license notices; no npm install or adoption is needed for command startup.
+If a command cannot start, stop and report the startup error, the PR and full
+head SHA left untouched, and the remedy: repair the runtime, then rerun.
+There is no alternate merge path.
 
-Before the first wait and each later or resumed head, run
-`node <this skill's directory>/request.mjs <number>` from the repository root.
-It applies app-author policy before the rules' review request rule, posting
-any required request under step 4 or reporting why none is needed. Add
-`--fixes-review` when the head fixes a finding requiring a new request.
-Exit `0` means the rule was applied, not that review occurred; `1` and `7`
-use the wait's error and owner-handoff actions below.
+## Deliver
 
-Request and wait read the paginated ready-for-review history when automatic
-opening requests are enabled. They apply the rules' effective request time to
-bounds and head freshness while retaining the original completion and
-unavailability evidence cutoffs. Polls and resumed invocations use platform
-timestamps, including when the PR has returned to draft.
-
-Request checks the PR body's own-head file links before any request or policy
-skip. Exit `8` lists links to replace with commit-SHA links; correct the body
-and rerun request before waiting. It never rewrites the body; external
-repositories and other branches are outside this check.
-
-For an adoption-summary exemption, request rebuilds pre-commit state in a
-temporary detached worktree outside the author's checkout at
-`merge-base(<PR base commit>, <head>)`, restores the exact head tree with
-`git restore --source=<head> --worktree :/`, runs
-`npm ci --ignore-scripts --prefix .repo-standards/runtime` there, then runs the
-head's pinned `.repo-standards/runtime/node_modules/.bin/repo-standards status --summary`.
-It removes the temporary worktree on success and failure. Only a complete,
-byte-exact leading match of that stdout is exempt, including its final newline
-and generated Impact and Migration. Every appended section is checked. Missing
-local commits or runtime, failed reconstruction/install/generation, and a
-mismatching prefix grant no exemption: the diagnostic explains why the whole
-body was checked. Link-free bodies need no reconstruction.
-
-1. Run `node <this skill's directory>/wait.mjs <number>` from the repository
-   root and wait until it exits, in the foreground whenever its exit cannot
-   resume the session. It silently waits for checks and the configured
-   reviewer's review of the head. Use 600000 ms command timeouts where
-   supported.
-
-   | Exit | Outcome and action |
-   | --- | --- |
-   | `0` | Checks passed; reviewer reviewed or none configured. Go to step 2. |
-   | `2` | Listed checks failed. Go to step 2. |
-   | `3`, `4` | Checks passed; reviewer did not review this head (`3`: unavailable; `4`: reason in output). Go to step 2; apply the rules for merging without review and record its absence under `.repo-standards/rules/comments.md#delivery-records`. |
-   | `5` | Still waiting; rerun wait. |
-   | `6` | Checks passed; app-author policy skipped external review. Go to step 2; after both internal reviews, read `.repo-standards/rules/comments.md#reviews`, fill every placeholder in the printed full-head template and post it as a PR review. An unfilled template is not completed evidence. |
-   | `7` | Invalid trusted configuration. Post an owner question under `.repo-standards/rules/comments.md#owner-questions`, naming the diagnostic's destination repository, selected revision, declaration, validation problem and needed correction. Follow installed continuation rules, leave the PR open and stop babysitting; no unchanged-configuration retry or merge. |
-   | `1` | For permission refusal, follow `CONTRIBUTING.md`'s Credentials section; otherwise fix the invocation or platform error and rerun. |
-
-2. Verify each failing check and review finding against the source, including
-   findings that arrive on a policy-skipped pull request. Follow the
-   `github-repository-configuration` rules for applicable internal Standards and
-   Spec reviews, posting each round as
-   `.repo-standards/rules/comments.md#reviews` says.
-3. Fix the real findings `CONTRIBUTING.md` does not let you decline, and answer
-   every review thread as it requires. Before replying, read
-   `.repo-standards/rules/comments.md#review-thread-replies`.
-4. After a fix push, apply the review request rule to the new head using
-   `request.mjs` as above, with app-author policy taking precedence. Post any
-   required request under `.repo-standards/rules/comments.md#review-request-comments`.
-   After any push or re-request, return to step 1.
-5. Before each merge attempt, verify merge ownership and any required owner
-   approval against the current head under the applicable installed rules.
-   Read the authoritative implementation contract and any worker handoff in
-   the PR body's Delivery subsection, and apply the `github-repository-configuration` rules' Designated owner review gate.
-   Read PR comments carrying designation provenance and current-head approval;
-   record approval there under `.repo-standards/rules/comments.md#delivery-records`.
-   Missing required approval means the planning rules' owner-question handoff under
-   `.repo-standards/rules/comments.md#owner-questions`; stop with the
-   PR unmerged. Once merge conditions hold on the latest head, run
-   `node <this skill's directory>/merge.mjs <number> <SHA>`, where `<SHA>` is
-   the full SHA that starts the wait's latest line:
-
-   | Exit | Outcome and action |
-   | --- | --- |
-   | `0` | Merged. Record any installed-rule-required outcome under `.repo-standards/rules/comments.md#delivery-records`: delivered head, validation/review results and printed merge commit SHA. |
-   | `2` | Head changed or current-head validation has not succeeded. Return to step 1. |
-   | `3` | Not merged; owner needed, including a `gate:` label on the PR or any closing issue, a closing issue's declared deletion still present, or an edit to a surface another open issue's `Deletes:` names. Leave it open and hand off under `.repo-standards/rules/comments.md#owner-questions`, without retrying merge. |
-   | `4` | Stale base. Enter Branch-update recovery: at most 2 further updates for a non-overlapping advance; the next stale base goes to the owner with "base did not settle". An overlap after the first update goes to the owner. |
-   | `5` | Current-head policy-skip review missing/incomplete. Complete both internal reviews, post under `.repo-standards/rules/comments.md#reviews` using wait's full-head template, verify other merge conditions and rerun merge. No owner handoff. |
-   | `6` | Configured-reviewer threads remain unresolved. Resolve them on the platform, verify the other gates and rerun merge. Replies alone do not resolve threads. |
-   | `9` | Another open issue/PR has the repository-hold label, or another open PR has the release-hold label. Leave this PR open; retry only after the hold ends. Factory runs end for factory relaunch after the hold; other runs rerun merge after it ends. No owner handoff. |
-   | `1` | For permission refusal, follow `CONTRIBUTING.md`'s Credentials section; otherwise fix the invocation or platform error and rerun. |
-6. Stop.
-
-Which results make a head eligible, at each check location, is the
-`github-repository-configuration` rules' Required-check authority and merge
-gate section; wait and merge apply it. When either refuses the trusted
-declaration or the location's result account, correct it through the
-applicable owner procedure, then invoke again.
-
-The merge command independently checks current `gate:` labels on the PR and
-all platform closing issues, including without factory configuration or a prior
-review step. It checks again after slow validation before merging. Any gate
-returns `3`, naming its label and source; approval comments or reviews do not
-clear labels. Incomplete, malformed or unreadable gate evidence permits no
-merge. The helper changes no labels, workflow states or review records; the
-caller performs the owner handoff. After all applicable gates are removed, a
-fresh invocation rechecks every merge condition.
-
-The merge command independently resolves trusted review configuration and checks
-the platform PR author on every invocation, even without a prior wait. Invalid
-trusted declarations require its owner-handoff exit `3`; unreadable review
-configuration returns `1` and permits no merge. A prior wait result and proposed
-PR-branch policy cannot bypass the outcome check.
-Immediately before its merge write, it reads `labels.hold` and
-`labels.releaseHold` from
-`.scriptorium/config.json` at that same destination default-branch snapshot and
-lists open issues and PRs for the repository hold and open PRs for the release
-hold, excluding only the PR being merged. A candidate is a hold only when its
-own labels carry the exact configured name (REST label objects and strings are
-recognized). A filter result disagreeing with a candidate's own labels refuses
-with exit `3`, even alongside real holds: the diagnostic names each inconsistent
-item, label key and name, and pinned revision, and states that no hold was
-confirmed for that item and none was bypassed. An absent file or key adds no
-hold. Unreadable labels or invalid configuration or issue/PR reads permit no
-merge write and follow the freshness-read failure handling.
-
-## Branch-update recovery
-
-Every owner handoff in this section and in step 5 posts its question as
-`.repo-standards/rules/comments.md#owner-questions` says.
-
-Follow the `github-repository-configuration` rules' Required-check freshness
-section, which sets the enforcement merge confirms and the proven private-plan
-path with its accepted concurrent-base race. Exit `4` means stale base,
-distinct from head change or owner-only failure; no merge succeeded.
-
-The first update is unconditional. There are at most 2 further updates for a non-overlapping advance; the next stale base goes to the owner
-with "base did not settle". Count updates across this invocation, including entry
-from a stopped run; a wait or merge retry does not reset the count.
-
-Preserve the full base SHA integrated by the previous update and its head SHA.
-After fetching, run `node <this skill's directory>/branch-update.mjs <previous-base> <previous-head> <new-base> <updates-used>`.
-Before the first update use the PR's merge-base and current head, with count `0`.
-Exit `0` permits the update; `3` requires the owner handoff with its printed
-reason; `1` means missing or invalid Git evidence, which permits no further update
-until resolved. At count `0`, exit `1` still permits the unconditional first
-update and carries no review. The script checks all paths touched by added base commits, including
-reverts and merge parents, and `git merge-tree --write-tree` (Git 2.38 or newer).
-A clean merge that touches a PR path is still an overlap. Prose grants no override.
-
-The freshness section says what recovery never does. Preserve committed,
-staged, unstaged and untracked work and the PR's review and handoff context
-before changing history. Fetch origin, resolve its remote default branch again,
-and inspect outgoing history (including each merge parent) and the whole diff.
-Rebase or replay only this PR's work onto the refreshed base; keep unrelated
-work preserved separately. Apply the same section's keep-both class to every
-reconstruction conflict. Resolve every in-class conflict within the current update;
-such a resolution is not a failed branch update. For conflicts outside the class
-or uncertain ownership, preserve the work and hand off to the owner, naming the
-conflicting files and why each conflict is outside the class.
-
-Validate the integrated change with the repository's required local checks;
-wait for their final successful status before pushing with an explicit lease
-when history changed. Before the delivery push, refresh origin and its default
-branch again and inspect both `git log --stat --patch -m origin/HEAD..HEAD`
-and `git diff origin/HEAD...HEAD`. Revalidate after any further reconstruction.
-A permission refusal ends recovery under Credentials, without another push.
-
-After resolving conflicts, post one conflict-resolution record on the PR under
-`.repo-standards/rules/comments.md#delivery-records` before the replacement
-head's review. Account for every resolved file, both sides' contributions kept,
-any derived value and its producing command or check, and why no choice was needed.
-
-After an allowed update, rerun `branch-update.mjs` with the same four inputs and
-the replacement head as a fifth argument. Only `nonOverlapping: true` together
-with `patchUnchanged: true` carries internal and external review; every other
-replacement repeats both. Record the carried internal outcomes for the current
-head, citing the previous review and the script's base/head SHAs and patch result,
-in the current-head review record; unresolved findings stay unresolved.
-Pass `--updated-from <previous-base>:<previous-head>:<new-base>` to request and
-wait only for that verified unchanged update. Both commands recompute proof against
-the live head. Wait accepts completed external review of the previous head,
-and otherwise retains normal reviewer behavior. When carrying across more than
-one update, keep the reviewed base/head pair and verify the whole advance from it.
-Keep the immediately previous update's base/head separately for the next overlap
-decision and count. No host configuration or state is read.
-
-For every replacement head, renew any designated owner approval and run request
-and wait again from step 1 under freshly applied trusted app-author policy.
-The unchanged-patch case repeats only required checks, while retaining review
-records and owner gates. Pending/failed checks permit no merge; old-head checks never qualify it.
-Re-establish merge ownership before step 5. Finish each waiting PR's delivery
-before the next, refreshing each base independently.
-
-For either command's exit `7`, follow correction and authorized continuation
-under the rules' Trusted review configuration section.
+1. From the repository root, run
+   `node <this skill's directory>/request.mjs <number>` before the first wait
+   and each later or resumed head. Add `--fixes-review` when fixing a review
+   finding. On any nonzero exit, read the request [exit actions](COMMANDS.md#request)
+   and complete its action before proceeding.
+2. Run `node <this skill's directory>/wait.mjs <number>` and wait for its
+   exit. Read the wait [exit actions](COMMANDS.md#wait); perform the action
+   for the actual outcome.
+3. Verify failing checks and review findings against the source, including
+   findings arriving after a policy skip. Apply the installed rules' internal
+   Standards and Spec reviews, recording actual outcomes under the comment
+   rules' Reviews section. Fix findings the guide does not let you decline;
+   answer every review thread under Review-thread replies. After a push or
+   re-request, return to request and wait.
+4. Before merging, re-establish merge ownership and any designated owner
+   approval for the current head. Read the authoritative implementation
+   contract, worker handoff and PR comments holding designation provenance
+   and approval. Apply the GitHub rules' Designated owner review gate;
+   record approval under Delivery records. Missing required approval means
+   the owner-question handoff with the PR unmerged.
+5. Once merge conditions hold, run
+   `node <this skill's directory>/merge.mjs <number> <SHA>` with the full SHA
+   starting wait's latest outcome. Read the merge [exit actions](COMMANDS.md#merge)
+   and complete its action. Record any installed-rule-required merge outcome
+   under Delivery records, then stop.
 
 ## Reads
 
 Paths are relative to the repository root.
 
-- `.repo-standards/rules/planning.md` in the target repository: planning policy
-  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
-  if both are absent, report the missing policy and stop the dependent step.
-
-- `CONTRIBUTING.md`: the merge conditions and the Merging and Credentials sections the steps name. When it is missing, carry out the
-  steps and the commands' own checks as written, and hand off to the owner in
-  one PR comment for any rule the steps leave to the guide.
-- `.repo-standards/rules/comments.md`: the installed comment rules, whose
-  sections the steps name before each post. When it is missing, keep the
-  worker handoff in the PR body's Evidence section, post each other record or
-  question the steps name as one comment, and each review in the shape the
-  wait prints.
-- The installed rules the steps name, such as the
-  `github-repository-configuration` rules, which the `repository-standards`
-  skill looks up. When they are missing, the commands' own behavior stands, no
-  rule prescribes a worker handoff or owner approval,
-  and `CONTRIBUTING.md` alone sets the merge rules.
-- `.github/required-checks.json`: the required-name authority for wait and
-  merge, which also tells the check location. Missing, invalid or unreadable
-  at the selected trusted commit stops delivery and requires correction on the
-  destination default branch before reinvocation.
-- `.github/pull-request-reviewer.json`: the optional reviewer declaration.
-  When it is missing at the selected commit, no reviewer is configured.
-- `.github/factory-review-policy.json`: the optional app-author review policy.
-  When it is missing at the selected commit, configured reviewer behavior
-  applies.
-- `.github/workflows/pr-metadata.yml`: at `github` only, the workflow the
-  merge command reads on the live default branch for the rules' proven
-  private-plan path. When it is missing there, merge needs the owner; at
-  `runner` and `self-reported` it is never read.
-- `.scriptorium/config.json`: its `labels.hold` and `labels.releaseHold`, which the
-  merge command reads. When the file or a key is missing, that hold does not apply.
-- `.agents/skills/` and `rules/` at the pull request's head and merge base: the
-  skills, references and rule sections that open issues' `Deletes:` lines name,
-  which the merge command resolves. When a surface is missing at both, the
-  command reports it unchecked.
-- `.repo-standards/runtime/`: the pinned Repository Standards runtime, its
-  `package-lock.json` and `node_modules/.bin/repo-standards`, which the
-  request command uses to rebuild an adoption summary. When it is missing, no
-  link is exempt as part of an adoption summary.
-- `vendor/postern/postern.mjs`, `vendor/marked/marked.esm.js`,
-  `vendor/parse5/parse5.esm.js` and `vendor/repo-canon/validate-issue-contract.mjs`:
-  the bundles and contract parser the commands import, which Repo Canon's
-  adoption installs. When they are missing, the commands cannot start:
-  carry out each step by hand with the GitHub CLI under the same rules, and
-  squash-merge with the subject `<title> (#<number>)` and the PR body passed
-  explicitly.
+- `.repo-standards/rules/planning.md`: planning policy. When absent, use
+  `CONTRIBUTING.md`; if both are absent, stop the dependent step.
+- `CONTRIBUTING.md`: merge, validation, findings and credential requirements.
+  When missing, follow the commands and hand off rules left to the guide
+  to the owner in one PR comment.
+- `.repo-standards/rules/comments.md`: sections named above and by exit
+  actions. When missing, keep the handoff in the PR body's Evidence, each
+  other record or question in one comment, and reviews in wait's printed shape.
+- The installed rules, including the `github-repository-configuration` rules,
+  looked up through the `repository-standards` skill: merge eligibility,
+  review configuration, request policy, branch updates and continuation.
+  When missing, commands stand; no installed rule adds handoff or owner
+  approval and the guide sets merge rules.
+- `.github/required-checks.json`: trusted required checks and location.
+  Missing, invalid or unreadable stops delivery for default-branch correction.
+- `.github/pull-request-reviewer.json` and `.github/factory-review-policy.json`:
+  optional trusted declarations. When absent, no reviewer or no policy exemption,
+  respectively.
+- `.github/workflows/pr-metadata.yml`: read at `github` for the proven
+  private-plan path; missing there requires the owner. Other locations omit it.
+- `.scriptorium/config.json`: hold labels; an absent file or key adds no hold.
+- `.agents/skills/` and `rules/`: declared-deletion surfaces at head and base;
+  missing at both is reported unchecked.
+- `.repo-standards/runtime/`: adoption-summary verification runtime; when
+  missing, no link receives the summary exemption.
+- `vendor/`: canonical command dependencies in adopted installations. When
+  absent, the shipped runtime supplies them; missing runtime stops at Start.

@@ -1,11 +1,11 @@
+import { runtimeModule } from "./runtime-module.mjs";
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import {
-  connect,
-  detectPlatform,
-  PlatformError,
-} from "../../../vendor/postern/postern.mjs";
+const { connect, detectPlatform, PlatformError } =
+  /** @type {typeof import("../../../vendor/postern/postern.mjs")} */ (
+    await import(runtimeModule("vendor/postern/postern.mjs"))
+  );
 
 export const requestTimeoutMs = 45_000;
 

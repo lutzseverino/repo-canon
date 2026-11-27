@@ -1,5 +1,12 @@
-import { marked } from "../../../vendor/marked/marked.esm.js";
-import { parseFragment } from "../../../vendor/parse5/parse5.esm.js";
+import { runtimeModule } from "./runtime-module.mjs";
+const { marked } =
+  /** @type {typeof import("../../../vendor/marked/marked.esm.js")} */ (
+    await import(runtimeModule("vendor/marked/marked.esm.js"))
+  );
+const { parseFragment } =
+  /** @type {typeof import("../../../vendor/parse5/parse5.esm.js")} */ (
+    await import(runtimeModule("vendor/parse5/parse5.esm.js"))
+  );
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";

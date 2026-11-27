@@ -1,3 +1,4 @@
+import { runtimeModule } from "./runtime-module.mjs";
 // One destination default-branch snapshot governs an invocation's trusted files.
 import {
   checkLocation,
@@ -7,7 +8,10 @@ import {
 import { pinnedFiles } from "./platform.mjs";
 import { parseReviewPolicy, policyTarget } from "./review-policy.mjs";
 import { parseReviewer, reviewerTarget } from "./pull-request-reviewer.mjs";
-import { readTrustedResultAccount } from "../../../vendor/repo-canon/validate-issue-contract.mjs";
+const { readTrustedResultAccount } =
+  /** @type {typeof import("../../../vendor/repo-canon/validate-issue-contract.mjs")} */ (
+    await import(runtimeModule("vendor/repo-canon/validate-issue-contract.mjs"))
+  );
 
 const runnerAccountVariable = "REPO_CANON_RUNNER_ACCOUNT";
 

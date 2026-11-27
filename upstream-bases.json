@@ -88,7 +88,7 @@
     },
     "writing-for-agents": {
       "path": "skills/productivity/writing-for-agents",
-      "edits": "Its pruning reference keeps requirements in the rules or contribution guide that hold them, with skills stating the method, and puts repository-specific agent constraints in the file a repository names for them where it installs `AGENTS.md` as shared content. Its skill-mechanics reference says that a prompt or brief naming a user-invoked skill is its invocation, whether a human, another skill's step or a delegation brief writes it: another skill reaching a skill no longer justifies model-invocation or a split, shared reference can live in a skill the others name, and a router's naming invokes the skill it picks."
+      "edits": "Its pruning reference describes bundled scripts only through commands, exit codes and agent next steps, ships their standalone runtime and replaces by-hand fallbacks with a startup-error stop. It keeps requirements in the rules or contribution guide that hold them, with skills stating the method, and puts repository-specific agent constraints in the file a repository names for them where it installs `AGENTS.md` as shared content. Its skill-mechanics reference says that a prompt or brief naming a user-invoked skill is its invocation, whether a human, another skill's step or a delegation brief writes it: another skill reaching a skill no longer justifies model-invocation or a split, shared reference can live in a skill the others name, and a router's naming invokes the skill it picks."
     }
   },
   "files": {

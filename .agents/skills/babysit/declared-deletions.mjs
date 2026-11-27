@@ -1,5 +1,9 @@
+import { runtimeModule } from "./runtime-module.mjs";
 import { pages, pinnedFiles, requestData } from "./platform.mjs";
-import { contractFootprint } from "../../../vendor/repo-canon/validate-issue-contract.mjs";
+const { contractFootprint } =
+  /** @type {typeof import("../../../vendor/repo-canon/validate-issue-contract.mjs")} */ (
+    await import(runtimeModule("vendor/repo-canon/validate-issue-contract.mjs"))
+  );
 
 // The merge check of declared deletions. The issue owns its footprint and the
 // issue-contract protocol its fields; this check owns how a deleted surface

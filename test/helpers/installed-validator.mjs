@@ -61,7 +61,7 @@ export function installedValidator(t, target) {
     mkdirSync(dirname(destination), { recursive: true });
     cpSync(join(sourceRoot, source), destination);
     for (const [, specifier] of readFileSync(destination, "utf8").matchAll(
-      /^import\s[^;]*?from\s+"(\.{1,2}\/[^"]+)";/gm,
+      /(?:\bfrom\s+|\bimport\(\s*)"(\.{1,2}\/[^"]+)"/g,
     ))
       pending.push(posix.join(posix.dirname(path), specifier));
   }

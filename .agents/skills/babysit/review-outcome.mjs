@@ -1,4 +1,8 @@
-import { marked } from "../../../vendor/marked/marked.esm.js";
+import { runtimeModule } from "./runtime-module.mjs";
+const { marked } =
+  /** @type {typeof import("../../../vendor/marked/marked.esm.js")} */ (
+    await import(runtimeModule("vendor/marked/marked.esm.js"))
+  );
 
 // The comment rules' Reviews section defines this review. The wait prints its
 // template; merge accepts only a completed review of the current head.
