@@ -43,6 +43,32 @@ traverse directories depth first, sort each directory's entries with JavaScript
 bytes, and NUL to the SHA-256 stream. These values identify the bytes actually
 used even when the source worktree has uncommitted changes.
 
+Run every exercise session with `HOME` set to a directory created empty for
+that exercise, outside every fixture repository and workbench. A resumed or
+returned-to session keeps the isolated home it started with. Every user-scope
+skill location the harness reads must resolve inside that home and contain no
+skills; never link those locations back to the host. For Codex, cover both
+`$HOME/.agents/skills` and `$CODEX_HOME/skills`: leave `CODEX_HOME` unset so it
+defaults to `$HOME/.codex`, or set it inside the isolated home. Skills bundled
+with the harness, such as Codex's `$CODEX_HOME/skills/.system`, are exempt.
+
+Authenticate the harness in that isolated home before the exercise. Never
+copy or link a credential into a fixture repository or workbench. For example,
+with Codex CLI, create the home and complete device login as described in the
+[official authentication documentation](https://learn.chatgpt.com/docs/auth?surface=cli).
+File storage keeps the login cache inside the isolated Codex home:
+
+```bash
+exercise_home="$(mktemp -d /tmp/repo-canon-exercise-home.XXXXXX)"
+mkdir "$exercise_home/.codex"
+env HOME="$exercise_home" CODEX_HOME="$exercise_home/.codex" \
+  codex -c 'cli_auth_credentials_store="file"' login --device-auth
+```
+
+Before the first session, including after authentication, inspect every
+user-scope skill location and confirm it contains no skill apart from the
+harness's bundled skills.
+
 Run exercises one at a time, waiting for each session to finish before
 starting the next. Run one session per scenario, with the fixture repository
 as its working directory:
@@ -55,10 +81,12 @@ as its working directory:
   A sandbox that mounts `.git` read-only blocks the commits that the debugging,
   TDD, and planning scenarios make.
 
-For example, with Codex CLI:
+For example, with Codex CLI, using the home authenticated above:
 
 ```bash
-codex exec --json -c 'model_reasoning_effort="high"' \
+env HOME="$exercise_home" CODEX_HOME="$exercise_home/.codex" \
+  codex exec --json -c 'cli_auth_credentials_store="file"' \
+  -c 'model_reasoning_effort="high"' \
   -C <fixture-repository> <scenario-prompt>
 ```
 
@@ -73,8 +101,8 @@ limit, never a pass.
 
 A scenario establishes only the path it exercises, not every behavior of the
 skill. Report each outcome in the pull request that needs it, such as the
-release pull request. Session output, transcripts, and produced artifacts are
-not committed.
+release pull request, and state that its sessions ran with the isolated home.
+Session output, transcripts, and produced artifacts are not committed.
 
 ## Engineering skills
 
