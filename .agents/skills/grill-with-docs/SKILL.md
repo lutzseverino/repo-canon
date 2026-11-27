@@ -9,8 +9,12 @@ A prompt or brief naming this skill is its invocation.
 Read the target repository's planning rules, or its contribution guide when
 those rules are absent, for Decision rights, Publication and amendments and
 Readiness. Invoke `grilling` and `domain-modeling` with the request, recorded
-decisions and dated sources. Make domain edits on a branch and checkout you
-own; deliver one draft PR per
+decisions and dated sources. Have `grilling` select the other party through
+Decision rights: the maintainer for its five cases, otherwise their delegated
+agent, or the maintainer when none is delegated. Carry the proposed
+specification and split into `grilling`'s publishing last round, retaining its
+strategic close review and reusing applicable recorded approval. Make domain
+edits on a branch and checkout you own; deliver one draft PR per
 repository through separate `review`, arranged by the caller unless factory
 review is configured. Gather missing facts yourself and apply
 `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check).
