@@ -39,17 +39,16 @@ Finding _facts_ is your job, never the user's. When a frontier question needs a 
 When the frontier is empty, a grill that adds or changes a mechanism or policy
 ends with an independent review against long-term design: a fresh session,
 of another provider where the harness offers one, reads ADRs as history, not
-constraints. Ask its findings as the final round, before the decision maker's final
-approval and publication. A grill that only drops or moves work skips this
-strategic-close step; delegated decisions still need the planning rules'
-independent review. Reuse an applicable recorded approval instead of asking
-again.
+constraints. Ask its findings as the final round; the decision maker's answer
+to that round is their final approval before publication. A grill that only
+drops or moves work skips this strategic-close step; delegated decisions still
+need the planning rules' independent review. Reuse an applicable recorded
+approval instead of asking again.
 
-For a publishing grill, include the last decisions and ticket check in that
-same final round: specification repository, ticket split with repositories and
-blockers, testing seams, and publication go-ahead. Cite any reused approval in
-the round. The delegated agent
-answers this round with the review above when it is the other party.
+For a publishing grill, include the last decisions and ticket check in its
+final round, with that review's findings when it has one: specification
+repository, ticket split with repositories and blockers, testing seams, and
+publication go-ahead. Cite any reused approval in the round.
 
 Complete the interview only when every required answer is recorded or listed
 for veto under the planning rules, including the final round. If a question
