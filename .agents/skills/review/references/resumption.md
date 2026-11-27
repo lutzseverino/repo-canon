@@ -20,5 +20,5 @@ At step 4, name the resolved contract finding in the Spec note, link the
 recorded decision and report the actual reassessment. Use
 `round.mjs <number> --reassess <file>` to update this account's latest complete
 non-holding review of this head, preserving the previous assessment as quoted
-history. Retain the head, round number and convergence bound. The common
-method's exit handling and finding routes still apply.
+history. Retain the head, round number and convergence bound. `SKILL.md`'s
+exit table and step 4 routes still apply.
