@@ -95,10 +95,13 @@ and no bootstrap bypass exists. The standard never installs repository names.
 
 Merge reads paginated current-head check runs, commit statuses and workflow
 attempts. Every declared name needs positive success: absence, pending, failure,
-cancellation, timeout, skipped and neutral are insufficient. Older heads and
-earlier attempts cannot satisfy newer pending/failed evidence. Existing waits
-on observed checks and workflow attempts remain. Wait shares the same
-interpretation and cannot report success after a no-check timeout.
+cancellation, timeout, skipped and neutral are insufficient. For a GitHub
+Actions check, the latest run's latest attempt supplies the job list. A job
+GitHub carries forward into that attempt counts with its own result. A check's
+start time never decides attempt membership. Checks from superseded jobs and
+earlier workflow runs cannot satisfy the latest attempt. A failed workflow
+attempt still fails validation when its carried jobs passed. Wait and merge
+share this decision and require complete job membership evidence.
 
 The declaration tells the check location, without reading the selection: a
 declaration naming `Runner checks` means `runner`, one naming `Review rerun`
@@ -307,10 +310,11 @@ The scripts read the currently authenticated GitHub CLI credential with
 `gh auth token --hostname github.com` and pass it to the exact
 [Postern bundle](../../vendor/postern/README.md). No credential is printed.
 PullRequests owns PR reads, reviews, queue checks and merge writes; Access
-retains conversation comments, GitHub check links, workflow attempt times,
-push activity, inline review-comment facts, branch policy and comparisons that the neutral ports do not
-expose. Access reads use
-the expected head SHA and paginate. A failed prerequisite read fails without a merge. The wait preserves its
+retains conversation comments, GitHub check links, workflow runs and their
+attempt job lists, push activity, inline review-comment facts, branch policy
+and comparisons that the neutral ports do not expose. Access paginates the
+checks and runs for the expected head SHA, then reads all job pages for the
+selected attempts. A failed prerequisite read fails without a merge. The wait preserves its
 activity-read fallback: when the push activity request fails, it uses the
 committer date for review timing and keeps the push unrecorded. Without checks,
 an unrecorded push continues waiting; it cannot satisfy the five-minute gate.

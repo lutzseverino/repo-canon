@@ -554,6 +554,20 @@ export function fixtureFetch(statePath = process.env.FAKE_GH_STATE) {
     }
     if (/\/commits\/[^/]+$/.test(path))
       return json({ commit: { committer: { date: state.committedAt } } });
+    const attempt = /\/actions\/runs\/(\d+)\/attempts\/(\d+)\/jobs$/.exec(path);
+    if (attempt) {
+      const responses = state.attemptJobs?.[`${attempt[1]}/${attempt[2]}`];
+      const page = Number(url.searchParams.get("page") ?? "1");
+      const response = responses?.[page - 1];
+      if (!response) return json({ message: "attempt jobs missing" }, 404);
+      const next = new URL(url);
+      next.searchParams.set("page", String(page + 1));
+      return json(
+        response.body,
+        response.status,
+        page < responses.length ? { link: `<${next.href}>; rel="next"` } : {},
+      );
+    }
     if (path.endsWith("/actions/runs")) {
       if (state.failRuns)
         return json({ message: "runs refused" }, state.failRuns);

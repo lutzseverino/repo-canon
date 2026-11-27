@@ -8,7 +8,6 @@
 //   0  checks settled and the reviewer reviewed the head, or none is configured
 //   1  usage or platform error
 //   2  one or more checks failed, including a workflow whose latest run failed
-//      with no check from that run or attempt
 //   3  checks settled and the configured reviewer is unavailable
 //   4  checks settled and the configured reviewer did not review this head
 //   5  still waiting at the invocation limit; run it again
@@ -17,8 +16,7 @@
 //
 // Checks settled means every declared required name has positive success and
 // no observed check or workflow attempt remains unfinished or failed.
-// A workflow whose latest run failed with no check from that run or attempt
-// counts as a failed check.
+// A failed workflow counts as a failed check when no member reports the failure.
 //
 // Usage: node wait.mjs <number> [--repo <owner/name>] [--limit <seconds>]
 //        [--interval <seconds>] [--updated-from <base>:<head>:<new base>]
@@ -32,8 +30,7 @@ import {
   connectionFor,
   executedAsScript,
   pages,
-  checkRollup,
-  workflowRuns,
+  currentHeadCheckEvidence,
   reviewComments,
   pushTime,
   conversationComments,
@@ -54,10 +51,7 @@ import {
 } from "./reviewer.mjs";
 export { reviewRequestedAt } from "./reviewer.mjs";
 
-import {
-  validationCheckStates,
-  failedConclusions,
-} from "./required-checks.mjs";
+import { currentHeadValidation } from "./required-checks.mjs";
 export { checkStates } from "./required-checks.mjs";
 
 const settledCodes = {
@@ -70,20 +64,8 @@ const settledCodes = {
   "not reviewing": 4,
 };
 
-// A job or attempt link and its run link share this Actions run URL.
-const workflowRunLink = (link) =>
-  /^(.*\/actions\/runs\/\d+)(?:[/?#]|$)/.exec(link ?? "")?.[1];
-
-// Decides the outcome from one look at the pull request. `checks` holds
-// `{ name, state: "pass" | "fail" | "pending", link, workflowName?,
-//    checkRunStartedAt? }`, with the check run's start in `checkRunStartedAt`;
-// `runs` holds the head's GitHub Actions workflow runs as
-// `{ workflow_id, name, status, conclusion, run_started_at, html_url }`, with
-// the latest attempt's start in `run_started_at`. Check links identify their
-// workflow through its runs; a workflow name also identifies it when unique.
-// A check settles that workflow's latest run only if it started at or after
-// the run's latest attempt. A workflow whose latest run failed with no check
-// from that run or attempt joins the failed checks under its name and run link;
+// Decides review and timing from one look at the pull request. The check
+// verdict already accounts for the head's required names and workflow attempts.
 // `requestedAt` is the effective review request time; `evidenceRequestedAt`
 // retains the opening/explicit-request cutoff for completion and unavailability.
 // `pushedAt` is the head's push
@@ -98,8 +80,7 @@ export const decide = ({
   author,
   head,
   reviewHead = head,
-  checks,
-  runs = [],
+  validation,
   requestedAt,
   evidenceRequestedAt = requestedAt,
   pushedAt,
@@ -132,51 +113,7 @@ export const decide = ({
   const review = state
     ? { reviewer: state, reviewerPhrase: reviewerPhrase(reviewer, state) }
     : {};
-  const latestRuns = new Map();
-  const workflowsByLink = new Map();
-  const workflowsByName = new Map();
-  for (const run of runs) {
-    const known = latestRuns.get(run.workflow_id);
-    if (!known || run.run_started_at > known.run_started_at) {
-      latestRuns.set(run.workflow_id, run);
-    }
-    const link = workflowRunLink(run.html_url);
-    if (link) workflowsByLink.set(link, run.workflow_id);
-    const ids = workflowsByName.get(run.name) ?? new Set();
-    ids.add(run.workflow_id);
-    workflowsByName.set(run.name, ids);
-  }
-  const checkedWorkflows = new Set();
-  for (const check of checks) {
-    if (!check.workflowName) continue;
-    const linkedId = workflowsByLink.get(workflowRunLink(check.link));
-    const namedIds = workflowsByName.get(check.workflowName);
-    const workflowId =
-      linkedId ?? (namedIds?.size === 1 ? [...namedIds][0] : undefined);
-    const run = latestRuns.get(workflowId);
-    if (
-      run &&
-      Date.parse(check.checkRunStartedAt) >= Date.parse(run.run_started_at)
-    ) {
-      checkedWorkflows.add(workflowId);
-    }
-  }
-  const failingRuns = [...latestRuns.values()]
-    .filter(
-      (run) =>
-        !checkedWorkflows.has(run.workflow_id) &&
-        run.status === "completed" &&
-        failedConclusions.has(run.conclusion?.toUpperCase()),
-    )
-    .map((run) => ({ name: run.name, state: "fail", link: run.html_url }));
-  const failing = [
-    ...checks.filter((check) => check.state === "fail"),
-    ...failingRuns,
-  ];
-  const checksPending =
-    (checks.length === 0 && failingRuns.length === 0) ||
-    checks.some((check) => check.state === "pending") ||
-    runs.some((run) => run.status !== "completed");
+  const { failing, checksPending } = validation;
   if (failing.length > 0) {
     return { code: 2, ...review, failing };
   }
@@ -287,9 +224,11 @@ const look = async (
   const pull = await connection.pullRequests.pullRequest(Number(number));
   const reviewHead =
     unchangedUpdate(updatedFrom, pull.headCommit) ?? pull.headCommit;
-  const [rollup, comments, reviews, reviewCommentPages, runs, push, readyAt] =
+  const [validation, comments, reviews, reviewCommentPages, push, readyAt] =
     await Promise.all([
-      checkRollup(connection, pull.headCommit),
+      currentHeadCheckEvidence(connection, pull.headCommit).then((checks) =>
+        currentHeadValidation(checks, requiredChecks, resultAccount),
+      ),
       reviewer
         ? pages(connection, `${path}/issues/${number}/comments?per_page=100`)
         : [],
@@ -297,10 +236,6 @@ const look = async (
       reviewer
         ? pages(connection, `${path}/pulls/${number}/comments?per_page=100`)
         : [],
-      pages(
-        connection,
-        `${path}/actions/runs?head_sha=${pull.headCommit}&per_page=100`,
-      ),
       pushTimes.get(pull.headCommit) ?? pushTime(pull, connection),
       reviewer?.request.onOpen &&
       !skipsExternalReview(policy, pull.author?.login)
@@ -318,13 +253,7 @@ const look = async (
   return {
     head: pull.headCommit,
     reviewHead,
-    checks: validationCheckStates(
-      rollup,
-      requiredChecks,
-      workflowRuns(runs),
-      resultAccount,
-    ),
-    runs: workflowRuns(runs),
+    validation,
     reviewer,
     policy,
     author: pull.author?.login,

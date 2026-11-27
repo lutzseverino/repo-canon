@@ -12,8 +12,7 @@ import {
   pages,
   requestData,
   pinnedFiles,
-  checkRollup,
-  workflowRuns,
+  currentHeadCheckEvidence,
   unresolvedReviewerThreads,
 } from "./platform.mjs";
 import {
@@ -25,9 +24,7 @@ import { completeReview, reviewsSection } from "./review-outcome.mjs";
 
 import { ownerGates } from "./owner-gates.mjs";
 import { declaredDeletions } from "./declared-deletions.mjs";
-
-import { decide } from "./wait.mjs";
-import { validationCheckStates } from "./required-checks.mjs";
+import { currentHeadValidation } from "./required-checks.mjs";
 
 function needsOwner(message) {
   console.error(message);
@@ -383,38 +380,15 @@ export async function main(argv = process.argv.slice(2), connection) {
           "Could not confirm the default-branch PR metadata workflow; needs the owner.",
         );
     }
-    const rollup = await checkRollup(connection, head);
-    const runs = workflowRuns(
-      await pages(
-        connection,
-        `/repos/${connection.repository.path}/actions/runs?head_sha=${head}&per_page=100`,
-      ),
-    );
-    const checks = validationCheckStates(
-      rollup,
+    const validation = await currentHeadValidation(
+      await currentHeadCheckEvidence(connection, head),
       configuration.requiredChecks,
-      runs,
       configuration.resultAccount,
     );
-    const required = checks.filter((check) =>
+    const required = validation.checks.filter((check) =>
       configuration.requiredChecks.includes(check.name),
     );
-    const now = Date.now();
-    const validation = decide({
-      checks,
-      runs,
-      head,
-      now,
-      startedAt: now,
-      limitMs: 0,
-      comments: [],
-      requestedAt: now,
-      pushedAt: now,
-      reviewer: null,
-      policy: null,
-      author: pullRequest.author?.login,
-    });
-    if (validation.code !== 0) {
+    if (validation.checksPending || validation.failing.length) {
       console.error(
         `Current-head validation has not succeeded for ${head}; required checks: ${
           required

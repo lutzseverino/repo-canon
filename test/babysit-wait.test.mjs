@@ -24,6 +24,12 @@ import {
   reviewRequestedAt,
 } from "../.agents/skills/babysit/wait.mjs";
 
+import {
+  checkVerdict,
+  validationCheckStates,
+  workflowAttempts,
+} from "../.agents/skills/babysit/required-checks.mjs";
+
 test("invalid durations fail before accessing the connection", async (t) => {
   let stderr = "";
   t.mock.method(process.stderr, "write", (chunk) => {
@@ -220,15 +226,16 @@ const accountRequired = (createdAt) => ({
 
 const passed = [{ name: "check", state: "pass", link: "https://ci/1" }];
 
-/** @returns {Record<string, any>} */
-const decision = (overrides) =>
+/** @param {Record<string, any>} overrides @returns {Record<string, any>} */
+const decision = ({ checks = passed, runs, ...overrides }) =>
   decide({
     head,
     reviewer: codexReviewer,
-    checks: passed,
+    policy: null,
+    author: null,
+    validation: checkVerdict(checks, runs),
     requestedAt: Date.parse("2026-10-11T05:39:50Z"),
     pushedAt: Date.parse("2026-10-11T05:39:50Z"),
-    pushRecorded: true,
     comments: [],
     now: Date.parse("2026-10-11T05:43:00Z"),
     startedAt: Date.parse("2026-10-11T05:40:00Z"),
@@ -868,6 +875,8 @@ test("empty check evidence never passes, even long after a recorded push", () =>
 const workflowRun = (name, event, status, overrides = {}) => ({
   name,
   workflow_id: { CI: 1, "PR metadata validation": 2, Other: 3 }[name],
+  id: { CI: 21, "PR metadata validation": 22, Other: 23 }[name],
+  run_attempt: 1,
   event,
   status,
   conclusion: status === "completed" ? "success" : null,
@@ -875,6 +884,49 @@ const workflowRun = (name, event, status, overrides = {}) => ({
   html_url: `https://ci/runs/${encodeURIComponent(name)}`,
   ...overrides,
 });
+
+const attemptJobs = (run, ...ids) => ({
+  [`${run.id}/${run.run_attempt}`]: [
+    {
+      body: {
+        total_count: ids.length,
+        jobs: ids.map((id) => ({
+          id,
+          run_id: run.id,
+          name: run.jobName ?? "test",
+        })),
+      },
+    },
+  ],
+});
+
+/** @param {Record<string, any>} overrides */
+const workflowDecision = ({
+  checks = passed,
+  runs = [],
+  members = {},
+  ...overrides
+}) => {
+  const rollup = checks.map((check) =>
+    checkRun({
+      name: check.name,
+      workflowName: check.workflowName,
+      detailsUrl: check.link,
+      startedAt: check.checkRunStartedAt,
+      status: check.state === "pending" ? "QUEUED" : "COMPLETED",
+      conclusion: check.state === "fail" ? "FAILURE" : "SUCCESS",
+    }),
+  );
+  const workflows = workflowAttempts(runs);
+  const jobs = new Map(
+    workflows.latestRuns.map((run) => [
+      run.id,
+      new Map((members[run.id] ?? []).map((id) => [id, "test"])),
+    ]),
+  );
+  const validation = validationCheckStates(rollup, [], workflows, jobs);
+  return decision({ ...overrides, validation: checkVerdict(validation, runs) });
+};
 
 const failedRun = workflowRun("CI", "pull_request", "completed", {
   conclusion: "failure",
@@ -906,7 +958,7 @@ test("a failed workflow without checks fails in every Codex state", () => {
         };
         if (state === "not requested")
           look.requestedAt = look.pushedAt - minute;
-        const outcome = decision(look);
+        const outcome = workflowDecision(look);
         assert.equal(outcome.reviewer, state);
         assert.equal(outcome.code, 2);
         assert.deepEqual(outcome.failing, [failedWorkflow]);
@@ -917,7 +969,7 @@ test("a failed workflow without checks fails in every Codex state", () => {
 });
 
 test("a failed workflow makes a fresh head's checks non-empty", () => {
-  assert.equal(decision({ checks: [], runs: [failedRun] }).code, 2);
+  assert.equal(workflowDecision({ checks: [], runs: [failedRun] }).code, 2);
 });
 
 test("only the latest-started workflow run can fail, in either order", () => {
@@ -931,6 +983,7 @@ test("only the latest-started workflow run can fail, in either order", () => {
       conclusion: laterConclusion,
       // A rerun's latest attempt can start after a newer run was created.
       created_at: "2026-10-11T05:00:00Z",
+      id: 23,
       run_attempt: 2,
       run_started_at: "2026-10-11T05:41:00Z",
       html_url: "https://ci/runs/later",
@@ -939,7 +992,7 @@ test("only the latest-started workflow run can fail, in either order", () => {
       [earlier, later],
       [later, earlier],
     ]) {
-      const outcome = decision({
+      const outcome = workflowDecision({
         runs,
         comments: reviewerStates.reviewed.comments,
       });
@@ -958,6 +1011,7 @@ test("workflows sharing a display name do not supersede each other", () => {
   const successful = {
     ...failedRun,
     workflow_id: 4,
+    id: 22,
     conclusion: "success",
     run_started_at: "2026-10-11T05:41:00Z",
   };
@@ -965,7 +1019,7 @@ test("workflows sharing a display name do not supersede each other", () => {
     [failedRun, successful],
     [successful, failedRun],
   ]) {
-    const outcome = decision({ checks: [], runs });
+    const outcome = workflowDecision({ checks: [], runs });
     assert.equal(outcome.code, 2);
     assert.deepEqual(outcome.failing, [failedWorkflow]);
   }
@@ -977,11 +1031,12 @@ test("an older passing check does not hide a later run's startup failure", () =>
   const older = { ...failedRun, conclusion: "success", html_url: runUrl(21) };
   const latest = {
     ...failedRun,
+    id: 23,
     conclusion: "startup_failure",
     run_started_at: "2026-10-11T05:41:00Z",
     html_url: runUrl(23),
   };
-  const outcome = decision({
+  const outcome = workflowDecision({
     checks: [
       {
         name: "test",
@@ -1008,7 +1063,7 @@ test("a prior attempt's passing check does not hide a failed rerun", () => {
     run_started_at: "2026-10-11T05:41:00Z",
     html_url: runUrl(21),
   };
-  const outcome = decision({
+  const outcome = workflowDecision({
     checks: [
       {
         name: "test",
@@ -1031,6 +1086,7 @@ test("a failed check from the latest run or attempt is listed once", () => {
   for (const id of [21, 23]) {
     const latest = {
       ...failedRun,
+      id,
       run_started_at: "2026-10-11T05:41:00Z",
       html_url: runUrl(id),
     };
@@ -1047,9 +1103,10 @@ test("a failed check from the latest run or attempt is listed once", () => {
           checkRunStartedAt,
         },
       ];
-      const outcome = decision({
+      const outcome = workflowDecision({
         checks,
         runs: id === 21 ? [latest] : [older, latest],
+        members: { [id]: [2] },
       });
       assert.equal(outcome.code, 2);
       assert.deepEqual(outcome.failing, checks);
@@ -1061,30 +1118,32 @@ test("a latest successful run clears an older failure alongside leftover checks"
   const older = { ...failedRun, html_url: runUrl(21) };
   const latest = {
     ...failedRun,
+    id: 23,
     conclusion: "success",
     run_started_at: "2026-10-11T05:41:00Z",
     html_url: runUrl(23),
   };
-  const outcome = decision({
+  const outcome = workflowDecision({
     checks: [
       {
         name: "test",
         workflowName: "CI",
         state: "pass",
-        link: `${runUrl(21)}/job/1`,
-        checkRunStartedAt: "2026-10-11T05:40:01Z",
+        link: `${runUrl(23)}/job/2`,
+        checkRunStartedAt: "2026-10-11T05:41:01Z",
       },
     ],
     runs: [older, latest],
+    members: { 23: [2] },
     comments: reviewerStates.reviewed.comments,
   });
   assert.equal(outcome.code, 0);
   assert.deepEqual(outcome.failing, []);
 });
 
-test("a check with no start time does not settle a failed run", () => {
+test("a check absent from the job list does not settle a failed run", () => {
   for (const link of [`${runUrl(21)}/job/1`, "https://ci/job"]) {
-    const outcome = decision({
+    const outcome = workflowDecision({
       checks: [{ name: "test", workflowName: "CI", state: "pass", link }],
       runs: [{ ...failedRun, html_url: runUrl(21) }],
     });
@@ -1100,6 +1159,7 @@ test("checks represent only their own workflow when display names are shared", (
   const successful = {
     ...failedRun,
     workflow_id: 4,
+    id: 22,
     conclusion: "success",
     html_url: runUrl(22),
   };
@@ -1118,27 +1178,36 @@ test("checks represent only their own workflow when display names are shared", (
             checkRunStartedAt: "2026-10-11T05:40:00Z",
           },
         ];
-        const outcome = decision({ checks, runs });
-        assert.deepEqual(outcome.failing, [
-          ...checks.filter((check) => check.state === "fail"),
-          ...(id === 22 ? [{ ...failedWorkflow, link: failed.html_url }] : []),
-        ]);
-        assert.equal(outcome.code, id === 22 || state === "fail" ? 2 : null);
+        const outcome = workflowDecision({
+          checks,
+          runs,
+          members: { [id]: [1] },
+        });
+        assert.deepEqual(
+          outcome.failing.map((check) => check.name).sort(),
+          [
+            ...(state === "fail" ? ["test"] : []),
+            ...(id === 22 || state !== "fail" ? ["CI"] : []),
+          ].sort(),
+        );
+        assert.equal(outcome.code, 2);
       }
     }
   }
 });
 
-test("a check from an older run still represents its workflow ID", () => {
+test("a check from an older run cannot represent the latest run", () => {
   const older = { ...failedRun, conclusion: "success", html_url: runUrl(21) };
   const latest = {
     ...failedRun,
+    id: 23,
     html_url: runUrl(23),
     run_started_at: "2026-10-11T05:41:00Z",
   };
   const unrelated = {
     ...failedRun,
     workflow_id: 4,
+    id: 22,
     conclusion: "success",
     html_url: runUrl(22),
   };
@@ -1147,18 +1216,28 @@ test("a check from an older run still represents its workflow ID", () => {
       name: "test",
       workflowName: "CI",
       state: "fail",
-      link: `${runUrl(21)}/attempts/1`,
+      link: `${runUrl(21)}/job/1`,
       checkRunStartedAt: "2026-10-11T05:41:00Z",
     },
   ];
-  const outcome = decision({ checks, runs: [older, latest, unrelated] });
+  const outcome = workflowDecision({
+    checks,
+    runs: [older, latest, unrelated],
+  });
   assert.equal(outcome.code, 2);
-  assert.deepEqual(outcome.failing, checks);
+  assert.deepEqual(outcome.failing, [
+    { ...failedWorkflow, link: latest.html_url },
+  ]);
 });
 
 test("an ambiguous workflow name alone does not hide a failed run", () => {
-  const successful = { ...failedRun, workflow_id: 4, conclusion: "success" };
-  const outcome = decision({
+  const successful = {
+    ...failedRun,
+    id: 22,
+    workflow_id: 4,
+    conclusion: "success",
+  };
+  const outcome = workflowDecision({
     checks: [{ ...passed[0], workflowName: "CI" }],
     runs: [failedRun, successful],
   });
@@ -1166,25 +1245,32 @@ test("an ambiguous workflow name alone does not hide a failed run", () => {
   assert.deepEqual(outcome.failing, [failedWorkflow]);
 });
 
-test("a workflow with a check uses only that check's outcome", () => {
-  for (const state of ["pass", "fail", "pending"]) {
+test("a member's passing or pending check does not hide a failed workflow", () => {
+  for (const state of ["pass", "pending"]) {
+    const run = { ...failedRun, html_url: runUrl(21) };
     const checks = [
       {
         name: "test",
         workflowName: "CI",
         state,
-        link: "https://ci/job",
-        checkRunStartedAt: "2026-10-11T05:40:00Z",
+        link: `${run.html_url}/job/1`,
       },
     ];
-    const look = { checks, comments: reviewerStates.reviewed.comments };
-    assert.deepEqual(decision({ ...look, runs: [failedRun] }), decision(look));
+    const outcome = workflowDecision({
+      checks,
+      runs: [run],
+      members: { 21: [1] },
+    });
+    assert.equal(outcome.code, 2);
+    assert.deepEqual(outcome.failing, [
+      { ...failedWorkflow, link: run.html_url },
+    ]);
   }
 });
 
 test("another workflow's checks or a status context do not hide a failed run", () => {
   for (const workflowName of ["Other CI", undefined]) {
-    const outcome = decision({
+    const outcome = workflowDecision({
       checks: [
         { name: "CI", workflowName, state: "pass", link: "https://ci/job" },
       ],
@@ -1201,8 +1287,8 @@ test("non-failing workflow conclusions preserve the no-check outcomes", () => {
       for (const pushRecorded of [true, false]) {
         const look = { ...overrides, checks: [], pushRecorded };
         assert.deepEqual(
-          decision({ ...look, runs: [{ ...failedRun, conclusion }] }),
-          decision(look),
+          workflowDecision({ ...look, runs: [{ ...failedRun, conclusion }] }),
+          workflowDecision(look),
         );
       }
     }
@@ -1211,12 +1297,16 @@ test("non-failing workflow conclusions preserve the no-check outcomes", () => {
 
 test("a failed workflow exits despite any unfinished run", () => {
   const earlier = { ...failedRun, status: "in_progress", conclusion: null };
-  const later = { ...failedRun, run_started_at: "2026-10-11T05:41:00Z" };
+  const later = {
+    ...failedRun,
+    id: 23,
+    run_started_at: "2026-10-11T05:41:00Z",
+  };
   for (const runs of [
     [earlier, later],
     [later, earlier],
   ]) {
-    const outcome = decision({ checks: [], runs });
+    const outcome = workflowDecision({ checks: [], runs });
     assert.equal(outcome.code, 2);
     assert.deepEqual(outcome.failing, [failedWorkflow]);
   }
@@ -1451,7 +1541,6 @@ test("check states follow the latest run of each check", () => {
 const checkRun = (overrides) => ({
   __typename: "CheckRun",
   name: "test",
-  workflowName: "CI",
   startedAt: "2026-10-11T23:00:00Z",
   status: "COMPLETED",
   conclusion: "SUCCESS",
@@ -1459,16 +1548,19 @@ const checkRun = (overrides) => ({
   ...overrides,
 });
 
+const workflowCheckRun = (overrides = {}) =>
+  checkRun({ workflowName: "CI", ...overrides });
+
 test("queued reruns keep prior successes and failures pending in either order", () => {
   for (const startedAt of [null, undefined, "", "0001-01-01T00:00:00Z"]) {
-    const queued = checkRun({
+    const queued = workflowCheckRun({
       startedAt,
       status: "QUEUED",
       conclusion: null,
       detailsUrl: "fixture:queued",
     });
     for (const conclusion of ["SUCCESS", "FAILURE"]) {
-      const previous = checkRun({ conclusion });
+      const previous = workflowCheckRun({ conclusion });
       for (const rollup of [
         [previous, queued],
         [queued, previous],
@@ -1488,12 +1580,12 @@ test("queued reruns keep prior successes and failures pending in either order", 
 });
 
 test("an older unfinished run keeps a newer completed run pending", () => {
-  const unfinished = checkRun({
+  const unfinished = workflowCheckRun({
     status: "IN_PROGRESS",
     conclusion: null,
     detailsUrl: "fixture:unfinished",
   });
-  const completed = checkRun({ startedAt: "2026-10-11T23:10:00Z" });
+  const completed = workflowCheckRun({ startedAt: "2026-10-11T23:10:00Z" });
   for (const rollup of [
     [unfinished, completed],
     [completed, unfinished],
@@ -1515,7 +1607,7 @@ test("completed runs use the later start's state and link in either order", () =
     ["FAILURE", "SUCCESS", "pass"],
     ["SUCCESS", "FAILURE", "fail"],
   ]) {
-    const later = checkRun({
+    const later = workflowCheckRun({
       startedAt: "2026-10-11T23:10:00Z",
       conclusion: laterConclusion,
       detailsUrl: "fixture:later",
@@ -1527,7 +1619,10 @@ test("completed runs use the later start's state and link in either order", () =
       "",
       "0001-01-01T00:00:00Z",
     ]) {
-      const earlier = checkRun({ startedAt, conclusion: earlierConclusion });
+      const earlier = workflowCheckRun({
+        startedAt,
+        conclusion: earlierConclusion,
+      });
       for (const rollup of [
         [earlier, later],
         [later, earlier],
@@ -1575,9 +1670,9 @@ test("pending and expected commit statuses hold their context pending", () => {
 test("unfinished runs hold only their own workflow and check", () => {
   assert.deepEqual(
     checkStates([
-      checkRun({ status: "QUEUED", startedAt: null }),
-      checkRun({ workflowName: "Other CI", conclusion: "FAILURE" }),
-      checkRun({ name: "Other check" }),
+      workflowCheckRun({ status: "QUEUED", startedAt: null }),
+      workflowCheckRun({ workflowName: "Other CI", conclusion: "FAILURE" }),
+      workflowCheckRun({ name: "Other check" }),
     ]),
     [
       {
@@ -2214,7 +2309,6 @@ const pendingPullRequest = {
     {
       __typename: "CheckRun",
       name: "test",
-      workflowName: "ci",
       status: "IN_PROGRESS",
       conclusion: "",
       startedAt: new Date().toISOString(),
@@ -2492,6 +2586,7 @@ test("the script reports a completed failed workflow with no check (#293)", asyn
       ...pendingPullRequest,
       checks: [],
       runs: [failedRun],
+      attemptJobs: attemptJobs(failedRun),
       createdAt: "2026-10-11T05:00:00Z",
       pushedAt: "2026-10-11T05:20:00Z",
       comments: [unavailable("2026-10-11T05:40:00Z")],
@@ -2506,12 +2601,14 @@ test("the script reports a completed failed workflow with no check (#293)", asyn
   );
 });
 
-test("the script uses check start times to settle later runs and attempts (#296)", async () => {
+test("the script uses job membership to settle later runs and attempts (#296)", async () => {
   const older = { ...failedRun, conclusion: "success", html_url: runUrl(21) };
   for (const id of [21, 23]) {
     for (const currentCheck of [false, true]) {
       const latest = {
         ...failedRun,
+        id,
+        run_attempt: id === 21 ? 2 : 1,
         conclusion: currentCheck ? "failure" : "startup_failure",
         run_started_at: "2026-10-11T05:41:00Z",
         html_url: runUrl(id),
@@ -2521,7 +2618,7 @@ test("the script uses check start times to settle later runs and attempts (#296)
         {
           ...pendingPullRequest,
           checks: [
-            checkRun({
+            workflowCheckRun({
               startedAt: currentCheck
                 ? "2026-10-11T05:41:01Z"
                 : "2026-10-11T05:40:01Z",
@@ -2530,6 +2627,7 @@ test("the script uses check start times to settle later runs and attempts (#296)
             }),
           ],
           runs: id === 21 ? [latest] : [older, latest],
+          attemptJobs: attemptJobs(latest, ...(currentCheck ? [1] : [])),
           createdAt: "2026-10-11T05:00:00Z",
           pushedAt: "2026-10-11T05:20:00Z",
           comments: [unavailable("2026-10-11T05:40:00Z")],
@@ -2555,11 +2653,16 @@ test("the script keeps failures of workflows sharing a display name", async () =
         failedRun,
         {
           ...failedRun,
+          id: 22,
           workflow_id: 4,
           conclusion: "success",
           run_started_at: "2026-10-11T05:41:00Z",
         },
       ],
+      attemptJobs: {
+        ...attemptJobs(failedRun),
+        ...attemptJobs({ ...failedRun, id: 22 }),
+      },
       createdAt: "2026-10-11T05:00:00Z",
       pushedAt: "2026-10-11T05:20:00Z",
       comments: [unavailable("2026-10-11T05:40:00Z")],
@@ -2579,7 +2682,7 @@ test("the script matches checks to same-named workflows by their run links", asy
       {
         ...pendingPullRequest,
         checks: [
-          checkRun({
+          workflowCheckRun({
             detailsUrl: `${runUrl(id)}/job/1`,
             conclusion: id === 21 ? "FAILURE" : "SUCCESS",
           }),
@@ -2588,11 +2691,16 @@ test("the script matches checks to same-named workflows by their run links", asy
           { ...failedRun, html_url: runUrl(21) },
           {
             ...failedRun,
+            id: 22,
             workflow_id: 4,
             conclusion: "success",
             html_url: runUrl(22),
           },
         ],
+        attemptJobs: {
+          ...attemptJobs(failedRun, ...(id === 21 ? [1] : [])),
+          ...attemptJobs({ ...failedRun, id: 22 }, ...(id === 22 ? [1] : [])),
+        },
         createdAt: "2026-10-11T05:00:00Z",
         pushedAt: "2026-10-11T05:20:00Z",
         comments: [unavailable("2026-10-11T05:40:00Z")],
@@ -2610,14 +2718,26 @@ test("the script matches checks to same-named workflows by their run links", asy
 
 test("the script uses a workflow's checks without hiding another workflow's failure", async () => {
   for (const [checks, expected] of [
-    [[checkRun({ workflowName: "Other CI" })], `CI ${failedRun.html_url}`],
-    [[checkRun({ conclusion: "FAILURE" })], "test fixture:previous"],
+    [[checkRun({ name: "external" })], `CI ${runUrl(21)}`],
+    [
+      [
+        workflowCheckRun({
+          conclusion: "FAILURE",
+          detailsUrl: `${runUrl(21)}/job/1`,
+        }),
+      ],
+      `test ${runUrl(21)}/job/1`,
+    ],
   ]) {
     const result = await run(
       {
         ...pendingPullRequest,
         checks,
-        runs: [failedRun],
+        runs: [{ ...failedRun, html_url: runUrl(21) }],
+        attemptJobs: attemptJobs(
+          failedRun,
+          ...(checks[0].workflowName ? [1] : []),
+        ),
         createdAt: "2026-10-11T05:00:00Z",
         pushedAt: "2026-10-11T05:20:00Z",
         comments: [unavailable("2026-10-11T05:40:00Z")],
@@ -2687,7 +2807,15 @@ test("recording a push does not satisfy absent required names", async () => {
 const metadataCheck = checkRun({
   name: "PR metadata",
   workflowName: "PR metadata validation",
+  detailsUrl: `${runUrl(22)}/job/2`,
 });
+const testWorkflowCheck = workflowCheckRun({
+  detailsUrl: `${runUrl(21)}/job/1`,
+});
+const checkJobs = {
+  ...attemptJobs({ id: 22, run_attempt: 1, jobName: "PR metadata" }, 2),
+  ...attemptJobs({ id: 21, run_attempt: 1 }, 1),
+};
 const metadataRun = (status) =>
   workflowRun("PR metadata validation", "pull_request_target", status);
 const testRun = (status) => workflowRun("CI", "pull_request", status);
@@ -2696,13 +2824,14 @@ test("a queued rerun missing from the rollup waits silently until its limit", as
   // The rollup drops a check while its rerun is queued; its run still lists it.
   for (const [checks, runs] of [
     [[metadataCheck], [metadataRun("completed"), testRun("queued")]],
-    [[checkRun()], [metadataRun("queued"), testRun("completed")]],
+    [[testWorkflowCheck], [metadataRun("queued"), testRun("completed")]],
   ]) {
     const result = await run(
       {
         ...pendingPullRequest,
         checks,
         runs,
+        attemptJobs: checkJobs,
         comments: [summary(completedCell(new Date().toISOString()), "f7bb671")],
       },
       ["12", "--limit", "2", "--interval", "0.2"],
@@ -2719,8 +2848,9 @@ test("a queued rerun missing from the rollup waits silently until its limit", as
 
 test("the head's push time comes from GitHub's activity record", async () => {
   const finished = {
-    checks: [metadataCheck, checkRun()],
+    checks: [metadataCheck, testWorkflowCheck],
     runs: [metadataRun("completed"), testRun("completed")],
+    attemptJobs: checkJobs,
   };
   // Opened long ago, pushed just now with no re-request: not requested.
   const pushed = await run(

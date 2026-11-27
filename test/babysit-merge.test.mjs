@@ -1239,7 +1239,7 @@ function run(
     [
       "--input-type=module",
       "-e",
-      `import { main } from ${JSON.stringify(targetURL.href)}; import { connect } from ${JSON.stringify(bundleURL.href)}; import { fixtureConnection } from ${JSON.stringify(new URL("./fixtures/postern-babysit.mjs", import.meta.url).href)}; try { await main(process.argv.slice(1), fixtureConnection(connect)); } catch (error) { console.error(error.message); process.exitCode = 1; }`,
+      `import { main } from ${JSON.stringify(targetURL.href)}; import { connect } from ${JSON.stringify(bundleURL.href)}; import { fixtureConnection } from ${JSON.stringify(new URL("./fixtures/postern-babysit.mjs", import.meta.url).href)}; try { const code = await main(process.argv.slice(1), fixtureConnection(connect)); if (typeof code === "number") process.exitCode = code; } catch (error) { console.error(error.message); process.exitCode = 1; }`,
       "--",
       ...args,
     ],
@@ -1255,6 +1255,188 @@ function run(
   );
   return { ...result, state: JSON.parse(readFileSync(statePath, "utf8")) };
 }
+
+test("wait and merge agree on latest workflow attempt evidence", async (t) => {
+  const url = "https://github.com/example/repository/actions/runs/21";
+  const job = (name, id, conclusion, startedAt = "2026-10-11T05:40:00Z") => ({
+    __typename: "CheckRun",
+    name,
+    workflowName: "CI",
+    detailsUrl: `${url}/job/${id}`,
+    status: "COMPLETED",
+    conclusion,
+    startedAt,
+  });
+  const before = "2026-10-11T05:40:00Z";
+  const after = "2026-10-11T05:41:00Z";
+  const runAttempt = {
+    id: 21,
+    workflow_id: 42,
+    name: "CI",
+    status: "completed",
+    conclusion: "success",
+    run_attempt: 2,
+    run_started_at: after,
+    html_url: url,
+  };
+  const carried = job("Access", 1, "SUCCESS");
+  const superseded = job("Maintenance", 2, "SUCCESS");
+  const rerun = job("Maintenance", 3, "SUCCESS", after);
+  const access = { id: 1, run_id: 21, name: "Access" };
+  const maintenance = { id: 3, run_id: 21, name: "Maintenance" };
+  const jobPage = (total_count, ...jobs) => ({ body: { total_count, jobs } });
+  const state = {
+    head,
+    pushedAt: before,
+    requiredChecks: { version: 1, checks: ["Access", "Maintenance"] },
+    checks: [
+      carried,
+      rerun,
+      { ...carried },
+      { ...superseded, conclusion: "FAILURE" },
+    ],
+    runs: [runAttempt],
+    attemptJobs: { "21/2": [jobPage(2, access), jobPage(2, maintenance)] },
+  };
+  const scenarios = [
+    {
+      name: "carried success and a superseded failure",
+      waitCode: 0,
+      mergeCode: 0,
+    },
+    ...["queued", "in_progress"].map((status) => ({
+      name: `${status} rerun without the earlier job`,
+      overrides: {
+        runs: [{ ...runAttempt, status, conclusion: null }],
+        checks: [carried, superseded],
+        attemptJobs: { "21/2": [jobPage(1, access)] },
+      },
+      waitCode: 5,
+      mergeCode: 2,
+      diagnostic: /Maintenance \(pending\)/,
+    })),
+    {
+      name: "latest job has no check result yet",
+      overrides: { checks: [carried, superseded] },
+      waitCode: 5,
+      mergeCode: 2,
+      diagnostic: /Maintenance \(pending\)/,
+    },
+    ...["failure", "cancelled"].map((conclusion) => ({
+      name: `${conclusion} supersedes an earlier success`,
+      overrides: {
+        runs: [{ ...runAttempt, conclusion }],
+        checks: [
+          carried,
+          superseded,
+          job("Maintenance", 3, conclusion.toUpperCase(), before),
+        ],
+      },
+      waitCode: 2,
+      mergeCode: 2,
+      diagnostic: /Maintenance \(fail\)/,
+    })),
+    {
+      name: "completed workflow failure with only successful check evidence",
+      overrides: { runs: [{ ...runAttempt, conclusion: "failure" }] },
+      waitCode: 2,
+      mergeCode: 2,
+      diagnostic: /observed checks\/workflow attempts/,
+    },
+    {
+      name: "unreadable attempt jobs",
+      overrides: {
+        attemptJobs: {
+          "21/2": [{ status: 404, body: { message: "attempt jobs missing" } }],
+        },
+      },
+      waitCode: 1,
+      mergeCode: 3,
+      diagnostic: /runs\/21\/attempts\/2\/jobs/,
+    },
+    {
+      name: "incomplete attempt job pages",
+      overrides: { attemptJobs: { "21/2": [jobPage(2, access)] } },
+      waitCode: 1,
+      mergeCode: 3,
+      diagnostic: /complete jobs for workflow run 21 attempt 2/,
+    },
+    {
+      name: "duplicate job identity across attempt job pages",
+      overrides: {
+        attemptJobs: { "21/2": [jobPage(2, access), jobPage(2, access)] },
+      },
+      waitCode: 1,
+      mergeCode: 3,
+      diagnostic: /Ambiguous jobs for workflow run 21 attempt 2/,
+    },
+    {
+      name: "conflicting results for one carried job",
+      overrides: {
+        checks: [...state.checks, { ...carried, conclusion: "FAILURE" }],
+      },
+      waitCode: 1,
+      mergeCode: 3,
+      diagnostic:
+        /Ambiguous check evidence for workflow run 21 attempt 2 job 1/,
+    },
+    {
+      name: "job name conflicts with its linked check",
+      overrides: {
+        attemptJobs: {
+          "21/2": [jobPage(2, { ...access, name: "Other check" }, maintenance)],
+        },
+      },
+      waitCode: 1,
+      mergeCode: 3,
+      diagnostic:
+        /Ambiguous check evidence for workflow run 21 attempt 2 job 1/,
+    },
+    {
+      name: "checks from a separate earlier run on the same head",
+      overrides: {
+        runs: [
+          runAttempt,
+          {
+            ...runAttempt,
+            id: 22,
+            run_attempt: 1,
+            html_url: url.replace(/21$/, "22"),
+            run_started_at: "2026-10-11T05:42:00Z",
+          },
+        ],
+        attemptJobs: { "22/1": [jobPage(0)] },
+      },
+      waitCode: 5,
+      mergeCode: 2,
+      diagnostic: /Access \(pending\).*Maintenance \(pending\)/,
+    },
+  ];
+  for (const scenario of scenarios) {
+    await t.test(scenario.name, async (t) => {
+      const fixture = { ...state, ...scenario.overrides };
+      const result = run(t, fixture);
+      const waited = run(
+        t,
+        fixture,
+        ["12", "--limit", "0.02"],
+        new URL("../.agents/skills/babysit/wait.mjs", import.meta.url),
+      );
+      assert.equal(
+        waited.status,
+        scenario.waitCode,
+        waited.stdout + waited.stderr,
+      );
+      assert.equal(result.status, scenario.mergeCode, result.stderr);
+      if (scenario.diagnostic) assert.match(result.stderr, scenario.diagnostic);
+      if (waited.status === 1) assert.match(waited.stderr, scenario.diagnostic);
+      assert.equal(
+        result.state.merge?.expectedHead,
+        waited.status === 0 ? head : undefined,
+      );
+    });
+  }
+});
 
 test("squash-merges with the current title and verbatim body through the port", (t) => {
   const body =
@@ -1983,6 +2165,7 @@ test("plan-limited delivery refuses unrelated green CI without metadata validati
 
 test("plan-limited metadata validation must succeed on this exact head", (t) => {
   const unrelated = { ...planLimited.checks[0], context: "CI" };
+  const url = "https://github.com/example/repository/actions/runs/21";
   const metadata = {
     __typename: "CheckRun",
     name: "PR metadata",
@@ -1990,7 +2173,32 @@ test("plan-limited metadata validation must succeed on this exact head", (t) => 
     status: "COMPLETED",
     conclusion: "SUCCESS",
     startedAt: "2026-11-02T12:00:00Z",
-    detailsUrl: "https://example.com/metadata",
+    detailsUrl: `${url}/job/2`,
+  };
+  const planLimitedMetadata = {
+    ...planLimited,
+    runs: [
+      {
+        id: 21,
+        workflow_id: 42,
+        name: metadata.workflowName,
+        status: "completed",
+        conclusion: "success",
+        run_attempt: 2,
+        run_started_at: metadata.startedAt,
+        html_url: url,
+      },
+    ],
+    attemptJobs: {
+      "21/2": [
+        {
+          body: {
+            total_count: 1,
+            jobs: [{ id: 2, run_id: 21, name: metadata.name }],
+          },
+        },
+      ],
+    },
   };
   for (const conclusion of [
     "SUCCESS",
@@ -2000,7 +2208,7 @@ test("plan-limited metadata validation must succeed on this exact head", (t) => 
     "CANCELLED",
   ]) {
     const result = run(t, {
-      ...planLimited,
+      ...planLimitedMetadata,
       checks: [unrelated, { ...metadata, conclusion }],
     });
     assert.equal(
@@ -2012,9 +2220,9 @@ test("plan-limited metadata validation must succeed on this exact head", (t) => 
   }
   for (const checks of [
     [unrelated, { ...metadata, status: "IN_PROGRESS", conclusion: null }],
-    [unrelated, { ...metadata, name: "Unrelated" }],
+    [unrelated, { ...metadata, name: "Unrelated", detailsUrl: `${url}/job/3` }],
   ]) {
-    const result = run(t, { ...planLimited, checks });
+    const result = run(t, { ...planLimitedMetadata, checks });
     assert.equal(result.status, 2, result.stderr);
     assert.equal(result.state.merge, undefined);
   }
@@ -2026,9 +2234,14 @@ test("plan-limited metadata validation must succeed on this exact head", (t) => 
   assert.equal(old.status, 2, old.stderr);
   assert.equal(old.state.merge, undefined);
   const rerun = run(t, {
-    ...planLimited,
+    ...planLimitedMetadata,
     checks: [
-      { ...metadata, conclusion: "FAILURE", startedAt: "2026-11-02T11:00:00Z" },
+      {
+        ...metadata,
+        detailsUrl: `${url}/job/1`,
+        conclusion: "FAILURE",
+        startedAt: "2026-11-02T11:00:00Z",
+      },
       metadata,
     ],
   });
