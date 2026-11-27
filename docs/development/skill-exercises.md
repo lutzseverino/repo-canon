@@ -52,10 +52,9 @@ skills; never link those locations back to the host. For Codex, cover both
 defaults to `$HOME/.codex`, or set it inside the isolated home. Skills bundled
 with the harness, such as Codex's `$CODEX_HOME/skills/.system`, are exempt.
 
-Authenticate the harness in that isolated home before the exercise, using
-only credentials supplied for the exercise. Never copy or link a credential
-into a fixture repository or workbench. For example, with Codex CLI, create
-the home and complete device login as described in the
+Authenticate the harness in that isolated home before the exercise. Never
+copy or link a credential into a fixture repository or workbench. For example,
+with Codex CLI, create the home and complete device login as described in the
 [official authentication documentation](https://learn.chatgpt.com/docs/auth?surface=cli).
 File storage keeps the login cache inside the isolated Codex home:
 
@@ -67,9 +66,8 @@ env HOME="$exercise_home" CODEX_HOME="$exercise_home/.codex" \
 ```
 
 Before the first session, including after authentication, inspect every
-user-scope skill location and confirm no user-scope skill directory is present;
-only the harness's own bundled skills are exempt. Keep these locations free
-of user skills throughout the exercise, including resumed sessions.
+user-scope skill location and confirm it contains no skill apart from the
+harness's bundled skills.
 
 Run exercises one at a time, waiting for each session to finish before
 starting the next. Run one session per scenario, with the fixture repository
