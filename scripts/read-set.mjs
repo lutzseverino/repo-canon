@@ -94,7 +94,7 @@ export function gitTree(root, ref) {
 
 /**
  * Compute one entry point's Markdown and named source rules, once per member.
- * Value owner: Repo Canon (ADR 0048, amended by ADR 0056).
+ * Value owner: Repo Canon (ADR 0048, amended by ADR 0056); consumers: this comparison and the conformance suite.
  * @param {Tree} tree
  * @param {string} entryPoint
  */

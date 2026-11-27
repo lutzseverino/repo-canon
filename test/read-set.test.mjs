@@ -368,6 +368,7 @@ test("the guard counts raw whitespace-delimited words in entry files and nested 
     "sample/SKILL.md": words(1000),
     "sample/nested/DETAIL.MD": words(1003),
     "local/nested/no-upstream.md": words(1000),
+    "sample/nested/no-upstream.md": words(1000),
     "sample/nested/CREDITS.md": words(1400),
     "sample/nested/LICENCE.md": words(1400),
     "sample/nested/COPYING.md": words(1400),
@@ -385,12 +386,13 @@ test("the guard counts raw whitespace-delimited words in entry files and nested 
       "sample/SKILL.md": words(999) + "##\t<!-- -->\n",
       "sample/nested/DETAIL.MD": words(1004),
       "local/nested/no-upstream.md": words(1001),
+      "sample/nested/no-upstream.md": words(1001),
     },
     {},
     upstream,
   );
   const { failures } = checkSkillWords(head);
-  assert.equal(failures.length, 3);
+  assert.equal(failures.length, 4);
   assert.match(failures.join("\n"), /sample\/SKILL.md: 1002 words.*1,?000/);
   assert.match(
     failures.join("\n"),
@@ -399,6 +401,10 @@ test("the guard counts raw whitespace-delimited words in entry files and nested 
   assert.match(
     failures.join("\n"),
     /local\/nested\/no-upstream.md: 1001 words.*1,?000/,
+  );
+  assert.match(
+    failures.join("\n"),
+    /sample\/nested\/no-upstream.md: 1001 words.*1,?000/,
   );
 });
 
