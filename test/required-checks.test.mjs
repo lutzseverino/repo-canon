@@ -6,6 +6,8 @@ import {
   parseRequiredChecks,
   requiredCheckStates,
   requiredChecksTarget,
+  validationCheckStates,
+  workflowAttempts,
 } from "../.agents/skills/babysit/required-checks.mjs";
 import { declarations } from "../scripts/standards-declarations.mjs";
 import {
@@ -177,7 +179,9 @@ test("new attempts supersede old successes, in either order, and ambiguous evide
     detailsUrl: "https://github.com/x/y/actions/runs/1/job/2",
   };
   const attempt = {
+    id: 1,
     workflow_id: 1,
+    run_attempt: 2,
     name: "CI",
     html_url: "https://github.com/x/y/actions/runs/1",
     run_started_at: "2026-11-09T11:00:00Z",
@@ -185,7 +189,12 @@ test("new attempts supersede old successes, in either order, and ambiguous evide
     conclusion: "success",
   };
   assert.equal(
-    requiredCheckStates([check], ["Test"], [attempt])[0].state,
+    validationCheckStates(
+      [check],
+      ["Test"],
+      workflowAttempts([attempt]),
+      new Map([[1, new Map()]]),
+    )[0].state,
     "pending",
   );
 });
@@ -229,7 +238,7 @@ test("a trusted creator limits declared names to its own commit statuses", () =>
     creator: login,
   });
   assert.equal(
-    requiredCheckStates([by(runner)], ["Test"], [], runner)[0].state,
+    requiredCheckStates([by(runner)], ["Test"], runner)[0].state,
     "pass",
   );
   for (const rollup of [
@@ -240,7 +249,7 @@ test("a trusted creator limits declared names to its own commit statuses", () =>
     [by(runner.toUpperCase())],
   ])
     assert.equal(
-      requiredCheckStates(rollup, ["Test"], [], runner)[0].state,
+      requiredCheckStates(rollup, ["Test"], runner)[0].state,
       "pending",
     );
   // Another creator's later failure cannot replace the runner's own result.
@@ -251,7 +260,6 @@ test("a trusted creator limits declared names to its own commit statuses", () =>
         { ...by("someone-else", "FAILURE"), createdAt: "2026-11-09T11:00:00Z" },
       ],
       ["Test"],
-      [],
       runner,
     )[0].state,
     "pass",

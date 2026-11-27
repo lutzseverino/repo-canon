@@ -214,7 +214,7 @@ const restLogin = (actor) =>
       : actor.login;
 
 // CheckResult omits links, workflow identity and start time. Access retains
-// those GitHub facts so the existing check/attempt ordering stays unchanged.
+// those GitHub facts; job links tie workflow checks to their attempts.
 export async function checkRollup(connection, head) {
   const [owner, name] = connection.repository.path.split("/");
   const items = [];
@@ -332,16 +332,24 @@ export function workflowRuns(pages) {
     if (!Array.isArray(page?.workflow_runs)) unreadable("workflow runs");
     for (const run of page.workflow_runs) {
       if (
-        !Number.isSafeInteger(run?.workflow_id) ||
+        !Number.isSafeInteger(run?.id) ||
+        run.id <= 0 ||
+        !Number.isSafeInteger(run.workflow_id) ||
         run.workflow_id <= 0 ||
         typeof run.name !== "string" ||
         !run.name ||
-        !checkStatuses.has(run.status?.toUpperCase()) ||
+        typeof run.status !== "string" ||
+        !checkStatuses.has(run.status.toUpperCase()) ||
+        typeof run.html_url !== "string" ||
+        !run.html_url ||
+        !Number.isFinite(Date.parse(run.run_started_at ?? run.created_at)) ||
         (run.status === "completed" &&
-          (!checkConclusions.has(run.conclusion?.toUpperCase()) ||
-            !Number.isFinite(Date.parse(run.run_started_at))))
+          (typeof run.conclusion !== "string" ||
+            !checkConclusions.has(run.conclusion.toUpperCase())))
       )
         unreadable("a workflow run");
+      if (!Number.isSafeInteger(run.run_attempt) || run.run_attempt <= 0)
+        unreadable(`the latest attempt number for workflow run ${run.id}`);
       runs.push(run);
     }
   }
@@ -355,6 +363,26 @@ export function workflowRuns(pages) {
   )
     unreadable("complete workflow runs");
   return runs;
+}
+
+export async function currentHeadCheckEvidence(connection, head) {
+  const path = `/repos/${connection.repository.path}/actions/runs`;
+  const rollup = await checkRollup(connection, head);
+  const runs = workflowRuns(
+    await pages(connection, `${path}?head_sha=${head}&per_page=100`),
+  );
+  const readAttemptJobs = async (run) => {
+    const endpoint = `${path}/${run.id}/attempts/${run.run_attempt}/jobs`;
+    try {
+      return await pages(connection, `${endpoint}?per_page=100`);
+    } catch (error) {
+      throw new PlatformError(
+        error.reason ?? "invalidResponse",
+        `Could not read GET ${endpoint}: ${error.message}`,
+      );
+    }
+  };
+  return { rollup, runs, readAttemptJobs };
 }
 
 export function reviewComments(pages) {
