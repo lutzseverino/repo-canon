@@ -22,7 +22,7 @@
     },
     "codebase-design": {
       "path": "skills/engineering/codebase-design",
-      "edits": "It adds the shared Ownership check section: value owners, triggers and cost read, wrapping and extraction defaults, deferred seams, narrow touched-code cleanup, contract disagreement routing, and capability/policy and vendored UI examples. Its description and Reads section expose that reference. Planning policy is read from the target repository’s installed planning rules, with its contribution guide only as the non-adopter fallback."
+      "edits": "It adds the shared `OWNERSHIP.md` branch reference: value owners, triggers and cost read, wrapping and extraction defaults, deferred seams, narrow touched-code cleanup, contract disagreement routing, and capability/policy and vendored UI examples. `SKILL.md` links that branch and retains the common design vocabulary and testing method; its redundant Relationships recap is removed. The Reads section declares the reference’s repository inputs. Planning policy is read from the target repository’s installed planning rules, with its contribution guide only as the non-adopter fallback."
     },
     "create-adopted-repo": null,
     "create-repository": null,

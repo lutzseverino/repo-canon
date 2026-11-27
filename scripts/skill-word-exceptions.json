@@ -2,7 +2,6 @@
   "introductionBase": "07a65afb875f81c4168e976a7cb66f94daab5d5a",
   "allowances": {
     "code-review/SKILL.md": 1619,
-    "codebase-design/SKILL.md": 1757,
     "factory/SKILL.md": 1296,
     "orchestrate/SKILL.md": 1076,
     "orchestrate/references/launches.md": 1542,

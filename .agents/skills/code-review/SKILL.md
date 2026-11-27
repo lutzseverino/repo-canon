@@ -80,8 +80,8 @@ package-name guesses nor earlier additions in the same diff as the baseline.
 An empty list is valid; a failed command must be resolved before review.
 These are evidence, not a trigger classifier or an automatic ownership verdict.
 
-Invoke the `codebase-design` skill and read its **Ownership check** section.
-Pass that section and the fact list to Standards; pass the section to Spec for
+Read `codebase-design`’s [Ownership check](../codebase-design/OWNERSHIP.md).
+Pass that reference and the fact list to Standards; pass the reference to Spec for
 its cleanup allowance. If that skill is missing, report the missing dependency
 rather than inventing ownership rules.
 
@@ -90,17 +90,17 @@ rather than inventing ownership rules.
 **Standards sub-agent prompt** should include:
 
 - The full pinned diff command and commit list, plus the fact list from step 4
-  and `codebase-design`'s Ownership check section.
+  and `codebase-design`'s Ownership check reference.
 - The list of standards-source files you found in step 3, **plus the smell baseline from step 3** pasted in full (the sub-agent has no other access to it).
-- The brief: "Report, per file/hunk where relevant, (a) every place the diff violates a documented standard: cite the standard (file + the rule); and (b) any baseline smell you spot: name it and quote the hunk. Distinguish hard violations from judgement calls: documented-standard breaches can be hard, but baseline smells are always judgement calls, and a documented repo standard overrides the baseline. Skip anything tooling enforces. Apply the Ownership check to the diff using the facts as evidence; distinguish ownership judgment calls from documented violations. Ask whether existing ownership problems in touched code were fixed, noted or filed under that section. Recognize cleanup it permits, listed on its own PR-body line; other out-of-scope defects follow the planning rules' Findings route. Judge against the recorded contract. Under 400 words."
+- The brief: "Report, per file/hunk where relevant, (a) every place the diff violates a documented standard: cite the standard (file + the rule); and (b) any baseline smell you spot: name it and quote the hunk. Distinguish hard violations from judgement calls: documented-standard breaches can be hard, but baseline smells are always judgement calls, and a documented repo standard overrides the baseline. Skip anything tooling enforces. Apply the Ownership check to the diff using the facts as evidence; distinguish ownership judgment calls from documented violations. Ask whether existing ownership problems in touched code were fixed, noted or filed under that reference. Recognize cleanup it permits, listed on its own PR-body line; other out-of-scope defects follow the planning rules' Findings route. Judge against the recorded contract. Under 400 words."
 
 **Spec sub-agent prompt** should include:
 
 - The diff command and commit list.
 - The path or fetched contents of the spec, the PR body (or proposed body for
-  work in progress), and `codebase-design`'s Ownership check section. Give
+  work in progress), and `codebase-design`'s Ownership check reference. Give
   Standards that PR body too, so both can check the listed cleanup.
-- The brief: "Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Treat cleanup allowed by the Ownership check section and listed on its own PR-body line as permitted, not scope creep. Other out-of-scope defects follow the planning rules' Findings route. Judge against the recorded contract. Under 400 words."
+- The brief: "Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Treat cleanup allowed by the Ownership check reference and listed on its own PR-body line as permitted, not scope creep. Other out-of-scope defects follow the planning rules' Findings route. Judge against the recorded contract. Under 400 words."
 
 If the spec is missing, skip the Spec sub-agent and note this in the final report.
 
@@ -137,7 +137,7 @@ Paths are relative to the repository root.
   that documents how code should be written. When they are missing, the
   Standards axis carries only the smell baseline.
 
-- The `codebase-design` skill: its Ownership check section supplies the shared
+- The `codebase-design` skill: its Ownership check reference supplies the shared
   rules for both prompts. When it is missing, report the dependency as above.
 - `vendor/` and `.gitattributes`: the collector reads the pinned trees and Git
   attributes for evidence. Missing paths or attributes contribute no vendored

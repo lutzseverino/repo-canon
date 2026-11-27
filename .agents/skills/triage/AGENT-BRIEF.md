@@ -68,7 +68,7 @@ Name adjacent work that is out of scope.
 ### Seams
 
 After Out of scope, record **Seams** under
-`codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check):
+`codebase-design`'s [Ownership check](../codebase-design/OWNERSHIP.md):
 `No trigger`, or the triggered read and chosen default or accepted override.
 Review assesses honesty, Value owner, consumers, reversibility and cost;
 validation checks non-placeholder content only.
