@@ -210,6 +210,11 @@ byte matches those digests and that `UPSTREAM.json` names the same tag and
 commit, and checks that no installed skill routes to an undeclared skill. The
 manifest is provenance, not an installed adopter file.
 
+Run `node scripts/read-set.mjs compare origin/main` after updating the
+snapshot and its record. Include every reported word-ceiling change in the
+reconciliation pull request. Frozen word exceptions keep their original
+allowances until the corresponding files reach compliance.
+
 Rerun the byte comparison with the proposed commit, review all resource
 references and runtime prerequisites, and exercise the changed skills through
 the [skill exercise procedure](skill-exercises.md). Release review then decides

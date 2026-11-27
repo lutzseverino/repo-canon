@@ -1,0 +1,17 @@
+{
+  "introductionBase": "07a65afb875f81c4168e976a7cb66f94daab5d5a",
+  "allowances": {
+    "babysit/SKILL.md": 2668,
+    "code-review/SKILL.md": 1619,
+    "codebase-design/SKILL.md": 1757,
+    "create-repository/SKILL.md": 1400,
+    "factory/SKILL.md": 1296,
+    "orchestrate/SKILL.md": 1076,
+    "orchestrate/references/launches.md": 1542,
+    "orchestrate/references/templates.md": 1072,
+    "review/SKILL.md": 1736,
+    "to-tickets/SKILL.md": 1959,
+    "triage/AGENT-BRIEF.md": 2058,
+    "triage/SKILL.md": 3578
+  }
+}

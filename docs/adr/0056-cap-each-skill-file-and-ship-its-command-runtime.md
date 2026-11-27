@@ -19,12 +19,17 @@ Each Markdown file in an owned skill directory, including references but
 excluding credits and licences, has a ceiling of the greater of 1,000 words
 or the floor of 120 percent of the same-path file's words in its recorded,
 vendored upstream base. Without that upstream file the ceiling is 1,000.
-Upstream reconciliation reports allowance changes. Unlike a shrinking stored
-budget, this fixed ceiling does not need editing when a file shrinks.
+Count whitespace-separated tokens in the raw file. Upstream reconciliation
+reports ceiling changes.
 The ceiling runs in the existing read-set gate, has no reason-line override,
-and starts with only the eleven historical over-ceiling files as shrink-only
-exceptions. Each exception is bounded by both its initial allowance and the
-base-branch count; it leaves permanently on compliance and is never refreshed.
+and starts with the eleven historical over-ceiling files and
+`orchestrate/references/templates.md` as its twelfth shrink-only exception
+under the [2026-11-27 decision](https://github.com/lutzseverino/repo-canon/issues/1285#issuecomment-7219486683).
+The [exception record](../../scripts/skill-word-exceptions.json) freezes the
+verified allowance for each file at the introduction base. Each file is bounded
+by its frozen allowance and its base-branch count. Remove its exception when the
+file becomes compliant or is deleted. Entries can only be removed after
+introduction.
 The byte ratchet retains its existing `Read set:` reason rule. Script output
 also reports the `orchestrate` read set against a plan's pinned base,
 replacing a manual retrospective comparison without dropping the requirement
