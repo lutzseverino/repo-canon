@@ -12,9 +12,9 @@ order. Use this template:
 ```markdown
 # <NN>: <Ticket title>
 
-**What to build:** end-to-end behaviour from the user's perspective. For a
-deepening ticket, state the structural outcome and `Behaviour changes: none`
-or list each change.
+**What to build:** end-to-end behaviour from the user's perspective, not a
+layer-by-layer implementation list. For a deepening ticket, state the
+structural outcome and `Behaviour changes: none` or list each change.
 
 **Blocked by:** numbers/titles of blockers, naming the passage or inventory
 behind each overlap edge, or "None (readiness still required)".
@@ -45,8 +45,9 @@ Reference to the specification parent (omit if the source was no existing issue)
 
 ## What to build
 
-End-to-end behaviour from the user's perspective. For a deepening ticket,
-state the structural outcome and `Behaviour changes: none` or list each change.
+End-to-end behaviour from the user's perspective, not a layer-by-layer
+implementation list. For a deepening ticket, state the structural outcome and
+`Behaviour changes: none` or list each change.
 
 ## Acceptance criteria
 

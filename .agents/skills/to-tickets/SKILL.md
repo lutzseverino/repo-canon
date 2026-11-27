@@ -81,9 +81,10 @@ Record publication progress in comments and native sub-issue states.
 
 Paths are relative to the repository root.
 
-- `.repo-standards/rules/planning.md`: planning policy. If absent, use
-  `CONTRIBUTING.md`; if both are absent, report missing policy and stop the
-  dependent step. The guide also owns live evidence, progress and closure.
+- `.repo-standards/rules/planning.md` in the target repository: planning
+  policy. If absent, use that repository's `CONTRIBUTING.md`; if both are
+  absent, report missing policy and stop the dependent step. The guide also
+  owns live evidence, progress and closure.
 - `docs/agents/issue-tracker.md` and `docs/agents/triage-labels.md`: tracker and
   labels. If tracker configuration is missing and no tracker was supplied, ask
   whether to use local files or a real tracker; if labels are missing, use
