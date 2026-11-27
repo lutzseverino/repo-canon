@@ -378,7 +378,10 @@ test("self-adoption leaves Repo Canon's own installed source unvendored", () => 
     ".agents/skills/triage/ready.mjs",
     ".agents/skills/review/round.mjs",
     ".agents/skills/code-review/ownership-facts.mjs",
-    ...readdirSync(join(root, ".agents/skills/babysit"), { recursive: true })
+    ...readdirSync(join(root, ".agents/skills/babysit"), {
+      recursive: true,
+      encoding: "utf8",
+    })
       .filter((name) => name.endsWith(".mjs"))
       .map((name) => `.agents/skills/babysit/${name}`),
   ];
