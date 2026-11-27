@@ -12,6 +12,8 @@ findings and continue on that pull request's branch.
 
 Apply `codebase-design`'s [Ownership check](../codebase-design/SKILL.md#ownership-check) to the change, including its contract-disagreement route.
 
+Before delegating, read [delegation and session naming](DELEGATION.md).
+
 Use /tdd where possible, at pre-agreed seams.
 
 Run typechecking regularly, single test files regularly, and the repository's

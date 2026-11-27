@@ -1,7 +1,13 @@
 import { execFixtureGit } from "./fixture-git.mjs";
 import { createHash } from "node:crypto";
-import { readFileSync, readdirSync } from "node:fs";
-import { join, relative } from "node:path";
+import {
+  cpSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const helperPath = fileURLToPath(import.meta.url);
@@ -90,4 +96,53 @@ export function identifyFixtureSource({
     ),
     directoryHashSerialization: DIRECTORY_HASH_SERIALIZATION,
   };
+}
+
+// Inputs copied by the local-only rules adapter, shared by all three builders.
+export const fixtureStandardsInputs = [
+  "rules/comments.md",
+  "rules/planning.md",
+  "rules/github-repository-configuration.md",
+  "rules/factory-workflow.md",
+  "scripts/support/repository-standards/SKILL.md",
+  "scripts/support/repository-standards/rules.mjs",
+];
+
+export function installFixtureStandards(
+  sourceRoot,
+  root,
+  profile = "standard",
+) {
+  const write = (repository, path, content) => {
+    const target = join(repository, path);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, content);
+  };
+  cpSync(
+    join(sourceRoot, "scripts/support/repository-standards"),
+    join(root, ".agents/skills/repository-standards"),
+    { recursive: true },
+  );
+  const declarations = [
+    "comments",
+    "planning",
+    "github-repository-configuration",
+  ];
+  if (profile === "factory") declarations.push("factory-workflow");
+  const rules = declarations.map((declaration) => {
+    const input = `rules/${declaration}.md`;
+    const path = `.repo-standards/${input}`;
+    write(root, path, readFileSync(join(sourceRoot, input)));
+    return { declaration, coverage: "repository", path, input };
+  });
+  write(
+    root,
+    ".repo-standards/rules/index.json",
+    `${JSON.stringify({ profile, rules }, null, 2)}\n`,
+  );
+  write(
+    root,
+    ".repo-standards/rules/README.md",
+    `# Installed exercise rules\n\nProfile: ${profile}. These canonical rules apply to the whole repository, including tracker work.\n\nRun \`node .agents/skills/repository-standards/rules.mjs [path]\` from the fixture root.\n\n${rules.map(({ declaration }) => `- [${declaration}](${declaration}.md) covers the whole repository.`).join("\n")}\n`,
+  );
 }

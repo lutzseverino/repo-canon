@@ -565,63 +565,154 @@ test("runner prerequisites live only in the GitHub rules", () => {
   );
 });
 
-test("AGENTS.md names no rules path", () => {
-  assert.doesNotMatch(
-    readFileSync(join(root, "AGENTS.md"), "utf8"),
-    /\.repo-standards\/rules|(?:^|[\s(`"'/])rules\/[\w.-]+|repo-standards rules\b/m,
+// #1041 lands after #1042, adding the planning pointer and its reviewed cap edit.
+// Later growth needs a reviewed edit.
+const agentMapLineLimit = 24;
+
+function mapProfiles() {
+  return Object.values(declarations(root)).filter((entries) =>
+    entries.some(
+      ({ target, exact }) => target === "AGENTS.md" && exact === "AGENTS.md",
+    ),
   );
-});
-
-// Fixed budgets make entry-document growth visible in review.
-const wordBudgets = { "AGENTS.md": 223 };
-
-function wordCount(text) {
-  return text.match(/\S+/gu)?.length ?? 0;
 }
 
-// The failure for a document over its budget, naming the document, its actual
-// count, and its limit; null when the count is at or under the limit.
-function wordBudgetFailure(document, text, limit) {
-  const count = wordCount(text);
-  return count > limit
-    ? `${document} is over its word budget: ${count} words, limit ${limit}`
-    : null;
+function oneMapSentence(text) {
+  // Read rendered text so dots in link targets and inline code do not count.
+  const content = interpretMarkdown(
+    text.replace(/`[^`]*`/g, "code"),
+  ).content.text().text;
+  const endings = content.match(/[.!?](?:\s|$)/g) ?? [];
+  return endings.length === 1 && /[.!?]$/.test(content.trim());
 }
 
-test("word counts split on whitespace only", () => {
-  assert.equal(wordCount(""), 0);
-  assert.equal(wordCount(" \n\t \r\n\u00a0\u3000 "), 0);
-  assert.equal(wordCount("one"), 1);
-  assert.equal(wordCount("  one \t two\nthree\r\n\nfour  "), 4);
-  assert.equal(wordCount("well-known `a/b.md` (see [x](y))"), 4);
-  assert.equal(wordCount("# Title\n\n- item\n"), 4);
-});
-
-test("a word budget passes at its limit and fails above it with the document, count, and limit", () => {
-  assert.equal(wordBudgetFailure("A.md", "", 0), null);
-  assert.equal(wordBudgetFailure("A.md", "   \n", 0), null);
-  assert.equal(wordBudgetFailure("A.md", "one two three", 3), null);
-  assert.equal(wordBudgetFailure("A.md", "one two", 3), null);
-  assert.equal(
-    wordBudgetFailure("A.md", "one two three four", 3),
-    "A.md is over its word budget: 4 words, limit 3",
-  );
-  assert.equal(
-    wordBudgetFailure("B.md", "one two", 1),
-    "B.md is over its word budget: 2 words, limit 1",
-  );
-});
-
-test("AGENTS.md stays within its word budget", () => {
-  for (const [document, limit] of Object.entries(wordBudgets))
-    assert.equal(
-      wordBudgetFailure(
-        document,
-        readFileSync(join(root, document), "utf8"),
-        limit,
-      ),
-      null,
+function agentMapFailures(text, limit = agentMapLineLimit) {
+  const failures = [];
+  const lines = text
+    .replace(/\r\n?/g, "\n")
+    .replace(/\n$/, "")
+    .split("\n").length;
+  if (lines > limit)
+    failures.push(`AGENTS.md has ${lines} lines, limit ${limit}`);
+  let section = "";
+  let routing = 0;
+  let title = false;
+  let skills = false;
+  for (const token of marked.lexer(text)) {
+    if (token.type === "space") continue;
+    if (token.type === "heading") {
+      if (token.depth === 1 && !title && !section) title = true;
+      else if (token.depth === 2 && token.text === "Agent skills" && !skills)
+        skills = true;
+      else
+        failures.push("AGENTS.md headings must label the map and Agent skills");
+      section = token.depth === 2 ? token.text : "";
+      continue;
+    }
+    if (token.type === "list" && !token.ordered) {
+      for (const item of token.items) {
+        const links = localLinks(
+          root,
+          "AGENTS.md",
+          interpretMarkdown(item.text).content.elements,
+        );
+        if (
+          !links.some(({ path, broken }) => {
+            if (!path || path === "AGENTS.md") return false;
+            // Self-adoption can lag this source. Resolve installed-rule
+            // targets through the declarations every map adopter installs.
+            if (path.startsWith(".repo-standards/rules/"))
+              return mapProfiles().every((entries) =>
+                entries.some(
+                  ({ rules, optional }) =>
+                    rules &&
+                    !optional &&
+                    path === `.repo-standards/${rules}` &&
+                    existsSync(join(root, rules)),
+                ),
+              );
+            return !broken;
+          })
+        )
+          failures.push("AGENTS.md entry needs a local path link");
+        if (item.tokens.some(({ type }) => !["text", "space"].includes(type)))
+          failures.push("AGENTS.md entry must be one paragraph");
+        if (!oneMapSentence(item.text))
+          failures.push("AGENTS.md entry must be one sentence");
+      }
+      continue;
+    }
+    if (
+      token.type === "paragraph" &&
+      section === "Agent skills" &&
+      routing++ === 0
+    ) {
+      // Rewording the routing sentence needs no assertion changes (ADR 0032).
+      if (oneMapSentence(token.text)) continue;
+    }
+    failures.push(
+      "AGENTS.md holds prose outside its routing sentence or non-map content",
     );
+  }
+  return failures;
+}
+
+test("AGENTS.md is a stable map with one routing sentence", () => {
+  assert.deepEqual(agentMapFailures(read("AGENTS.md")), []);
+  assert.ok(
+    mapProfiles().length > 0,
+    "adoption installs the checked map exactly",
+  );
+});
+
+test("AGENTS.md map check accepts reworded entries and routing", () => {
+  assert.deepEqual(
+    agentMapFailures(`# Agent guidance
+
+- Before a change: [contribution guide](CONTRIBUTING.md).
+
+## Agent skills
+
+Choose the appropriate skill from the installed stages.
+
+- Before delegating: [method](.agents/skills/implement/DELEGATION.md).
+`),
+    [],
+  );
+});
+
+test("AGENTS.md map check resolves declared installed rules from source inputs", () => {
+  assert.deepEqual(
+    agentMapFailures(
+      "# Contributor map\n\n- Before planning: [planning rules](.repo-standards/rules/planning.md).\n",
+    ),
+    [],
+  );
+});
+
+test("AGENTS.md map check rejects rule prose, missing path links and excess lines", () => {
+  const map =
+    "# Agent guidance\n\n- Before changing: [guide](CONTRIBUTING.md).\n";
+  for (const invalid of [
+    `${map}\nAlways run validation.\n`,
+    "# Agent guidance\n\n- Before changing: [guide](CONTRIBUTING.md). Always run validation before pushing.\n",
+    `${map}\n## Always rebase before you push\n`,
+    `${map}\n# Always rebase before you push\n`,
+    `${map}\n### Always rebase before you push\n`,
+    "# Agent guidance\n\n- Before changing: read the guide.\n",
+    "# Agent guidance\n\n- Before changing: [guide](https://example.com/guide).\n",
+    `${map}\n## Agent skills\n\nRoute by outcome. Also run validation.\n`,
+    `${map}\n## Agent skills\n\nRoute by outcome.\n\nAlways run validation.\n`,
+    `${map}\n## Other section\n\nRoute by outcome.\n`,
+    `${map}\n> Always run validation.\n`,
+    "# Agent guidance\n\n- Before changing: [missing](missing-file.md).\n",
+    "# Agent guidance\n\n- Before planning: [missing](.repo-standards/rules/missing.md).\n",
+    "# Agent guidance\n\n- Before factory work: [factory rules](.repo-standards/rules/factory-workflow.md).\n",
+    "# Agent guidance\n\n- Before Node work: [stack rules](.repo-standards/rules/typescript-node-stack.md).\n",
+  ])
+    assert.ok(agentMapFailures(invalid).length > 0, invalid);
+  assert.deepEqual(agentMapFailures(map, 3), []);
+  assert.match(agentMapFailures(map, 2).join("\n"), /3 lines, limit 2/);
 });
 
 test("standards.yaml declares no repository-owned optional policy file", () => {

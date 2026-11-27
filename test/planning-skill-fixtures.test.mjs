@@ -135,6 +135,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "grilling",
     ],
     "triage-wayfinder": [
+      "implement",
       "triage",
       "grill-with-docs",
       "to-spec",
@@ -146,6 +147,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "prototype",
     ],
     "factory-planning": [
+      "implement",
       "triage",
       "grill-with-docs",
       "to-spec",
@@ -156,6 +158,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "prototype",
     ],
     "triage-routing": [
+      "implement",
       "triage",
       "research",
       "grill-with-docs",
@@ -164,7 +167,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "grilling",
       "domain-modeling",
     ],
-    "factory-triage": ["triage"],
+    "factory-triage": ["triage", "implement"],
     delivery: [
       "implement",
       "pr",
@@ -173,9 +176,10 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "babysit",
       "codebase-design",
     ],
-    orchestrate: ["orchestrate", "retro", "factory"],
-    "host-grant": ["orchestrate", "factory"],
+    orchestrate: ["orchestrate", "retro", "factory", "implement"],
+    "host-grant": ["orchestrate", "factory", "implement"],
     "front-door": [
+      "implement",
       "triage",
       "grill-with-docs",
       "orchestrate",
@@ -184,7 +188,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "research",
       "prototype",
     ],
-    "session-naming": [],
+    "session-naming": ["implement"],
   };
   for (const [name, skills] of Object.entries(expectedSkills))
     assert.deepEqual(
@@ -195,7 +199,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       `${name} installs exactly its selected skills`,
     );
   const naming = manifest.repositories["session-naming"];
-  assert.deepEqual(naming.skills, []);
+  assert.deepEqual(naming.skills, ["implement"]);
   assert.ok(
     readFileSync(join(naming.path, "AGENTS.md"), "utf8").startsWith(
       readFileSync(join(root, "AGENTS.md"), "utf8"),

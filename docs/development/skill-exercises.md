@@ -22,6 +22,10 @@ The builders need only Node.js 24 or 26 and Git. The agent harness is a prerequi
 of the exercise, not of the builders, and no builder calls it. Run every
 command from the Repo Canon root.
 
+Repositories with the shared map also link `implement` for its delegation reference
+and install the local rules-lookup adapter described below. The standalone
+engineering scenario keeps its absence of shared guidance and adoption files.
+
 Each builder creates its repositories under a new temporary directory, or under
 `--root <path>`, which must not exist yet. Each repository has real Git history,
 shared contribution and tracker guidance, scenario-specific project guidance
@@ -392,7 +396,8 @@ local signing, and an ordinary later commit under hostile global signing.
 ## Session naming with and without support
 
 The planning builder's `repositories.session-naming` fixture copies the shared
-`AGENTS.md` and installs no orchestration skill. Follow its `docs/exercise.md`
+`AGENTS.md` and links `implement`, whose delegation reference the map names.
+Follow its `docs/exercise.md`
 as an implementation worker: inspect the Delivery glossary in two bounded
 agent sessions, first with naming supported, then without naming for the
 session being launched or owned. A controlled capability restriction is valid

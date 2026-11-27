@@ -161,7 +161,8 @@ involve real alternatives.
   still hold.
 - [Keep agent guidance a stable map](0042-keep-agent-guidance-a-stable-map.md):
   `AGENTS.md` links where each rule lives, including the installed rules at
-  the start of work, and holds no rule text.
+  the start of work; #1215 partially supersedes its no-rule-text decision with
+  one routing sentence.
 - [Keep the contribution guide for contributors, and process in planning and delivery rules](0043-keep-the-contribution-guide-for-contributors.md):
   the guide is role-worded contribution help; planning and delivery rules hold
   the process; amends ADR 0016.

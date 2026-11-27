@@ -17,7 +17,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   commitFixture as commit,
+  fixtureStandardsInputs,
   identifyFixtureSource,
+  installFixtureStandards,
   initializeFixtureRepository,
 } from "./support/fixture-authoring.mjs";
 
@@ -61,12 +63,7 @@ const sharedSourceFiles = [
   "docs/agents/domain.md",
   "docs/agents/issue-tracker.md",
   "docs/agents/triage-labels.md",
-  "rules/comments.md",
-  "rules/planning.md",
-  "rules/github-repository-configuration.md",
-  "rules/factory-workflow.md",
-  "scripts/support/repository-standards/SKILL.md",
-  "scripts/support/repository-standards/rules.mjs",
+  ...fixtureStandardsInputs,
   "scripts/support/planning-revision-notice.mjs",
   ".scriptorium/config.json",
   "vendor/mattpocock-skills/skills/engineering/setup-matt-pocock-skills/issue-tracker-local.md",
@@ -99,11 +96,7 @@ function createRepository(
 ) {
   const root = join(fixtureRoot, name);
   mkdirSync(root, { recursive: true });
-  write(
-    root,
-    "AGENTS.md",
-    `${agents}\nBefore any work, read and use [.agents/skills/repository-standards/SKILL.md](.agents/skills/repository-standards/SKILL.md) for local installed-rules lookup.\n`,
-  );
+  write(root, "AGENTS.md", agents);
   cpSync(join(sourceRoot, "CONTRIBUTING.md"), join(root, "CONTRIBUTING.md"));
   write(root, "GLOSSARY.md", context);
   write(
@@ -126,35 +119,13 @@ function createRepository(
     )}\n`,
   );
   mkdirSync(join(root, ".agents/skills"), { recursive: true });
-  for (const skill of skills)
+  // Delegating skills share implement's reference, as installed profiles do.
+  const installedSkills = new Set(skills);
+  if (skills.includes("triage") || skills.includes("orchestrate"))
+    installedSkills.add("implement");
+  for (const skill of installedSkills)
     symlinkSync(skillPath(skill), join(root, ".agents/skills", skill), "dir");
-  cpSync(
-    join(sourceRoot, "scripts/support/repository-standards"),
-    join(root, ".agents/skills/repository-standards"),
-    { recursive: true },
-  );
-  const declarations = [
-    "comments",
-    "planning",
-    "github-repository-configuration",
-  ];
-  if (profile === "factory") declarations.push("factory-workflow");
-  const rules = declarations.map((declaration) => {
-    const input = `rules/${declaration}.md`;
-    const path = `.repo-standards/${input}`;
-    write(root, path, readFileSync(join(sourceRoot, input)));
-    return { declaration, coverage: "repository", path, input };
-  });
-  write(
-    root,
-    ".repo-standards/rules/index.json",
-    `${JSON.stringify({ profile, rules }, null, 2)}\n`,
-  );
-  write(
-    root,
-    ".repo-standards/rules/README.md",
-    `# Installed exercise rules\n\nProfile: ${profile}. These canonical rules apply to the whole repository, including tracker work.\n\nRun \`node .agents/skills/repository-standards/rules.mjs [path]\` from the fixture root.\n\n${rules.map(({ declaration }) => `- [${declaration}](${declaration}.md) covers the whole repository.`).join("\n")}\n`,
-  );
+  installFixtureStandards(sourceRoot, root, profile);
   installLocalTracker(root);
   write(
     root,
@@ -1882,13 +1853,13 @@ The session reads AGENTS.md's Agent skills routing and the installed Canonical s
 }
 
 {
-  const root = createRepository("session-naming", [], {
+  const root = createRepository("session-naming", ["implement"], {
     agents: readFileSync(join(sourceRoot, "AGENTS.md"), "utf8"),
     context:
       "# Glossary\n\nA Delivery is a completed shipment of one Parcel.\n",
     exercise: `## Task
 
-Read AGENTS.md as an implementation worker outside orchestrate or triage. Inspect the Delivery definition in GLOSSARY.md and report its meaning and source to the operator. This bounded local inspection has no covering installed skill; any delegation carries context only. Make no repository edits or remote calls.
+Read AGENTS.md as an implementation worker outside orchestrate or triage, then follow its delegation-and-naming pointer before handing off work. Inspect the Delivery definition in GLOSSARY.md and report its meaning and source to the operator. This bounded local inspection has no covering installed skill; any delegation carries context only. Make no repository edits or remote calls.
 
 ## Supported naming
 
@@ -1906,7 +1877,7 @@ Allow at most two minutes per case. Record actual session references, capability
   installLocalTracker(root);
   repositories["session-naming"] = {
     path: root,
-    skills: [],
+    skills: ["implement"],
     initial: commit(root, "chore: establish session naming exercise"),
   };
 }

@@ -15,6 +15,8 @@ import { fileURLToPath } from "node:url";
 import {
   commitFixture as commit,
   identifyFixtureSource,
+  fixtureStandardsInputs,
+  installFixtureStandards,
   initializeFixtureRepository,
 } from "./support/fixture-authoring.mjs";
 
@@ -97,12 +99,13 @@ function createRepository(name, skills, { context, development }) {
     )}\n`,
   );
   mkdirSync(join(root, ".agents/skills"), { recursive: true });
-  for (const skill of skills)
+  for (const skill of new Set([...skills, "implement"]))
     symlinkSync(
       join(skillsRoot, skill),
       join(root, ".agents/skills", skill),
       "dir",
     );
+  installFixtureStandards(sourceRoot, root);
   initializeFixtureRepository(root, {
     author: { name: "Repo Canon Exercise", email: "exercise@example.invalid" },
   });
@@ -341,9 +344,14 @@ const repositories = {};
 const provenance = identifyFixtureSource({
   sourceRoot,
   builderPath: scriptSourcePath,
-  files: [...sharedFiles, "upstream-bases.json", "scripts/upstream-bases.mjs"],
+  files: [
+    ...sharedFiles,
+    ...fixtureStandardsInputs,
+    "upstream-bases.json",
+    "scripts/upstream-bases.mjs",
+  ],
   directories: Object.fromEntries(
-    skillNames.map((name) => [name, join(skillsRoot, name)]),
+    [...skillNames, "implement"].map((name) => [name, join(skillsRoot, name)]),
   ),
 });
 const skills = provenance.directories;

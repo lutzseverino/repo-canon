@@ -446,7 +446,8 @@ _Avoid_: Process manual, agent instructions
 **Agent guidance**:
 The always-loaded `AGENTS.md`: a short, stable map whose lines each name a
 moment of work and the authoritative file to read then. It holds no rule text
-and changes only when a path moves.
+apart from the one routing sentence in its Agent skills section (ADR 0042) and
+changes only when a path moves.
 _Avoid_: Agent rules, standing rules
 
 **Adoption guidance**:

@@ -50,6 +50,7 @@ test("creates the engineering-skill repositories with the declared engineering s
     "codebase-design",
     "diagnosing-bugs",
     "domain-modeling",
+    "implement",
     "improve-codebase-architecture",
     "research",
     "tdd",
@@ -82,10 +83,31 @@ test("creates the engineering-skill repositories with the declared engineering s
   for (const [name, repository] of Object.entries(manifest.repositories)) {
     assert.deepEqual(
       readdirSync(join(repository.path, ".agents/skills")).sort(),
-      [...repository.skills].sort(),
+      [
+        ...repository.skills,
+        ...(name === "standalone" ? [] : ["implement", "repository-standards"]),
+      ].sort(),
       `${name} installs exactly its selected skills`,
     );
     if (name === "standalone") continue;
+    for (const path of [
+      ".agents/skills/repository-standards/SKILL.md",
+      ".agents/skills/implement/DELEGATION.md",
+      ".repo-standards/rules/planning.md",
+    ])
+      assert.ok(
+        existsSync(join(repository.path, path)),
+        `${name}: map reaches ${path}`,
+      );
+    const lookup = execFileSync(
+      process.execPath,
+      [".agents/skills/repository-standards/rules.mjs"],
+      { cwd: repository.path, encoding: "utf8" },
+    );
+    assert.match(lookup, /github-repository-configuration/);
+    assert.match(lookup, /## planning/);
+    assert.doesNotMatch(lookup, /## factory-workflow/);
+
     assert.equal(
       readFileSync(join(repository.path, "AGENTS.md"), "utf8"),
       readFileSync(join(repositoryRoot, "AGENTS.md"), "utf8"),
