@@ -198,6 +198,7 @@ function tracker(items) {
         return json({ data });
       }
       const repository = {};
+      const errors = [];
       const matches = [
         ...query.matchAll(/(item\d+):issueOrPullRequest\(number:(\d+)\)/g),
       ];
@@ -224,8 +225,17 @@ function tracker(items) {
             delete node[field];
         }
         repository[alias] = node;
+        if (!node)
+          errors.push({
+            type: "NOT_FOUND",
+            path: ["repository", alias],
+            message: `Could not resolve to an issue or pull request with the number of ${number}.`,
+          });
       }
-      return json({ data: { repository } });
+      return json({
+        data: { repository },
+        ...(errors.length ? { errors } : {}),
+      });
     }
     const pr = /^\/repos\/([^/]+)\/([^/]+)\/pulls\/(\d+)$/.exec(path);
     if (pr) {
@@ -623,6 +633,37 @@ test("partial GraphQL responses and incomplete pages remain explicit failures", 
         "failed wait cannot save a partial observation",
       );
     });
+  }
+});
+
+test("an error scoped to one alias leaves its batch siblings observed", async (t) => {
+  for (const command of ["status", "wait"]) {
+    const bench = watching(t, "example/tracker#7 example/tracker#8");
+    const platform = tracker({ "example/tracker#7": {} });
+    const output = capture();
+    const code = await main(
+      command === "status" ? statusArgs(bench.root) : waitArgs(bench.root),
+      {
+        connect: transportConnection,
+        fetch: platform.fetch,
+        pause: unreachable,
+        ...output.streams,
+      },
+    );
+    if (command === "status") {
+      assert.equal(code, 0, output.stderr);
+      assert.match(
+        output.stdout,
+        /unavailable: https:\/\/github.com\/example\/tracker\/issues\/8 \(GitHub's GraphQL API answered: Could not resolve to an issue or pull request with the number of 8\.\)/,
+      );
+      assert.doesNotMatch(output.stdout, /unavailable: \S+issues\/7\b/);
+      const facts = observation(bench).facts;
+      assert.ok(Object.hasOwn(facts, "example/tracker#7"));
+      assert.ok(!Object.hasOwn(facts, "example/tracker#8"));
+    } else {
+      assert.equal(code, 1);
+      assert.match(output.stderr, /number of 8\./);
+    }
   }
 });
 
@@ -2976,7 +3017,7 @@ My move
 - ${issue(1)} state:triage · review/intake, review/finished
 - ${issue(2)} start or resume its Grill session with \`grill-with-docs\` · review/grill
 - ${issue(13)} no state the rules place · review/unlabeled
-- unavailable: ${issue(14)} (GitHub returned incomplete tracker example/tracker#14) · review/broken
+- unavailable: ${issue(14)} (GitHub's GraphQL API answered: Could not resolve to an issue or pull request with the number of 14.) · review/broken
 - review/report-a.md finished; read the report · review/brief-a.md
 - incoming/20261120T100000Z-alice.md message · —
 Owner's move

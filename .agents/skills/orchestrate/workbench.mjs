@@ -489,7 +489,9 @@ const trackerState = (value) => {
   if (!["OPEN", "CLOSED", "MERGED"].includes(value)) throw incompleteTracker("state");
   return value.toLowerCase();
 };
-const trackerGraphql = async (connection, query, variables, refused, now) => {
+// An aliased query may answer errors scoped to single aliases, such as a
+// missing or forbidden number, beside the other aliases' complete data.
+const trackerGraphql = async (connection, query, variables, refused, now, aliased = false) => {
   try {
     const { data: result, headers } = await connection.access.request({ path: "/graphql", method: "POST", body: { query, variables } });
     if (!result || (result.errors !== undefined && (!Array.isArray(result.errors) || result.errors.some((error) => !error || typeof error.message !== "string")))) throw incompleteTracker("GraphQL result");
@@ -511,10 +513,14 @@ const trackerGraphql = async (connection, query, variables, refused, now) => {
         const at = Number.isFinite(after) ? after : headers["x-ratelimit-remaining"] === "0" && /^\d+$/.test(reset ?? "") ? Number(reset) * 1000 : NaN;
         if (Number.isFinite(at) && Math.abs(at) <= 864e13) Object.assign(error, { retryAt: new Date(at).toISOString() });
       }
-      throw error;
+      const alias = ({ path }) => Array.isArray(path) && path[0] === "repository" && /^item\d+$/.test(path[1]) ? path[1] : undefined;
+      if (rateLimited || !aliased || !result.data?.repository || result.errors.some((entry) => alias(entry) === undefined)) throw error;
+      const failed = new Map();
+      for (const entry of result.errors) failed.set(alias(entry), [...(failed.get(alias(entry)) ?? []), entry.message]);
+      return { data: result.data, failed };
     }
     if (!result.data || typeof result.data !== "object") throw incompleteTracker("GraphQL data");
-    return result.data;
+    return { data: result.data, failed: new Map() };
   } catch (error) {
     refused(error);
     throw error;
@@ -527,7 +533,7 @@ const readTrackerBatch = async (items, connection, saved, refused, now) => {
   const [owner, name] = items[0].repository.split("/");
   const detailed = (item) => !saved[item.key] || saved[item.key].state === "open";
   const query = `query($owner:String!,$name:String!) { repository(owner:$owner,name:$name) { ${items.map((item, index) => `item${index}:issueOrPullRequest(number:${item.number}) { ${trackerSelection(detailed(item))} }`).join("\n")} } }`;
-  const data = await trackerGraphql(connection, query, { owner, name }, refused, now);
+  const { data, failed } = await trackerGraphql(connection, query, { owner, name }, refused, now, true);
   if (!data.repository) throw incompleteTracker("repository");
   const pages = [];
   const consume = (node, field, type, receive, after = null, cursors = new Set()) => {
@@ -543,6 +549,7 @@ const readTrackerBatch = async (items, connection, saved, refused, now) => {
   };
   const reads = items.map((item, index) => {
     try {
+      if (failed.has(`item${index}`)) throw new Error(`GitHub's GraphQL API answered: ${failed.get(`item${index}`).join("; ")}`);
       const node = data.repository[`item${index}`];
       if (!node || !["Issue", "PullRequest"].includes(node.__typename)) throw incompleteTracker(`${item.repository}#${item.number}`);
       const state = trackerState(node.state);
@@ -580,7 +587,7 @@ const readTrackerBatch = async (items, connection, saved, refused, now) => {
   while (pages.length) {
     const batch = pages.splice(0, trackerBatchSize);
     const query = `{ ${batch.map((page, index) => `page${index}:node(id:${JSON.stringify(page.id)}) { ... on ${page.type} { id ${trackerConnection(page.field, page.after)} } }`).join("\n")} }`;
-    const data = await trackerGraphql(connection, query, {}, refused, now);
+    const { data } = await trackerGraphql(connection, query, {}, refused, now);
     batch.forEach((page, index) => consume(data[`page${index}`], page.field, page.type, page.receive, page.after, page.cursors));
   }
   for (const read of reads) {
