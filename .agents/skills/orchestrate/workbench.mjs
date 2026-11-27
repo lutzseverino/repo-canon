@@ -105,7 +105,7 @@ const trackerReader = (connect, transport, now) => {
     // Every pass settles before another starts; slots released on the next
     // event-loop turn are still counted across pass boundaries.
     refusal = cooldown;
-    const reads = new Array(items.length);
+    const reads = Array.from({ length: items.length });
     const repositories = new Map();
     for (const item of items) {
       const key = item.repository.toLowerCase();
