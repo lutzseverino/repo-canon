@@ -1,7 +1,10 @@
 # Keep agent guidance a stable map
 
 Status: amends the `AGENTS.md` line of
-[ADR 0010](0010-carry-delivery-rules-in-the-environment.md).
+[ADR 0010](0010-carry-delivery-rules-in-the-environment.md). Partially superseded
+by [#1215](https://github.com/lutzseverino/repo-canon/issues/1215), approved by
+the owner on 2026-11-19: the map permits the one routing sentence in its
+Agent skills section; its map, pointer and line cap remain.
 
 `AGENTS.md` is a short, stable map: each line names a moment of work and the
 authoritative file to read then, including a start-of-work line that reaches
@@ -30,6 +33,7 @@ installed-rules pointer is added to agent guidance".
 ## Consequences
 
 - A conformance check holds the installed `AGENTS.md` to a map: every entry
-  links a path, a line cap applies, and no rule prose appears.
+  links a path, a line cap applies, and rule prose is limited to the one
+  routing sentence in Agent skills permitted by #1215.
 - The delegation and session-naming paragraphs leave `AGENTS.md` for the files
   where they bind.

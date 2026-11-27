@@ -362,7 +362,7 @@ own documentation and README checks, profile declarations, factory
 configuration, source size limits, upstream snapshot integrity, installed skill
 structure, and license notices. The suite uses the shared YAML reader for
 `standards.yaml` and the rendered Markdown readers for headings and links.
-It preserves single-home checks, `AGENTS.md`'s 223-word budget, the read-set
+It preserves single-home checks, `AGENTS.md`'s 24-line map cap, the read-set
 budget, and `orchestrate`'s required sections, reference links and application
 independence. License notices in owned skills and notices linked from
 `THIRD_PARTY_NOTICES.md` are checked against their vendored licenses, including
@@ -383,7 +383,7 @@ Merge Danger section has a line `Read set: <reason>` with a meaningful reason,
 using the PR metadata validator's placeholder rules. Description edits rerun
 the check. There is no stored budget number. Outside pull requests, including
 `pnpm validate` and pushes to `main`, only membership is checked, without a
-comparison gate. `AGENTS.md` keeps its word budget and
+comparison gate. `AGENTS.md` keeps its map line cap and
 `improve-codebase-architecture` keeps its own 200-line limit.
 
 Compare the working tree against any Git ref locally; the command prints every

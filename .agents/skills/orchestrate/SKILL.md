@@ -105,8 +105,9 @@ Paths are relative to each repository or the workbench.
 - `CONTRIBUTING.md` and `.repo-standards/rules/comments.md`: the sections and
   comment rules named above. When either is missing, carry out this method as
   written, and route unresolved questions through [intake](references/intake.md#questions).
-- `AGENTS.md`: delegation, naming and workstation convention. If missing, pass
-  context only and name sessions for operation/target where naming is supported.
+- `.agents/skills/implement/DELEGATION.md`: shared delegation and naming method.
+  If missing, obtain it before launching.
+- `AGENTS.md`: front-door routing. If missing, use the installed Canonical stages.
 - The workbench, whose format this skill owns: its `index.md`, `inbox.md`,
   `wishes.md`, `inbox-archive.md`, `incoming/`, `<plan>/plan.md`, `<plan>/log.md`,
   launch briefs and reports (`<plan>/*.md`), and the script's `workbench-observation.json` in its

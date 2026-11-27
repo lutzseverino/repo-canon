@@ -4,7 +4,8 @@
 
 ## Starting a launch
 
-Keep application mappings outside this skill. Follow `AGENTS.md` for skill invocation.
+Keep application mappings outside this skill. Before any handoff, read
+`.agents/skills/implement/DELEGATION.md` for delegation and session naming.
 Name each hand launch and its thread, where supported, `<stage>: <item>` using the canonical stage in lowercase; keep naming metadata outside task context. Verify repository contracts are self-contained
 under [Workbench](../SKILL.md#workbench). For heavy reads, use a covering
 installed skill or read a bounded tail; without one, pass context only.

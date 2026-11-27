@@ -40,9 +40,10 @@ test("builds scenario-specific repositories using every declared productivity sk
   assert.deepEqual(Object.keys(manifest.source.skills), [
     "grilling",
     "writing-for-agents",
+    "implement",
   ]);
 
-  const exercised = new Set();
+  const installed = new Set(["implement"]);
   for (const repository of Object.values(manifest.repositories)) {
     assert.equal(
       execFixtureGit(["status", "--short"], {
@@ -55,15 +56,29 @@ test("builds scenario-specific repositories using every declared productivity sk
       readFileSync(join(repository.path, "AGENTS.md"), "utf8"),
       readFileSync(join(sourceRoot, "AGENTS.md"), "utf8"),
     );
+    for (const path of [
+      ".agents/skills/repository-standards/SKILL.md",
+      ".agents/skills/implement/DELEGATION.md",
+      ".repo-standards/rules/planning.md",
+    ])
+      assert.ok(existsSync(join(repository.path, path)), `map reaches ${path}`);
+    const lookup = execFileSync(
+      process.execPath,
+      [".agents/skills/repository-standards/rules.mjs"],
+      { cwd: repository.path, encoding: "utf8" },
+    );
+    assert.match(lookup, /github-repository-configuration/);
+    assert.match(lookup, /## planning/);
+    assert.doesNotMatch(lookup, /## factory-workflow/);
     for (const skill of repository.skills) {
-      exercised.add(skill);
+      installed.add(skill);
       const link = join(repository.path, ".agents/skills", skill);
       assert.ok(lstatSync(link).isSymbolicLink());
       assert.ok(existsSync(join(link, "SKILL.md")));
     }
   }
   assert.deepEqual(
-    [...exercised].sort(),
+    [...installed].sort(),
     Object.keys(manifest.source.skills).sort(),
   );
 });

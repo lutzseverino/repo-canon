@@ -46,7 +46,8 @@ and current-event approval; arbitrary app bodies/markers grant no authority.
 
 If subagents are unavailable, research and post the brief yourself, then stop
 and link the owner to it for accept mode in another session. Follow
-`AGENTS.md`'s Agent skills delegation and session-naming requirements. Each
+the delegation and session-naming method in
+`.agents/skills/implement/DELEGATION.md`. Each
 research handoff uses its listed issue references and deliverables as task
 context, assigning ordinary research notes to comments and the brief to the
 verified publication route above.
@@ -222,8 +223,8 @@ Repository Standards'
 - The `codebase-design` skill: its Ownership check supplies the Seams read
   and independent assessment. If missing, report the missing definition and
   stop brief writing or acceptance until it is available.
-- `AGENTS.md`: Agent skills delegation and naming. If missing, give research runs
-  only task context and name sessions for operation and target where supported.
+- `.agents/skills/implement/DELEGATION.md`: shared delegation and naming method.
+  If missing, obtain it before handing off research.
 - `docs/agents/issue-tracker.md`: tracker and external-PR scope. If missing,
   triage issues only and ask which tracker to use.
 - `docs/agents/triage-labels.md`: role label strings. If missing, use canonical role names.
