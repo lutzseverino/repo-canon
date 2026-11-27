@@ -222,7 +222,14 @@ const repositories = {};
 {
   const root = createRepository(
     "planning",
-    ["grill-with-docs", "to-spec", "to-tickets", "domain-modeling", "grilling"],
+    [
+      "grill-with-docs",
+      "to-spec",
+      "to-tickets",
+      "domain-modeling",
+      "grilling",
+      "codebase-design",
+    ],
     {
       exercise: `## Task
 

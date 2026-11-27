@@ -133,6 +133,7 @@ test("planning and project-agent-guidance fixture builder creates runnable bound
       "to-tickets",
       "domain-modeling",
       "grilling",
+      "codebase-design",
     ],
     "triage-wayfinder": [
       "implement",
