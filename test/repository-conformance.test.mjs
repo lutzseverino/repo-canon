@@ -569,6 +569,14 @@ test("runner prerequisites live only in the GitHub rules", () => {
 // Later growth needs a reviewed edit.
 const agentMapLineLimit = 24;
 
+function mapProfiles() {
+  return Object.values(declarations(root)).filter((entries) =>
+    entries.some(
+      ({ target, exact }) => target === "AGENTS.md" && exact === "AGENTS.md",
+    ),
+  );
+}
+
 function oneMapSentence(text) {
   // Read rendered text so dots in link targets and inline code do not count.
   const content = interpretMarkdown(
@@ -612,13 +620,16 @@ function agentMapFailures(text, limit = agentMapLineLimit) {
           !links.some(({ path, broken }) => {
             if (!path || path === "AGENTS.md") return false;
             // Self-adoption can lag this source. Resolve installed-rule
-            // targets through the declarations adopters actually install.
+            // targets through the declarations every map adopter installs.
             if (path.startsWith(".repo-standards/rules/"))
-              return manifestDeclarations().some(
-                ({ rules }) =>
-                  rules &&
-                  path === `.repo-standards/${rules}` &&
-                  existsSync(join(root, rules)),
+              return mapProfiles().every((entries) =>
+                entries.some(
+                  ({ rules, optional }) =>
+                    rules &&
+                    !optional &&
+                    path === `.repo-standards/${rules}` &&
+                    existsSync(join(root, rules)),
+                ),
               );
             return !broken;
           })
@@ -649,9 +660,7 @@ function agentMapFailures(text, limit = agentMapLineLimit) {
 test("AGENTS.md is a stable map with one routing sentence", () => {
   assert.deepEqual(agentMapFailures(read("AGENTS.md")), []);
   assert.ok(
-    manifestDeclarations().some(
-      ({ target, exact }) => target === "AGENTS.md" && exact === "AGENTS.md",
-    ),
+    mapProfiles().length > 0,
     "adoption installs the checked map exactly",
   );
 });
@@ -698,6 +707,8 @@ test("AGENTS.md map check rejects rule prose, missing path links and excess line
     `${map}\n> Always run validation.\n`,
     "# Agent guidance\n\n- Before changing: [missing](missing-file.md).\n",
     "# Agent guidance\n\n- Before planning: [missing](.repo-standards/rules/missing.md).\n",
+    "# Agent guidance\n\n- Before factory work: [factory rules](.repo-standards/rules/factory-workflow.md).\n",
+    "# Agent guidance\n\n- Before Node work: [stack rules](.repo-standards/rules/typescript-node-stack.md).\n",
   ])
     assert.ok(agentMapFailures(invalid).length > 0, invalid);
   assert.deepEqual(agentMapFailures(map, 3), []);
