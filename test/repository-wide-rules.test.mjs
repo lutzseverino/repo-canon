@@ -1092,9 +1092,13 @@ for (const [
     for (const path of [
       "CONTRIBUTING.md",
       ".github/workflows/standards-update.yml",
+      ".agents/skills/triage/ACCEPT.md",
       ".agents/skills/triage/AGENT-BRIEF.md",
       ".agents/skills/triage/CREDITS.md",
+      ".agents/skills/triage/FACTORY.md",
+      ".agents/skills/triage/ORCHESTRATING.md",
       ".agents/skills/triage/OUT-OF-SCOPE.md",
+      ".agents/skills/triage/REVIEW.md",
       ".agents/skills/triage/SKILL.md",
       ".agents/skills/triage/agents/openai.yaml",
       ...readdirSync(join(root, ".agents/skills/babysit")).map(

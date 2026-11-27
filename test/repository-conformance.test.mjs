@@ -1347,6 +1347,10 @@ test("the owned setup files install from themselves and record how they differ f
   }
 });
 
+const triageDocuments = snapshotFiles(join(root, ".agents/skills/triage"))
+  .filter((path) => path.endsWith(".md") && path !== "CREDITS.md")
+  .map((path) => `.agents/skills/triage/${path}`);
+
 test("setup overrides have no second home in shared documents", () => {
   for (const document of [
     "CONTRIBUTING.md",
@@ -1355,7 +1359,7 @@ test("setup overrides have no second home in shared documents", () => {
     "rules/documentation.md",
     "AGENTS.md",
     "docs/agents/README.md",
-    ".agents/skills/triage/SKILL.md",
+    ...triageDocuments,
   ])
     assert.doesNotMatch(
       read(document).replaceAll(/\s+/g, " "),
@@ -1445,9 +1449,13 @@ test("adoption installs Repo Canon's own triage, with its retained files", () =>
   );
   const owned = join(root, ".agents/skills/triage");
   assert.deepEqual(snapshotFiles(owned).sort(), [
+    "ACCEPT.md",
     "AGENT-BRIEF.md",
     "CREDITS.md",
+    "FACTORY.md",
+    "ORCHESTRATING.md",
     "OUT-OF-SCOPE.md",
+    "REVIEW.md",
     "SKILL.md",
     "agents/openai.yaml",
     "ready.mjs",
@@ -1662,7 +1670,7 @@ test("shared orchestration material excludes private application mappings everyw
     "docs/development/README.md",
     "AGENTS.md",
     "CONTRIBUTING.md",
-    ".agents/skills/triage/SKILL.md",
+    ...triageDocuments,
     "test/repository-conformance.test.mjs",
     "scripts/create-planning-skill-fixtures.mjs",
     "test/planning-skill-fixtures.test.mjs",
@@ -1732,12 +1740,12 @@ test("delivery and triage requirements keep their single homes", () => {
       /Never infer a default|readiness label|`state:ready`/,
     ],
     [
-      [".agents/skills/triage/SKILL.md"],
+      triageDocuments,
       /Never infer a default|Reversible within the work|one channel (?:for questions )?to the owner|never write a brief you accept|applies no readiness|cites only records in the repository/i,
     ],
     [
       [
-        ".agents/skills/triage/SKILL.md",
+        ...triageDocuments,
         ".agents/skills/orchestrate/SKILL.md",
         ".agents/skills/orchestrate/references/launches.md",
       ],
