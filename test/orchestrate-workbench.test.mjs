@@ -56,6 +56,11 @@ const pull = (number, state) => ({
   repository: { nameWithOwner: "example/tracker" },
 });
 
+const connection = (nodes) => ({
+  nodes,
+  pageInfo: { hasNextPage: false, endCursor: null },
+});
+
 // A stubbed tracker: the published Postern adapter reads the mutable `items`
 // through an injected fetch transport, keyed by `owner/name#number`.
 function tracker(items) {
@@ -65,21 +70,142 @@ function tracker(items) {
     requests.push(path);
     if (items.fail) return json({ message: "Server Error" }, 502);
     if (path === "/graphql") {
-      const { variables } = JSON.parse(options.body);
-      const item =
-        items[`${variables.owner}/${variables.name}#${variables.number}`];
-      return json({
-        data: {
-          repository: {
-            issue: {
-              closedByPullRequestsReferences: {
-                nodes: item.linked ?? [],
-                pageInfo: { hasNextPage: false, endCursor: null },
+      const { query, variables } = JSON.parse(options.body);
+      if (
+        !query.includes("issueOrPullRequest") &&
+        !query.includes("page0:node")
+      ) {
+        const item =
+          items[`${variables.owner}/${variables.name}#${variables.number}`];
+        return json({
+          data: {
+            repository: {
+              issue: {
+                closedByPullRequestsReferences: connection(item.linked ?? []),
               },
             },
           },
-        },
-      });
+        });
+      }
+      const nodeFor = (id) => {
+        const key = id.replace(/^(commit|suite):/, "").replace(/:\d+$/, "");
+        const item = items[key];
+        if (!item) return null;
+        const page = (nodes) => {
+          const size = item.pageSize ?? Infinity;
+          return {
+            nodes: nodes.slice(0, size),
+            pageInfo: {
+              hasNextPage: nodes.length > size,
+              endCursor: nodes.length > size ? String(size) : null,
+            },
+            all: nodes,
+            size,
+          };
+        };
+        const suites = (item.suites ?? [item.runs ?? []]).map(
+          (runs, index) => ({
+            id: `suite:${key}:${index}`,
+            checkRuns: page(
+              runs.map((run) => ({
+                ...run,
+                databaseId: run.id,
+                status: run.status.toUpperCase(),
+                conclusion: run.conclusion?.toUpperCase() ?? null,
+              })),
+            ),
+          }),
+        );
+        const commit = {
+          id: `commit:${key}`,
+          checkSuites: page(suites),
+          status: {
+            contexts: (item.statuses ?? []).map((entry) => ({
+              ...entry,
+              id: `SC_${entry.id}`,
+              state: entry.state.toUpperCase(),
+            })),
+          },
+        };
+        if (id.startsWith("suite:"))
+          return suites[Number(id.split(":").at(-1))];
+        if (id.startsWith("commit:")) return commit;
+        return {
+          __typename: item.pull ? "PullRequest" : "Issue",
+          id: key,
+          state: item.mergedAt
+            ? "MERGED"
+            : (item.state ?? "open").toUpperCase(),
+          updatedAt: item.updatedAt ?? "2026-11-19T00:00:00Z",
+          labels: page((item.labels ?? []).map((name) => ({ name }))),
+          comments: page(
+            (item.comments ?? []).map((entry) => ({
+              databaseId: entry.id,
+              url: entry.html_url,
+            })),
+          ),
+          ...(item.pull
+            ? {
+                headRefOid: item.head ?? "a".repeat(40),
+                commits: { nodes: [{ commit }] },
+              }
+            : {
+                closedByPullRequestsReferences: page(
+                  (item.linked ?? []).map((entry) => ({
+                    url: entry.url,
+                    state: entry.state.toUpperCase(),
+                  })),
+                ),
+              }),
+        };
+      };
+      if (query.includes("page0:node")) {
+        const data = {};
+        for (const match of query.matchAll(
+          /(page\d+):node\(id:("[^"]+")\) \{ \.\.\. on \w+ \{ id (\w+)\(first:\d+,after:("[^"]+")/g,
+        )) {
+          const [, alias, encoded, field, after] = match;
+          const node = nodeFor(JSON.parse(encoded));
+          const page = node[field];
+          const start = Number(JSON.parse(after));
+          const end = start + page.size;
+          data[alias] = {
+            id: node.id,
+            [field]: {
+              nodes: page.all.slice(start, end),
+              pageInfo: {
+                hasNextPage: end < page.all.length,
+                endCursor: end < page.all.length ? String(end) : null,
+              },
+            },
+          };
+        }
+        return json({ data });
+      }
+      const repository = {};
+      const matches = [
+        ...query.matchAll(/(item\d+):issueOrPullRequest\(number:(\d+)\)/g),
+      ];
+      for (const [index, match] of matches.entries()) {
+        const [, alias, number] = match;
+        const node = nodeFor(`${variables.owner}/${variables.name}#${number}`);
+        const selection = query.slice(
+          match.index,
+          matches[index + 1]?.index ?? query.length,
+        );
+        if (node && !selection.includes("labels")) {
+          for (const field of [
+            "labels",
+            "comments",
+            "closedByPullRequestsReferences",
+            "headRefOid",
+            "commits",
+          ])
+            delete node[field];
+        }
+        repository[alias] = node;
+      }
+      return json({ data: { repository } });
     }
     const pr = /^\/repos\/([^/]+)\/([^/]+)\/pulls\/(\d+)$/.exec(path);
     if (pr) {
@@ -225,18 +351,330 @@ const waitArgs = (root, interval = "0.01", maxDuration = "5") => [
 const transportConnection = (repository, options) =>
   connect(`https://github.com/${repository}`, options);
 
+test("a tracker pass batches watched items per repository without per-item REST reads", async (t) => {
+  for (const count of [1, 12]) {
+    const items = Object.fromEntries(
+      Array.from({ length: count }, (_, index) => [
+        `example/tracker#${index + 1}`,
+        {},
+      ]),
+    );
+    const bench = watching(t, Object.keys(items).join(" "));
+    const platform = tracker(items);
+    const output = capture();
+    assert.equal(
+      await main(statusArgs(bench.root), {
+        connect: transportConnection,
+        fetch: platform.fetch,
+        ...output.streams,
+      }),
+      0,
+      output.stderr,
+    );
+    assert.deepEqual(
+      platform.requests,
+      ["/graphql"],
+      `requests for ${count} watched items`,
+    );
+    assert.doesNotMatch(output.stdout, /unavailable:/);
+  }
+});
+
 // The fixture transport is underneath the command queue, including every page.
-test("status and wait cap transport requests at eight across ninety items and paginated reads", async (t) => {
+test("tracker batches retain every connection page and chunk boundary", async (t) => {
+  const items = {};
+  for (let number = 1; number <= 43; number++) {
+    items[`example/tracker#${number}`] = {
+      pageSize: 1,
+      labels: ["state:ready", "one", "two"],
+      comments: [comment(1), comment(2), comment(3)],
+      linked: [pull(81, "OPEN"), pull(82, "CLOSED"), pull(83, "MERGED")],
+    };
+  }
+  items["example/tracker#20"] = {
+    pull: true,
+    pageSize: 1,
+    comments: [comment(1), comment(2)],
+    suites: [
+      [
+        { id: 1, name: "Test", status: "completed", conclusion: "success" },
+        { id: 2, name: "Test", status: "completed", conclusion: "failure" },
+      ],
+      [{ id: 3, name: "Lint", status: "queued", conclusion: null }],
+    ],
+    statuses: [
+      { id: 1, context: "deploy", state: "pending" },
+      { id: 2, context: "scan", state: "success" },
+    ],
+  };
+  const bench = watching(t, Object.keys(items).join(" "));
+  const platform = tracker(items);
+  const output = capture();
+  const dependencies = {
+    connect: transportConnection,
+    fetch: platform.fetch,
+    ...output.streams,
+  };
+  assert.equal(
+    await main(statusArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.doesNotMatch(output.stdout, /unavailable:/);
+  const facts = observation(bench).facts;
+  assert.deepEqual(facts["example/tracker#43"].labels, [
+    "one",
+    "state:ready",
+    "two",
+  ]);
+  assert.deepEqual(
+    facts["example/tracker#43"].comments.map(({ id }) => id),
+    [1, 2, 3],
+  );
+  assert.equal(facts["example/tracker#43"].linked.length, 3);
+  assert.deepEqual(
+    facts["example/tracker#20"].checks.runs.map(({ id }) => id),
+    [1, 2, 3],
+  );
+  assert.equal(facts["example/tracker#20"].checks.statuses.length, 2);
+  let now = 0;
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "1", "2"), {
+      ...dependencies,
+      now: () => now,
+      pause: async (ms) => {
+        now += ms;
+        items["example/tracker#20"].suites[1][0].status = "completed";
+        items["example/tracker#40"].comments.push(comment(4));
+        items["example/tracker#43"].labels.push("state:owner");
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.match(output.stdout, /pull\/20: checks changed/);
+  assert.match(output.stdout, /issues\/40: new comment .*issuecomment-4/);
+  assert.match(output.stdout, /issues\/43: labels added state:owner/);
+  assert.ok(platform.requests.every((path) => path === "/graphql"));
+});
+
+test("closed tracker reads retain saved details and a reopen refreshes before comparison", async (t) => {
+  for (const pull of [false, true]) {
+    const item = {
+      pull,
+      state: "open",
+      labels: ["state:ready"],
+      comments: [comment(1)],
+    };
+    const bench = watching(t, "example/tracker#7");
+    const platform = tracker({ "example/tracker#7": item });
+    const output = capture();
+    const queries = [];
+    const dependencies = {
+      connect: transportConnection,
+      ...output.streams,
+      fetch: async (input, options) => {
+        queries.push(JSON.parse(options.body).query);
+        return platform.fetch(input, options);
+      },
+    };
+    assert.equal(
+      await main(statusArgs(bench.root), dependencies),
+      0,
+      output.stderr,
+    );
+    item.state = "closed";
+    assert.equal(
+      await main(statusArgs(bench.root), dependencies),
+      0,
+      output.stderr,
+    );
+    const closedFacts = observation(bench).facts["example/tracker#7"];
+    queries.length = 0;
+    assert.equal(
+      await main(statusArgs(bench.root), dependencies),
+      0,
+      output.stderr,
+    );
+    assert.equal(queries.length, 1);
+    assert.doesNotMatch(
+      queries[0],
+      /comments|labels|checkSuites|contexts|commits|closedByPullRequests/,
+    );
+    assert.deepEqual(
+      observation(bench).facts["example/tracker#7"],
+      closedFacts,
+    );
+    item.state = "open";
+    queries.length = 0;
+    output.stdout = "";
+    assert.equal(
+      await main(waitArgs(bench.root, "1", "1"), dependencies),
+      0,
+      output.stderr,
+    );
+    assert.equal(
+      queries.length,
+      2,
+      "state-only reopen is followed by a full observation",
+    );
+    assert.match(output.stdout, /state changed from closed to open/);
+    assert.doesNotMatch(
+      output.stdout,
+      /new comment|labels (added|removed)|checks changed|head changed/,
+    );
+    assert.deepEqual(observation(bench).facts["example/tracker#7"].comments, [
+      {
+        id: 1,
+        url: "https://github.com/example/tracker/issues/7#issuecomment-1",
+      },
+    ]);
+  }
+});
+
+test("partial GraphQL responses and incomplete pages remain explicit failures", async (t) => {
+  for (const fault of ["errors", "missing", "null", "page", "cursor"]) {
+    await t.test(fault, async (t) => {
+      const bench = watching(t, "example/tracker#7 example/tracker#8");
+      const items = {
+        "example/tracker#7": {
+          comments: [comment(1), comment(2)],
+          pageSize: 1,
+        },
+        "example/tracker#8": {},
+      };
+      const platform = tracker(items);
+      const output = capture();
+      const dependencies = {
+        connect: transportConnection,
+        fetch: platform.fetch,
+        ...output.streams,
+      };
+      assert.equal(
+        await main(statusArgs(bench.root), dependencies),
+        0,
+        output.stderr,
+      );
+      const saved = observation(bench).facts;
+      let pauses = 0;
+      const code = await main(waitArgs(bench.root, "1", "2"), {
+        ...dependencies,
+        pause: async () => {
+          pauses++;
+        },
+        fetch: async (input, options) => {
+          const response = await platform.fetch(input, options);
+          const data = JSON.parse(await response.text());
+          const query = JSON.parse(String(options.body)).query;
+          if (fault === "errors")
+            data.errors = [
+              { type: "FORBIDDEN", message: "One alias is forbidden" },
+            ];
+          else if (query.includes("issueOrPullRequest")) {
+            if (fault === "missing") delete data.data.repository.item0;
+            if (fault === "null") data.data.repository.item0 = null;
+          } else {
+            if (fault === "page") data.data.page0.comments.nodes = null;
+            if (fault === "cursor")
+              data.data.page0.comments.pageInfo = {
+                hasNextPage: true,
+                endCursor: "1",
+              };
+          }
+          return json(data);
+        },
+      });
+      assert.equal(code, 1);
+      assert.match(output.stderr, /GraphQL API answered|incomplete tracker/);
+      assert.equal(pauses, 0);
+      assert.deepEqual(
+        observation(bench).facts,
+        saved,
+        "failed wait cannot save a partial observation",
+      );
+    });
+  }
+});
+
+test("saved REST status-context identifiers cause only the accepted upgrade wake", async (t) => {
+  const item = {
+    pull: true,
+    statuses: [{ id: 3, context: "deploy", state: "pending" }],
+  };
+  const bench = watching(t, "example/tracker#7");
+  const platform = tracker({ "example/tracker#7": item });
+  const output = capture();
+  const dependencies = {
+    connect: transportConnection,
+    fetch: platform.fetch,
+    ...output.streams,
+  };
+  assert.equal(
+    await main(statusArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  const legacy = observation(bench);
+  legacy.facts["example/tracker#7"].checks.statuses[0].id = 3;
+  writeFileSync(
+    bench.path(".git/workbench-observation.json"),
+    JSON.stringify(legacy),
+  );
+  let now = 0;
+  const waiting = {
+    ...dependencies,
+    now: () => now,
+    pause: async (ms) => {
+      now += ms;
+    },
+  };
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "1", "1"), waiting),
+    0,
+    output.stderr,
+  );
+  assert.match(output.stdout, /checks changed/);
+  assert.equal(
+    observation(bench).facts["example/tracker#7"].checks.statuses[0].id,
+    "SC_3",
+  );
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "1", "1"), waiting),
+    0,
+    output.stderr,
+  );
+  assert.doesNotMatch(output.stdout, /checks changed/);
+  assert.match(output.stdout, /no item changed/);
+});
+
+test("status and wait cap batched and paginated requests across repository connections", async (t) => {
   const items = {};
   const rows = [];
-  for (const repository of ["example/tracker", "example/other"]) {
+  for (let repository = 0; repository < 10; repository++) {
     for (let number = 1; number <= 45; number++) {
-      const key = `${repository}#${number}`;
-      items[key] = number === 1 ? { pull: true } : {};
-      rows.push(row(`${repository.split("/")[1]}-${number}`, key));
+      const key = `example/tracker${repository}#${number}`;
+      items[key] =
+        number === 1
+          ? {
+              pull: true,
+              pageSize: 1,
+              comments: [comment(1), comment(2)],
+              runs: [1, 2].map((id) => ({
+                id,
+                name: "Test",
+                status: "completed",
+                conclusion: "success",
+              })),
+              statuses: [{ id: 3, context: "deploy", state: "success" }],
+            }
+          : {};
+      rows.push(row(`tracker${repository}-${number}`, key));
     }
   }
-  rows.push(row("duplicate", "example/tracker#2"));
+  rows.push(row("duplicate", "example/tracker0#2"));
   const bench = workbench(t, { plans: { review: planText({ rows }) } });
   const platform = tracker(items);
   let active = 0;
@@ -245,41 +683,12 @@ test("status and wait cap transport requests at eight across ninety items and pa
   const fetch = async (input, options) => {
     active++;
     peak = Math.max(peak, active);
-    const url = new URL(input);
-    requests.push(url.pathname + url.search);
+    requests.push({
+      path: new URL(input).pathname,
+      ...JSON.parse(options.body),
+    });
     await new Promise((resolve) => setTimeout(resolve, 1));
-    let response = await platform.fetch(input, options);
-    if (/\/issues\/1\/comments$|\/(?:check-runs|status)$/.test(url.pathname)) {
-      const page = url.searchParams.get("page");
-      const data = url.pathname.endsWith("comments")
-        ? [comment(page === "2" ? 2 : 1)]
-        : url.pathname.endsWith("check-runs")
-          ? {
-              check_runs: [
-                {
-                  id: page === "2" ? 2 : 1,
-                  name: "Test",
-                  status: "completed",
-                  conclusion: "success",
-                },
-              ],
-            }
-          : {
-              statuses: [
-                {
-                  id: page === "2" ? 2 : 1,
-                  context: "deploy",
-                  state: "success",
-                },
-              ],
-            };
-      const result = json(data);
-      if (!page) {
-        url.searchParams.set("page", "2");
-        result.headers.set("link", `<${url}>; rel="next"`);
-      }
-      response = result;
-    }
+    const response = await platform.fetch(input, options);
     const body = await response.text();
     return new Response(
       new ReadableStream({
@@ -300,28 +709,25 @@ test("status and wait cap transport requests at eight across ninety items and pa
     ...output.streams,
   };
   assert.equal(
-    await main(
-      [
-        "status",
-        bench.root,
-        "--stale-after",
-        "60",
-        "--stages",
-        installedStages,
-      ],
-      dependencies,
-    ),
+    await main(statusArgs(bench.root), dependencies),
     0,
     output.stderr,
   );
   assert.equal(peak, 8);
   assert.doesNotMatch(output.stdout, /unavailable:/);
-  // 88 issues * 3 reads + 2 PRs * (5 reads + 3 second pages).
-  assert.equal(requests.length, 280, "status requests per pass");
+  assert.ok(requests.every(({ path }) => path === "/graphql"));
   assert.equal(
-    requests.filter((path) => path === "/repos/example/tracker/issues/2")
-      .length,
+    requests.filter(
+      ({ query, variables }) =>
+        variables.name === "tracker0" && query.includes("number:2)"),
+    ).length,
     1,
+    "duplicate watches share a read",
+  );
+  const perPass = requests.length;
+  assert.ok(
+    requests.some(({ query }) => query.includes("page0:node")),
+    "follow-up pages are in the queue",
   );
   requests.length = 0;
   peak = 0;
@@ -332,21 +738,16 @@ test("status and wait cap transport requests at eight across ninety items and pa
       ...dependencies,
       now: () => elapsed,
       pause: async (ms) => {
-        assert.equal(requests.length, 280, "first wait poll requests");
+        assert.equal(requests.length, perPass, "first wait pass requests");
         elapsed += ms;
-        items["example/tracker#2"].labels = ["state:owner"];
+        items["example/tracker0#2"].labels = ["state:owner"];
       },
     }),
     0,
     output.stderr,
   );
   assert.equal(peak, 8);
-  assert.equal(requests.length, 560, "two wait polls");
-  assert.equal(
-    requests.filter((path) => path === "/repos/example/tracker/issues/2")
-      .length,
-    2,
-  );
+  assert.equal(requests.length, perPass * 2, "requests per complete wait pass");
   assert.match(output.stdout, /labels added state:owner/);
   assert.doesNotMatch(output.stdout, /unavailable:/);
 });
@@ -388,7 +789,7 @@ test("wait re-arms keep the full-poll cadence while reading only new items and s
     0,
     output.stderr,
   );
-  assert.equal(requests.length, 3);
+  assert.equal(requests.length, 1);
   assert.equal(observation(bench).trackerPollAt, 0);
   now = 2000;
   requests.length = 0;
@@ -397,7 +798,7 @@ test("wait re-arms keep the full-poll cadence while reading only new items and s
     0,
     output.stderr,
   );
-  assert.equal(requests.length, 3, "status always reads known items fresh");
+  assert.equal(requests.length, 1, "status always reads known items fresh");
   assert.equal(
     observation(bench).trackerPollAt,
     0,
@@ -416,7 +817,7 @@ test("wait re-arms keep the full-poll cadence while reading only new items and s
     0,
     output.stderr,
   );
-  assert.equal(requests.length, 3);
+  assert.equal(requests.length, 1);
   assert.ok(
     requests.every(
       ({ path }) =>
@@ -445,7 +846,7 @@ test("wait re-arms keep the full-poll cadence while reading only new items and s
     0,
     output.stderr,
   );
-  assert.equal(requests.length, 6);
+  assert.equal(requests.length, 1);
   assert.ok(requests.every(({ at }) => at === 10000));
   assert.match(output.stdout, /labels added state:owner/);
 });
@@ -709,7 +1110,7 @@ test("an expired status cooldown does not advance an early re-arm's full poll", 
     0,
     output.stderr,
   );
-  assert.equal(platform.requests.length, 3);
+  assert.equal(platform.requests.length, 1);
   assert.match(output.stdout, /labels added state:owner/);
 });
 
@@ -881,7 +1282,7 @@ test("a later refusal without retryAt keeps its full interval after a timestampe
   );
   assert.match(output.stdout, /^rate limited:/m);
   assert.doesNotMatch(output.stdout, /rate limited until/);
-  assert.equal(platform.requests.length, 3);
+  assert.equal(platform.requests.length, 1);
   assert.equal(observation(bench).trackerPollAt, 90000);
   assert.match(output.stdout, /labels added state:owner/);
   assert.equal(
@@ -1029,7 +1430,7 @@ test("retryAt cooldown survives status and wait writes, preserves facts and keep
     0,
     output.stderr,
   );
-  assert.equal(requests.length, 63);
+  assert.equal(requests.length, 2);
   assert.ok(requests.every(({ at }) => at === start + 10000));
   assert.match(output.stdout, /labels added state:owner/);
   assert.equal(output.stderr, "");
@@ -1039,8 +1440,8 @@ test("queued exchanges receive a fresh forty-five-second timeout when dispatched
   const items = {};
   const links = [];
   for (let number = 1; number <= 32; number++) {
-    items[`example/tracker#${number}`] = {};
-    links.push(`example/tracker#${number}`);
+    items[`example/tracker${number}#1`] = {};
+    links.push(`example/tracker${number}#1`);
   }
   const bench = watching(t, links.join(" "));
   const platform = tracker(items);
@@ -1074,7 +1475,7 @@ test("queued exchanges receive a fresh forty-five-second timeout when dispatched
     0,
     output.stderr,
   );
-  assert.equal(budgets.length, 96);
+  assert.equal(budgets.length, 32);
   assert.ok(elapsed > 45000, "queued work spans more than the request timeout");
   assert.ok(
     budgets.every((budget) => budget === 45000),
@@ -1152,7 +1553,7 @@ test("rate limits without retryAt keep same-wait and re-armed polling one caller
           output.stderr,
         );
       }
-      assert.deepEqual(requests, [0, 10000, 10000, 10000]);
+      assert.deepEqual(requests, [0, 10000]);
       assert.match(output.stdout, /rate limited/);
       assert.doesNotMatch(output.stdout, /rate limited until|unavailable:/);
       assert.match(output.stdout, /labels added state:owner/);
@@ -1204,7 +1605,7 @@ test("status retries fresh without a supplied retryAt while preserving the wait 
     0,
     output.stderr,
   );
-  assert.equal(requests, 3, "status has no interval and reads fresh on demand");
+  assert.equal(requests, 1, "status has no interval and reads fresh on demand");
   assert.equal(observation(bench).trackerPollAt, 0);
 });
 
@@ -1225,7 +1626,7 @@ test("ordinary transport failures retain unavailable status lines and fail wait"
       assert.equal(code, 0, output.stderr);
       assert.match(
         output.stdout,
-        /unavailable: https:\/\/github.com\/example\/tracker\/issues\/7 \(GitHub answered GET .*502: Server Error\)/,
+        /unavailable: https:\/\/github.com\/example\/tracker\/issues\/7 \(GitHub answered POST .*502: Server Error\)/,
       );
       assert.doesNotMatch(output.stdout, /rate limited/);
     } else {
@@ -1236,32 +1637,29 @@ test("ordinary transport failures retain unavailable status lines and fail wait"
   }
 });
 
-test("GraphQL and paginated rate limits stop dispatch among successful reads and retain unread facts", async (t) => {
-  for (const kind of ["graphql", "comments", "check-runs", "status"]) {
-    await t.test(kind, async (t) => {
+test("GraphQL envelope and paginated rate limits stop queued batches and retain saved observations", async (t) => {
+  for (const mode of [
+    "initial batch",
+    "follow-up page",
+    "retry-after",
+    "mixed envelope",
+  ]) {
+    const paginated = mode === "follow-up page";
+    await t.test(mode, async (t) => {
       const items = {};
-      const rows = [];
-      for (const repository of ["example/tracker", "example/other"]) {
-        for (let number = 1; number <= 10; number++) {
-          const key = `${repository}#${number}`;
-          rows.push(row(`${repository.split("/")[1]}-${number}`, key));
-          items[key] = ["check-runs", "status"].includes(kind)
-            ? { pull: true }
-            : {};
-        }
+      const links = [];
+      for (let index = 0; index < 24; index++) {
+        const key = `example/tracker${index}#7`;
+        links.push(key);
+        items[key] = { comments: [comment(1), comment(2)], pageSize: 1 };
       }
-      const bench = workbench(t, { plans: { review: planText({ rows }) } });
+      const bench = watching(t, links.join(" "));
       const platform = tracker(items);
       const output = capture();
       let limited = false;
       let refused = false;
       let afterRefusal = 0;
       let requests = 0;
-      const headers = {
-        "content-type": "application/json",
-        "x-ratelimit-remaining": "0",
-        "x-ratelimit-reset": "1795723210",
-      };
       const dependencies = {
         ...output.streams,
         connect: transportConnection,
@@ -1269,41 +1667,40 @@ test("GraphQL and paginated rate limits stop dispatch among successful reads and
         fetch: async (input, options) => {
           requests++;
           if (refused) afterRefusal++;
-          const url = new URL(input);
-          const matches =
-            kind === "graphql"
-              ? url.pathname === "/graphql"
-              : url.pathname.endsWith(`/${kind}`);
-          if (
-            limited &&
-            matches &&
-            (kind === "graphql" || url.searchParams.get("page") === "2")
-          ) {
+          await new Promise((resolve) => setTimeout(resolve, 1));
+          const { query } = JSON.parse(options.body);
+          if (limited && (!paginated || query.includes("page0:node"))) {
             refused = true;
             return new Response(
-              JSON.stringify(
-                kind === "graphql"
-                  ? {
-                      data: null,
-                      errors: [
+              JSON.stringify({
+                data: { repository: {} },
+                errors: [
+                  ...(mode === "mixed envelope"
+                    ? [
                         {
-                          type: "RATE_LIMITED",
-                          message: "API rate limit exceeded",
+                          type: "FORBIDDEN",
+                          message: "One alias was forbidden",
                         },
-                      ],
-                    }
-                  : { message: "API rate limit exceeded" },
-              ),
-              { status: kind === "graphql" ? 200 : 429, headers },
+                      ]
+                    : []),
+                  { type: "RATE_LIMITED", message: "API rate limit exceeded" },
+                ],
+              }),
+              {
+                status: 200,
+                headers: {
+                  "content-type": "application/json",
+                  ...(mode === "retry-after"
+                    ? { "retry-after": "10" }
+                    : {
+                        "x-ratelimit-remaining": "0",
+                        "x-ratelimit-reset": "1795723210",
+                      }),
+                },
+              },
             );
           }
-          await new Promise((resolve) => setTimeout(resolve, 1));
-          const response = await platform.fetch(input, options);
-          if (limited && matches && kind !== "graphql") {
-            url.searchParams.set("page", "2");
-            response.headers.set("link", `<${url}>; rel="next"`);
-          }
-          return response;
+          return platform.fetch(input, options);
         },
       };
       assert.equal(
@@ -1320,27 +1717,19 @@ test("GraphQL and paginated rate limits stop dispatch among successful reads and
         0,
         output.stderr,
       );
-      assert.equal(
-        refused,
-        true,
-        "the follow-up request reached its platform refusal",
-      );
+      assert.equal(refused, true);
       assert.equal(
         afterRefusal,
         0,
-        "a platform refusal stops every queued transport request",
+        "refusal stops queued exchanges across repositories",
       );
-      assert.ok(requests > 8, "successful reads preceded the refusal");
+      assert.ok(requests > 0);
       assert.match(
         output.stdout,
         /rate limited until 2026-11-26T20:00:10.000Z/,
       );
       assert.doesNotMatch(output.stdout, /unavailable:/);
-      assert.deepEqual(
-        observation(bench).facts,
-        saved,
-        "unread items retain their previous successful facts",
-      );
+      assert.deepEqual(observation(bench).facts, saved);
     });
   }
 });
@@ -1458,19 +1847,14 @@ test("wait retries at retryAt even when its saved full-poll cadence is later", a
     0,
     output.stderr,
   );
-  assert.deepEqual(requests, [
-    start + 60000,
-    start + 70000,
-    start + 70000,
-    start + 70000,
-  ]);
+  assert.deepEqual(requests, [start + 60000, start + 70000]);
   assert.match(output.stdout, /rate limited until 2026-11-26T20:01:10.000Z/);
   assert.match(output.stdout, /labels added state:owner/);
 });
 
 test("without retryAt the refusal time owns the retry even when in-flight reads finish later", async (t) => {
-  const bench = watching(t, "example/tracker#7 example/tracker#8");
-  const items = { "example/tracker#7": {}, "example/tracker#8": {} };
+  const bench = watching(t, "example/tracker#7 example/other#8");
+  const items = { "example/tracker#7": {}, "example/other#8": {} };
   const platform = tracker(items);
   const output = capture();
   let now = 0;
@@ -1483,7 +1867,7 @@ test("without retryAt the refusal time owns the retry even when in-flight reads 
     fetch: async (input, options) => {
       requests.push(now);
       if (limited) {
-        if (new URL(input).pathname.endsWith("/7"))
+        if (JSON.parse(options.body).variables.name === "tracker")
           return json({ message: "API rate limit exceeded" }, 429);
         await new Promise((resolve) => setImmediate(resolve));
         now += 5000;
@@ -1522,7 +1906,7 @@ test("without retryAt the refusal time owns the retry even when in-flight reads 
     0,
     output.stderr,
   );
-  assert.deepEqual(requests, [0, 0, 10000, 10000, 10000, 10000, 10000, 10000]);
+  assert.deepEqual(requests, [0, 0, 10000, 10000]);
   assert.match(output.stdout, /rate limited/);
   assert.doesNotMatch(output.stdout, /rate limited until|unavailable:/);
   assert.match(output.stdout, /labels added state:owner/);
@@ -1790,7 +2174,7 @@ test("a pull request on a row reports merging, labels and comments, and reads no
     "https://github.com/example/tracker/pull/12: labels added released",
     "https://github.com/example/tracker/pull/12: new comment https://github.com/example/tracker/issues/7#issuecomment-3",
   ]);
-  assert.ok(!requests.includes("/graphql"));
+  assert.ok(requests.every((path) => path === "/graphql"));
 });
 
 test("pull request head and raw check and status sets wake without success policy", async (t) => {
@@ -2563,7 +2947,7 @@ My move
 - ${issue(1)} state:triage · review/intake, review/finished
 - ${issue(2)} start or resume its Grill session with \`grill-with-docs\` · review/grill
 - ${issue(13)} no state the rules place · review/unlabeled
-- unavailable: ${issue(14)} (GitHub answered GET /repos/example/tracker/issues/14 with 404: Not Found) · review/broken
+- unavailable: ${issue(14)} (GitHub returned incomplete tracker example/tracker#14) · review/broken
 - review/report-a.md finished; read the report · review/brief-a.md
 - incoming/20261120T100000Z-alice.md message · —
 Owner's move
