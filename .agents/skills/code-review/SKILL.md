@@ -5,140 +5,126 @@ description: 'Review the changes since a fixed point (commit, branch, tag, or me
 
 A prompt or brief naming this skill is its invocation.
 
-Two-axis review of the diff between `HEAD` and a fixed point the user supplies:
-
-- **Standards**: does the code conform to this repo's documented coding standards?
-- **Spec**: does the code faithfully implement the originating issue / spec?
-
-Both axes run as **parallel sub-agents** so they don't pollute each other's context, then this skill aggregates their findings.
-
-The issue tracker should have been provided to you.
+Review a pinned diff on two independent axes, using parallel sub-agents:
+**Standards** checks documented standards; **Spec** checks the originating
+implementation contract. Report them separately so neither masks the other.
 
 ## Process
 
 ### 1. Pin the fixed point
 
-Whatever the user said is the fixed point (a commit SHA, branch name, tag, `main`, `HEAD~5`, etc.). If they didn't specify one, ask for it.
-
-Resolve the fixed point and `HEAD` to full commit SHAs with
-`git rev-parse --verify <ref>^{commit}`, then pin their merge-base as the
-comparison base, `<comparison-base-sha>`, with
-`git merge-base <fixed-point-sha> <head-sha>`. Capture the diff command once:
-`git diff <comparison-base-sha> <head-sha>`. Also note the commits via
-`git log <fixed-point-sha>..<head-sha> --oneline`. Keep these SHAs for the
-facts and both axes even if a branch moves.
-
-Before going further, confirm both refs resolve and the diff is non-empty.
-A bad ref or empty diff should fail here, not inside two parallel sub-agents.
+Ask for a fixed point if none was supplied. Resolve it and `HEAD` to full
+commit SHAs with `git rev-parse --verify <ref>^{commit}`; pin
+`<comparison-base-sha>` with `git merge-base <fixed-point-sha> <head-sha>`.
+Capture `git diff <comparison-base-sha> <head-sha>` and
+`git log <fixed-point-sha>..<head-sha> --oneline` once. Use these SHAs for
+ownership facts and both axes even if refs move. Resolve bad refs or an empty
+diff before starting sub-agents.
 
 ### 2. Identify the spec source
 
-Look for the originating spec, in this order:
+Search in order:
 
-1. Issue references in the commit messages (`#123`, `Closes #45`, GitLab `!67`, etc.), fetched via the workflow in `docs/agents/issue-tracker.md`. The spec is the issue's implementation contract; read the validator’s selected source/revision and the tracker’s mode rules. Prepared mode retains latest-brief comments; active body mode permits only the exact unchanged inventoried legacy exception until migration. Review the selected contract and treat other discussion as context; comments cannot supersede a migrated body.
-2. A path the user passed as an argument.
-3. A spec file under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
-4. If nothing is found, ask the user where the spec is. If they say there isn't one, the **Spec** sub-agent will skip and report "no spec available".
+1. Issue references in commit messages (`#123`, `Closes #45`, GitLab `!67`),
+   fetched through `docs/agents/issue-tracker.md`. Follow its
+   [Read an issue](../../../docs/agents/issue-tracker.md#conventions) guidance
+   for the validator-selected contract revision and prepared/body-mode rules,
+   including the eligible legacy exception. Review that contract; other
+   discussion is context.
+2. A path the user supplied.
+3. A spec under `docs/`, `specs/`, or `.scratch/` matching the branch or feature.
+4. Ask where the spec is. If none exists, skip the Spec sub-agent and report
+   "no spec available".
 
 ### 3. Identify the standards sources
 
-Anything in the repo that documents how code should be written, such as `CODING_STANDARDS.md` or `CONTRIBUTING.md`.
+Find repository standards such as `CODING_STANDARDS.md` and `CONTRIBUTING.md`.
+Always include the following Fowler smell baseline (_Refactoring_, ch.3),
+including when the repository documents nothing. Repository standards override
+it; suppress conflicting smells. Smells are labelled heuristics ("possible
+Feature Envy"), always judgement calls, never hard violations. Skip anything
+tooling enforces.
 
-On top of whatever the repo documents, the Standards axis always carries the **smell baseline** below: a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies even when a repo documents nothing. Two rules bind it:
+Match each smell and remedy against the diff:
 
-- **The repo overrides.** A documented repo standard always wins; where it endorses something the baseline would flag, suppress the smell.
-- **Always a judgement call.** Each smell is a labelled heuristic ("possible Feature Envy"), never a hard violation. Like any standard here, skip anything tooling already enforces.
-
-Each smell reads _what it is_ → _how to fix_; match it against the diff:
-
-- **Mysterious Name**: a function, variable, or type whose name doesn't reveal what it does or holds. → rename it; if no honest name comes, the design's murky.
-- **Duplicated Code**: the same logic shape appears in more than one hunk or file in the change. → extract the shared shape, call it from both.
-- **Feature Envy**: a method that reaches into another object's data more than its own. → move the method onto the data it envies.
-- **Data Clumps**: the same few fields or params keep travelling together (a type wanting to be born). → bundle them into one type, pass that.
-- **Primitive Obsession**: a primitive or string standing in for a domain concept that deserves its own type. → give the concept its own small type.
-- **Repeated Switches**: the same `switch`/`if`-cascade on the same type recurs across the change. → replace with polymorphism, or one map both sites share.
-- **Shotgun Surgery**: one logical change forces scattered edits across many files in the diff. → gather what changes together into one module.
-- **Divergent Change**: one file or module is edited for several unrelated reasons. → split so each module changes for one reason.
-- **Speculative Generality**: abstraction, parameters, or hooks added for needs the spec doesn't have. → delete it; inline back until a real need shows.
-- **Message Chains**: long `a.b().c().d()` navigation the caller shouldn't depend on. → hide the walk behind one method on the first object.
-- **Middle Man**: a class or function that mostly just delegates onward. → cut it, call the real target direct.
-- **Refused Bequest**: a subclass or implementer that ignores or overrides most of what it inherits. → drop the inheritance, use composition.
+- **Mysterious Name**: a name hides its meaning. → rename; no honest name suggests unclear design.
+- **Duplicated Code**: repeated logic across hunks or files. → extract and share.
+- **Feature Envy**: a method uses another object's data more than its own. → move it there.
+- **Data Clumps**: fields or parameters travel together. → bundle into a type.
+- **Primitive Obsession**: a primitive represents a domain concept deserving a type. → introduce that type.
+- **Repeated Switches**: repeated conditionals on one type. → use polymorphism or a shared map.
+- **Shotgun Surgery**: one change scatters edits. → gather related behavior into one module.
+- **Divergent Change**: one module changes for unrelated reasons. → split by reason.
+- **Speculative Generality**: abstraction, parameters or hooks without a spec need. → delete or inline.
+- **Message Chains**: navigation callers shouldn't know. → hide the walk behind a method.
+- **Middle Man**: mostly delegates. → call the target directly.
+- **Refused Bequest**: a subclass or implementer ignores or overrides most inherited behavior. → use composition.
 
 ### 4. Collect ownership facts
 
-Before either axis starts, run the bundled collector from the repository root:
+From the repository root, run:
 
 ```sh
 node <this skill's directory>/ownership-facts.mjs <comparison-base-sha> <head-sha>
 ```
 
-It needs Node.js and Git with `check-attr --source` support. It returns a JSON
-fact list: touched paths under `vendor/` or marked `linguist-vendored` by
-`git check-attr` in either pinned tree, and added files whose extension or
-top-level directory was absent from the comparison base. It uses neither
-package-name guesses nor earlier additions in the same diff as the baseline.
-An empty list is valid; a failed command must be resolved before review.
-These are evidence, not a trigger classifier or an automatic ownership verdict.
+Requires Node.js and Git with `check-attr --source` support. Exit `0` returns
+a JSON fact list, possibly empty; exit `1` reports an error to resolve before
+review. Facts are evidence, never automatic triggers or ownership verdicts.
 
 Read `codebase-design`'s [Ownership check](../codebase-design/OWNERSHIP.md).
-Pass that reference and the fact list to Standards; pass the reference to Spec for
-its cleanup allowance. If that skill is missing, report the missing dependency
-rather than inventing ownership rules.
+Give Standards the reference and fact list; give Spec the reference for its
+cleanup allowance. Report a missing skill dependency rather than inventing
+ownership rules.
 
 ### 5. Spawn both sub-agents in parallel
 
-**Standards sub-agent prompt** should include:
+Give both agents the pinned diff command and commit list, the PR body (proposed
+body for work in progress), and `codebase-design`'s Ownership check reference.
+Give Standards the fact list, standards-source paths and the full smell
+baseline from step 3; its isolated context cannot otherwise access them.
 
-- The full pinned diff command and commit list, plus the fact list from step 4
-  and `codebase-design`'s Ownership check reference.
-- The list of standards-source files you found in step 3, **plus the smell baseline from step 3** pasted in full (the sub-agent has no other access to it).
-- The brief: "Report, per file/hunk where relevant, (a) every place the diff violates a documented standard: cite the standard (file + the rule); and (b) any baseline smell you spot: name it and quote the hunk. Distinguish hard violations from judgement calls: documented-standard breaches can be hard, but baseline smells are always judgement calls, and a documented repo standard overrides the baseline. Skip anything tooling enforces. Apply the Ownership check to the diff using the facts as evidence; distinguish ownership judgment calls from documented violations. Ask whether existing ownership problems in touched code were fixed, noted or filed under that reference. Recognize cleanup it permits, listed on its own PR-body line; other out-of-scope defects follow the planning rules' Findings route. Judge against the recorded contract. Under 400 words."
+**Standards prompt:** "Report per file/hunk: (a) every documented-standard
+violation, citing its file and rule; (b) baseline smells, naming each and
+quoting the hunk. Distinguish documented violations from smell and ownership
+judgement calls. Repository standards override smells; skip tooling-enforced
+checks. Apply the Ownership check using the facts as evidence. Check whether
+existing ownership problems in touched code were fixed, noted or filed under
+that reference. Recognize its permitted cleanup listed on its own PR-body line;
+route other out-of-scope defects through the planning rules' Findings route.
+Judge against the recorded contract. Under 400 words."
 
-**Spec sub-agent prompt** should include:
+Give Spec the spec's path or fetched contents.
 
-- The diff command and commit list.
-- The path or fetched contents of the spec, the PR body (or proposed body for
-  work in progress), and `codebase-design`'s Ownership check reference. Give
-  Standards that PR body too, so both can check the listed cleanup.
-- The brief: "Report: (a) requirements the spec asked for that are missing or partial; (b) behaviour in the diff that wasn't asked for (scope creep); (c) requirements that look implemented but where the implementation looks wrong. Quote the spec line for each finding. Treat cleanup allowed by the Ownership check reference and listed on its own PR-body line as permitted, not scope creep. Other out-of-scope defects follow the planning rules' Findings route. Judge against the recorded contract. Under 400 words."
-
-If the spec is missing, skip the Spec sub-agent and note this in the final report.
+**Spec prompt:** "Report: (a) missing or partial requirements; (b) unrequested
+behavior; (c) incorrectly implemented requirements. Quote the spec line for
+each finding. Cleanup permitted by the Ownership check and listed on its own
+PR-body line is allowed. Route other out-of-scope defects through the planning
+rules' Findings route. Judge against the recorded contract. Under 400 words."
 
 ### 6. Aggregate
 
-Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings, because the two axes are deliberately separate (see _Why two axes_).
-
-End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes: that's the reranking the separation exists to prevent.
-
-## Why two axes
-
-A change can pass one axis and fail the other:
-
-- Code that follows every standard but implements the wrong thing → **Standards pass, Spec fail.**
-- Code that does exactly what the issue asked but breaks the project's conventions → **Spec pass, Standards fail.**
-
-Reporting them separately stops one axis from masking the other.
+Present the reports under `## Standards` and `## Spec`, verbatim or lightly
+cleaned. Keep their findings separate without merging or reranking. End with
+one line giving each axis's finding count and worst issue, if any; pick no
+winner across axes.
 
 ## Reads
 
 Paths are relative to the repository root.
 
-- `.repo-standards/rules/planning.md` in the target repository: planning policy
-  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
-  if both are absent, report the missing policy and stop the dependent step.
-
-- `docs/agents/issue-tracker.md`: how to fetch the issues that commit
-  messages reference, and which comment or body holds an issue's
-  implementation contract. When it is missing and no tracker was provided,
-  look for the spec in step 2's other places, without blocking the review.
-- A spec file under `docs/`, `specs/` or `.scratch/`. When it is missing,
-  ask the user where the spec is, as step 2 says.
-- `CODING_STANDARDS.md`, `CONTRIBUTING.md` and anything else in the repository
-  that documents how code should be written. When they are missing, the
-  Standards axis carries only the smell baseline.
-
-- The `codebase-design` skill: its Ownership check reference supplies the shared
-  rules for both prompts. When it is missing, report the dependency as above.
-- `vendor/` and `.gitattributes`: the collector reads the pinned trees and Git
-  attributes for evidence. Missing paths or attributes contribute no vendored
-  facts; ordinary diff paths still participate in new-file facts.
+- `.repo-standards/rules/planning.md`: planning policy. If absent, use
+  `CONTRIBUTING.md`; if both are absent, report the missing policy and stop
+  the dependent step.
+- `docs/agents/issue-tracker.md`: issue fetching and authoritative contract
+  selection. When missing and no tracker was provided, use step 2's other
+  spec sources without blocking review.
+- A spec under `docs/`, `specs/` or `.scratch/`. When missing, ask for it as
+  step 2 directs.
+- `CODING_STANDARDS.md`, `CONTRIBUTING.md` and other repository standards.
+  When missing, Standards uses only the smell baseline.
+- The `codebase-design` skill: Ownership check for both prompts. When missing, report
+  the dependency as above.
+- `vendor/` and `.gitattributes`: pinned-tree collector evidence. Missing
+  paths or attributes contribute no vendored facts; ordinary diff paths still
+  participate in new-file facts.
