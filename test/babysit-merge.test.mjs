@@ -1285,6 +1285,20 @@ test("wait and merge agree on latest workflow attempt evidence", async (t) => {
   const access = { id: 1, run_id: 21, name: "Access" };
   const maintenance = { id: 3, run_id: 21, name: "Maintenance" };
   const jobPage = (total_count, ...jobs) => ({ body: { total_count, jobs } });
+  const tied = {
+    ...runAttempt,
+    id: 22,
+    run_attempt: 1,
+    html_url: url.replace(/21$/, "22"),
+  };
+  const lint = {
+    ...runAttempt,
+    id: 31,
+    workflow_id: 43,
+    name: "Lint",
+    run_attempt: 1,
+    html_url: url.replace(/21$/, "31"),
+  };
   const state = {
     head,
     pushedAt: before,
@@ -1410,6 +1424,60 @@ test("wait and merge agree on latest workflow attempt evidence", async (t) => {
       waitCode: 5,
       mergeCode: 2,
       diagnostic: /Access \(pending\).*Maintenance \(pending\)/,
+    },
+    {
+      name: "required check without a run on the head",
+      overrides: {
+        checks: [{ ...carried, detailsUrl: "https://ci/job" }, rerun],
+        attemptJobs: { "21/2": [jobPage(1, maintenance)] },
+      },
+      waitCode: 5,
+      mergeCode: 2,
+      diagnostic: /Access \(pending\)/,
+    },
+    {
+      name: "tied successful runs, including a workflow without required names",
+      overrides: {
+        runs: [runAttempt, tied, lint, { ...lint, id: 32 }],
+        attemptJobs: {
+          ...state.attemptJobs,
+          "22/1": [jobPage(0)],
+          "31/1": [jobPage(0)],
+          "32/1": [jobPage(0)],
+        },
+      },
+      waitCode: 0,
+      mergeCode: 0,
+    },
+    {
+      name: "a tied run's failed conclusion",
+      overrides: {
+        runs: [runAttempt, { ...tied, conclusion: "failure" }],
+        attemptJobs: { ...state.attemptJobs, "22/1": [jobPage(0)] },
+      },
+      waitCode: 2,
+      mergeCode: 2,
+      diagnostic: /observed checks\/workflow attempts/,
+    },
+    {
+      name: "a tied run's failed member check",
+      overrides: {
+        runs: [runAttempt, { ...tied, conclusion: "failure" }],
+        checks: [
+          ...state.checks,
+          {
+            ...job("Maintenance", 5, "FAILURE"),
+            detailsUrl: `${tied.html_url}/job/5`,
+          },
+        ],
+        attemptJobs: {
+          ...state.attemptJobs,
+          "22/1": [jobPage(1, { id: 5, run_id: 22, name: "Maintenance" })],
+        },
+      },
+      waitCode: 2,
+      mergeCode: 2,
+      diagnostic: /Maintenance \(fail\)/,
     },
   ];
   for (const scenario of scenarios) {

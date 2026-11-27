@@ -214,7 +214,7 @@ const restLogin = (actor) =>
       : actor.login;
 
 // CheckResult omits links, workflow identity and start time. Access retains
-// those GitHub facts so the existing check/attempt ordering stays unchanged.
+// those GitHub facts; job links tie workflow checks to their attempts.
 export async function checkRollup(connection, head) {
   const [owner, name] = connection.repository.path.split("/");
   const items = [];

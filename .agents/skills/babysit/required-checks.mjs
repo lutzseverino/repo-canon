@@ -58,7 +58,8 @@ const failedConclusions = new Set([
 ]);
 
 // Turns GitHub's status check rollup, read through Access, into check states. Any unfinished
-// run keeps its check pending; otherwise the latest-started run wins.
+// run keeps its check pending; among checks outside workflow attempts, the latest-started
+// run wins. Job lists, never start times, decide attempt membership.
 export const checkStates = (rollup, positiveOnly = false) => {
   const latest = new Map();
   for (const item of rollup ?? []) {
@@ -151,7 +152,8 @@ export function requiredCheckStates(
   });
 }
 
-// Order distinct runs of one workflow by when their latest attempts started.
+// Order distinct runs of one workflow by when their latest attempts started;
+// runs that tie are all latest, each judged by its own members and conclusion.
 // A job's start time has no bearing on its membership in an attempt.
 export function workflowAttempts(runs) {
   const byId = new Map();
@@ -162,18 +164,13 @@ export function workflowAttempts(runs) {
     const start = Date.parse(run.run_started_at ?? run.created_at);
     const previous = latest.get(run.workflow_id);
     if (!previous || start > previous.start)
-      latest.set(run.workflow_id, { run, start, ambiguous: false });
-    else if (start === previous.start) previous.ambiguous = true;
+      latest.set(run.workflow_id, { start, runs: [run] });
+    else if (start === previous.start) previous.runs.push(run);
   }
-  const latestRuns = [];
-  for (const { run, ambiguous } of latest.values()) {
-    if (ambiguous)
-      throw new Error(
-        `Ambiguous latest workflow run for ${run.name} (workflow ${run.workflow_id}).`,
-      );
-    latestRuns.push(run);
-  }
-  return { byId, latestRuns };
+  return {
+    byId,
+    latestRuns: [...latest.values()].flatMap((entry) => entry.runs),
+  };
 }
 
 function attemptJobs(pages, run) {
@@ -230,11 +227,8 @@ function workflowCheckStates(
     if (required && creator !== null) continue;
     const run = link && byId.get(Number(link[1]));
     if (!run) {
-      if (required)
-        throw new Error(
-          `Could not identify the workflow run and job for required check ${item.name}.`,
-        );
-      ordinary.push(item);
+      // A required check outside every run on the head never counts.
+      if (!required) ordinary.push(item);
       continue;
     }
     if (required) requiredByWorkflow.get(run.workflow_id).add(item.name);
@@ -251,26 +245,38 @@ function workflowCheckStates(
     current.set(job, check);
   }
   const checks = [];
-  for (const run of latestRuns) {
-    const observed = members.get(run.id);
-    const expected = requiredByWorkflow.get(run.workflow_id);
-    const jobNames = jobsByRun.get(run.id);
-    for (const check of observed.values()) {
-      checks.push(check);
-      expected.delete(check.name);
+  const byWorkflow = Map.groupBy(latestRuns, (run) => run.workflow_id);
+  for (const [workflow, runs] of byWorkflow) {
+    const expected = new Map(
+      [...requiredByWorkflow.get(workflow)].map((name) => [
+        name,
+        runs[0].html_url,
+      ]),
+    );
+    for (const run of runs)
+      for (const check of members.get(run.id).values()) {
+        checks.push(check);
+        expected.delete(check.name);
+      }
+    for (const run of runs) {
+      const observed = members.get(run.id);
+      for (const [id, name] of jobsByRun.get(run.id)) {
+        if (creator === null && names.includes(name) && !observed.has(id))
+          expected.set(name, run.html_url);
+      }
     }
-    for (const [id, name] of jobNames) {
-      if (creator === null && names.includes(name) && !observed.has(id))
-        expected.add(name);
+    for (const [name, link] of expected)
+      checks.push({ name, state: "pending", link });
+    for (const run of runs) {
+      if (
+        run.status === "completed" &&
+        failedConclusions.has(run.conclusion?.toUpperCase()) &&
+        ![...members.get(run.id).values()].some(
+          (check) => check.state === "fail",
+        )
+      )
+        checks.push({ name: run.name, state: "fail", link: run.html_url });
     }
-    for (const name of expected)
-      checks.push({ name, state: "pending", link: run.html_url });
-    if (
-      run.status === "completed" &&
-      failedConclusions.has(run.conclusion?.toUpperCase()) &&
-      ![...observed.values()].some((check) => check.state === "fail")
-    )
-      checks.push({ name: run.name, state: "fail", link: run.html_url });
   }
   return { ordinary, checks };
 }

@@ -96,12 +96,14 @@ and no bootstrap bypass exists. The standard never installs repository names.
 Merge reads paginated current-head check runs, commit statuses and workflow
 attempts. Every declared name needs positive success: absence, pending, failure,
 cancellation, timeout, skipped and neutral are insufficient. For a GitHub
-Actions check, the latest run's latest attempt supplies the job list. A job
-GitHub carries forward into that attempt counts with its own result. A check's
-start time never decides attempt membership. Checks from superseded jobs and
-earlier workflow runs cannot satisfy the latest attempt. A failed workflow
-attempt still fails validation when its carried jobs passed. Wait and merge
-share this decision and require complete job membership evidence.
+Actions check, the latest run's latest attempt supplies the job list; runs of
+one workflow whose latest attempts start at the same time are all latest, and
+each must pass. A job GitHub carries forward into that attempt counts with its
+own result. A required check that belongs to no run on the head never counts.
+A check's start time never decides attempt membership. Checks from superseded
+jobs and earlier workflow runs cannot satisfy the latest attempt. A failed
+workflow attempt still fails validation when its carried jobs passed. Wait and
+merge share this decision and require complete job membership evidence.
 
 The declaration tells the check location, without reading the selection: a
 declaration naming `Runner checks` means `runner`, one naming `Review rerun`

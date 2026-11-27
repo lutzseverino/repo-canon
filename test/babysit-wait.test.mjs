@@ -1129,6 +1129,13 @@ test("a latest successful run clears an older failure alongside leftover checks"
         name: "test",
         workflowName: "CI",
         state: "pass",
+        link: `${runUrl(21)}/job/1`,
+        checkRunStartedAt: "2026-10-11T05:40:01Z",
+      },
+      {
+        name: "test",
+        workflowName: "CI",
+        state: "pass",
         link: `${runUrl(23)}/job/2`,
         checkRunStartedAt: "2026-10-11T05:41:01Z",
       },
@@ -1245,8 +1252,8 @@ test("an ambiguous workflow name alone does not hide a failed run", () => {
   assert.deepEqual(outcome.failing, [failedWorkflow]);
 });
 
-test("a member's passing or pending check does not hide a failed workflow", () => {
-  for (const state of ["pass", "pending"]) {
+test("a member's check does not hide a failed workflow", () => {
+  for (const state of ["pass", "fail", "pending"]) {
     const run = { ...failedRun, html_url: runUrl(21) };
     const checks = [
       {
@@ -1262,9 +1269,12 @@ test("a member's passing or pending check does not hide a failed workflow", () =
       members: { 21: [1] },
     });
     assert.equal(outcome.code, 2);
-    assert.deepEqual(outcome.failing, [
-      { ...failedWorkflow, link: run.html_url },
-    ]);
+    assert.deepEqual(
+      outcome.failing.map((check) => [check.name, check.link]),
+      state === "fail"
+        ? [["test", checks[0].link]]
+        : [[failedWorkflow.name, run.html_url]],
+    );
   }
 });
 
@@ -2718,6 +2728,7 @@ test("the script matches checks to same-named workflows by their run links", asy
 
 test("the script uses a workflow's checks without hiding another workflow's failure", async () => {
   for (const [checks, expected] of [
+    [[checkRun({ workflowName: "Other CI" })], `CI ${runUrl(21)}`],
     [[checkRun({ name: "external" })], `CI ${runUrl(21)}`],
     [
       [
@@ -2736,7 +2747,7 @@ test("the script uses a workflow's checks without hiding another workflow's fail
         runs: [{ ...failedRun, html_url: runUrl(21) }],
         attemptJobs: attemptJobs(
           failedRun,
-          ...(checks[0].workflowName ? [1] : []),
+          ...(checks[0].detailsUrl.startsWith(runUrl(21)) ? [1] : []),
         ),
         createdAt: "2026-10-11T05:00:00Z",
         pushedAt: "2026-10-11T05:20:00Z",
