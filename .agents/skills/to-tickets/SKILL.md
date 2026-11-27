@@ -60,6 +60,10 @@ parent-readiness rules.
 
 **Live evidence follows the contribution guide's Implementation contracts paragraph**, which says when it is a criterion of the **source ticket** and when it splits into a **live-acceptance ticket**. In that split case, block the live-acceptance ticket on the source ticket, make the recorded live evidence its acceptance criteria, and have the source pull request link it without a closing reference. Its live steps take the route the installed rules give work that needs host access.
 
+For UI, visual and icon tickets, put the
+[design acceptance criteria](../triage/AGENT-BRIEF.md#design-acceptance-criteria)
+in each ticket's contract; read them at that link rather than restating them here.
+
 **A cross-repository switch waits on its activation steps.** A ticket **switches** one side of a cross-repository break when its change, once merged, released or adopted, activates a protocol, configuration or workflow change that a deployed producer or consumer in another repository, or a host, cannot yet handle. Each **activation step** the switch needs, whether a release, an adopter update, a host step or the recovery path for a repository the switch deliberately pauses, is a ticket of its own, published in the repository that owns that step. Join the activation steps to the switching ticket with blocking edges: every activation step that must land before the switch blocks it, so the switching ticket stays behind them on the frontier, and an activation step that can only follow the switch, such as recovering a paused repository, is blocked by it. The split's evidence for independent review checks the activation steps against each intervening deployed state: who can still deliver each remaining activation step, the merge tooling on the destination repository's base, contracts and results that are already ready, and adopters' installed versions. A host-step ticket names the step and its outcome; host names, providers and access mechanisms stay in owner setup. A later change to the activation steps is an amendment under step 1's rule.
 
 ### 4. Prepare the split for independent review
@@ -164,6 +168,9 @@ Paths are relative to the repository root.
 - The `codebase-design` skill: the vocabulary a deepening ticket uses and its
   replace-don't-layer testing strategy. When it is missing, describe the
   deepened module in the codebase's own words.
+- The `triage` skill's `AGENT-BRIEF.md`: design acceptance criteria for UI,
+  visual and icon tickets. If missing, report the gap and stop publication of
+  those tickets until the criteria are available.
 - The `to-spec` skill: publish the single specification before a grill's
   tickets. If missing, report it and stop ticket publication until a
   specification exists.

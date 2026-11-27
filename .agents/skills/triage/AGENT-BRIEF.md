@@ -56,6 +56,19 @@ After readiness, nobody edits the brief to record progress, ticking its acceptan
 
 When work must be shown on a live system, follow the contribution guide's Implementation contracts paragraph: put the live evidence in the source brief's acceptance criteria. In its split case, write two briefs instead: the live-acceptance brief, blocked by the source ticket, makes the recorded live evidence its acceptance criteria, and the source pull request links it without a closing reference. Its readiness follows the installed rules for work whose live steps need host access.
 
+### Design acceptance criteria
+
+For UI, visual and icon work, add these outcomes to the issue's contract so
+review can check the evidence on the pull request:
+
+- A token plan, written before building, records a small colour set, type roles, a layout sketch and the design principles.
+- A self-review against generic design tells of its own choosing names each tell it checked and its verdict.
+- Built screens have screenshots and a critique recorded before review.
+- Icon work has a vector master judged against a named reference icon of the same family.
+
+These are acceptance outcomes, not an implementation procedure, and need no
+installed design skill.
+
 ### Explicit scope boundaries
 
 State what is out of scope. This prevents the agent from gold-plating or making assumptions about adjacent features.
