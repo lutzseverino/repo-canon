@@ -1101,9 +1101,12 @@ for (const [
       ".agents/skills/triage/REVIEW.md",
       ".agents/skills/triage/SKILL.md",
       ".agents/skills/triage/agents/openai.yaml",
-      ...readdirSync(join(root, ".agents/skills/babysit")).map(
-        (name) => `.agents/skills/babysit/${name}`,
-      ),
+      ...readdirSync(join(root, ".agents/skills/babysit"), {
+        recursive: true,
+        withFileTypes: true,
+      })
+        .filter((entry) => entry.isFile())
+        .map((entry) => relative(root, join(entry.parentPath, entry.name))),
     ])
       assert.deepEqual(
         readFileSync(join(project, path)),
