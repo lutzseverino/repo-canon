@@ -84,7 +84,7 @@ for pickup, merge and exemption semantics.
 
 1. Read configured `labels.hold` and locate every labelled open issue/PR.
    If absent, arrange compatible configuration with the owner before pausing.
-   Distinguish repository, release and per-run holds.
+   Distinguish repository/release holds from per-run pauses.
 2. Put the hold on the expedited PR, or its issue until opened. Record why
    and which change carries it under
    `.repo-standards/rules/comments.md#disclaimers`.
