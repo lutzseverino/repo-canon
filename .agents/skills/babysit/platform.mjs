@@ -7,6 +7,8 @@ import {
   PlatformError,
 } from "../../../vendor/postern/postern.mjs";
 
+export const requestTimeoutMs = 45_000;
+
 // The only credential is the GitHub CLI's currently authenticated credential.
 /** @param {string} [repository] @param {{fetch?: typeof globalThis.fetch}} [options] */
 export function connectionFor(repository, { fetch } = {}) {
@@ -41,7 +43,7 @@ export function connectionFor(repository, { fetch } = {}) {
     );
   return connect(identity, {
     credential,
-    timeoutMs: 45_000,
+    timeoutMs: requestTimeoutMs,
     ...(fetch ? { fetch } : {}),
   });
 }

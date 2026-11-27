@@ -33,7 +33,7 @@ import {
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { text } from "node:stream/consumers";
 import { promisify } from "node:util";
-import { connectionFor, executedAsScript } from "../babysit/platform.mjs";
+import { connectionFor, executedAsScript, requestTimeoutMs } from "../babysit/platform.mjs";
 
 class UsageError extends Error {}
 class TrackerPaused extends Error {
@@ -61,7 +61,7 @@ const trackerReader = (connect, transport, now) => {
         try {
           const response = await transport(input, {
             ...options,
-            signal: AbortSignal.timeout(45_000),
+            signal: AbortSignal.timeout(requestTimeoutMs),
           });
           const body = await response.text();
           resolve({
@@ -96,11 +96,10 @@ const trackerReader = (connect, transport, now) => {
     error?.name === "TrackerPaused" || (error?.cause && paused(error.cause));
   const refused = (error) => {
     if (error.reason !== "rateLimited") return;
-    const retryAt = [refusal?.retryAt, error.retryAt]
-      .filter(Boolean)
-      .sort()
-      .at(-1);
-    refusal = { observedAt: now(), ...(retryAt ? { retryAt } : {}) };
+    refusal = mergeSchedule(
+      { cooldown: refusal },
+      { cooldown: { observedAt: now(), ...(error.retryAt ? { retryAt: error.retryAt } : {}) } },
+    ).cooldown;
   };
   return async (items, cooldown) => {
     // Every pass settles before another starts; slots released on the next
@@ -127,16 +126,19 @@ const trackerReader = (connect, transport, now) => {
   };
 };
 
-const cooldownUntil = (cooldown, interval) =>
-  cooldown
-    ? cooldown.retryAt
-      ? Date.parse(cooldown.retryAt)
-      : interval === undefined
-        ? 0
-        : cooldown.observedAt + interval
-    : 0;
-const rateLimitLine = (item, cooldown) =>
-  `${cooldown.retryAt ? `rate limited until ${cooldown.retryAt}` : "rate limited"}: ${link(item)} · ${item.rows.join(", ")}`;
+const cooldownUntil = (cooldown, interval) => Math.max(
+  cooldown?.retryAt ? Date.parse(cooldown.retryAt) : 0,
+  cooldown && interval !== undefined
+    ? (cooldown.intervalAt ?? (cooldown.retryAt ? -Infinity : cooldown.observedAt)) + interval
+    : 0,
+);
+const rateLimitLine = (item, cooldown, now) => {
+  // An expired timestamp does not describe a later untimestamped refusal.
+  const retryAt = cooldown.intervalAt !== undefined && Date.parse(cooldown.retryAt) <= now
+    ? undefined
+    : cooldown.retryAt;
+  return `${retryAt ? `rate limited until ${retryAt}` : "rate limited"}: ${link(item)} · ${item.rows.join(", ")}`;
+};
 
 const usage =
   "usage: workbench.mjs status <workbench> --stale-after <seconds> --stages <factory-workflow rules file> | workbench.mjs brief <stage> <target> --plan <plan directory> --row <row> --model <model>@<effort> --reason <one line> --stages <factory-workflow rules file> < <context> | workbench.mjs wait <workbench> --interval <seconds> --max-duration <seconds>";
@@ -504,12 +506,7 @@ const readTracker = async (item, connection, refused = (_error) => {}) => {
       runs: byId(
         runs
           .flatMap((page) => page.data.check_runs)
-          .map(({ id, name, status, conclusion }) => ({
-            id,
-            name,
-            status,
-            conclusion,
-          })),
+          .map(({ id, name, status, conclusion }) => ({ id, name, status, conclusion })),
       ),
       statuses: byId(
         statuses
@@ -525,7 +522,6 @@ const link = (item, facts) =>
   `https://github.com/${item.repository}/${facts?.pull ? "pull" : "issues"}/${item.number}`;
 
 const runGit = promisify(execFile);
-const fetchTimeoutMs = 45_000;
 
 // Git's output in a directory. With `optional`, an unsuccessful exit gives
 // null; any other failure, such as a missing git or a timeout, is an error.
@@ -555,13 +551,38 @@ const observationPath = async (workbench) => {
 const loadObservation = async (workbench) =>
   JSON.parse(readText(await observationPath(workbench)) ?? "{}");
 
+// Re-read before decisions and writes: an armed wait and on-demand status share
+// cadence and cooldown, but keep their own successful observation baselines.
+const mergeSchedule = (...observations) => {
+  const polls = observations.map(({ trackerPollAt }) => trackerPollAt).filter(Number.isFinite);
+  const cooldowns = observations.map(({ cooldown }) => cooldown).filter(Boolean);
+  const retryAt = cooldowns.map(({ retryAt }) => retryAt).filter(Boolean).sort().at(-1);
+  // A supplied timestamp and a refusal without one impose independent bounds.
+  const intervals = cooldowns.flatMap((cooldown) =>
+    cooldown.intervalAt !== undefined ? [cooldown.intervalAt] : cooldown.retryAt ? [] : [cooldown.observedAt],
+  );
+  return {
+    ...(polls.length ? { trackerPollAt: Math.max(...polls) } : {}),
+    ...(cooldowns.length ? {
+      cooldown: {
+        observedAt: Math.max(...cooldowns.map(({ observedAt }) => observedAt)),
+        ...(retryAt ? { retryAt } : {}),
+        ...(retryAt && intervals.length ? { intervalAt: Math.max(...intervals) } : {}),
+      },
+    } : {}),
+  };
+};
+
 const saveObservation = async (workbench, facts, schedule) => {
   const path = await observationPath(workbench);
+  const saved = JSON.parse(readText(path) ?? "{}");
+  schedule = mergeSchedule(saved, schedule);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(
     path,
-    `${JSON.stringify({ ...schedule, facts: Object.fromEntries(facts) })}\n`,
+    `${JSON.stringify({ ...schedule, facts: facts ? Object.fromEntries(facts) : saved.facts ?? {} })}\n`,
   );
+  return schedule;
 };
 
 // The workbench checkout's upstream, or null without a branch upstream.
@@ -592,7 +613,7 @@ const unheldCommits = async (upstream, items) => {
     return [item.kind === "dir" ? `:(glob)${escaped}/*` : `:(literal)${path}`];
   });
   if (!pathspecs.length) return [];
-  await git(upstream.top, ["fetch", upstream.remote], { timeout: fetchTimeoutMs });
+  await git(upstream.top, ["fetch", upstream.remote], { timeout: requestTimeoutMs });
   const listed = await git(upstream.top, [
     "rev-list",
     "--reverse",
@@ -681,7 +702,8 @@ const status = async (options, { readTrackers, now, stdout }) => {
   const { workbench } = options;
   const grillSkill = handSkill(options.stages, "Grill");
   const records = readRecords(workbench);
-  const { facts: saved = {}, ...schedule } = await loadObservation(workbench);
+  const { facts: saved = {}, ...initialSchedule } = await loadObservation(workbench);
+  let schedule = initialSchedule;
   const observed = new Map();
   const reads = new Map();
   const mine = [];
@@ -696,14 +718,10 @@ const status = async (options, { readTrackers, now, stdout }) => {
     } catch (error) {
       if (item.kind !== "launch")
         records.unavailable.push({ item: item.label, reason: error.message });
-      else
-        line(
-          running,
-          `unavailable: ${item.label} (${error.message})`,
-          item.brief,
-        );
+      else line(running, `unavailable: ${item.label} (${error.message})`, item.brief);
     }
   const trackers = records.watches.filter(({ kind }) => kind === "tracker");
+  schedule = mergeSchedule(schedule, await loadObservation(workbench));
   const result = await readTrackers(
     trackers,
     now() < cooldownUntil(schedule.cooldown) ? schedule.cooldown : undefined,
@@ -720,7 +738,7 @@ const status = async (options, { readTrackers, now, stdout }) => {
     const where = item.rows.join(", ");
     const { facts, updatedAt, error, cooldown } = reads.get(item.key);
     if (cooldown) {
-      mine.push(`- ${rateLimitLine(item, result.cooldown)}`);
+      mine.push(`- ${rateLimitLine(item, result.cooldown, now())}`);
       continue;
     }
     if (error) {
@@ -759,10 +777,7 @@ const status = async (options, { readTrackers, now, stdout }) => {
   try {
     await saveObservation(workbench, observed, schedule);
   } catch (error) {
-    records.unavailable.push({
-      item: "observation file",
-      reason: error.message,
-    });
+    records.unavailable.push({ item: "observation file", reason: error.message });
   }
   for (const { item, reason } of records.unavailable)
     line(mine, `unavailable: ${item} (${reason})`, "—");
@@ -779,10 +794,7 @@ const status = async (options, { readTrackers, now, stdout }) => {
       ...group("Owner's move", owner),
       ...group("Running", running),
       `Waiting quietly: ${quiet.pickup} state:ready (pickup), ${quiet.delivery} open pull request (delivery), ${quiet["third party"]} state:reporter or state:carried (third party)`,
-      ...group(
-        `Stale (unchanged for over ${options["stale-after"]} seconds)`,
-        stale,
-      ),
+      ...group(`Stale (unchanged for over ${options["stale-after"]} seconds)`, stale),
     ].join("\n") + "\n",
   );
   return 0;
@@ -968,7 +980,8 @@ const wait = async (
   const { workbench } = options;
   const startedAt = now();
   const limitMs = options["max-duration"] * 1000;
-  const { facts: saved = {}, ...schedule } = await loadObservation(workbench);
+  const { facts: saved = {}, ...initialSchedule } = await loadObservation(workbench);
+  let schedule = initialSchedule;
   const baseline = new Map(Object.entries(saved));
   const intervalMs = options.interval * 1000;
   const upstream = await upstreamOf(workbench);
@@ -1012,12 +1025,11 @@ const wait = async (
         baseline.set(item.key, facts);
       };
       for (const item of local) compare(item, readLocal(item), item.label);
+      schedule = mergeSchedule(schedule, await loadObservation(workbench));
       const retryAt = cooldownUntil(schedule.cooldown, intervalMs);
       const blocked = now() < retryAt;
-      const fullPoll = schedule.cooldown
-        ? !blocked
-        : schedule.trackerPollAt === undefined ||
-          now() >= schedule.trackerPollAt + intervalMs;
+      const fullPoll = schedule.trackerPollAt === undefined ||
+        now() >= schedule.trackerPollAt + intervalMs;
       const polled = items.filter(
         (item) =>
           item.kind === "tracker" && (fullPoll || !baseline.has(item.key)),
@@ -1029,13 +1041,11 @@ const wait = async (
       if (result.cooldown) schedule.cooldown = result.cooldown;
       const failure = result.reads.find((read) => read.error);
       if (failure) {
-        await saveObservation(workbench, baseline, schedule);
+        await saveObservation(workbench, undefined, schedule);
         throw failure.error;
       }
-      if (fullPoll && !blocked) {
+      if (fullPoll && !blocked && !result.cooldown)
         schedule.trackerPollAt = now();
-        if (!result.cooldown) delete schedule.cooldown;
-      }
       for (const [index, item] of polled.entries()) {
         const read = result.reads[index];
         if (read.facts) compare(item, read.facts, link(item, read.facts));
@@ -1044,7 +1054,7 @@ const wait = async (
         for (const item of items.filter(({ kind }) => kind === "tracker")) {
           const index = polled.indexOf(item);
           if (index >= 0 && result.reads[index].facts) continue;
-          const line = rateLimitLine(item, schedule.cooldown);
+          const line = rateLimitLine(item, schedule.cooldown, now());
           if (!reportedLimits.has(line)) {
             stdout.write(`${line}\n`);
             reportedLimits.add(line);
@@ -1061,7 +1071,7 @@ const wait = async (
         }
         upstreamPollAt = now() + intervalMs;
       }
-      await saveObservation(workbench, baseline, schedule);
+      schedule = await saveObservation(workbench, baseline, schedule);
       const deadline = startedAt + limitMs;
       if (!lines.length && now() >= deadline)
         lines.push(
@@ -1071,9 +1081,10 @@ const wait = async (
         stdout.write(`${lines.join("\n")}\n`);
         return 0;
       }
-      const trackerPollAt = schedule.cooldown
-        ? cooldownUntil(schedule.cooldown, intervalMs)
-        : (schedule.trackerPollAt ?? -Infinity) + intervalMs;
+      const trackerPollAt = Math.max(
+        cooldownUntil(schedule.cooldown, intervalMs),
+        (schedule.trackerPollAt ?? -Infinity) + intervalMs,
+      );
       await pauseFor(
         Math.max(Math.min(trackerPollAt, upstreamPollAt, deadline) - now(), 0),
         events.next(),
@@ -1088,8 +1099,9 @@ const wait = async (
 // the GitHub CLI's current credential; `pause` waits a number of
 // milliseconds, resolving "event" early when the given file-event promise
 // does; `input` reads brief's Context; `now` gives the time; `stdout` and `stderr` receive the lines. Each is
-// replaceable for fixtures. `fetch` is the underlying transport, always behind
-// this command's shared queue; `connect` forwards its fetch option to Postern.
+// replaceable for fixtures. For status and wait, `fetch` is the underlying
+// transport behind the shared queue; `connect` forwards its fetch option to
+// Postern. Brief retains its ordinary cached connections without the queue.
 export const main = async (
   argv = process.argv.slice(2),
   {
@@ -1111,13 +1123,15 @@ export const main = async (
   }
   const readTrackers = trackerReader(connect, fetch, now);
   try {
-    if (options.command === "brief")
-      return await brief(options, {
-        connectionOf: connect,
-        input,
-        now,
-        stdout,
-      });
+    if (options.command === "brief") {
+      const connections = new Map();
+      const connectionOf = (repository) => {
+        const key = repository.toLowerCase();
+        if (!connections.has(key)) connections.set(key, connect(repository));
+        return connections.get(key);
+      };
+      return await brief(options, { connectionOf, input, now, stdout });
+    }
     return options.command === "status"
       ? await status(options, { readTrackers, now, stdout })
       : await wait(options, { readTrackers, pause: pauseFor, now, stdout });
