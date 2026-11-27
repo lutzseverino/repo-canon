@@ -5,173 +5,94 @@ description: Review an implemented draft pull request as an agent that did not w
 
 A prompt or brief naming this skill is its invocation.
 
-Take an implemented draft pull request to merge as its independent reviewer.
-Run in a session that wrote none of the change; if you wrote any of it, stop
-and say so, because the review needs a fresh agent. The
-`github-repository-configuration` rules' Review of an implemented pull request
-section holds what a review must do, and where installed, the
-`factory-workflow` rules hold how an owner gate stops it; this skill supplies
-the method. Each step that posts names the section of
-`.repo-standards/rules/comments.md` to read before posting.
+Run as an independent reviewer who wrote none of the change; otherwise stop
+and request a fresh agent. The installed `github-repository-configuration`
+rules' Review of an implemented pull request section owns review policy;
+`factory-workflow` owns gate stops. This skill supplies the method.
 
-The review works in **rounds**, one reviewed head each. A round **holds**,
-**hands back**, **fails** or goes to a **grill**, as those rules say.
+From the repository root, run
+`node <this skill's directory>/round.mjs <number>` with Node.js 24 or 26 and
+the supplied GitHub CLI credential. Add `--issue <n>` for a non-closing linked
+issue. It prints `head`, `round`, `reviewed`, `held`, `draft`, closing `issues`
+and owner `gates` for the running account's standing reviews. `held` means
+that account's latest review holds on the current head.
 
-`node <this skill's directory>/round.mjs <number>`, run from the repository
-root, prints the PR's `head`, its `round`, whether that head is already
-`reviewed`, whether the review `held`, whether it is a `draft`, the `issues` it
-closes and every owner `gates` label on the PR or those issues. It counts
-only the standing reviews of the account you run as, as the rules say: the
-review held when that account's latest one is a holding review of the head.
-Add `--issue <n>` for an issue the PR links without closing. It requires
-Node.js 24 or 26 and uses the GitHub CLI's credential. Exit `1` is an
-invocation or platform error, including more closing issues or labels than one
-read holds: follow `CONTRIBUTING.md`'s Credentials section for a permission
-refusal; otherwise fix the cause and run it again.
+| Exit | Recovery                                                                                                                            |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `1`  | Invocation/platform error, including oversized reads: follow Credentials for permission refusals; otherwise fix and rerun.          |
+| `2`  | `--post`/`--reassess`: correct the incomplete/current-head review file and retry. `--ready`: return to step 1; review has not held. |
+| `3`  | `--post`: this head already has a review. `--reassess`: no eligible review. Reread the round; retain an already holding review.     |
 
-1. **Read the round.** Run `round.mjs`. When it reports `held yes`, delivery
-   already started, as after a run stopped before step 5 finished, a later
-   babysit round or a cleared gate: go to step 5. When it reports
-   `reviewed yes` and `held no`, read its review and the recorded resolution.
-   An unresolved finding still waits for its implementation or grill. When a
-   grill settled the contract finding without requiring a code change, resume
-   with the inputs below and step 2 on this unchanged head; resolution alone
-   does not make it hold.
-   Read the authoritative implementation contract
-   under `CONTRIBUTING.md`'s Implementation contracts section, the whole issue
-   and its discussion, the PR body's Delivery subsection, which holds the
-   worker's handoff, every earlier round's review and the grill's decision,
-   including acceptance of any contract revision the planning rules require. Without
-   a settled contract, retain the contract-finding stop. A PR without an issue
-   takes its decision-bearing body as its contract. Done when you hold the
-   head, the round number, the contract and the issue.
-2. **Review.** Check out the head in a checkout you own and run `code-review`
-   with the merge-base of the PR's base branch as the fixed point and the
-   contract as the spec.
-   Apply `codebase-design`'s [Ownership check](../codebase-design/OWNERSHIP.md) through `code-review`'s Standards axis, judging against the recorded contract.
-   Give its Spec axis this task context: also read the
-   contract against the issue, and report where the contract contradicts,
-   drops or invents what the issue and its recorded decisions ask, or leaves it
-   ambiguous. A PR without an issue has no such check. Verify every finding
-   against the source and drop those that do not hold. Route a defect outside
-   the change's responsibility under the planning rules' Findings section;
-   an issue it opens is a Filed row of this review. Sort each remaining finding as **contract**,
-   **larger** or **small**, by the rules' section. Done when every finding
-   from both axes is dropped with its reason or sorted.
-3. **Fix small findings** when no contract or larger finding stands; otherwise
-   fix nothing and carry every finding into the review. With no fix, retain the
-   current head. Commit the fixes to the
-   PR branch, run the required checks the development guide names, and push.
-   Run `round.mjs` again: its head is the head this round's review covers. At
-   `self-reported`, when no contract or larger finding stands, run
-   [Self-reported reruns](#self-reported-reruns) on that head; a failure is a
-   larger finding of this round. Done when the diff from the reviewed head to
-   that head holds only the fixes and the checks pass.
-4. **Post the round's review**, after reading
-   `.repo-standards/rules/comments.md#reviews`: the actual Standards and Spec
-   outcomes, a row for each open, fixed or filed finding, and the round and
-   head `round.mjs` printed; a holding round's lead line records the merge.
-   For a same-head reassessment, name in the Spec note the resolved contract
-   finding, link its recorded decision and report the actual reassessment.
-   Record it with
-   `round.mjs <number> --reassess <file>`: it updates this account's latest
-   complete non-holding review of this head, preserving the previous assessment
-   as quoted history. The round number and convergence bound stay unchanged.
-   For a new head, post with `round.mjs <number> --post <file>`;
-   exit `2` means the file is not a complete review of the current head, so
-   correct it and record again; exit `3` means no review can be posted or
-   reassessed, so reread the round and leave an already holding review intact.
-   Then:
-   - The round **holds**: go to step 5.
-   - A **larger** finding in round 1 **hands back**: leave the PR a draft and
-     end the run, reporting the hand-back with the review's link, so `implement`
-     can take it on the same PR.
-   - A **larger** finding in a later round **fails**: leave the PR a draft and
-     end the run, reporting that the rounds did not converge and why.
-   - A **contract** finding: post the question a grill must settle as
-     `.repo-standards/rules/comments.md#owner-questions` says, move the issue
-     to `state:grill`, leave the PR a draft and stop under
-     the planning rules' owner-question handoff.
-5. **Deliver.** Mark the PR ready with `round.mjs <number> --ready`; exit `2`
-   means the review has not held, so return to step 1. Then run `babysit` on
-   the PR, posting each internal review round it calls for with
-   `round.mjs --post`, in the same shape as step 4. At `self-reported`, before
-   babysit waits on a head without this run's reruns, including each head it
-   pushes for a fix or branch update, run Self-reported reruns on it, and rerun
-   its PR metadata step after each title or body edit; a failure there is a
-   failed check that babysit's wait reports and its steps 2–4 handle. Before
-   each of babysit's merge attempts, run `round.mjs` again. When it reports a
-   gate, stop at ready-to-merge as the `factory-workflow` rules say: leave the
-   PR open, move its issue, if it has one, to `state:owner`, and end the run,
+1. **Read the round.** Run `round.mjs`. For `held yes` or `reviewed yes`, read
+   [Resumption](references/resumption.md) before continuing. Otherwise read the
+   authoritative contract under `CONTRIBUTING.md`, the whole issue/discussion,
+   the PR's Delivery handoff, every earlier review and grill decision, including
+   required acceptance of revised contracts. Without a settled contract, retain
+   the contract-finding stop. A PR without an
+   issue uses its decision-bearing body. Done with head, round, contract and issue.
+2. **Review.** Check out the head in your own checkout. Run `code-review` from
+   the PR base branch's merge-base with the contract as spec. Apply
+   `codebase-design`'s Ownership check through Standards against that contract.
+   Give Spec the additional task of checking the contract against its issue
+   and recorded decisions for contradictions, omissions, inventions or ambiguity;
+   without an issue, omit that check. Verify every finding against source,
+   dropping invalid ones with reasons. Route defects outside the change's
+   responsibility through planning's Findings as Filed rows. Sort remaining
+   findings as **contract**, **larger** or **small** under review policy. Done
+   when every finding is dropped or sorted.
+3. **Fix small findings** only without contract/larger findings; otherwise
+   carry all findings unchanged. Without fixes retain the head. Commit fixes
+   on the PR branch, run required development checks and push. Rerun
+   `round.mjs` for the review's head. At `self-reported`, without contract/larger
+   findings, run [Self-reported reruns](references/self-reported-reruns.md);
+   failure becomes a larger finding. Done when only fixes separate the heads
+   and checks pass.
+4. **Post the review.** Read `.repo-standards/rules/comments.md#reviews`.
+   Record actual Standards/Spec outcomes, a row per open/fixed/filed finding and the
+   printed round/head; a holding round's lead records the merge. Post a new
+   head with `round.mjs <number> --post <file>`; for same-head reassessment,
+   use [Resumption](references/resumption.md)'s recording method. Handle exits above.
+   - **Holds:** step 5.
+   - **Larger, round 1:** leave draft; end with hand-back and review link for
+     `implement` on this PR.
+   - **Larger, later round:** leave draft; end failed, explaining nonconvergence.
+   - **Contract:** read `.repo-standards/rules/comments.md#owner-questions`,
+     post the grill question, move the issue to `state:grill`, leave draft
+     and stop under planning's owner-question handoff.
+5. **Deliver.** Run `round.mjs <number> --ready`, then `babysit`. Post its
+   internal rounds through `round.mjs --post` as in step 4. At `self-reported`,
+   read [Self-reported reruns](references/self-reported-reruns.md) before waiting on each head without this run's
+   reruns, including fixes/branch updates; repeat metadata after title/body
+   edits. A failure is a failed check for babysit's wait and steps 2–4.
+   Before each merge attempt rerun `round.mjs`. A gate stops at ready-to-merge
+   under factory rules: leave open, move its issue to `state:owner` and end
    reporting the gate.
-
-## Self-reported reruns
-
-`CONTRIBUTING.md`'s Worker handoff tells the check location from the pinned
-trusted default-branch `.github/required-checks.json`; read no selection. At
-`self-reported`, merge needs `Review rerun` and `PR metadata` on the exact
-head, and only this skill posts `Review rerun`. In your own checkout of the
-head, from the repository root and with the run's supplied GitHub credential as
-`POSTERN_TOKEN`, run:
-
-1. The check command the development guide names, through the check-command
-   entry point's `review` role, which posts `Review rerun`:
-   `node vendor/repo-canon/validate.mjs <file>` with
-   `{"kind": "check-command", "repository": "https://github.com/<owner>/<repo>", "head": "<full SHA>", "checkout": ".", "command": "<command>", "role": "review"}`.
-2. The PR metadata entry point, so `PR metadata` reflects the current title
-   and body: the same command with
-   `{"kind": "pr-metadata", "repository": "https://github.com/<owner>/<repo>", "pullRequest": <number>}`.
-3. Where `vendor/repo-canon/sandbox-image.mjs` is installed, check Docker with
-   `docker info`. When it answers, run
-   `node vendor/repo-canon/sandbox-image.mjs <base SHA> <head SHA> <owner>/<repo>`
-   with the PR's current base commit: it builds the toolchain image when its
-   inputs changed and posts `Sandbox image`, which stays non-required for
-   merge. When Docker is unavailable, skip it, post no `Sandbox image` status,
-   and record in that head's review, or its carried-review record, that the
-   sandbox image build did not run.
-
-A nonzero exit after an entry point posts its status is a failure. One before
-it posts, from its input, credential or a head mismatch, is an invocation
-error: fix the cause and run it again. A permission refusal follows
-`CONTRIBUTING.md`'s Credentials section.
 
 ## Reads
 
 Paths are relative to the repository root.
 
-- `.repo-standards/rules/planning.md` in the target repository: planning policy
-  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
-  if both are absent, report the missing policy and stop the dependent step.
-
-- `CONTRIBUTING.md`: the implementation contract, Credentials and delivery requirements
-  the steps name, and the development guide's required
-  checks. When it is missing, take the issue body as the contract, run the
-  checks the repository documents, and hand off to the owner in one PR comment
-  for any rule the steps leave to the guide.
-- `.repo-standards/rules/comments.md`: the installed comment rules, whose
-  sections the steps name before each post. When it is missing, post each
-  review in the shape `round.mjs` accepts and each question as one comment.
-- The installed `github-repository-configuration` and `factory-workflow`
-  rules, and those `babysit` names, which the `repository-standards` skill
-  looks up. When the review section is missing, hold a round only with no open
-  finding, hand back any other finding once and fail on a second round with
-  one; without the factory rules, a gate stops delivery as step 5 says.
-- The `code-review` skill, which runs both axes. When it is missing, review
-  the diff since the merge-base against the repository's documented standards
-  and against the contract yourself, keeping the two axes apart.
-- The `babysit` skill, which delivers the PR: `round.mjs` imports its GitHub
-  CLI connection and its review shape. When it is missing, `round.mjs` cannot
-  start: stop and report that this skill needs it.
-- The `implement` skill, which takes a hand-back on the same PR. When it is
-  missing, report the hand-back with the review's link and stop.
+- `.repo-standards/rules/planning.md`: planning policy. If absent, use
+  `CONTRIBUTING.md`; without both, report the gap and stop the dependent step.
+- `CONTRIBUTING.md`: contracts, Credentials, delivery and development checks.
+  If absent, use the issue body, run documented checks and ask the owner in one
+  PR comment about requirements left to the guide.
+- `.repo-standards/rules/comments.md`: posting shapes. If absent, use
+  `round.mjs`'s review shape and one comment per question.
+- The installed `github-repository-configuration` and `factory-workflow` rules,
+  and those `babysit` names: looked up by `repository-standards`. When the review section is missing,
+  hold only with no open finding, hand back others once and fail the second
+  round; without factory rules, gates stop delivery as step 5 says.
+- The `code-review` skill: both axes. If absent, review the merge-base diff against
+  documented standards and the contract yourself, keeping the axes apart.
+- The `babysit` skill: delivery and `round.mjs` imports. If absent, stop: the command
+  needs it.
+- The `implement` skill: hand-backs. If absent, report the review link and stop.
 - `.github/required-checks.json` at the pinned trusted default-branch commit:
-  the check location. When it is missing or unreadable, run no reruns;
-  babysit refuses delivery until it is corrected.
+  check location. If missing or unreadable, run no reruns; babysit refuses
+  delivery until corrected.
 - `vendor/repo-canon/validate.mjs` and `vendor/repo-canon/sandbox-image.mjs`:
-  the entry points Self-reported reruns call, which Repo Canon's adoption
-  installs. When the validator is missing at `self-reported`, stop and report
-  that the reruns need it. When the sandbox image entry point is missing, skip
-  that step.
-- The `codebase-design` skill: the check used through Standards above. When
-  missing, report the gap through the planning rules' Findings route, or
-  in the handoff without those rules or the guide; retain the recorded contract as the baseline.
+  rerun entry points. If the validator is missing at `self-reported`, stop and report that reruns need it;
+  if the image entry point is missing, skip that step.
+- The `codebase-design` skill: Ownership check. If absent, report through planning's
+  Findings, or in the handoff without planning or the guide; retain the contract.
