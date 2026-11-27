@@ -7,8 +7,11 @@ import {
   PlatformError,
 } from "../../../vendor/postern/postern.mjs";
 
+export const requestTimeoutMs = 45_000;
+
 // The only credential is the GitHub CLI's currently authenticated credential.
-export function connectionFor(repository) {
+/** @param {string} [repository] @param {{fetch?: typeof globalThis.fetch}} [options] */
+export function connectionFor(repository, { fetch } = {}) {
   let remote = repository ?? process.env.GH_REPO ?? defaultRemote();
   if (!remote.includes(":")) {
     // CLI selectors accept [HOST/]OWNER/REPO; retain an explicit host.
@@ -38,7 +41,11 @@ export function connectionFor(repository) {
     throw new Error(
       "The currently authenticated GitHub CLI credential is empty.",
     );
-  return connect(identity, { credential, timeoutMs: 45_000 });
+  return connect(identity, {
+    credential,
+    timeoutMs: requestTimeoutMs,
+    ...(fetch ? { fetch } : {}),
+  });
 }
 
 // --view deliberately omits the host. Recover it from the configured remote,

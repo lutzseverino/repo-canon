@@ -118,6 +118,7 @@ function tracker(items) {
   };
   return {
     requests,
+    fetch,
     connect: (repository) =>
       connect(`https://github.com/${repository}`, { fetch }),
   };
@@ -220,6 +221,1312 @@ const waitArgs = (root, interval = "0.01", maxDuration = "5") => [
   "--max-duration",
   maxDuration,
 ];
+
+const transportConnection = (repository, options) =>
+  connect(`https://github.com/${repository}`, options);
+
+// The fixture transport is underneath the command queue, including every page.
+test("status and wait cap transport requests at eight across ninety items and paginated reads", async (t) => {
+  const items = {};
+  const rows = [];
+  for (const repository of ["example/tracker", "example/other"]) {
+    for (let number = 1; number <= 45; number++) {
+      const key = `${repository}#${number}`;
+      items[key] = number === 1 ? { pull: true } : {};
+      rows.push(row(`${repository.split("/")[1]}-${number}`, key));
+    }
+  }
+  rows.push(row("duplicate", "example/tracker#2"));
+  const bench = workbench(t, { plans: { review: planText({ rows }) } });
+  const platform = tracker(items);
+  let active = 0;
+  let peak = 0;
+  const requests = [];
+  const fetch = async (input, options) => {
+    active++;
+    peak = Math.max(peak, active);
+    const url = new URL(input);
+    requests.push(url.pathname + url.search);
+    await new Promise((resolve) => setTimeout(resolve, 1));
+    let response = await platform.fetch(input, options);
+    if (/\/issues\/1\/comments$|\/(?:check-runs|status)$/.test(url.pathname)) {
+      const page = url.searchParams.get("page");
+      const data = url.pathname.endsWith("comments")
+        ? [comment(page === "2" ? 2 : 1)]
+        : url.pathname.endsWith("check-runs")
+          ? {
+              check_runs: [
+                {
+                  id: page === "2" ? 2 : 1,
+                  name: "Test",
+                  status: "completed",
+                  conclusion: "success",
+                },
+              ],
+            }
+          : {
+              statuses: [
+                {
+                  id: page === "2" ? 2 : 1,
+                  context: "deploy",
+                  state: "success",
+                },
+              ],
+            };
+      const result = json(data);
+      if (!page) {
+        url.searchParams.set("page", "2");
+        result.headers.set("link", `<${url}>; rel="next"`);
+      }
+      response = result;
+    }
+    const body = await response.text();
+    return new Response(
+      new ReadableStream({
+        async start(controller) {
+          await new Promise((resolve) => setTimeout(resolve, 1));
+          controller.enqueue(new TextEncoder().encode(body));
+          active--;
+          controller.close();
+        },
+      }),
+      { status: response.status, headers: response.headers },
+    );
+  };
+  const output = capture();
+  const dependencies = {
+    connect: transportConnection,
+    fetch,
+    ...output.streams,
+  };
+  assert.equal(
+    await main(
+      [
+        "status",
+        bench.root,
+        "--stale-after",
+        "60",
+        "--stages",
+        installedStages,
+      ],
+      dependencies,
+    ),
+    0,
+    output.stderr,
+  );
+  assert.equal(peak, 8);
+  assert.doesNotMatch(output.stdout, /unavailable:/);
+  // 88 issues * 3 reads + 2 PRs * (5 reads + 3 second pages).
+  assert.equal(requests.length, 280, "status requests per pass");
+  assert.equal(
+    requests.filter((path) => path === "/repos/example/tracker/issues/2")
+      .length,
+    1,
+  );
+  requests.length = 0;
+  peak = 0;
+  output.stdout = "";
+  let elapsed = 0;
+  assert.equal(
+    await main(waitArgs(bench.root, "1", "2"), {
+      ...dependencies,
+      now: () => elapsed,
+      pause: async (ms) => {
+        assert.equal(requests.length, 280, "first wait poll requests");
+        elapsed += ms;
+        items["example/tracker#2"].labels = ["state:owner"];
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(peak, 8);
+  assert.equal(requests.length, 560, "two wait polls");
+  assert.equal(
+    requests.filter((path) => path === "/repos/example/tracker/issues/2")
+      .length,
+    2,
+  );
+  assert.match(output.stdout, /labels added state:owner/);
+  assert.doesNotMatch(output.stdout, /unavailable:/);
+});
+
+const observation = (bench) =>
+  JSON.parse(
+    readFileSync(bench.path(".git/workbench-observation.json"), "utf8"),
+  );
+const statusArgs = (root) => [
+  "status",
+  root,
+  "--stale-after",
+  "60",
+  "--stages",
+  installedStages,
+];
+
+test("wait re-arms keep the full-poll cadence while reading only new items and status stays fresh", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  const items = { "example/tracker#7": {}, "example/tracker#8": {} };
+  const platform = tracker(items);
+  const output = capture();
+  let now = 0;
+  const requests = [];
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    fetch: async (input, options) => {
+      requests.push({ path: new URL(input).pathname, at: now });
+      return platform.fetch(input, options);
+    },
+    now: () => now,
+    pause: async (ms) => {
+      now += ms;
+    },
+  };
+  assert.equal(
+    await main(waitArgs(bench.root, "10", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.equal(requests.length, 3);
+  assert.equal(observation(bench).trackerPollAt, 0);
+  now = 2000;
+  requests.length = 0;
+  assert.equal(
+    await main(statusArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.equal(requests.length, 3, "status always reads known items fresh");
+  assert.equal(
+    observation(bench).trackerPollAt,
+    0,
+    "status preserves the wait cadence",
+  );
+  bench.write(
+    "review/plan.md",
+    planText({
+      rows: [row("old", "example/tracker#7"), row("new", "example/tracker#8")],
+    }),
+  );
+  now = 3000;
+  requests.length = 0;
+  assert.equal(
+    await main(waitArgs(bench.root, "10", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.equal(requests.length, 3);
+  assert.ok(
+    requests.every(
+      ({ path }) =>
+        path.endsWith("/8") ||
+        path.endsWith("/8/comments") ||
+        path === "/graphql",
+    ),
+  );
+  assert.equal(
+    observation(bench).trackerPollAt,
+    0,
+    "new-item reads do not postpone the full poll",
+  );
+  now = 4000;
+  requests.length = 0;
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "10", "10"), {
+      ...dependencies,
+      pause: async (ms) => {
+        assert.equal(ms, 6000, "the next full poll remains at 10 seconds");
+        now += ms;
+        items["example/tracker#7"].labels = ["state:owner"];
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(requests.length, 6);
+  assert.ok(requests.every(({ at }) => at === 10000));
+  assert.match(output.stdout, /labels added state:owner/);
+});
+
+test("an armed wait adopts an overlapping status cooldown before its next tracker poll", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  const platform = tracker({ "example/tracker#7": {} });
+  const output = capture();
+  let now = 0;
+  let limited = false;
+  let requests = 0;
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    now: () => now,
+    fetch: async (input, options) => {
+      requests++;
+      return limited
+        ? new Response(JSON.stringify({ message: "API rate limit exceeded" }), {
+            status: 429,
+            headers: {
+              "content-type": "application/json",
+              "x-ratelimit-remaining": "0",
+              "x-ratelimit-reset": "20",
+            },
+          })
+        : platform.fetch(input, options);
+    },
+  };
+  let pauses = 0;
+  assert.equal(
+    await main(waitArgs(bench.root, "1", "30"), {
+      ...dependencies,
+      pause: async (ms) => {
+        pauses++;
+        if (pauses === 1) {
+          now = 500;
+          limited = true;
+          const statusOutput = capture();
+          assert.equal(
+            await main(statusArgs(bench.root), {
+              ...dependencies,
+              ...statusOutput.streams,
+            }),
+            0,
+            statusOutput.stderr,
+          );
+          assert.match(statusOutput.stdout, /rate limited until/);
+          limited = false;
+          requests = 0;
+          now = 1000;
+        } else {
+          assert.equal(requests, 0, "wait must observe status's refusal");
+          assert.equal(ms, 1000);
+          now = 2000;
+          bench.write("review/log.md", "# Log\nA local answer.\n");
+        }
+        return "event";
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(requests, 0);
+  assert.equal(observation(bench).cooldown.retryAt, "1970-01-01T00:00:20.000Z");
+  assert.equal(observation(bench).trackerPollAt, 0);
+  assert.match(output.stdout, /review\/log.md: changed/);
+});
+
+test("a slow status preserves a newer full poll completed by an overlapping wait", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  const platform = tracker({ "example/tracker#7": {} });
+  const output = capture();
+  let now = 0;
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    fetch: platform.fetch,
+    now: () => now,
+    pause: async (ms) => {
+      now += ms;
+    },
+  };
+  assert.equal(
+    await main(waitArgs(bench.root, "10", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  let started;
+  const starting = new Promise((resolve) => {
+    started = resolve;
+  });
+  let release;
+  const held = new Promise((resolve) => {
+    release = resolve;
+  });
+  const statusOutput = capture();
+  const pendingStatus = main(statusArgs(bench.root), {
+    ...dependencies,
+    ...statusOutput.streams,
+    fetch: async (input, options) => {
+      started();
+      await held;
+      return platform.fetch(input, options);
+    },
+  });
+  await starting;
+  try {
+    now = 10000;
+    assert.equal(
+      await main(waitArgs(bench.root, "10", "1"), dependencies),
+      0,
+      output.stderr,
+    );
+    assert.equal(observation(bench).trackerPollAt, 10000);
+  } finally {
+    release();
+    assert.equal(await pendingStatus, 0, statusOutput.stderr);
+  }
+  assert.equal(
+    observation(bench).trackerPollAt,
+    10000,
+    "status must not restore its older schedule",
+  );
+});
+
+test("an older status refusal completing last preserves wait's later cooldown and refused full-poll cadence", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  const items = { "example/tracker#7": {} };
+  const platform = tracker(items);
+  const output = capture();
+  let now = 0;
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    fetch: platform.fetch,
+    now: () => now,
+    pause: async (ms) => {
+      now += ms;
+    },
+  };
+  assert.equal(
+    await main(waitArgs(bench.root, "10", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  const refuse = (reset) =>
+    new Response(JSON.stringify({ message: "API rate limit exceeded" }), {
+      status: 429,
+      headers: {
+        "content-type": "application/json",
+        "x-ratelimit-remaining": "0",
+        "x-ratelimit-reset": reset,
+      },
+    });
+  let started;
+  const starting = new Promise((resolve) => {
+    started = resolve;
+  });
+  let release;
+  const held = new Promise((resolve) => {
+    release = resolve;
+  });
+  const statusOutput = capture();
+  const pendingStatus = main(statusArgs(bench.root), {
+    ...dependencies,
+    ...statusOutput.streams,
+    fetch: async () => {
+      started();
+      await held;
+      return refuse("20");
+    },
+  });
+  await starting;
+  try {
+    now = 10000;
+    assert.equal(
+      await main(waitArgs(bench.root, "10", "1"), {
+        ...dependencies,
+        fetch: async () => refuse("40"),
+      }),
+      0,
+      output.stderr,
+    );
+    assert.equal(
+      observation(bench).trackerPollAt,
+      0,
+      "a refused full poll must not postpone its retry",
+    );
+  } finally {
+    release();
+    assert.equal(await pendingStatus, 0, statusOutput.stderr);
+  }
+  assert.equal(observation(bench).cooldown.retryAt, "1970-01-01T00:00:40.000Z");
+  now = 40000;
+  items["example/tracker#7"].labels = ["state:owner"];
+  assert.equal(
+    await main(waitArgs(bench.root, "10", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.equal(observation(bench).trackerPollAt, 40000);
+  assert.match(output.stdout, /labels added state:owner/);
+});
+
+test("an expired status cooldown does not advance an early re-arm's full poll", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  const items = { "example/tracker#7": {} };
+  const platform = tracker(items);
+  const output = capture();
+  let now = 0;
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    fetch: platform.fetch,
+    now: () => now,
+    pause: async (ms) => {
+      now += ms;
+    },
+  };
+  assert.equal(
+    await main(waitArgs(bench.root, "600", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  now = 10000;
+  assert.equal(
+    await main(statusArgs(bench.root), {
+      ...dependencies,
+      fetch: async () =>
+        new Response(JSON.stringify({ message: "API rate limit exceeded" }), {
+          status: 429,
+          headers: {
+            "content-type": "application/json",
+            "x-ratelimit-remaining": "0",
+            "x-ratelimit-reset": "20",
+          },
+        }),
+    }),
+    0,
+    output.stderr,
+  );
+  now = 30000;
+  platform.requests.length = 0;
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "600", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.equal(
+    platform.requests.length,
+    0,
+    "the saved full poll remains due at 600 seconds",
+  );
+  assert.equal(observation(bench).trackerPollAt, 0);
+  now = 600000;
+  items["example/tracker#7"].labels = ["state:owner"];
+  assert.equal(
+    await main(waitArgs(bench.root, "600", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.equal(platform.requests.length, 3);
+  assert.match(output.stdout, /labels added state:owner/);
+});
+
+test("a failed wait retains unreported local record and launch-report changes for its re-arm", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  bench.write("review/brief-01.md", brief("report-01.md"));
+  const items = { "example/tracker#7": {} };
+  const platform = tracker(items);
+  const output = capture();
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    fetch: platform.fetch,
+  };
+  assert.equal(
+    await main(statusArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  const saved = observation(bench).facts;
+  bench.write("review/log.md", "# Log\nAn answer.\n");
+  bench.write("review/report-01.md", "The findings.\n\nstatus: done\n");
+  items.fail = true;
+  output.stdout = "";
+  assert.equal(await main(waitArgs(bench.root), dependencies), 1);
+  assert.equal(output.stdout, "");
+  assert.match(output.stderr, /502: Server Error/);
+  assert.deepEqual(
+    observation(bench).facts,
+    saved,
+    "unreported changes must not become the saved baseline",
+  );
+  items.fail = false;
+  output.stderr = "";
+  assert.equal(
+    await main(waitArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.match(output.stdout, /review\/log.md: changed/);
+  assert.match(output.stdout, /finished: read review\/report-01.md/);
+});
+
+test("a launch report wakes an armed wait while an overlapping status establishes cooldown", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  bench.write("review/brief-01.md", brief("report-01.md"));
+  const platform = tracker({ "example/tracker#7": {} });
+  const output = capture();
+  let now = 0;
+  let requests = 0;
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    now: () => now,
+    fetch: async (input, options) => {
+      requests++;
+      return platform.fetch(input, options);
+    },
+  };
+  assert.equal(
+    await main(waitArgs(bench.root, "60", "120"), {
+      ...dependencies,
+      pause: async () => {
+        now = 1000;
+        const statusOutput = capture();
+        assert.equal(
+          await main(statusArgs(bench.root), {
+            ...dependencies,
+            ...statusOutput.streams,
+            fetch: async () =>
+              new Response(
+                JSON.stringify({ message: "API rate limit exceeded" }),
+                {
+                  status: 429,
+                  headers: {
+                    "content-type": "application/json",
+                    "x-ratelimit-remaining": "0",
+                    "x-ratelimit-reset": "120",
+                  },
+                },
+              ),
+          }),
+          0,
+          statusOutput.stderr,
+        );
+        requests = 0;
+        now = 2000;
+        bench.write("review/report-01.md", "The findings.\n\nstatus: done\n");
+        return "event";
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(
+    requests,
+    0,
+    "finishing the report must not cause tracker requests during cooldown",
+  );
+  assert.match(output.stdout, /finished: read review\/report-01.md/);
+  assert.equal(observation(bench).cooldown.retryAt, "1970-01-01T00:02:00.000Z");
+});
+
+test("a later refusal without retryAt keeps its full interval after a timestamped cooldown", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  const items = { "example/tracker#7": {} };
+  const platform = tracker(items);
+  const output = capture();
+  let now = 0;
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    fetch: platform.fetch,
+    now: () => now,
+    pause: async (ms) => {
+      now += ms;
+    },
+  };
+  assert.equal(
+    await main(waitArgs(bench.root, "60", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  const refuse = (headers) => async () =>
+    new Response(JSON.stringify({ message: "API rate limit exceeded" }), {
+      status: 429,
+      headers: { "content-type": "application/json", ...headers },
+    });
+  now = 10000;
+  assert.equal(
+    await main(statusArgs(bench.root), {
+      ...dependencies,
+      fetch: refuse({
+        "x-ratelimit-remaining": "0",
+        "x-ratelimit-reset": "20",
+      }),
+    }),
+    0,
+    output.stderr,
+  );
+  now = 30000;
+  assert.equal(
+    await main(statusArgs(bench.root), {
+      ...dependencies,
+      fetch: refuse({}),
+    }),
+    0,
+    output.stderr,
+  );
+  now = 31000;
+  platform.requests.length = 0;
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "60", "120"), {
+      ...dependencies,
+      pause: async (ms) => {
+        assert.equal(
+          platform.requests.length,
+          0,
+          "the later refusal still blocks tracker requests",
+        );
+        assert.equal(ms, 59000);
+        now += ms;
+        items["example/tracker#7"].labels = ["state:owner"];
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.match(output.stdout, /^rate limited:/m);
+  assert.doesNotMatch(output.stdout, /rate limited until/);
+  assert.equal(platform.requests.length, 3);
+  assert.equal(observation(bench).trackerPollAt, 90000);
+  assert.match(output.stdout, /labels added state:owner/);
+  assert.equal(
+    await main(statusArgs(bench.root), {
+      ...dependencies,
+      fetch: refuse({
+        "x-ratelimit-remaining": "0",
+        "x-ratelimit-reset": "120",
+      }),
+    }),
+    0,
+    output.stderr,
+  );
+  platform.requests.length = 0;
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "60", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.equal(platform.requests.length, 0);
+  assert.match(output.stdout, /^rate limited until 1970-01-01T00:02:00.000Z:/m);
+});
+
+test("retryAt cooldown survives status and wait writes, preserves facts and keeps local watching until recovery", async (t) => {
+  const rows = [];
+  const items = {};
+  for (const repository of ["example/tracker", "example/other"]) {
+    for (let number = 1; number <= 10; number++) {
+      rows.push(
+        row(`${repository.split("/")[1]}-${number}`, `${repository}#${number}`),
+      );
+      items[`${repository}#${number}`] = {};
+    }
+  }
+  const bench = workbench(t, { plans: { review: planText({ rows }) } });
+  const platform = tracker(items);
+  const output = capture();
+  const start = Date.parse("2026-11-26T20:00:00Z");
+  const retryAt = "2026-11-26T20:00:10.000Z";
+  let now = start;
+  let limited = false;
+  const requests = [];
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    now: () => now,
+    fetch: async (input, options) => {
+      requests.push({ path: new URL(input).pathname, at: now });
+      if (limited)
+        return new Response(
+          JSON.stringify({ message: "API rate limit exceeded" }),
+          {
+            status: 429,
+            headers: {
+              "content-type": "application/json",
+              "x-ratelimit-remaining": "0",
+              "x-ratelimit-reset": String((start + 10000) / 1000),
+            },
+          },
+        );
+      return platform.fetch(input, options);
+    },
+  };
+  assert.equal(
+    await main(statusArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  const saved = observation(bench).facts;
+  limited = true;
+  requests.length = 0;
+  output.stdout = "";
+  assert.equal(
+    await main(statusArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.ok(
+    requests.length > 0 && requests.length <= 8,
+    "the refusal stops queued dispatch across both repositories",
+  );
+  assert.equal(
+    output.stdout.split(`rate limited until ${retryAt}`).length - 1,
+    20,
+  );
+  assert.match(output.stdout, /example\/other\/issues\/10.*review\/other-10/);
+  assert.doesNotMatch(output.stdout, /unavailable:/);
+  assert.deepEqual(observation(bench).facts, saved);
+  const cooldown = observation(bench).cooldown;
+  assert.equal(cooldown.retryAt, retryAt);
+  now += 1000;
+  rows.push(row("new", "example/other#11"));
+  items["example/other#11"] = {};
+  bench.write("review/plan.md", planText({ rows }));
+  requests.length = 0;
+  assert.equal(
+    await main(statusArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.equal(
+    requests.length,
+    0,
+    "cooldown includes items new to the baseline",
+  );
+  assert.deepEqual(observation(bench).cooldown, cooldown);
+  for (const [key, facts] of Object.entries(saved))
+    if (key.startsWith("tracker:"))
+      assert.deepEqual(observation(bench).facts[key], facts);
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "60", "20"), {
+      ...dependencies,
+      pause: async (ms) => {
+        assert.equal(requests.length, 0);
+        assert.equal(ms, 9000);
+        now += 1000;
+        bench.write("review/log.md", "# Log\n\n- A local answer.\n");
+        return "event";
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(requests.length, 0);
+  assert.match(output.stdout, /rate limited until/);
+  assert.match(output.stdout, /review\/log.md: changed/);
+  assert.deepEqual(observation(bench).cooldown, cooldown);
+  for (const [key, facts] of Object.entries(saved))
+    if (key.startsWith("tracker:"))
+      assert.deepEqual(observation(bench).facts[key], facts);
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "60", "20"), {
+      ...dependencies,
+      pause: async (ms) => {
+        assert.equal(requests.length, 0);
+        assert.equal(ms, 8000);
+        now += ms;
+        limited = false;
+        items["example/tracker#7"].labels = ["state:owner"];
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(requests.length, 63);
+  assert.ok(requests.every(({ at }) => at === start + 10000));
+  assert.match(output.stdout, /labels added state:owner/);
+  assert.equal(output.stderr, "");
+});
+
+test("queued exchanges receive a fresh forty-five-second timeout when dispatched", async (t) => {
+  const items = {};
+  const links = [];
+  for (let number = 1; number <= 32; number++) {
+    items[`example/tracker#${number}`] = {};
+    links.push(`example/tracker#${number}`);
+  }
+  const bench = watching(t, links.join(" "));
+  const platform = tracker(items);
+  const output = capture();
+  let elapsed = 0;
+  const signals = new WeakMap();
+  const scheduled = [];
+  const budgets = [];
+  t.mock.method(AbortSignal, "timeout", (milliseconds) => {
+    const controller = new AbortController();
+    const expires = elapsed + milliseconds;
+    signals.set(controller.signal, expires);
+    scheduled.push({ controller, expires });
+    return controller.signal;
+  });
+  assert.equal(
+    await main(statusArgs(bench.root), {
+      ...output.streams,
+      connect: transportConnection,
+      fetch: async (input, options) => {
+        budgets.push(signals.get(options.signal) - elapsed);
+        assert.equal(options.signal.aborted, false);
+        await new Promise((resolve) => setImmediate(resolve));
+        elapsed += 2000;
+        for (const { controller, expires } of scheduled)
+          if (expires <= elapsed)
+            controller.abort(new DOMException("Timed out", "TimeoutError"));
+        return platform.fetch(input, options);
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.equal(budgets.length, 96);
+  assert.ok(elapsed > 45000, "queued work spans more than the request timeout");
+  assert.ok(
+    budgets.every((budget) => budget === 45000),
+    "every transport dispatch starts with the full timeout",
+  );
+  assert.doesNotMatch(output.stdout, /unavailable:/);
+});
+
+test("rate limits without retryAt keep same-wait and re-armed polling one caller interval after refusal", async (t) => {
+  for (const rearm of [false, true]) {
+    await t.test(rearm ? "re-armed wait" : "same wait", async (t) => {
+      const bench = watching(t, "example/tracker#7");
+      const items = { "example/tracker#7": {} };
+      const platform = tracker(items);
+      const output = capture();
+      let now = 0;
+      let limited = false;
+      const requests = [];
+      const dependencies = {
+        ...output.streams,
+        connect: transportConnection,
+        now: () => now,
+        fetch: async (input, options) => {
+          requests.push(now);
+          return limited
+            ? json({ message: "API rate limit exceeded" }, 429)
+            : platform.fetch(input, options);
+        },
+      };
+      assert.equal(
+        await main(statusArgs(bench.root), dependencies),
+        0,
+        output.stderr,
+      );
+      const saved = observation(bench).facts;
+      requests.length = 0;
+      output.stdout = "";
+      limited = true;
+      let pauses = 0;
+      const pause = async (ms) => {
+        pauses++;
+        if (rearm && pauses === 1) {
+          assert.equal(ms, 1000);
+          now += ms;
+          return;
+        }
+        assert.equal(ms, rearm ? 9000 : 10000);
+        assert.equal(
+          requests.length,
+          1,
+          "there are no tracker reads during cooldown",
+        );
+        now += ms;
+        limited = false;
+        items["example/tracker#7"].labels = ["state:owner"];
+      };
+      assert.equal(
+        await main(waitArgs(bench.root, "10", rearm ? "1" : "20"), {
+          ...dependencies,
+          pause,
+        }),
+        0,
+        output.stderr,
+      );
+      if (rearm) {
+        assert.deepEqual(observation(bench).facts, saved);
+        assert.equal(observation(bench).cooldown.observedAt, 0);
+        assert.equal(observation(bench).cooldown.retryAt, undefined);
+        assert.equal(
+          await main(waitArgs(bench.root, "10", "20"), {
+            ...dependencies,
+            pause,
+          }),
+          0,
+          output.stderr,
+        );
+      }
+      assert.deepEqual(requests, [0, 10000, 10000, 10000]);
+      assert.match(output.stdout, /rate limited/);
+      assert.doesNotMatch(output.stdout, /rate limited until|unavailable:/);
+      assert.match(output.stdout, /labels added state:owner/);
+      assert.equal(output.stderr, "");
+    });
+  }
+});
+
+test("status retries fresh without a supplied retryAt while preserving the wait poll time", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  const platform = tracker({ "example/tracker#7": {} });
+  const output = capture();
+  let limited = false;
+  let now = 0;
+  let requests = 0;
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    now: () => now,
+    fetch: async (input, options) => {
+      requests++;
+      return limited
+        ? json({ message: "API rate limit exceeded" }, 429)
+        : platform.fetch(input, options);
+    },
+    pause: async (ms) => {
+      now += ms;
+    },
+  };
+  assert.equal(
+    await main(waitArgs(bench.root, "10", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  limited = true;
+  output.stdout = "";
+  assert.equal(
+    await main(statusArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.match(output.stdout, /rate limited/);
+  assert.doesNotMatch(output.stdout, /rate limited until|unavailable:/);
+  assert.equal(observation(bench).trackerPollAt, 0);
+  requests = 0;
+  limited = false;
+  assert.equal(
+    await main(statusArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.equal(requests, 3, "status has no interval and reads fresh on demand");
+  assert.equal(observation(bench).trackerPollAt, 0);
+});
+
+test("ordinary transport failures retain unavailable status lines and fail wait", async (t) => {
+  for (const command of ["status", "wait"]) {
+    const bench = watching(t, "example/tracker#7");
+    const output = capture();
+    const code = await main(
+      command === "status" ? statusArgs(bench.root) : waitArgs(bench.root),
+      {
+        ...output.streams,
+        connect: transportConnection,
+        fetch: async () => json({ message: "Server Error" }, 502),
+        pause: unreachable,
+      },
+    );
+    if (command === "status") {
+      assert.equal(code, 0, output.stderr);
+      assert.match(
+        output.stdout,
+        /unavailable: https:\/\/github.com\/example\/tracker\/issues\/7 \(GitHub answered GET .*502: Server Error\)/,
+      );
+      assert.doesNotMatch(output.stdout, /rate limited/);
+    } else {
+      assert.equal(code, 1);
+      assert.match(output.stderr, /502: Server Error/);
+      assert.equal(output.stdout, "");
+    }
+  }
+});
+
+test("GraphQL and paginated rate limits stop dispatch among successful reads and retain unread facts", async (t) => {
+  for (const kind of ["graphql", "comments", "check-runs", "status"]) {
+    await t.test(kind, async (t) => {
+      const items = {};
+      const rows = [];
+      for (const repository of ["example/tracker", "example/other"]) {
+        for (let number = 1; number <= 10; number++) {
+          const key = `${repository}#${number}`;
+          rows.push(row(`${repository.split("/")[1]}-${number}`, key));
+          items[key] = ["check-runs", "status"].includes(kind)
+            ? { pull: true }
+            : {};
+        }
+      }
+      const bench = workbench(t, { plans: { review: planText({ rows }) } });
+      const platform = tracker(items);
+      const output = capture();
+      let limited = false;
+      let refused = false;
+      let afterRefusal = 0;
+      let requests = 0;
+      const headers = {
+        "content-type": "application/json",
+        "x-ratelimit-remaining": "0",
+        "x-ratelimit-reset": "1795723210",
+      };
+      const dependencies = {
+        ...output.streams,
+        connect: transportConnection,
+        now: () => Date.parse("2026-11-26T20:00:00Z"),
+        fetch: async (input, options) => {
+          requests++;
+          if (refused) afterRefusal++;
+          const url = new URL(input);
+          const matches =
+            kind === "graphql"
+              ? url.pathname === "/graphql"
+              : url.pathname.endsWith(`/${kind}`);
+          if (
+            limited &&
+            matches &&
+            (kind === "graphql" || url.searchParams.get("page") === "2")
+          ) {
+            refused = true;
+            return new Response(
+              JSON.stringify(
+                kind === "graphql"
+                  ? {
+                      data: null,
+                      errors: [
+                        {
+                          type: "RATE_LIMITED",
+                          message: "API rate limit exceeded",
+                        },
+                      ],
+                    }
+                  : { message: "API rate limit exceeded" },
+              ),
+              { status: kind === "graphql" ? 200 : 429, headers },
+            );
+          }
+          await new Promise((resolve) => setTimeout(resolve, 1));
+          const response = await platform.fetch(input, options);
+          if (limited && matches && kind !== "graphql") {
+            url.searchParams.set("page", "2");
+            response.headers.set("link", `<${url}>; rel="next"`);
+          }
+          return response;
+        },
+      };
+      assert.equal(
+        await main(statusArgs(bench.root), dependencies),
+        0,
+        output.stderr,
+      );
+      const saved = observation(bench).facts;
+      limited = true;
+      requests = 0;
+      output.stdout = "";
+      assert.equal(
+        await main(statusArgs(bench.root), dependencies),
+        0,
+        output.stderr,
+      );
+      assert.equal(
+        refused,
+        true,
+        "the follow-up request reached its platform refusal",
+      );
+      assert.equal(
+        afterRefusal,
+        0,
+        "a platform refusal stops every queued transport request",
+      );
+      assert.ok(requests > 8, "successful reads preceded the refusal");
+      assert.match(
+        output.stdout,
+        /rate limited until 2026-11-26T20:00:10.000Z/,
+      );
+      assert.doesNotMatch(output.stdout, /unavailable:/);
+      assert.deepEqual(
+        observation(bench).facts,
+        saved,
+        "unread items retain their previous successful facts",
+      );
+    });
+  }
+});
+
+test("the production GitHub CLI connection forwards the supplied transport and retains its timeout", (t) => {
+  const bench = workbench(t);
+  const bin = bench.path("bin");
+  mkdirSync(bin);
+  writeFileSync(
+    join(bin, "gh"),
+    `#!/bin/sh
+[ "$*" = "auth token --hostname github.com" ] || exit 1
+printf '%s\\n' 'fixture-workbench-credential'
+`,
+    { mode: 0o755 },
+  );
+  const platform = new URL(
+    "../.agents/skills/babysit/platform.mjs",
+    import.meta.url,
+  ).href;
+  const result = spawnSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "--eval",
+      `
+    import assert from "node:assert/strict";
+    import { connectionFor } from ${JSON.stringify(platform)};
+    let requests = 0;
+    let timeouts = 0;
+    AbortSignal.timeout = (milliseconds) => {
+      assert.equal(milliseconds, 45000);
+      timeouts++;
+      return new AbortController().signal;
+    };
+    const connection = connectionFor("example/tracker", {
+      fetch: async (input, options) => {
+        requests++;
+        assert.equal(new URL(input).pathname, "/repos/example/tracker/issues/7");
+        assert.equal(options.headers.authorization, "Bearer fixture-workbench-credential");
+        return Response.json({ number: 7, state: "open" });
+      },
+    });
+    const { data } = await connection.access.request({ path: "/repos/example/tracker/issues/7" });
+    assert.equal(data.number, 7);
+    assert.equal(requests, 1);
+    assert.equal(timeouts, 1);
+  `,
+    ],
+    {
+      cwd: bench.root,
+      encoding: "utf8",
+      timeout: 5000,
+      env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+    },
+  );
+  assert.equal(result.status, 0, result.stderr || result.error?.message);
+  assert.equal(result.stdout, "");
+});
+
+test("wait retries at retryAt even when its saved full-poll cadence is later", async (t) => {
+  const bench = watching(t, "example/tracker#7");
+  const items = { "example/tracker#7": {} };
+  const platform = tracker(items);
+  const output = capture();
+  let now = Date.parse("2026-11-26T20:00:00Z");
+  const start = now;
+  let limited = false;
+  const requests = [];
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    now: () => now,
+    fetch: async (input, options) => {
+      requests.push(now);
+      return limited
+        ? new Response(JSON.stringify({ message: "API rate limit exceeded" }), {
+            status: 429,
+            headers: {
+              "content-type": "application/json",
+              "x-ratelimit-remaining": "0",
+              "x-ratelimit-reset": String((start + 70000) / 1000),
+            },
+          })
+        : platform.fetch(input, options);
+    },
+    pause: async (ms) => {
+      now += ms;
+    },
+  };
+  assert.equal(
+    await main(waitArgs(bench.root, "60", "1"), dependencies),
+    0,
+    output.stderr,
+  );
+  assert.equal(observation(bench).trackerPollAt, start);
+  now = start + 60000;
+  limited = true;
+  requests.length = 0;
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "60", "20"), {
+      ...dependencies,
+      pause: async (ms) => {
+        assert.equal(
+          ms,
+          10000,
+          "platform retryAt owns the next full-poll deadline",
+        );
+        now += ms;
+        limited = false;
+        items["example/tracker#7"].labels = ["state:owner"];
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.deepEqual(requests, [
+    start + 60000,
+    start + 70000,
+    start + 70000,
+    start + 70000,
+  ]);
+  assert.match(output.stdout, /rate limited until 2026-11-26T20:01:10.000Z/);
+  assert.match(output.stdout, /labels added state:owner/);
+});
+
+test("without retryAt the refusal time owns the retry even when in-flight reads finish later", async (t) => {
+  const bench = watching(t, "example/tracker#7 example/tracker#8");
+  const items = { "example/tracker#7": {}, "example/tracker#8": {} };
+  const platform = tracker(items);
+  const output = capture();
+  let now = 0;
+  let limited = false;
+  const requests = [];
+  const dependencies = {
+    ...output.streams,
+    connect: transportConnection,
+    now: () => now,
+    fetch: async (input, options) => {
+      requests.push(now);
+      if (limited) {
+        if (new URL(input).pathname.endsWith("/7"))
+          return json({ message: "API rate limit exceeded" }, 429);
+        await new Promise((resolve) => setImmediate(resolve));
+        now += 5000;
+      }
+      return platform.fetch(input, options);
+    },
+  };
+  assert.equal(
+    await main(statusArgs(bench.root), dependencies),
+    0,
+    output.stderr,
+  );
+  limited = true;
+  requests.length = 0;
+  output.stdout = "";
+  assert.equal(
+    await main(waitArgs(bench.root, "10", "20"), {
+      ...dependencies,
+      pause: async (ms) => {
+        assert.equal(
+          now,
+          5000,
+          "another in-flight exchange completed after the refusal",
+        );
+        assert.equal(observation(bench).cooldown.observedAt, 0);
+        assert.equal(
+          ms,
+          5000,
+          "retry is refusal plus one interval, not pass completion plus interval",
+        );
+        now += ms;
+        limited = false;
+        items["example/tracker#7"].labels = ["state:owner"];
+      },
+    }),
+    0,
+    output.stderr,
+  );
+  assert.deepEqual(requests, [0, 0, 10000, 10000, 10000, 10000, 10000, 10000]);
+  assert.match(output.stdout, /rate limited/);
+  assert.doesNotMatch(output.stdout, /rate limited until|unavailable:/);
+  assert.match(output.stdout, /labels added state:owner/);
+});
 
 test("both wait durations and the status stale threshold are required, with no built-in default", async (t) => {
   const { root } = workbench(t);
@@ -362,10 +1669,13 @@ test("a row issue's state, labels, comments and linked pull requests each wake t
       },
     };
     let pauses = 0;
+    let elapsed = 0;
     const code = await main(waitArgs(root), {
       ...output.streams,
       connect: tracker(items).connect,
-      pause: async () => {
+      now: () => elapsed,
+      pause: async (ms) => {
+        elapsed += ms;
         pauses += 1;
         if (pauses === 2) change(items["example/tracker#7"]);
       },
@@ -507,11 +1817,14 @@ test("pull request head and raw check and status sets wake without success polic
       statuses: [{ id: 3, context: "deploy", state: "pending" }],
     };
     let pauses = 0;
+    let elapsed = 0;
     assert.equal(
       await main(waitArgs(root), {
         ...output.streams,
         connect: tracker({ "example/tracker#12": item }).connect,
-        pause: async () => {
+        now: () => elapsed,
+        pause: async (ms) => {
+          elapsed += ms;
           pauses++;
           if (pauses === 1) item.runs.reverse();
           if (pauses === 2) change(item);
@@ -960,11 +2273,14 @@ test("an upstream commit touching a watched record wakes the wait, and other com
     const output = capture();
     const { workbench, sender } = workbenches(t);
     let pauses = 0;
+    let elapsed = 0;
     let message;
     const code = await main(waitArgs(workbench), {
       ...output.streams,
       connect: unreachable,
-      pause: async () => {
+      now: () => elapsed,
+      pause: async (ms) => {
+        elapsed += ms;
         pauses += 1;
         if (pauses === 1) push(sender, "wishes.md", "- A wish.\n");
         if (pauses === 2) message = push(sender, path, "Hi.\n");
@@ -980,6 +2296,27 @@ test("an upstream commit touching a watched record wakes the wait, and other com
     );
     assert.equal(existsSync(join(workbench, "incoming")), false);
   }
+});
+
+test("the maximum-duration pass still fetches the upstream between intervals", async (t) => {
+  const output = capture();
+  const { workbench, sender } = workbenches(t);
+  const pauses = [];
+  let elapsed = 0;
+  let message;
+  const code = await main(waitArgs(workbench, "10", "15"), {
+    ...output.streams,
+    connect: unreachable,
+    now: () => elapsed,
+    pause: async (ms) => {
+      elapsed += ms;
+      pauses.push(ms);
+      if (pauses.length === 2) message = push(sender, "review/log.md", "Hi.\n");
+    },
+  });
+  assert.equal(code, 0, output.stderr);
+  assert.deepEqual(pauses, [10_000, 5_000]);
+  assert.equal(output.stdout, `upstream commit ${message} not yet pulled\n`);
 });
 
 test("an upstream message fetched but not pulled before arming wakes the wait, and pulling it shows the message", async (t) => {

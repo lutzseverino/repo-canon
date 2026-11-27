@@ -115,10 +115,30 @@ Grill still allow closed targets; non-tracker targets need no tracker read.
 An unreadable tracker target refuses any brief with its target and reason and
 writes nothing. A failed status read prints `unavailable: <item> (<reason>)`, never "nothing changed". The
 [records](templates.md) are the watches, from the moment a row names an issue: link a
-row's blockers on it. Wait wakes on file events for local records, launch reports and
-`incoming/`, and polls GitHub items and the workbench upstream on the interval. Both save
-what they saw in the workbench's Git directory, so a change after the last status or wait
-wakes the next wait at once. Exit `0` (change, finished report or maximum duration):
+row's blockers on it. Each status or wait invocation shares one queue across repository
+connections, capped at 8 HTTP requests in flight, including pagination and response
+bodies. Each request's 45-second timeout starts when it leaves the queue.
+
+Wait wakes on file events for local records, launch reports and `incoming/`, and polls
+GitHub items and the workbench upstream on the interval. Both save their observed facts
+in the workbench's Git directory. Wait also persists its last full tracker poll time:
+re-arming before that time plus `--interval` reads only items new to the baseline,
+then resumes full polling when due. Status still reads every tracker item fresh on
+demand without moving or erasing wait's saved poll time.
+
+A platform rate limit stops further tracker requests for that pass and prints
+`rate limited until <retryAt>`, or `rate limited` when no retry time was supplied,
+with the item link and plan/row. Both commands preserve the cooldown separately from
+successful facts, keeping saved facts for unread items without a change line. Neither
+command sends tracker requests before `retryAt`, even for new items. Without `retryAt`,
+wait resumes one caller-chosen interval after the refusal, including across re-arms;
+status reads fresh on demand. Wait prints the rate-limit lines and keeps watching local
+records during cooldown; a rate limit does not end it. Other read failures still end
+wait with exit `1`.
+
+A change after the last status or wait wakes the next wait once it reads the item: a
+local record at once, a tracker item at its next allowed poll. Exit `0` (change,
+finished report or maximum duration):
 minimally reconcile and re-arm. Exit `1`: fix the usage, record or platform error and
 re-arm; refusals follow Credentials. Surface answered questions lacking continuation with
 current issue/run/PR evidence, including absent evidence. Installed recovery rules govern
