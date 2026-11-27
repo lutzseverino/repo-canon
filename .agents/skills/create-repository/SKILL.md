@@ -74,9 +74,9 @@ into contextual work, resolving any remaining license requirement there.
 
 Follow the CLI's printed guidance and the selected source's **Adoption
 delivery** guidance for project, first-remote, local-only or workbench delivery
-and continuation. For Repo Canon, read
-[the source guidance](https://github.com/lutzseverino/repo-canon/blob/main/guidance/github-repository-configuration.md#adoption-delivery)
-at the selected revision, including when workbench adoption prints none.
+and continuation. Repo Canon's
+[source guidance](https://github.com/lutzseverino/repo-canon/blob/24f2309811b19f091ccd7e99edde4cb455f1b73f/guidance/github-repository-configuration.md#adoption-delivery)
+is available without a checkout, including when workbench adoption prints none.
 
 ## Vision and handoff
 
@@ -110,7 +110,7 @@ Paths are relative to the new repository root.
   their own branch as `domain-modeling` directs.
 - The selected source's `guidance/github-repository-configuration.md`:
   prerequisites before remote GitHub project adoption; delivery and continuation
-  for every adoption branch. If unavailable, retain the repository and answers
+  for every adoption branch. When missing, retain the repository and answers
   and stop adoption until its guidance can be read.
 - The pinned CLI runtime and adoption state under `.repo-standards/`, including
   the `status --summary` adoption record: completion, recovery and pre-commit
