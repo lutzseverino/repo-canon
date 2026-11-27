@@ -2,7 +2,12 @@ import { interpretMarkdown } from "../operations/lib/rendered-markdown.mjs";
 import { localLinks } from "../operations/lib/local-markdown-links.mjs";
 import { marked } from "../vendor/marked/marked.esm.js";
 import { declarations } from "../scripts/standards-declarations.mjs";
-import { directoryTree, entryPoints, readSet } from "../scripts/read-set.mjs";
+import {
+  checkSkillWords,
+  directoryTree,
+  entryPoints,
+  readSet,
+} from "../scripts/read-set.mjs";
 import { execFixtureGit } from "../scripts/support/fixture-git.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -10,7 +15,11 @@ import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { basePaths, snapshotIdentity } from "../scripts/upstream-bases.mjs";
+import {
+  basePaths,
+  ownedSkills,
+  snapshotIdentity,
+} from "../scripts/upstream-bases.mjs";
 import { decideIssueContract } from "./helpers/contract-decision.mjs";
 import {
   completeReview,
@@ -443,7 +452,13 @@ test("planning policy has a declared home reached by guide pointers and entry po
     );
   }
   const tree = directoryTree(root);
-  for (const name of entryPoints)
+  for (const name of [
+    "orchestrate",
+    "factory",
+    "triage",
+    "implement",
+    "review",
+  ])
     assert.ok(readSet(tree, name).members.includes("rules/planning.md"), name);
 });
 
@@ -1590,7 +1605,14 @@ test("improve-codebase-architecture keeps its line limit and launch heading orde
 
 test("entry-point read sets resolve every member at its source", () => {
   const tree = directoryTree(root);
-  const sets = new Map(entryPoints.map((name) => [name, readSet(tree, name)]));
+  const entries = entryPoints(tree);
+  assert.deepEqual(
+    entries,
+    ownedSkills(root)
+      .map(({ name }) => name)
+      .sort(),
+  );
+  const sets = new Map(entries.map((name) => [name, readSet(tree, name)]));
   const orchestrate = sets.get("orchestrate").members;
   for (const member of [
     ".agents/skills/orchestrate/SKILL.md",
@@ -1617,6 +1639,10 @@ test("entry-point read sets resolve every member at its source", () => {
       );
     }
   }
+});
+
+test("owned skill Markdown honors its word ceilings and frozen allowances", () => {
+  assert.deepEqual(checkSkillWords(directoryTree(root)).failures, []);
 });
 
 // Check the whole installed directory and the shared delegation guidance.

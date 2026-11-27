@@ -369,8 +369,8 @@ independence. License notices in owned skills and notices linked from
 fixtures with dropped or altered notices. Rule and skill wording stays with
 pull request review and release skill exercises, as ADR 0032 decides above.
 
-The read-set budget (ADR 0048) measures bytes for the `orchestrate`, `factory`,
-`triage`, `implement` and `review` entry points. It follows the skills named in
+The read-set budget (ADR 0048, amended by ADR 0056) measures bytes for every
+owned skill as an entry point. It follows the skills named in
 each reached skill's Reads section and counts their Markdown (except credits
 and licenses), named rules at their `rules/` source, and named `CONTRIBUTING.md`
 and `AGENTS.md`. It excludes scripts, configuration, domain and tracker records,
@@ -378,20 +378,30 @@ workbench records and Scriptorium status. Shared members count once, and missing
 skills or rules fail with the entry point and naming skill.
 
 Every pull request's `Read set` check compares its head against its base commit
-using the head's computation for both. Growth fails unless the description's
+using the head's computation for both. Byte growth fails unless the description's
 Merge Danger section has a line `Read set: <reason>` with a meaningful reason,
 using the PR metadata validator's placeholder rules. Description edits rerun
-the check. There is no stored budget number. Outside pull requests, including
-`pnpm validate` and pushes to `main`, only membership is checked, without a
-comparison gate. `AGENTS.md` keeps its map line cap and
+the check. The same check enforces the per-file word ceilings in
+[ADR 0056](../adr/0056-cap-each-skill-file-and-ship-its-command-runtime.md)
+without a reason-line override. The active
+[exceptions](../../scripts/skill-word-exceptions.json) may only shrink
+against the PR base. Delete an entry when its file reaches compliance or is
+removed. `pnpm validate` checks membership, ceilings and frozen allowances
+through the conformance suite. `AGENTS.md` keeps its map line cap and
 `improve-codebase-architecture` keeps its own 200-line limit.
 
-Compare the working tree against any Git ref locally; the command prints every
-entry point's base bytes, head bytes and difference, even when growth fails:
+Compare the working tree against a Git ref locally. The command prints the
+resolved base commit and every entry point's base bytes, head bytes and
+difference, even when growth fails. For a plan's `orchestrate` measurement,
+pass its pinned base revision and record the base commit and `orchestrate` row.
+When a plan base predates the word guard, it supplies the byte comparison
+and the current file ceilings and frozen allowances still apply. The PR
+check enforces exception history using the PR's base commit.
 
 ```sh
 node scripts/read-set.mjs compare origin/main
 node scripts/read-set.mjs compare origin/main --description /path/to/pr-body.md
+node scripts/read-set.mjs compare <plan-base-revision>
 ```
 
 The fixture-builder suites check repositories' files, issue metadata, linked
