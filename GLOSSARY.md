@@ -158,8 +158,9 @@ _Avoid_: Spec file, draft brief, plan
 
 **Amendment grill**:
 A grill, as small as one round, for a proposed change to a plan's goal, its
-Done means or a ticket's scope. See [Triage](rules/planning.md#triage) for
-amendment requirements.
+Done means or a ticket's scope. See
+[Publication and amendments](rules/planning.md#publication-and-amendments)
+for amendment requirements.
 _Avoid_: Conversational amendment
 
 **Factory gap**:
@@ -251,7 +252,9 @@ _Avoid_: Backlog item, suggestion
 **Research run**:
 The sub-agent that gathers the facts for one request and writes its Agent
 Brief from settled intent unless a grilling session drafts it. Acceptance
-policy lives in [Triage](rules/planning.md#triage) and the
+policy lives in
+[Publication and amendments](rules/planning.md#publication-and-amendments)
+and the
 [factory triage rules](rules/factory-workflow.md#triage-run).
 _Avoid_: Orchestrating agent, reviewer
 

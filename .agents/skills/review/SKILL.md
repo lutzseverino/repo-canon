@@ -174,4 +174,4 @@ Paths are relative to the repository root.
   that step.
 - The `codebase-design` skill: the check used through Standards above. When
   missing, report the gap through the planning rules' Findings route, or
-  in the handoff without the guide; retain the recorded contract as the baseline.
+  in the handoff without those rules or the guide; retain the recorded contract as the baseline.

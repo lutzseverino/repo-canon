@@ -433,8 +433,8 @@ test("planning policy has a declared home reached by guide pointers and entry po
     );
     const [target] = section.content.text().links;
     assert.equal(
-      target?.split("#")[0],
-      ".repo-standards/rules/planning.md",
+      target,
+      `.repo-standards/rules/planning.md#${heading.toLowerCase().replaceAll(" ", "-")}`,
       heading,
     );
     assert.ok(

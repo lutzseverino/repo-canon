@@ -81,4 +81,4 @@ Paths are relative to the repository root.
   the handoff that `PR metadata` was not posted.
 - The `codebase-design` skill: the check applied above. When missing, report
   the gap through the planning rules' Findings route, or in the handoff
-  when the guide is missing; retain the recorded contract.
+  when neither those rules nor the guide exists; retain the recorded contract.

@@ -32,7 +32,7 @@
     },
     "domain-modeling": {
       "path": "skills/engineering/domain-modeling",
-      "edits": "It also has glossary and ADR edits made on a branch of their own in a checkout the session owns, never in a shared checkout on the default branch, and delivered as the repository's contribution guide directs. It creates `docs/adr/` with its index where the repo indexes its documentation directories, and `ADR-FORMAT.md` adds each new ADR to that index, and keeps a superseded ADR, marking it superseded with a link to the ADR that supersedes it. Planning policy is read from the target repository’s installed planning rules, with its contribution guide only as the non-adopter fallback."
+      "edits": "It also has glossary and ADR edits made on a branch of their own in a checkout the session owns, never in a shared checkout on the default branch, and delivered as the repository's contribution guide directs. It creates `docs/adr/` with its index where the repo indexes its documentation directories, and `ADR-FORMAT.md` adds each new ADR to that index, and keeps a superseded ADR, marking it superseded with a link to the ADR that supersedes it."
     },
     "factory": null,
     "grill-with-docs": {

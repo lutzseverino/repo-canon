@@ -81,10 +81,6 @@ If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](
 
 Paths are relative to the repository root.
 
-- `.repo-standards/rules/planning.md` in the target repository: planning policy
-  named by this skill. If absent, use that repository's `CONTRIBUTING.md`;
-  if both are absent, report the missing policy and stop the dependent step.
-
 - `GLOSSARY.md`, or the root `GLOSSARY-MAP.md` that points to each context's
   own `GLOSSARY.md`: the domain language. When `GLOSSARY-MAP.md` is missing,
   the repository has a single context; when its `GLOSSARY.md` is missing,

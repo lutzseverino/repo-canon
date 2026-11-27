@@ -35,8 +35,9 @@ A grill opens with the maintainer only when:
 The triager routes an intake request by where its uncertainty lies, not by its
 category label. A request is code-bound when its expected result is clear and
 code, logs or a reproduction can answer the rest. It is intent-bound when an
-open question needs intent, a policy, a trade-off or taste, including a bug
-whose fix would choose a value nobody chose. Missing evidence or access never
+open question needs intent, a policy, a trade-off or taste in copy, UI or look,
+as when its brief would otherwise leave an open question or offer options,
+including a bug whose fix would choose a value nobody chose. Missing evidence or access never
 licenses inventing policy. The triager verifies claims and gathers code facts
 before seeking an intent decision.
 

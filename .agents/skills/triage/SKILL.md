@@ -185,7 +185,7 @@ The factory starts this run for one issue, read-only, and the installed factory 
 
 ## Route questions
 
-Every question reaches you first, whoever raises it: a research run, a grill, or an agent's issue comment, in any waiting state. Route it as the planning rules' Triage section says:
+Every question reaches you first, whoever raises it: a research run, a grill, or an agent's issue comment, in any waiting state. Route it as the planning rules' Triage and Owner questions sections say:
 
 - **An answer you can give**, from code, logs, or a reproduction, or under the inference test: post it on the issue as `.repo-standards/rules/comments.md#disclaimers` says.
 - **A fact only an outside reporter holds**: ask them with the reporter template below, and move the issue to `state:reporter`.

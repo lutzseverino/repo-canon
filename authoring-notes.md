@@ -95,7 +95,9 @@ repeated.
 - Publication, inference and intake decisions of 2026-11-06, 2026-11-08 and
   2026-11-09 are recorded in
   [#912](https://github.com/lutzseverino/repo-canon/issues/912#issuecomment-6750712597).
-  Their homes are [Triage](rules/planning.md#triage) and the factory rules'
+  Their homes are [Triage](rules/planning.md#triage),
+  [Publication and amendments](rules/planning.md#publication-and-amendments)
+  and the factory rules'
   [Canonical stages](rules/factory-workflow.md#canonical-stages).
 - Orchestration is a workflow method under ADRs 0016 and 0018, implemented by
   [orchestrate](.agents/skills/orchestrate/SKILL.md). Its decision records are:

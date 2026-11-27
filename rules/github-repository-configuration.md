@@ -40,8 +40,8 @@ the planning rules' Readiness section governs its maintenance.
 owner or filing agent lacks wait in `state:owner`, or `state:grill` for the
 owner's intent. `state:carried` waits on no one: another record or ticket
 carries the request's fate, the factory leaves it, and removing it starts
-nothing. Follow the planning rules' Triage section for question routing and
-inference. The repository owns `state:ready` readiness; `wontfix` marks an
+nothing. Follow the planning rules' Owner questions section for question
+routing and their Triage section for inference. The repository owns `state:ready` readiness; `wontfix` marks an
 issue closed as will not be actioned.
 
 A triaged request carries one `type:` label, its category.
@@ -512,7 +512,7 @@ acceptance criterion or large rework) return to implementation on the same PR
 with that round's review as input; whoever ran the review relaunches it. A later
 round still carrying a larger finding stops without converging, reports why
 and leaves the PR draft. Wrong or ambiguous contracts move the issue to
-`state:grill` under the planning rules' Triage section.
+`state:grill` under the planning rules' Owner questions section.
 
 After a recorded grill resolution requires no code change, an independent
 reviewer may reassess the unchanged head against the settled authoritative
