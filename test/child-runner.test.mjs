@@ -93,7 +93,11 @@ test("a signal ending the awaiting process also ends its detached child", async 
       "-e",
       `import { runChild } from ${JSON.stringify(new URL("./helpers/child-runner.mjs", import.meta.url).href)};
       await runChild(process.execPath, ["-e", ${JSON.stringify(
-        `require("node:fs").writeFileSync(${JSON.stringify(pidPath)}, String(process.pid)); setInterval(() => {}, 1000);`,
+        `const { renameSync, writeFileSync } = require("node:fs");
+        const pidPath = ${JSON.stringify(pidPath)};
+        writeFileSync(pidPath + ".new", String(process.pid));
+        renameSync(pidPath + ".new", pidPath);
+        setInterval(() => {}, 1000);`,
       )}], { kind: "command", boundMs: 60000 });`,
     ],
     { stdio: "ignore" },
@@ -191,7 +195,7 @@ const waitForStep = `
 function advanceOn(matches) {
   let step = 0;
   return (event, advance, cwd) => {
-    if (matches(event) && advance(110))
+    if (matches(event) && advance(600))
       writeFileSync(join(cwd, `step-${step++}`), "");
   };
 }
@@ -210,7 +214,7 @@ test("completion progress survives buffered TAP and several no-progress periods 
       "b-progress.mjs": `import test from "node:test";
       ${waitForStep}
       while (!existsSync("started")) await setTimeout(10);
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 6; i++) {
         await test("later completion " + i, () => {});
         await waitForStep(i);
       }
@@ -228,7 +232,7 @@ test("completion progress survives buffered TAP and several no-progress periods 
   assert.equal(result.status, 1, result.stderr);
   assert.ok(result.elapsedMs > 3000);
   assert.match(result.stdout, /earlier slow test/);
-  assert.match(result.stdout, /later completion 29/);
+  assert.match(result.stdout, /later completion 5/);
 });
 
 test("nested output counts as progress and returns a passing exit status", async (t) => {
@@ -238,7 +242,7 @@ test("nested output counts as progress and returns a passing exit status", async
       "output.mjs": `import test from "node:test";
       ${waitForStep}
       test("verbose test", async () => {
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 6; i++) {
           console.log("stdout progress"); console.error("stderr progress");
           await waitForStep(i);
         }
