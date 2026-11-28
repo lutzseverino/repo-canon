@@ -46,3 +46,13 @@ because two implementations drift, as these had.
   inside Repo Canon.
 - [ADR 0023](0023-reach-the-hosting-platform-through-postern.md) still keeps
   Postern factual.
+
+## Content-selection amendment
+
+The 2026-11-26 decision in
+[ADR 0035's prepared-mode amendment](0035-keep-the-implementation-contract-in-the-issue-body.md#prepared-mode-selection-amendment)
+supersedes the category-dependent selection, validity and readiness rule above.
+Category labels now report classification discrepancies only. The validator
+still owns the single contract decision; content selects its kind and source,
+and authenticated source/edit transitions invalidate v1 approval without
+changing genuinely unchanged revision bytes.

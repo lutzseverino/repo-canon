@@ -36,9 +36,29 @@ import {
 const time = "2026-09-14T16:00:00Z";
 const page = (nodes) => ({
   nodes,
+  totalCount: nodes.length,
   pageInfo: { hasNextPage: false, endCursor: null },
 });
 const account = (login = "reporter") => ({ login, type: "User" });
+
+// Authenticated platform facts are separate from revision timestamps: two edits
+// in one second can have the same date and different immutable identities.
+function sourceEdit(id, editedAt = null) {
+  return {
+    id: editedAt ? `edit:${id}:${editedAt}` : `created:${id}`,
+    editedAt,
+  };
+}
+
+/** @returns {[string, {id: string, editedAt: string | null}]} */
+function commentSourceEdit(value, index) {
+  const id = value.node_id ?? `COMMENT_${index + 1}`;
+  const updated = value.updated_at ?? time;
+  return [
+    id,
+    sourceEdit(id, updated === (value.created_at ?? time) ? null : updated),
+  ];
+}
 
 /**
  * @param {any} t
@@ -65,6 +85,8 @@ async function exercise(
     triageResult,
     validatorLogin = "github-actions[bot]",
     viewerFailure,
+    sourceEdits = {},
+    sourceHistory = {},
   } = {},
 ) {
   const root = await mkdtemp(join(tmpdir(), "postern-issue-"));
@@ -127,6 +149,74 @@ async function exercise(
           viewer: validatorLogin.endsWith("[bot]")
             ? { __typename: "Bot", login: validatorLogin.slice(0, -5) }
             : { __typename: "User", login: validatorLogin },
+        },
+      });
+    }
+    if (path === "/graphql" && body.query.includes("ContractSourceEdits")) {
+      const issueId = current.node_id ?? "ISSUE_42";
+      const edits = {
+        [issueId]: sourceEdit(issueId, bodyLastEditedAt),
+        ...Object.fromEntries(comments.flat().map(commentSourceEdit)),
+        ...sourceEdits,
+      };
+      return json({
+        data: {
+          nodes: body.variables.ids.map((id) => {
+            const edit = edits[id];
+            return (
+              edit && {
+                id,
+                lastEditedAt: edit.editedAt,
+                userContentEdits: page(
+                  edit.editedAt
+                    ? [
+                        {
+                          id: edit.id,
+                          editedAt: edit.editedAt,
+                          deletedAt: null,
+                        },
+                      ]
+                    : [],
+                ),
+              }
+            );
+          }),
+        },
+      });
+    }
+    if (path === "/graphql" && body.query.includes("ContractSourceHistory")) {
+      const id = body.variables.id;
+      const issueId = current.node_id ?? "ISSUE_42";
+      const entry = comments
+        .flat()
+        .find(
+          (value, index) => (value.node_id ?? `COMMENT_${index + 1}`) === id,
+        );
+      const editedAt =
+        id === issueId
+          ? bodyLastEditedAt
+          : entry && (entry.updated_at ?? time) !== (entry.created_at ?? time)
+            ? entry.updated_at
+            : null;
+      const edit = sourceEdits[id] ?? sourceEdit(id, editedAt);
+      return json({
+        data: {
+          node: {
+            id,
+            lastEditedAt: editedAt,
+            userContentEdits: page(
+              sourceHistory[id]?.edits ??
+                (editedAt
+                  ? [
+                      {
+                        ...edit,
+                        deletedAt: null,
+                        diff: id === issueId ? current.body : entry.body,
+                      },
+                    ]
+                  : []),
+            ),
+          },
         },
       });
     }
@@ -310,10 +400,12 @@ const writes = (result) =>
             ...request,
             body: {
               ...request.body,
-              body: request.body.body.replace(
-                /"evaluatedAt":"[^"]+"/,
-                '"evaluatedAt":null',
-              ),
+              body: request.body.body
+                .replace(/"evaluatedAt":"[^"]+"/, '"evaluatedAt":null')
+                .replace(
+                  /(<!-- repo-canon:selected-source .*"at":)"[^"]+"/,
+                  "$1null",
+                ),
             },
           }
         : request,
@@ -347,7 +439,10 @@ function decisionFor({
   permissions = {},
   bodyLastEditedAt = null,
   blockedBy = [],
+  sourceEdits = {},
+  sourceHistory = {},
 }) {
+  const issueId = issue.node_id ?? "ISSUE_42";
   return decideIssueContract({
     repository,
     issue: { number: 42, state: "open", ...issue },
@@ -367,6 +462,40 @@ function decisionFor({
       Object.entries(permissions).map(([login, role]) => [login, { role }]),
     ),
     bodyRevision: { id: "ISSUE_42", lastEditedAt: bodyLastEditedAt },
+    sourceEdits: {
+      [issueId]: sourceEdit(issueId, bodyLastEditedAt),
+      ...Object.fromEntries(comments.map(commentSourceEdit)),
+      ...sourceEdits,
+    },
+    sourceHistory: {
+      [issueId]: {
+        complete: true,
+        edits: bodyLastEditedAt
+          ? [
+              {
+                ...sourceEdit(issueId, bodyLastEditedAt),
+                deletedAt: null,
+                diff: issue.body,
+              },
+            ]
+          : [],
+      },
+      ...Object.fromEntries(
+        comments.map((comment, index) => {
+          const [id, edit] = commentSourceEdit(comment, index);
+          return [
+            id,
+            {
+              complete: true,
+              edits: edit.editedAt
+                ? [{ ...edit, deletedAt: null, diff: comment.body }]
+                : [],
+            },
+          ];
+        }),
+      ),
+      ...sourceHistory,
+    },
   });
 }
 const issuePath = "/repos/example/repository/issues/42";
@@ -718,6 +847,23 @@ test("late prerequisite read failures abort before label or feedback mutation", 
   assert.deepEqual(writes(parentFailure), []);
 });
 
+test("prepared validation cannot carry a recorded approval through unavailable source proof", async (t) => {
+  const issue = { number: 42, body: ticketBody, labels: ["state:ready"] };
+  for (const query of ["ContractSourceEdits", "ContractSourceHistory"]) {
+    const result = await exercise(t, {
+      issue,
+      comments: [approvedTicketFeedback(issue)],
+      events: [readinessReview],
+      permissions: { maintainer: "admin" },
+      failure: 503,
+      failurePath: (path, body) =>
+        path === "/graphql" && body.query.includes(query),
+    });
+    assert.ok(result.error instanceof PlatformError, query);
+    assert.deepEqual(writes(result), [], query);
+  }
+});
+
 test("comment global identifiers remain available through the actual published event adapter", async (t) => {
   const current = {
     id: 20,
@@ -849,7 +995,10 @@ test("native blockers supply relationship facts while named-section requirements
       feedbackWrite(decision),
     ]);
     assert.equal(
-      result.requests.filter(({ path }) => path === "/graphql").length,
+      result.requests.filter(
+        ({ path, body }) =>
+          path === "/graphql" && body.variables.number != null,
+      ).length,
       1,
     );
   }
@@ -1082,7 +1231,10 @@ test("reopening an issue with a changed contract invalidates readiness", async (
     event: { kind: "reopened" },
     permissions: { maintainer: "admin" },
   });
-  assert.match(decision.message, /exact contract revision/);
+  assert.match(
+    decision.message,
+    /selected contract source|exact contract revision/,
+  );
   const result = await exercise(t, {
     issue,
     comments,
@@ -1281,7 +1433,10 @@ test("role failures clean up edited approved contracts and recovery requires fre
           });
           assert.equal(failed.error, undefined);
           assert.equal(failed.code, 1);
-          assert.match(failed.stderr, /exact contract revision/);
+          assert.match(
+            failed.stderr,
+            /selected contract source|exact contract revision/,
+          );
           assert.deepEqual(
             writes(failed).map(({ method, path }) => [method, path]),
             [

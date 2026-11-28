@@ -91,8 +91,10 @@ access is unchanged.
 ## Contract publication mode
 
 Before publishing triage, the host verifies the repository's mode and cutoff.
-Preparation retains legacy comment publication and v1 authorization. An explicit
-per-repository cutoff activates body publication, v2 decisions and rejection of
+Preparation retains legacy comment publication and v1 authorization. Follow
+the GitHub rules' Agent Brief section for content-selected precedence and their
+Labels and Readiness roles sections for classification-only categories and
+authenticated source-change approval invalidation. An explicit per-repository cutoff activates body publication, v2 decisions and rejection of
 new comment contracts together, after a bridge reader/poster is installed.
 Freeze new/revised publication during complete inventory and its final re-read;
 include held and skip-routed issues. Unknown mode or proof holds publication.
@@ -114,9 +116,10 @@ live-acceptance ticket, never to source closure.
 
 A parent (a specification or any issue with sub-issues) never runs; its
 readiness releases its tickets, which each also need their own readiness.
-Parenthood grants no Agent Brief exemption: a non-specification parent with a
-`type:` label needs its own complete Agent Brief and revision-bound
-readiness under the planning rules and issue-contract validator.
+Parenthood grants no contract exemption: each parent needs its own complete
+content-selected contract and revision-bound readiness under the planning rules
+and issue-contract validator. Category labels neither create an Agent Brief
+requirement nor exempt a parent from one.
 
 With complete sub-issue link actor history, later links preserve the parent's
 readiness only when every addition at or after readiness was made by a person
@@ -189,8 +192,10 @@ settles takes the planning rules' Decision rights route. When the records settle
 duplicate, the ticket whose pull request closes it, or a past rejection the
 request adds nothing to. A request that brings a new argument against a
 rejection stays `state:owner`. For an intake request,
-a bug report, feature request or triaged request, every outcome carries the
-issue's one `type:` label. A directly authored specification or implementation
+a bug report, feature request or triaged request, the result reports its
+classification through `type:` metadata. Missing, multiple or mismatched labels
+never hold its notice, validation or readiness; the host need not repair them
+to publish a valid contract. A directly authored specification or implementation
 ticket needs no category label under the contribution guide's Implementation
 contracts rule, so a run on one asks for no `type:` label in any outcome.
 
@@ -200,9 +205,9 @@ needs: one `model:` label it chooses under Model selection, any
 `factory:skip` that Skipped work requires, and a `priority:` label as the
 GitHub rules' Labels section says.
 
-A directly authored specification or implementation ticket, an issue-body
-contract with no category label, gets no Agent Brief. The run reviews the
-revision the validator's current notice names, as `triage`'s accept mode
+A directly authored specification or implementation ticket, recognized from
+its body content regardless of category labels, gets no Agent Brief. The run
+reviews the revision the validator's current notice names, as `triage`'s accept mode
 reviews a direct contract. A body that holds and that this run did not write
 is accepted at that exact `sha256:` revision, as the GitHub rules' Readiness
 roles exception allows: the result asks the host for acceptance with

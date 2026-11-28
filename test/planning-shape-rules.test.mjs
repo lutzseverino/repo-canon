@@ -243,7 +243,7 @@ test("Markdown variations pass, and code or comments never form a brief", () => 
   }
 });
 
-test("the brief's Category is bug or enhancement and equals the issue's one category label", () => {
+test("the brief's Category is content while labels report classification discrepancies", () => {
   accepted(
     decideBrief(brief({ category: "bug" }), ["type:bug"]),
     "triaged Agent Brief",
@@ -252,14 +252,11 @@ test("the brief's Category is bug or enhancement and equals the issue's one cate
     decideBrief(brief({ category: "feature" })),
     "Set the Agent Brief `Category` to `bug` or `enhancement`.",
   );
-  rejected(
-    decideBrief(brief({ category: "bug" }), ["type:enhancement"]),
-    "Apply the Agent Brief's `type:bug` category label.",
-  );
-  rejected(
-    decideBrief(brief(), ["type:enhancement", "type:bug"]),
-    "Apply exactly one category label: `type:bug` or `type:enhancement`.",
-  );
+  for (const labels of [[], ["type:bug"], ["type:enhancement", "type:bug"]]) {
+    const decision = decideBrief(brief(), labels);
+    accepted(decision, "triaged Agent Brief");
+    assert.match(decision.feedback.body, /Classification discrepancy/);
+  }
 });
 
 test("the latest Agent Brief comment, by comment ID, is the contract", () => {

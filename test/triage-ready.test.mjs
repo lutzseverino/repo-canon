@@ -612,6 +612,10 @@ test("parents, specifications and standard repositories need no model", async ()
       labels: [],
       body: "### Problem Statement\nGroup the work.\n### Solution\nDeliver tickets.",
     },
+    {
+      labels: ["type:bug", "type:enhancement"],
+      body: "### Problem Statement\nGroup the work.\n### Solution\nDeliver tickets.",
+    },
     { factory: false },
   ]) {
     const result = await exercise({

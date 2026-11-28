@@ -15,9 +15,10 @@ comment Markdown only as data.
 
 The explicit prepared/body protocol, durable cutoff, exact v2 wire schema and
 host publication interface are documented in [body contract protocol](issue-contract-v2.md).
-Preparation preserves every v1 behavior below. After cutoff, source selection,
-edit identities and factory attestation use that protocol; native contracts and
-readiness role, timeline, notice and workflow-state rules remain applicable.
+Prepared mode retains the v1 result and its authority, notice and workflow-state
+rules, with content-selected sources and authenticated source-change invalidation
+as described below. After cutoff, source selection, edit identities and factory
+attestation use that protocol; protected legacy history still governs selection.
 
 The adapter fetches the issue itself before reading its discussion, timeline,
 relationships, edit revision, or actor roles. If that fetched issue is closed,
@@ -85,14 +86,26 @@ empty content, template comments, and GitHub's `_No response_` placeholder.
 The validator uses the repository's pinned Marked and parse5 resources so
 contract syntax in fenced or indented code, inline code, and HTML comments
 remains example content, and required fields are evaluated by their rendered
-visible content. Prepared mode retains the latest-comment contract and intake
-body context. Active body mode selects a body Agent Brief or the exact
-unchanged legacy source inventoried at cutoff; it never selects a new comment.
-Native specifications and implementation tickets remain authoritative when the
-issue does not carry a triage category. Wayfinder labels select the Wayfinder
-contract before either form. The validator alone identifies a contract's kind
-from these labels and the body's headings; the factory reads no issue body. A
-category-labeled `wontfix` outcome does not require an Agent Brief.
+visible content. In prepared mode, structural recognition of a direct
+specification or implementation ticket body happens before required-section
+validation. That body takes precedence over every brief comment, including
+when it is malformed. Otherwise the newest Agent Brief comment by any author
+is selected, otherwise the body. There is no timestamp contest or fallback
+from an invalid selected source. An edit keeps the selected comment at its
+new authenticated source version; deletion selects the latest remaining eligible brief, otherwise
+the body, without carrying approval.
+
+Active body mode selects a body Agent Brief, a native body contract where
+cutoff history permits it, or the exact unchanged legacy source inventoried at
+cutoff; it never selects a new comment. Prepared precedence cannot override
+protected legacy, migration or retirement states. The shared content
+recognizer supplies native kind to source selection and the readiness command's
+specification decisions. Wayfinder labels still select the Wayfinder contract
+before either form and keep their existing routing. Category labels never
+select a source or kind. The validator alone identifies the contract; the
+factory reads no issue body. A content-recognized intake/triaged `wontfix`
+outcome without an Agent Brief needs no brief; category labels cannot turn a
+direct contract into that outcome.
 Native parent and blocking relationships are read through Postern. On GitHub,
 body-only links in `Parent` and `Blocked by` sections do not supply
 relationships. An open blocker does not make a complete contract invalid.
@@ -109,12 +122,59 @@ contracts. Parse5's fragment handling continues to expose text from a bare
 evidence, while image alt text does not establish a relationship. These retain
 the issue-specific edge behavior.
 
-Triaged bug and feature requests must carry exactly one category label
-(`type:bug` or `type:enhancement`), matching their Agent Brief's `bug` or
-`enhancement` Category; the validator settles their workflow state, as described under
-[workflow state](#workflow-state). Direct specifications and implementation
-tickets do not need intake categories or an Agent Brief. Wayfinder planning
-labels remain separate from intake labels.
+The brief's Category content must still be `bug` or `enhancement`. Missing,
+multiple or mismatched `type:` labels are reported classification discrepancies,
+not structural errors or readiness gates. Bug/feature forms, unrecognized
+triaged requests, body briefs and comment briefs all follow that distinction.
+A category change cannot change source, content-derived kind, revision,
+validity or readiness. Direct specifications and implementation tickets do not
+need intake categories or an Agent Brief. Wayfinder planning labels and routing
+remain separate.
+
+## Source-change inventory
+
+Before publishing a source-selection update, compare the previous and proposed
+production validators against every open issue in the destination repository,
+including held, skipped and unready issues. Run the maintenance command from
+the proposed Repo Canon source checkout with the existing supplied credential;
+use an immutable full checkout of the previous installed validator so its
+relative imports resolve:
+
+```sh
+node scripts/issue-contract-source-inventory.mjs capture \
+  --repo OWNER/REPO --output /tmp/contracts.json
+node scripts/issue-contract-source-inventory.mjs compare \
+  --input /tmp/contracts.json \
+  --before /path/to/old-checkout/vendor/repo-canon/validate-issue-contract.mjs \
+  --output /tmp/source-switches.json
+```
+
+The inventory tool is maintained in the source checkout; adoption does not
+install it. Capture retains complete paginated issue/discussion histories,
+authenticated body/comment edit identities and available recorded source
+transitions. Deleted discussion text cannot be recovered from a current list;
+non-resurrection also relies on durable or previously authenticated transition
+records. Missing, redacted, unreadable or incomplete required history cannot
+produce a complete-inventory verdict. Preserve the capture and full comparison
+with the pull request or run artifact, with a lasting summary there; maintained
+documentation holds the procedure rather than a dated evidence dump.
+
+Capture records the resolved result account and its diagnostic alongside the
+trusted check location. At `github`, the fallback must name the Actions account.
+At `runner`, the configured publisher must be readable. A configured factory
+result author must agree with the resolved account. A prepared-mode validator
+run also fails before publishing a result or changing workflow labels when it
+cannot read authenticated source proof.
+
+Compare exact selected source, content-derived kind and revision, not a
+heading sample or only the final diff. Record every switch and every corrected
+old error kind that changes the hash. A changed selected source/edit needs a
+fresh notice and authorized review, with no inherited approval. Genuinely
+unchanged selected sources must retain exact revision bytes. The tool mutates
+no issue, label or readiness and its comparison grants none. Repeat capture
+and comparison before publication so a changing discussion cannot silently
+escape the inventory. Adopters follow the same
+[pre-update check](../usage/adopt-repo-canon.md#check-contract-source-changes).
 
 ## Seams release boundary
 
@@ -323,8 +383,10 @@ with `null` where the evaluation has no value:
   when two events of the same kind leave the decision unchanged.
 - `observedEventId`: the latest readiness transition the evaluation observed,
   other than the validator's own removal of readiness.
-- `sourceInvalidation`: the deleted newer Agent Brief, `deleted-comment:<ID>`,
-  that invalidated a restored source.
+- `sourceInvalidation`: the recorded source transition that invalidated an
+  approval, such as `deleted-comment:<ID>` or an opaque authenticated
+  `source-change:` token. Consumers treat it as validator evidence rather than
+  another source-selection or authority rule.
 - `publishedAt`: when the validator first published this revision, carried by
   later results for it. The result that first publishes a revision records
   `null`; its own update time is that time.
@@ -345,16 +407,19 @@ readiness. Closed issues are not evaluated and keep their last result.
 The result applies one rule for each point where the factory once interpreted
 contracts itself:
 
-- Only an edit to the implementation contract cancels readiness: the latest
-  Agent Brief of a triaged request, or the body of a directly authored ticket or
-  specification. Editing a triaged request's body or another comment does not.
-- Only current category labels count. Removing a triaged request's category
-  label leaves its Agent Brief without the matching category, so the result
-  needs attention and readiness is removed; a native ticket whose category was
-  removed needs no Agent Brief.
-- Readiness binds to one revision of one Agent Brief. Editing or deleting that
-  Brief, or posting a newer one, cancels it; deleting an older, superseded
-  Brief does not.
+- Readiness binds to the selected source and its authenticated edit history.
+  An actual source or selected-source edit change ends its v1 approval,
+  including edit-and-restore, same-second edits and deletion fallback. An ended
+  approval never revives when earlier bytes or a previously selected source
+  return. Editing unrelated context or a superseded comment does not cancel
+  approval while the selected contract stays unchanged.
+- Category labels report classification discrepancies only. Adding, removing
+  or changing them cannot change source, kind, revision, validity or readiness.
+- A selected comment's edit keeps that comment selected at a new authenticated
+  source version requiring fresh notice and review, without inherited factory
+  self-acceptance. A repeated v1 content hash after same-second restoration does
+  not carry approval. Missing authenticated edit proof cannot confer factory
+  authority.
 - Only the `admin`, `maintain` and `triage` roles, or the factory's
   [triage result](#factory-triage-readiness) or
   [review attestation](#factory-review-attestation), authorize readiness, as the
@@ -426,12 +491,21 @@ does not. Feedback records from the previous validator without a rejection
 reason keep the plain notice.
 
 The revision is computed from a versioned record containing the selected
-contract kind, exact contract bytes, source identity, and source edit revision.
+content-derived contract kind, exact contract bytes, source identity, and source
+edit revision. Category labels are not revision inputs. Genuinely unchanged
+selected sources keep byte-identical revisions through this selection change,
+including existing approved comment contracts; an old error kind corrected to
+a direct contract kind is a kind/revision change, not unchanged-source continuity.
 Direct-body contracts use the issue GraphQL node ID and `lastEditedAt`. Agent
-Briefs use the comment node ID and `updated_at`, so editing a brief or replacing
-it with an identical-looking comment still changes the revision. Native parent
-and blocker relationships remain separately fetched review context, not body or
-Brief revision bytes. An explicit relationship link inside a direct ticket body
+Briefs use the comment node ID and `updated_at`. A different source ID or edit
+time changes those revision bytes, but same-second edit-and-restore can repeat
+the old v1 hash. The validator separately records authenticated selected-source
+edit identity in private feedback metadata, keeping the published v1 state
+shape and revision serialization unchanged. That source version ends the old
+approval and requires a fresh notice/review even when the hash repeats. It is
+validator evidence, not a second consumer-facing contract decision. Native
+parent and blocker relationships remain separately fetched review context, not
+body or Brief revision bytes. An explicit relationship link inside a direct ticket body
 is part of those exact bytes. Closing or replacing a native relationship alone
 does not silently redefine the reviewed source revision.
 
@@ -578,8 +652,12 @@ in progress, GitHub keeps only the newest pending run for the issue, so the run
 for the latest event runs last, and because it decides from current state, its
 decision stands. Cancelling runs in progress could stop a run between its label
 writes and its feedback write, and could cancel the `deleted` run, the only run
-that knows about a deleted Agent Brief. A deleted Brief's invalidation is still
-lost when a newer event's run replaces that `deleted` run while it is pending.
+that receives that deleted comment's payload. Complete authenticated
+source/edit histories also establish transitions that a coalesced webhook
+cannot preserve. Edit identities distinguish identical bytes
+restored in the same second, and source invalidation remains after restoration;
+missing proof cannot grant factory authority. This is v1 approval correction,
+not the separate v5 grant/stop-model change.
 
 The event actor is authorized only when GitHub reports the repository `admin`,
 `maintain`, or `triage` role. The triage role is the explicit authorization for
@@ -611,8 +689,15 @@ posts for the run. It names the run on exactly one line of its own:
 
 The brief's shape still applies, so the line comes after the brief's
 preamble, such as below the brief. The result names its brief revision by
-being that revision's source: an edit makes a new revision, and a newer Agent
-Brief replaces it as the contract.
+being that revision's source: an edit establishes a new authenticated source
+version and keeps the comment selected, but removes its inherited factory
+self-acceptance. Fresh notice and review are required even if same-second
+restoration repeats the v1 revision hash. Factory
+authority needs authenticated proof that this selected comment is unedited;
+missing edit proof grants none. Any author's brief may be selected; the factory
+identity affects authority only. Until the separate account-storage migration,
+that identity still comes from `triageResult`. A newer brief replaces a selected
+comment only when prepared direct-body precedence and cutoff history allow it.
 
 A readiness label event by `author` is approved, without a role, when the
 current contract is that comment with one marked run line, and the event
@@ -648,9 +733,10 @@ facts)` returns `null` for the matching attestation or the reason it differs.
 attestation and the body-mode publication proof.
 
 The validator observes the latest attestation the configured `author` posted
-on a direct contract and reads its edit identity: in prepared mode the adapter
-reads only that comment's edit identity, and body mode already reads every
-comment's. It publishes what it observed as the result's `factoryReview`, in
+on a direct contract and reads its edit identity. The adapter also reads the
+body and relevant discussion sources' authenticated edit identities and content
+histories to bind approval to the selected source version in prepared and body
+modes. It publishes what it observed as the result's `factoryReview`, in
 the [v4 result](#review-attestation-result-v4), with `refusal: null` when the
 attestation backs readiness of the current revision, or the reason it backs
 none:
@@ -681,7 +767,7 @@ workflow, and the validator never adds a workflow state to them.
 
 On open issues, incomplete, edited, replaced, stale, or unauthorized contracts
 lose `state:ready`.
-Corrections update the same comment with a new revision and require fresh
+Corrections update the same comment's authenticated source version and require fresh
 review. Structural success never grants readiness, and the validator never
 starts work; the factory picks up ready issues. Reopening an issue whose contract
 changed while closed removes readiness and requires fresh review.
@@ -759,7 +845,8 @@ signal. The change is visible in the issue's label history, no readiness is
 granted, and applying the label again once the timeline has caught up settles
 it.
 
-A category-labeled triaged request with `wontfix` is a `wontfix` outcome unless
+A content-recognized intake or triaged request with `wontfix` is a `wontfix`
+outcome unless
 a non-readiness state applied later replaces `wontfix`, or the issue also
 carries readiness and an Agent Brief, which orders `wontfix` against the review
 like any other state. Readiness beside a `wontfix` outcome without an Agent

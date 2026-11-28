@@ -18,6 +18,7 @@ import {
   loadContractSources,
   saveContractSourceRecord,
   sourceEditIdentities,
+  sourceContentHistories,
   captureContractCutoff,
   installContractCutoff,
   captureContractIntake,
@@ -81,6 +82,37 @@ function store(checks = ["Test"]) {
                               text: JSON.stringify({ version: 1, checks }),
                             },
                     },
+              },
+            },
+          };
+        }
+        if (
+          path === "/graphql" &&
+          input.body.query.includes("ContractSourceHistory")
+        ) {
+          const id = input.body.variables.id;
+          const node = nodes[id];
+          const issue = await connection.issueTracker.issue(42);
+          const comments = await connection.issueTracker.comments(42);
+          const source =
+            issue.nodeId === id
+              ? issue
+              : comments.find((comment) => comment.nodeId === id);
+          return {
+            data: {
+              data: {
+                node: node && {
+                  id,
+                  lastEditedAt: node.lastEditedAt,
+                  userContentEdits: {
+                    totalCount: node.userContentEdits?.nodes?.length ?? 0,
+                    nodes: (node.userContentEdits?.nodes ?? []).map((edit) => ({
+                      ...edit,
+                      diff: edit.diff ?? source?.body ?? "",
+                    })),
+                    pageInfo: { hasNextPage: false, endCursor: null },
+                  },
+                },
               },
             },
           };
@@ -281,6 +313,87 @@ test("source edit identity detects restored/same-second edits and unavailable hi
     /incomplete/,
   );
 });
+test("source content history follows every page and refuses incomplete authenticated content", async () => {
+  const edits = [
+    {
+      id: "E2",
+      editedAt: "2026-11-09T01:00:00Z",
+      deletedAt: null,
+      diff: "## What to build\n\nTemporary direct contract.",
+    },
+    {
+      id: "E1",
+      editedAt: "2026-11-09T00:00:00Z",
+      deletedAt: null,
+      diff: "Original intake.",
+    },
+  ];
+  const reads = [];
+  const connection = {
+    access: {
+      async request(input) {
+        reads.push(input.body.variables);
+        const after = input.body.variables.after;
+        return {
+          data: {
+            data: {
+              node: {
+                id: "I42",
+                lastEditedAt: edits[0].editedAt,
+                userContentEdits: {
+                  totalCount: edits.length,
+                  nodes: [edits[after ? 1 : 0]],
+                  pageInfo: {
+                    hasNextPage: !after,
+                    endCursor: after ? null : "next",
+                  },
+                },
+              },
+            },
+          },
+        };
+      },
+    },
+  };
+  assert.deepEqual(await sourceContentHistories(connection, ["I42", "I42"]), {
+    I42: { complete: true, edits },
+  });
+  assert.deepEqual(reads, [
+    { id: "I42", after: null },
+    { id: "I42", after: "next" },
+  ]);
+  for (const invalid of [
+    { nodes: [null], pageInfo: { hasNextPage: false } },
+    { nodes: [{ ...edits[0], diff: null }], pageInfo: { hasNextPage: false } },
+    {
+      nodes: [{ ...edits[0], deletedAt: edits[0].editedAt }],
+      pageInfo: { hasNextPage: false },
+    },
+    { nodes: [], pageInfo: { hasNextPage: true, endCursor: null } },
+  ]) {
+    const unavailable = {
+      access: {
+        async request() {
+          return {
+            data: {
+              data: {
+                node: {
+                  id: "I42",
+                  lastEditedAt: edits[0].editedAt,
+                  userContentEdits: { totalCount: 1, ...invalid },
+                },
+              },
+            },
+          };
+        },
+      },
+    };
+    await assert.rejects(
+      () => sourceContentHistories(unavailable, ["I42"]),
+      /Complete authenticated source content history is unavailable/,
+    );
+  }
+});
 test("capture takes original and author/writer proof from platform before body publication, never reconstructed intake", async () => {
   const { connection } = store();
   const facts = {
@@ -431,7 +544,11 @@ test("active adapter initializes new native tickets with incidental Brief headin
     blockedBy: [],
   };
   const comments = [];
-  nodes.I42 = { id: "I42", lastEditedAt: null };
+  nodes.I42 = {
+    id: "I42",
+    lastEditedAt: null,
+    userContentEdits: { nodes: [] },
+  };
   files.set("cutoff.json", { value: receipt, sha: "receipt" });
   connection.issueTracker = {
     capabilities: { bodyEditTime: true },
@@ -483,7 +600,7 @@ import {
   readIssueContractObservation,
 } from "../vendor/repo-canon/validate-issue-contract.mjs";
 
-test("body-only historical approval resolves its boundary before category-error writes", async () => {
+test("body-only historical approval resolves its boundary and survives category removal", async () => {
   const fixture = JSON.parse(
     readFileSync(
       new URL("./fixtures/issue-contract-v2.json", import.meta.url),
@@ -597,13 +714,13 @@ test("body-only historical approval resolves its boundary before category-error 
       },
     );
     assert.equal(resolutions, 1);
-    assert.equal(code, 1);
+    assert.equal(code, resolved ? 0 : 1);
     if (resolved) {
       assert.deepEqual(roles, ["maintainer"]);
       const state = issueContractResult(comments).state;
-      assert.equal(state.status, "needs-attention");
+      assert.equal(state.status, "approved");
       assert.equal(state.seamsExemption.evaluatedAt, original.evaluatedAt);
-      assert.ok(!issue.labels.includes("state:ready"));
+      assert.ok(issue.labels.includes("state:ready"));
     } else {
       assert.deepEqual(writes, []);
       assert.deepEqual(issue.labels, ["state:ready"]);

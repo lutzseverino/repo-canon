@@ -133,7 +133,22 @@ function snapshot({
     issueEvents,
     permissions: { maintainer: role("admin"), [factory]: { role: null } },
     triageResult: configured,
-    sourceEdits,
+    sourceEdits: {
+      ISSUE_42: {
+        id: issue.lastEditedAt ? "BODY_EDIT" : "created:ISSUE_42",
+        editedAt: issue.lastEditedAt ?? null,
+      },
+      ...sourceEdits,
+    },
+    sourceHistory: {
+      ISSUE_42: { complete: true, edits: [] },
+      ...Object.fromEntries(
+        comments.map((comment) => [
+          comment.node_id,
+          { complete: true, edits: [] },
+        ]),
+      ),
+    },
   };
 }
 
@@ -332,7 +347,10 @@ test("the factory's readiness waits for a notice that named its attestation", as
     const s = accepted();
     const replacement = attestation({ id: 21 });
     s.comments.push(replacement);
-    s.sourceEdits = unedited(s.comments[1], replacement);
+    Object.assign(s.sourceEdits, unedited(replacement));
+    Object.assign(s.sourceHistory, {
+      COMMENT_21: { complete: true, edits: [] },
+    });
     assertRefused(decideIssueContract(s), waiting);
   });
 });
@@ -413,14 +431,15 @@ test("refuses the factory's readiness with an attestation that does not back it"
     );
   await t.test("an edited attestation", () => {
     const s = accepted();
-    s.sourceEdits = {
-      COMMENT_20: { id: "EDIT_20", editedAt: "2026-11-17T10:00:08Z" },
+    s.sourceEdits.COMMENT_20 = {
+      id: "EDIT_20",
+      editedAt: "2026-11-17T10:00:08Z",
     };
     assertRefused(decideIssueContract(s), /edited after posting/);
   });
   await t.test("an attestation whose edit history was not read", () => {
     const s = accepted();
-    s.sourceEdits = {};
+    delete s.sourceEdits.COMMENT_20;
     assertRefused(decideIssueContract(s), /edit history was not read/);
   });
   await t.test("an attestation from the run that wrote the issue", () => {
@@ -473,6 +492,7 @@ test("a review attestation authorizes nothing on a triaged Agent Brief", () => {
   const s = snapshot({
     issue,
     attested,
+    sourceEdits: unedited(brief, attested),
     comments: [
       brief,
       {
@@ -535,8 +555,9 @@ test("a recorded approval holds on later runs and ends with its attestation", as
   });
   await t.test("editing the attestation removes readiness", () => {
     const s = approvedAfter();
-    s.sourceEdits = {
-      COMMENT_20: { id: "EDIT_20", editedAt: "2026-11-17T10:00:12Z" },
+    s.sourceEdits.COMMENT_20 = {
+      id: "EDIT_20",
+      editedAt: "2026-11-17T10:00:12Z",
     };
     const state = assertRefused(decideIssueContract(s), /edited after posting/);
     assert.equal(
@@ -580,7 +601,7 @@ test("without a factory triage configuration nothing changes", () => {
   );
   assertRefused(withAttestation, /@factory\[bot\] is not authorized/);
   assert.equal(stateOf(withAttestation).format, resultFormat);
-  assert.equal(withAttestation.feedback.body, without.feedback.body);
+  assert.deepEqual(stateOf(withAttestation), stateOf(without));
   assert.equal(withAttestation.message, without.message);
 });
 

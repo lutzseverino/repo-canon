@@ -385,9 +385,9 @@ test("only an edit to the implementation contract cancels readiness", async (t) 
   );
 });
 
-test("only current category labels count", async (t) => {
+test("category changes preserve the selected contract and readiness", async (t) => {
   await t.test(
-    "removing a triaged request's category cancels readiness, and the result approves nothing",
+    "removing a triaged request's category reports classification without cancelling readiness",
     () => {
       const decision = decideIssueContract(
         briefSnapshot({
@@ -410,9 +410,11 @@ test("only current category labels count", async (t) => {
           },
         }),
       );
-      const state = cancelled(decision, "needs-attention");
-      assert.equal(state.revision, null);
-      assert.equal(state.reviewer, null);
+      kept(decision);
+      const state = publishedState(decision.feedback.body);
+      assert.equal(state.revision, briefRevision(brief));
+      assert.equal(state.reviewer, "maintainer");
+      assert.match(decision.feedback.body, /Classification discrepancy/);
       assert.deepEqual(
         state.event,
         evaluated("unlabeled", "maintainer", { label: "type:enhancement" }),

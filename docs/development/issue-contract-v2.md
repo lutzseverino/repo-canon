@@ -8,9 +8,15 @@ live pickup evidence. A source merge closes only #919, never activation.
 
 ## Preparation and activation
 
-No configuration file means **prepared** mode. Installing this release leaves
-comment selection, revision serialization, the v1 base result, notice barriers,
-authority, `ready.mjs`, native contracts and workflow-state behavior intact.
+No configuration file means **prepared** mode. Content selects a structurally
+recognized direct specification/ticket body first, even when malformed,
+otherwise the newest Agent Brief comment by any author, otherwise the body.
+Installing the body protocol alone activates no cutoff. Content-derived kind
+and unchanged-source revision serialization, the v1 base result, notice barriers,
+authority and workflow-state behavior remain as described in
+[issue contract validation](issue-contract-validation.md). Category labels
+report classification only; authenticated selected-source/edit transitions end
+approval even after restoration.
 The independent [Seams release extension](issue-contract-validation.md#seams-release-boundary)
 can wrap an exempt revision's v1/v2 base as v3 without activating body mode.
 No package version or installation date activates body mode. An unchanged
@@ -125,6 +131,12 @@ a missing ledger entry holds until its history is recovered. A
 partially prepared ledger before mode activation can be removed and recaptured
 by its authorized operator under the freeze; after activation preserve the
 receipt and records, repair forward, and never roll back to comment selection.
+
+All migration triggers, migrated-body holds, eligible-comment decisions and
+native-body decisions use content and authenticated facts, never category
+labels. The shared content recognizer may select a native body only where the
+cutoff state permits; prepared direct-body precedence is no escape from a
+protected legacy source or a recorded migration/retirement hold.
 
 An eligible comment must keep its exact content revision and edit identity.
 A new/replacement Brief, source edit or deletion retires it. Editing and restoring

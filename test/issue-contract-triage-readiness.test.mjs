@@ -88,6 +88,10 @@ function snapshot({
     issueEvents: [readiness(actor)],
     permissions: { maintainer: role("admin"), [factory]: { role: null } },
     triageResult: configured,
+    sourceEdits: {
+      [contract.node_id]: { id: `created:${contract.node_id}`, editedAt: null },
+    },
+    sourceHistory: { ISSUE_42: { complete: true, edits: [] } },
   };
 }
 

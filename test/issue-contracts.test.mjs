@@ -837,7 +837,7 @@ structureTable("issue structure decides the contract and its corrections", [
     },
     {
       name: "triaged Agent Brief",
-      body: "Free-form intake context.\n\n## Solution\n\nTry a cache.\n\n## Acceptance criteria\n\nThe result should be fast.",
+      body: "Free-form intake context.\n\n## Proposed approach\n\nTry a cache.",
       labels: [{ name: "type:enhancement" }, { name: "state:triage" }],
       feedback: "create",
     },
@@ -875,7 +875,7 @@ structureTable("issue structure decides the contract and its corrections", [
     },
   })),
   {
-    name: "a triage category cannot make a native body bypass the Agent Brief",
+    name: "a triage category cannot change a native body into an Agent Brief",
     snapshot: {
       issue: {
         number: 42,
@@ -889,7 +889,7 @@ structureTable("issue structure decides the contract and its corrections", [
       remove: ["state:ready"],
       add: ["state:triage"],
       feedback: "create",
-      message: /Agent Brief/,
+      message: /timeline does not contain the current readiness label event/,
     },
   },
   {
@@ -3954,11 +3954,18 @@ decisionTable(
           labels: ["type:bug", "type:enhancement", "state:triage"],
           events: [triagedLabel(3, "type:enhancement", "2026-10-13T10:00:00Z")],
         });
+        failing.comments[0] = {
+          ...triagedBrief,
+          body: triagedBrief.body.replace(
+            "**Summary:**",
+            "**Missing summary:**",
+          ),
+        };
         const failure = decideIssueContract(snapshotFor(failing));
         assertDecision(failure, {
           exitCode: 1,
           feedback: 13,
-          message: /Apply exactly one category label/,
+          message: /Summary/,
           feedbackBody: /needs attention/,
         });
         assert.deepEqual(recordedState(failure.feedback.body), {
@@ -3979,6 +3986,9 @@ decisionTable(
         const early = decideIssueContract(
           snapshotFor({
             ...failed,
+            comments: failed.comments.map((comment) =>
+              comment.id === triagedBrief.id ? triagedBrief : comment,
+            ),
             issue: {
               ...failed.issue,
               labels: [
@@ -4005,6 +4015,9 @@ decisionTable(
         // that notice is approved.
         const correction = {
           ...failed,
+          comments: failed.comments.map((comment) =>
+            comment.id === triagedBrief.id ? triagedBrief : comment,
+          ),
           issue: {
             ...failed.issue,
             labels: [{ name: "type:bug" }, { name: "state:triage" }],

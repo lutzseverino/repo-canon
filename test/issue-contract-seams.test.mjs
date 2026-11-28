@@ -113,7 +113,48 @@ function historical(mode = "comment") {
     state.format = "repo-canon/issue-contract-state/v1";
     s.comments[s.comments.length - 1] = notice(state);
   }
+  s.sourceEdits ??= {};
+  s.sourceEdits[s.bodyRevision.id] ??= {
+    id: `created:${s.bodyRevision.id}`,
+    editedAt: null,
+  };
+  s.sourceHistory = Object.fromEntries(
+    Object.entries(s.sourceEdits).map(([id, edit]) => [
+      id,
+      {
+        complete: true,
+        edits: edit.editedAt
+          ? [{ ...edit, diff: id === s.bodyRevision.id ? s.issue.body : body }]
+          : [],
+      },
+    ]),
+  );
   return s;
+}
+
+// Authenticated platform responses are independent of category labels. They
+// retain the exact resulting content and edit identity that this snapshot owns.
+function sourceRequests(s) {
+  return async ({ body: { query, variables } }) => {
+    const source = (id) => {
+      const edit = s.sourceEdits[id];
+      assert.ok(edit, `Unexpected source identity ${id}`);
+      const edits = s.sourceHistory[id].edits;
+      return {
+        id,
+        lastEditedAt: edit.editedAt,
+        userContentEdits: {
+          totalCount: edits.length,
+          nodes: edits.map((value) => ({ ...value, deletedAt: null })),
+          pageInfo: { hasNextPage: false, endCursor: null },
+        },
+      };
+    };
+    if (query.includes("ContractSourceEdits"))
+      return { data: { data: { nodes: variables.ids.map(source) } } };
+    assert.match(query, /ContractSourceHistory/);
+    return { data: { data: { node: source(variables.id) } } };
+  };
 }
 function rewrite(s, decision) {
   s.comments = s.comments.filter(
@@ -453,68 +494,72 @@ test("body-mode durable notices retain the exemption when feedback is deleted", 
   );
 });
 
-test("body-mode category repair retains historical proof without reviving readiness", () => {
+test("body-mode category relabeling preserves historical approval and exemption", () => {
   const s = historical("body");
   const approved = decide(s);
   rewrite(s, approved);
-  s.issue.labels = ["state:ready"];
-  const held = decide(s);
-  assert.equal(stateOf(held).status, "needs-attention");
-  assert.equal(stateOf(held).revision, null);
-  assert.deepEqual(
-    stateOf(held).seamsExemption,
-    stateOf(approved).seamsExemption,
-  );
-  rewrite(s, held);
-  s.issue.labels = ["type:enhancement"];
-  const repaired = decide(s);
-  assert.equal(stateOf(repaired).status, "awaiting-review");
-  assert.deepEqual(
-    stateOf(repaired).seamsExemption,
-    stateOf(approved).seamsExemption,
-  );
+  const evidence = previous(s).seamsExemption;
+  for (const categories of [
+    [],
+    ["type:bug"],
+    ["type:enhancement", "type:bug"],
+    ["type:enhancement"],
+  ]) {
+    s.issue.labels = ["state:ready", ...categories];
+    const relabeled = decide(s);
+    assert.equal(stateOf(relabeled).status, "approved");
+    assert.equal(stateOf(relabeled).revision, stateOf(approved).revision);
+    assert.deepEqual(stateOf(relabeled).seamsExemption, evidence);
+    assert.deepEqual(relabeled.removeLabels, []);
+    rewrite(s, relabeled);
+  }
 });
 
 for (const mode of ["prepared", "comment", "body"]) {
-  test(`${mode}: a retained exemption's needs-attention notice leads with its revision`, () => {
+  test(`${mode}: a retained exemption's classification notice leads with its unchanged revision`, () => {
     const s = historical(mode);
+    const original = previous(s);
     s.issue.labels.push("type:bug");
-    const held = decide(s);
-    assert.equal(stateOf(held).status, "needs-attention");
-    assert.ok(stateOf(held).revision);
-    feedbackLayout(held.feedback.body);
+    const relabeled = decide(s);
+    assert.equal(stateOf(relabeled).status, "approved", relabeled.message);
+    assert.equal(stateOf(relabeled).revision, original.revision);
+    assert.match(relabeled.feedback.body, /Classification discrepancy/);
+    feedbackLayout(relabeled.feedback.body);
   });
 }
 
 for (const mode of ["comment", "body"]) {
-  test(`${mode}: first-cutover category repair retains the original approval evidence`, () => {
+  test(`${mode}: first-cutover category discrepancies preserve the original approval evidence`, () => {
     const s = historical(mode);
     s.issue.labels = ["state:ready"];
-    const held = decide(s);
-    assert.equal(stateOf(held).status, "needs-attention");
+    const relabeled = decide(s);
+    assert.equal(stateOf(relabeled).status, "approved");
     assert.equal(
-      stateOf(held).seamsExemption?.evaluatedAt,
+      stateOf(relabeled).seamsExemption?.evaluatedAt,
       "2026-11-09T01:00:20Z",
     );
-    rewrite(s, held);
-    s.issue.labels = ["type:enhancement"];
-    const repaired = decide(s);
-    assert.equal(stateOf(repaired).status, "awaiting-review");
+    assert.match(relabeled.feedback.body, /Classification discrepancy/);
+    rewrite(s, relabeled);
+    s.issue.labels = ["state:ready", "type:enhancement"];
+    const classified = decide(s);
+    assert.equal(stateOf(classified).status, "approved");
     assert.equal(
-      stateOf(repaired).seamsExemption?.evaluatedAt,
+      stateOf(classified).seamsExemption?.evaluatedAt,
       "2026-11-09T01:00:20Z",
     );
-    assert.ok(!repaired.addLabels.includes("state:ready"));
+    assert.deepEqual(classified.removeLabels, []);
+    assert.deepEqual(classified.addLabels, []);
   });
 }
 
-test("the adapter loads historical authority before a first-cutover category repair", async () => {
+test("the adapter preserves historical authority through first-cutover category discrepancies", async () => {
   for (const category of [null, "type:bug"]) {
     const s = historical("prepared");
     s.issue.labels = ["state:ready", ...(category ? [category] : [])];
     const roles = [];
     const connection = {
       access: {
+        request: sourceRequests(s),
         role: async (login) => {
           roles.push(login);
           return "admin";
@@ -570,29 +615,35 @@ test("the adapter loads historical authority before a first-cutover category rep
         { mode: "prepared" },
         async () => seamsBoundary,
       );
-    assert.equal(await evaluate(), 1);
-    assert.deepEqual(roles, ["maintainer"]);
-    assert.equal(
-      previous(s).seamsExemption?.evaluatedAt,
-      "2026-11-09T01:00:20Z",
-    );
-    s.issue.labels = ["type:enhancement"];
     assert.equal(await evaluate(), 0);
-    assert.equal(previous(s).status, "awaiting-review");
+    assert.deepEqual(roles, ["maintainer"]);
+    assert.equal(previous(s).status, "approved");
     assert.equal(
       previous(s).seamsExemption?.evaluatedAt,
       "2026-11-09T01:00:20Z",
     );
-    assert.ok(!s.issue.labels.includes("state:ready"));
+    s.issue.labels = ["state:ready", "type:enhancement"];
+    assert.equal(await evaluate(), 0);
+    assert.equal(previous(s).status, "approved");
+    assert.equal(
+      previous(s).seamsExemption?.evaluatedAt,
+      "2026-11-09T01:00:20Z",
+    );
+    assert.ok(s.issue.labels.includes("state:ready"));
   }
 });
 
-test("a held legacy selector authenticates historical factory approval without selecting it", () => {
+test("a retired legacy selector retains authenticated historical factory proof independently of categories", () => {
   const s = historical("comment");
   const brief = s.comments[0];
   brief.body += '\n\n<!-- factory:run {"run":"triage-7"} -->';
   brief.user = { login: "factory[bot]" };
   s.triageResult = { author: "factory[bot]", marker: "factory:run" };
+  brief.created_at = brief.updated_at;
+  s.sourceEdits.C12 = { id: "created:C12", editedAt: null };
+  s.sourceHistory.C12 = { complete: true, edits: [] };
+  s.contractSources.receipt.issues[0].legacy.edit = s.sourceEdits.C12;
+  s.contractSources.record.retired = true;
   const original = previous(s);
   original.reviewer = "factory[bot]";
   original.revision = revision({
@@ -611,7 +662,8 @@ test("a held legacy selector authenticates historical factory approval without s
   rewrite(s, held);
   s.issue.labels = ["type:enhancement"];
   const repaired = decide(s);
-  assert.equal(stateOf(repaired).status, "awaiting-review");
+  assert.equal(stateOf(repaired).status, "needs-attention");
+  assert.equal(repaired.selection.state, "held");
   assert.equal(stateOf(repaired).seamsExemption?.revision, original.revision);
   assert.ok(!repaired.addLabels.includes("state:ready"));
 });
@@ -854,10 +906,23 @@ test("the adapter resolves a comment Brief's boundary before timeline state can 
     let resolutions = 0;
     const writes = [];
     const connection = {
+      access: {
+        request: sourceRequests({
+          sourceEdits: {
+            I42: { id: "created:I42", editedAt: null },
+            C12: { id: "created:C12", editedAt: null },
+          },
+          sourceHistory: {
+            I42: { complete: true, edits: [] },
+            C12: { complete: true, edits: [] },
+          },
+        }),
+      },
       issueTracker: {
         capabilities: { bodyEditTime: true },
         issue: async () => ({
           number: 42,
+          nodeId: "I42",
           state: "open",
           body: "Intake",
           labels: ["type:enhancement", "wontfix", "state:reporter"],

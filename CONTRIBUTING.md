@@ -22,9 +22,15 @@ For intake and triage, follow the [planning rules](.repo-standards/rules/plannin
 
 A directly authored specification or implementation ticket carries its
 implementation contract in its issue body and needs no intake triage, Agent
-Brief, or category label. A triaged request uses the validator's body Agent Brief after explicit
-activation. Preparation retains latest-comment contracts; cutoff preserves exact unchanged
-inventoried comments until revision into the body. Preserve one verbatim `Original request` at the body's end.
+Brief, or category label. In prepared mode, a structurally recognized direct
+specification or ticket body takes precedence, even when it needs correction;
+otherwise the newest Agent Brief comment by any author is the contract,
+otherwise the body. Category (`type:`) labels report classification only and
+never decide the source, kind, revision, validity or readiness. A triaged request
+uses the validator's body Agent Brief after explicit activation. Cutoff preserves
+exact unchanged inventoried comments until revision into the body; prepared
+precedence never bypasses that protected history. Preserve one verbatim
+`Original request` at the body's end.
 See [Agent Brief](.repo-standards/rules/github-repository-configuration.md#agent-brief).
 
 Before implementing, read the whole issue, its discussion, its parent

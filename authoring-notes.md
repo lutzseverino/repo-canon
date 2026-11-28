@@ -179,6 +179,13 @@ repeated.
 - Implementation contracts, and what an agent reads before implementing one,
   are stated in
   [`CONTRIBUTING.md`](CONTRIBUTING.md#implementation-contracts).
+  [ADR 0035's prepared-mode amendment](docs/adr/0035-keep-the-implementation-contract-in-the-issue-body.md#prepared-mode-selection-amendment)
+  records the owner's 2026-11-26 content-selection alignment in
+  [#1252](https://github.com/lutzseverino/repo-canon/issues/1252): direct body
+  precedence, any-author briefs, classification-only categories, unchanged
+  hashes and authenticated v1 source-change invalidation, with cutoff history
+  preserved. The [GitHub rules](rules/github-repository-configuration.md#agent-brief)
+  own the current requirement.
 - Monorepo documentation policy remains independent of directory names. Use
   the delivered v2 discovery interface for arbitrary Project README targets;
   demonstrate complete coverage before claiming monorepo adoption support.

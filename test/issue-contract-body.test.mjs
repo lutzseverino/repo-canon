@@ -8,6 +8,7 @@ import {
   briefRevision,
   bot,
   featureBody,
+  ticketBody,
 } from "./helpers/issue-contracts.mjs";
 const brief = {
   id: 12,
@@ -16,7 +17,7 @@ const brief = {
   updated_at: "2026-11-08T00:00:00Z",
   user: { login: "reporter" },
 };
-const edit = { id: "EDIT12", editedAt: brief.updated_at };
+const edit = { id: "created:C12", editedAt: null };
 const revision = briefRevision(brief);
 function snapshot() {
   return {
@@ -37,6 +38,10 @@ function snapshot() {
     permissions: {},
     bodyRevision: { id: "I42", lastEditedAt: null },
     sourceEdits: { C12: edit },
+    sourceHistory: {
+      I42: { complete: true, edits: [] },
+      C12: { complete: true, edits: [] },
+    },
     contractSources: {
       trusted: true,
       mode: "body",
@@ -78,6 +83,19 @@ test("body mode preserves the exact eligible legacy revision in v2", () => {
   assert.equal(result.format, "repo-canon/issue-contract-state/v2");
   assert.equal(result.revision, revision);
   assert.equal(result.selection.state, "eligible");
+});
+
+test("prepared direct-body precedence never displaces a protected eligible cutoff comment", () => {
+  const s = snapshot();
+  s.issue.body = ticketBody;
+  s.issue.labels = [];
+  const decision = decideIssueContract(s);
+  const selected = issueContractResult([
+    { user: bot, body: decision.feedback.body },
+  ]).state;
+  assert.equal(selected.selection.state, "eligible");
+  assert.equal(selected.source.type, "comment");
+  assert.equal(selected.revision, revision);
 });
 export {
   snapshot,
@@ -280,7 +298,7 @@ test("migration persists across comments, body deletion, category removal/re-add
   assert.equal(result(d).selection.state, "held");
   s.issue.body = bodyWithOriginal(completeAgentBrief, featureBody);
   s.issue.labels = [];
-  assert.equal(result(decideIssueContract(s)).selection.state, "held");
+  assert.equal(result(decideIssueContract(s)).selection.state, "migrated");
   s.issue.labels = ["type:enhancement"];
   assert.equal(result(decideIssueContract(s)).selection.state, "migrated");
 });

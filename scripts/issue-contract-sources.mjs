@@ -64,10 +64,8 @@ export function sourceSelection(snapshot, briefs, revisionOf) {
       "Durable issue source record unavailable; recover it or capture original intake before migrating. Reopened issues absent at cutoff must migrate.",
     );
   const bodyBrief = snapshot.bodyBrief;
-  const hasCategory = (snapshot.issue.labels ?? []).some((label) =>
-    ["type:bug", "type:enhancement"].includes(
-      typeof label === "string" ? label : label.name,
-    ),
+  const nativeDirect = ["specification", "implementation ticket"].includes(
+    snapshot.bodyKind,
   );
   let next = structuredClone(record);
   const eligible = receipt.issues.find(
@@ -82,7 +80,7 @@ export function sourceSelection(snapshot, briefs, revisionOf) {
     });
   if (
     bodyBrief &&
-    (hasCategory || eligible || next.migrated || next.retired) &&
+    (!nativeDirect || eligible || next.migrated || next.retired) &&
     !(unchangedCutoffBody && !next.migrated)
   )
     next = { ...next, migrated: true, retired: true };
@@ -111,9 +109,9 @@ export function sourceSelection(snapshot, briefs, revisionOf) {
   if (eligible && (!unchanged || replacement || deletedReplacement))
     next.retired = true;
   if (next.migrated) {
-    if (!bodyBrief || !hasCategory)
+    if (!bodyBrief)
       return held(
-        "This issue migrated to its body; restore its body Agent Brief and category. Legacy sources cannot be resurrected.",
+        "This issue migrated to its body; restore its body Agent Brief. Legacy sources cannot be resurrected.",
         next,
       );
     if (!snapshot.bodyRevision?.editId)
@@ -132,7 +130,7 @@ export function sourceSelection(snapshot, briefs, revisionOf) {
       type: "issue-body",
     };
   }
-  if (eligible && unchanged && !next.retired && hasCategory)
+  if (eligible && unchanged && !next.retired)
     return {
       selection: { ...selection, state: "eligible" },
       record: next,
@@ -141,8 +139,8 @@ export function sourceSelection(snapshot, briefs, revisionOf) {
       legacy: eligible,
     };
   // Native contracts and ordinary intake remain native. Retired/migrated triage
-  // contracts must never fall through to a direct contract after label removal.
-  if (!eligible && !next.retired && (!hasCategory || briefs.length === 0))
+  // contracts must never fall through to a direct contract after source edits.
+  if (!eligible && !next.retired && (nativeDirect || briefs.length === 0))
     return {
       selection: { ...selection, state: "native" },
       record: next,
