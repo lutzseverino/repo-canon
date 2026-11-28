@@ -325,7 +325,7 @@ function readRecord(lines, tables) {
 
 // A review in either shape, or null when it is neither. A visible footer line
 // makes it the lead-line record; otherwise it is read as the five-line record.
-function readReview(body) {
+export function readReview(body) {
   if (typeof body !== "string") return null;
   const context = { elements: [], tables: [] };
   const lines = visibleLines(marked.lexer(body), false, context);
