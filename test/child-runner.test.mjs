@@ -24,7 +24,7 @@ const boundMs = 1000;
 /**
  * Advance time from observed child I/O, independently of the runner's refreshes.
  * @param {{observeChild?: (child: import("node:child_process").ChildProcess, advance: Advance) => void, observeNested?: ObserveNested}} observers
- * @returns {NonNullable<Parameters<typeof runChild>[2]["timing"]>}
+ * @returns {import("./helpers/child-runner.mjs").Timing}
  */
 function controlledTime({ observeChild, observeNested }) {
   let now = 0;
@@ -83,6 +83,19 @@ test("a command exceeding its total bound returns its partial output and diagnos
     /total.*1000.*partial stdout.*partial stderr/s,
   );
   assert.match(result.error.message, /node/);
+});
+
+test("the default timer ends a command that never exits at its total bound", async () => {
+  // Only the default timer can end this child, however slowly the host runs it.
+  const result = await runChild(
+    process.execPath,
+    ["-e", "setInterval(() => {}, 1000);"],
+    { kind: "command", boundMs: 100 },
+  );
+  assert.equal(result.status, null);
+  assert.equal(result.signal, "SIGKILL");
+  assert.equal(result.timeout.bound, "total");
+  assert.match(result.error.message, /total bound \(100 ms\)/);
 });
 
 test("a signal ending the awaiting process also ends its detached child", async (t) => {
