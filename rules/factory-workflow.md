@@ -150,6 +150,12 @@ otherwise the cheaper one. The host owns the fit, narrower-model and cost
 information; Repo Canon supplies no model ranking or task-difficulty ladder.
 The one-line model reason identifies the actual guidance used.
 
+A model without guidance is never chosen by judgment: it runs only when the
+owner explicitly names it for a launch or as a configured default. When guidance
+leaves the choice open, use the configured host default (`models.default`), even
+if unguided, and say in the one-line model reason that guidance did not settle
+the choice.
+
 For model resolution, fallback and provider diversity, follow
 [Scriptorium's model selection documentation](https://github.com/lutzseverino/scriptorium/blob/scriptorium-v4.3.0/docs/usage/host.md#model-selection).
 
