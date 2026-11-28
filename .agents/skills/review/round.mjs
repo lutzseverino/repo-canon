@@ -9,10 +9,9 @@
 // rules' template that the account running this command posted; no other
 // account's review counts. Without an action, prints the pull request's
 // round: its head, the round number, whether that head already has this
-// account's review, whether the review held (this account's latest review is
-// of the head and leaves no open finding), whether the PR is a draft, the
-// issues it closes (plus each --issue) and every owner gate (`gate:` label)
-// on the PR or those issues.
+// account's review, whether the latest complete review of this account holds
+// on the current head, whether the PR is a draft, the issues it closes (plus
+// each --issue) and every owner gate (`gate:` label) on the PR or those issues.
 // --post posts the file as this round's review of the current head, once it is
 // a complete review of that head and the head has none of this account's yet.
 // --reassess updates this account's latest complete, non-holding review of
@@ -31,8 +30,7 @@ import {
 } from "../babysit/platform.mjs";
 import {
   completeReview,
-  holdingReview,
-  reviewedHead,
+  readReview,
   reviewsSection,
 } from "../babysit/review-outcome.mjs";
 
@@ -41,6 +39,7 @@ import { ownerGates } from "../babysit/owner-gates.mjs";
 const usage =
   "Usage: round.mjs <number> [--issue <number>]... [--post <file> | --reassess <file> | --ready] [--repo <owner/name>]";
 const positive = /^[1-9]\d*$/;
+const fullHead = /^[0-9a-f]{40}$/;
 
 // The account this command runs as, the identity whose holding review it
 // trusts. GraphQL's viewer serves App installation tokens too; it names a Bot
@@ -79,13 +78,13 @@ function options(argv) {
 
 // A complete review names its own head, the commit it was posted on; count it
 // against that head.
-export function completedReviews(reviews) {
+function completedAssessments(reviews) {
   return reviews.flatMap((review) => {
-    const head = reviewedHead(review.body);
-    return head &&
-      (review.commit ?? head) === head &&
-      completeReview(review.body, head)
-      ? [{ head, holds: holdingReview(review.body, head) }]
+    const assessment = readReview(review.body);
+    return assessment?.complete &&
+      fullHead.test(assessment.head) &&
+      review.commit === assessment.head
+      ? [{ review, head: assessment.head, holds: assessment.holds }]
       : [];
   });
 }
@@ -115,12 +114,12 @@ async function round(connection, { number, issues: extra }) {
     path: `/repos/${repository}/pulls/${number}`,
   });
   const head = pull?.head?.sha;
-  if (!/^[0-9a-f]{40}$/.test(head ?? "") || pull.state !== "open")
+  if (!fullHead.test(head ?? "") || pull.state !== "open")
     throw new Error(
       `Pull request #${number} is not open with a readable head.`,
     );
   const { issues, gates } = await ownerGates(connection, number, extra);
-  // Only this account's standing reviews record rounds, oldest first. Each
+  // Complete assessments from this account record rounds, oldest first. Each
   // reviewed head is one round; the current head's round is the next one until
   // its review is posted. The review held when the latest one is a holding
   // review of the current head.
@@ -130,15 +129,15 @@ async function round(connection, { number, issues: extra }) {
       !["PENDING", "DISMISSED"].includes(review.state) &&
       review.author?.login?.toLowerCase() === viewer,
   );
-  const rounds = completedReviews(standing);
-  const heads = new Set(rounds.map((entry) => entry.head));
-  const latest = standing.at(-1);
+  const assessments = completedAssessments(standing);
+  const heads = new Set(assessments.map((entry) => entry.head));
+  const latest = assessments.at(-1);
   return {
     pull,
     head,
     round: heads.size + (heads.has(head) ? 0 : 1),
     reviewed: heads.has(head),
-    held: latest?.commit === head && holdingReview(latest.body, head),
+    held: latest?.head === head && latest.holds,
     latest,
     issues,
     gates,
@@ -200,18 +199,14 @@ export const main = async (argv = process.argv.slice(2), connection) => {
       return 2;
     }
     if (action.reassess) {
-      const previous = facts.latest;
-      if (
-        !previous?.id ||
-        previous.commit !== facts.head ||
-        !completeReview(previous.body, facts.head) ||
-        facts.held
-      ) {
+      const latest = facts.latest;
+      if (latest?.head !== facts.head || !latest.review.id || latest.holds) {
         process.stderr.write(
           `round.mjs: no latest complete non-holding review of ${facts.head} for this account to reassess.\n`,
         );
         return 3;
       }
+      const previous = latest.review;
       const history = previous.body
         .split(/\r?\n/)
         .map((line) => `> ${line}`)

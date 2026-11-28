@@ -14,9 +14,8 @@ From the repository root, run
 `node <this skill's directory>/round.mjs <number>` with Node.js 24 or 26 and
 the supplied GitHub CLI credential. Add `--issue <n>` for a non-closing linked
 issue. It prints `head`, `round`, `reviewed`, `held`, `draft`, closing `issues`
-and owner `gates`; `round`, `reviewed` and `held` count only the running
-account's standing reviews. `held` means that account's latest review holds on
-the current head.
+and owner `gates`. `round`, `reviewed` and `held` use this account's complete
+standing reviews. `held` means the latest one holds on the current head.
 
 | Exit | Recovery                                                                                                                                              |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |

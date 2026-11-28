@@ -531,10 +531,10 @@ new-head review and validation path.
 A round with no open finding holds: mark the PR ready and deliver under the
 guide's Merging section. The round's review lists its open, fixed and filed
 findings, and declines are answered in their threads. Only the reviewing
-account's undismissed standing reviews submitted on the head they name count
-as its rounds. Resume delivery, including after interruption, only while that
-account's latest review holds on the current head. Installed factory workflow
-rules govern owner-gate stops.
+account's complete standing reviews submitted on the head they name count as
+rounds. Resume delivery, including after interruption, only while its latest
+complete review holds on the current head. Installed factory workflow rules
+govern owner-gate stops.
 
 ## Factory app-author review policy
 
