@@ -1,5 +1,18 @@
 # Ownership check
 
+For a proposed fix, apply these steps before choosing an ownership route,
+even when no trigger applies:
+
+1. **Checkable fixes first.** For a workflow or factory problem, lead with an
+   option code or CI can check. An explicit signal is acceptable even when it
+   adds a manual step; a prompt or skill-instruction change, or a time-based
+   settle delay, is never the primary fix.
+2. **Long-term design over patches.** If a proposal could patch over a design
+   problem, name the refactor and prefer it, or explain why not.
+
+Then apply the triggers and routes below within the recorded contract and
+authorized scope.
+
 Use the project's **Value owner**, **Ownership check** and **Deferred seam**
 vocabulary from `GLOSSARY.md`, when present. Check for these triggers:
 
