@@ -353,6 +353,10 @@ test("reassessment needs this account's latest complete standing review of the e
     [restReview(handBack(head), { state: "PENDING", submitted_at: undefined })],
     [restReview(handBack(head), { commit_id: earlier })],
     [original, restReview(handBack(earlier), { id: 2, commit_id: earlier })],
+    [
+      restReview(reviewBody(head)),
+      restReview(handBack(earlier), { id: 2, commit_id: earlier }),
+    ],
   ];
   const reassessment = file(t, reviewBody(head));
   for (const entry of [main, installed.main]) {
@@ -370,6 +374,34 @@ test("reassessment needs this account's latest complete standing review of the e
       assert.equal((await run(t, ["12", "--ready"], state, entry)).status, 2);
       assert.equal(state.pull.draft, true);
     }
+  }
+});
+
+test("an unfinished later review leaves the complete assessment to reassess", async (t) => {
+  const target = installedValidator(t, ".agents/skills/review/round.mjs");
+  const installed = await import(pathToFileURL(target).href);
+  const reassessment = file(t, reviewBody(head));
+  for (const entry of [main, installed.main]) {
+    const state = pullState(
+      {},
+      {
+        reviews: [
+          restReview(handBack(head)),
+          restReview("An unfinished later assessment", { id: 2 }),
+        ],
+      },
+    );
+    const result = await run(
+      t,
+      ["12", "--reassess", reassessment],
+      state,
+      entry,
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(state.updated[0].id, 1);
+    assert.equal(state.posted, undefined);
+    assert.equal(state.reviews[1].body, "An unfinished later assessment");
+    assert.equal((await run(t, ["12", "--ready"], state, entry)).status, 0);
   }
 });
 

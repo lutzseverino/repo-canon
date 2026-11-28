@@ -291,11 +291,13 @@ result through the validator's own reader. Run
 `node --test test/issue-contract-result.test.mjs` for that result's format,
 rules and the examples that the validator and the command both run.
 Run `node --test test/review-round.test.mjs` for the `review` skill's round
-command: rounds counted by head from the running account's standing reviews
-only, owner gates on the pull request, its closing issues and named issues,
-posting only one review of the current head per account, and the `held`
-fact: the running account's latest review, including an App installation's,
-is a holding review of the current head. That fact alone resumes delivery or
+command: rounds counted by head from the running account's complete standing
+reviews posted on the head they name, owner gates on the pull request, its
+closing issues and named issues, posting only one review of the current head
+per account, and the `held` fact: the running account's latest complete
+review, including an App installation's, is a holding review of the current
+head, and a later reply-only or other incomplete review leaves it in place.
+That fact alone resumes delivery or
 lets a draft be marked ready. The tests run against an injected fetch transport and from the
 installed layout.
 They also cover reassessment of a settled contract finding on an unchanged
