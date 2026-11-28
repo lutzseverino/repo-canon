@@ -9,7 +9,9 @@ import { fileURLToPath } from "node:url";
 /** @typedef {{name: string, file?: string, line?: number, column?: number, testId?: number, entryFile?: string}} NestedTest */
 /** @typedef {{bound: string, boundMs: number, command: string[], elapsedMs: number, lastCompleted?: NestedTest, unfinished: NestedTest[]}} Timeout */
 /** @typedef {{status: number | null, signal: NodeJS.Signals | null, stdout: string, stderr: string, elapsedMs: number, error?: Error, timeout?: Timeout}} ChildResult */
-/** @typedef {{now: () => number, startTimer: (expire: () => void, boundMs: number, child: import("node:child_process").ChildProcess) => {refresh: () => void, clear: () => void}}} Timing */
+/** @typedef {{type: string, test?: NestedTest, message?: string}} ProgressEvent */
+/** @typedef {{refresh: () => void, clear: () => void, afterNestedEvent?: (event: ProgressEvent) => void}} BoundTimer */
+/** @typedef {{now: () => number, startTimer: (expire: () => void, boundMs: number, child: import("node:child_process").ChildProcess) => BoundTimer}} Timing */
 
 /** @type {Timing} */
 const realTime = {
@@ -150,6 +152,7 @@ export async function runChild(
           pending += data;
           let newline;
           while ((newline = pending.indexOf("\n")) !== -1) {
+            /** @type {ProgressEvent} */
             const event = JSON.parse(pending.slice(0, newline));
             pending = pending.slice(newline + 1);
             if (event.test) {
@@ -172,6 +175,7 @@ export async function runChild(
               else liveStderr += event.message;
               progress();
             }
+            timer.afterNestedEvent?.(event);
           }
         });
       }

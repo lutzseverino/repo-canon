@@ -18,29 +18,29 @@ import { runChild } from "./helpers/child-runner.mjs";
 
 const boundMs = 1000;
 
-/** @typedef {(ms: number) => boolean} Advance */
+/** @typedef {(ms: number) => void} Advance */
+/** @typedef {(event: import("./helpers/child-runner.mjs").ProgressEvent, advance: Advance) => void} ObserveNested */
 
 /**
  * Advance time from observed child I/O, independently of the runner's refreshes.
- * @param {(child: import("node:child_process").ChildProcess, advance: Advance) => void} observe
+ * @param {{observeChild?: (child: import("node:child_process").ChildProcess, advance: Advance) => void, observeNested?: ObserveNested}} observers
  * @returns {NonNullable<Parameters<typeof runChild>[2]["timing"]>}
  */
-function controlledTime(observe) {
+function controlledTime({ observeChild, observeNested }) {
   let now = 0;
   return {
     now: () => now,
     startTimer(expire, bound, child) {
       let deadline = now + bound;
-      child.once("spawn", () => {
-        // The runner's listeners consume each chunk before the clock advances.
-        observe(child, (ms) => {
-          now += ms;
-          if (now < deadline) return true;
+      const advance = (/** @type {number} */ ms) => {
+        now += ms;
+        if (now >= deadline) {
           deadline = Infinity;
           expire();
-          return false;
-        });
-      });
+        }
+      };
+      // The runner's listeners consume command output before the clock advances.
+      if (observeChild) child.once("spawn", () => observeChild(child, advance));
       return {
         refresh: () => {
           deadline = now + bound;
@@ -48,6 +48,7 @@ function controlledTime(observe) {
         clear: () => {
           deadline = Infinity;
         },
+        afterNestedEvent: (event) => observeNested?.(event, advance),
       };
     },
   };
@@ -63,9 +64,11 @@ test("a command exceeding its total bound returns its partial output and diagnos
     {
       kind: "command",
       boundMs,
-      timing: controlledTime((child, advance) => {
-        for (const input of [child.stdout, child.stderr])
-          createInterface({ input }).once("line", () => advance(boundMs / 2));
+      timing: controlledTime({
+        observeChild(child, advance) {
+          for (const input of [child.stdout, child.stderr])
+            createInterface({ input }).once("line", () => advance(boundMs / 2));
+        },
       }),
     },
   );
@@ -116,11 +119,8 @@ test("a signal ending the awaiting process also ends its detached child", async 
   assert.equal(alive(), false);
 });
 
-/** @typedef {{type: string, test?: {name: string}, message?: string}} LiveEvent */
-/** @typedef {(event: LiveEvent, advance: Advance, cwd: string) => void} ObserveNested */
-
-/** @param {ObserveNested} observe */
-function nested(t, files, observe) {
+/** @param {ObserveNested} observeNested */
+function nested(t, files, observeNested) {
   const cwd = mkdtempSync(join(tmpdir(), "child-runner-"));
   t.after(() => rmSync(cwd, { recursive: true, force: true }));
   for (const [name, source] of Object.entries(files))
@@ -135,14 +135,7 @@ function nested(t, files, observe) {
       boundMs,
       cwd,
       env,
-      timing: controlledTime((child, advance) => {
-        const input = /** @type {import("node:stream").Readable} */ (
-          child.stdio[3]
-        );
-        createInterface({ input }).on("line", (line) => {
-          observe(JSON.parse(line), advance, cwd);
-        });
-      }),
+      timing: controlledTime({ observeNested }),
     },
   );
 }
@@ -179,26 +172,8 @@ test("a stalled nested run reports the last completion, all unfinished tests and
   );
 });
 
-// Each fixture waits for acknowledgment so adjacent steps cannot arrive in
-// the same chunk. One step fits inside a bound, but the sequence spans several.
-const waitForStep = `
-  import { existsSync, writeFileSync } from "node:fs";
-  import { setTimeout } from "node:timers/promises";
-  async function waitForStep(step) {
-    while (!existsSync("step-" + step)) await setTimeout(10);
-  }`;
-
-/**
- * @param {(event: LiveEvent) => boolean} matches
- * @returns {ObserveNested}
- */
-function advanceOn(matches) {
-  let step = 0;
-  return (event, advance, cwd) => {
-    if (matches(event) && advance(600))
-      writeFileSync(join(cwd, `step-${step++}`), "");
-  };
-}
+// Each record advances less than one bound, but six records span several.
+const progressStepMs = 600;
 
 test("completion progress survives buffered TAP and several no-progress periods of total runtime", async (t) => {
   const result = await nested(
@@ -212,20 +187,22 @@ test("completion progress survives buffered TAP and several no-progress periods 
         while (!existsSync("finished")) await setTimeout(10);
       });`,
       "b-progress.mjs": `import test from "node:test";
-      ${waitForStep}
+      import { existsSync, writeFileSync } from "node:fs";
+      import { setTimeout } from "node:timers/promises";
       while (!existsSync("started")) await setTimeout(10);
       for (let i = 0; i < 6; i++) {
         await test("later completion " + i, () => {});
-        await waitForStep(i);
       }
       writeFileSync("finished", "");
       process.exitCode = 7;`,
     },
-    advanceOn(
-      (event) =>
+    (event, advance) => {
+      if (
         event.type === "test:complete" &&
-        event.test?.name.startsWith("later completion "),
-    ),
+        event.test?.name.startsWith("later completion ")
+      )
+        advance(progressStepMs);
+    },
   );
   assert.equal(result.error, undefined);
   assert.equal(result.timeout, undefined);
@@ -240,22 +217,23 @@ test("nested output counts as progress and returns a passing exit status", async
     t,
     {
       "output.mjs": `import test from "node:test";
-      ${waitForStep}
-      test("verbose test", async () => {
+      test("verbose test", () => {
         for (let i = 0; i < 6; i++) {
           console.log("stdout progress"); console.error("stderr progress");
-          await waitForStep(i);
         }
       });`,
     },
-    advanceOn(
-      (event) =>
-        event.type === "test:stdout" &&
-        event.message?.trim() === "stdout progress",
-    ),
+    (event, advance) => {
+      // Node emits stderr as lines and can combine stdout writes in one event.
+      if (
+        event.type === "test:stderr" &&
+        event.message?.trim() === "stderr progress"
+      )
+        advance(progressStepMs);
+    },
   );
   assert.equal(result.status, 0, result.error?.message ?? result.stderr);
-  assert.equal(result.timeout, undefined);
+  assert.equal(result.timeout, undefined, result.error?.message);
   assert.ok(result.elapsedMs > 2000);
   assert.match(result.stdout, /stdout progress/);
   assert.match(result.stdout, /stderr progress/);
