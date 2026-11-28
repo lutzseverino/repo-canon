@@ -26,6 +26,8 @@ contracts that survive renames, moves and refactors while the issue waits in
 
 State what the system should do; leave implementation decisions to the agent.
 
+Apply [Fix proposals](REVIEW.md#fix-proposals) to proposed fixes in briefs and triage notes.
+
 ### Short fields
 
 Summary is one sentence. Current behavior and Desired behavior hold at most
