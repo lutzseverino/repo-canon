@@ -226,6 +226,7 @@ test("documented runner input evaluates through the real standalone command with
 import { readFileSync, writeFileSync } from "node:fs";
 const statePath = ${JSON.stringify(statePath)};
 const page = (nodes) => ({ nodes, pageInfo: { hasNextPage: false, endCursor: null } });
+const source = { id: "I42", lastEditedAt: null, userContentEdits: { ...page([]), totalCount: 0 } };
 const repository = ${JSON.stringify(input.event.repository)};
 const login = ${JSON.stringify(input.event.actor.login)};
 const time = "2026-11-09T00:00:00Z";
@@ -239,6 +240,10 @@ globalThis.fetch = async (input, options = {}) => {
   let response;
   if (url.pathname === "/graphql" && body.query.includes("TriageActingAccount")) {
     response = json({ data: { viewer: { __typename: "Bot", login: login.slice(0, -5) } } });
+  } else if (url.pathname === "/graphql" && body.query.includes("ContractSourceEdits")) {
+    response = json({ data: { nodes: [source] } });
+  } else if (url.pathname === "/graphql" && body.query.includes("ContractSourceHistory")) {
+    response = json({ data: { node: source } });
   } else if (url.pathname === "/graphql" && body.variables.number === 42) {
     response = json({ data: { repository: { issue: {
       number: 42, fullDatabaseId: "42", id: "I42", url: "https://github.com/" + repository + "/issues/42",

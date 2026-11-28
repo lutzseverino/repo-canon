@@ -264,7 +264,24 @@ test("unavailable prerequisite reads abort; role failures reach authorization cl
           createComment: async () => mutations++,
           updateComment: async () => mutations++,
         },
-        access: { role: async () => "admin" },
+        access: {
+          role: async () => "admin",
+          request: async ({ body }) => {
+            const source = {
+              id: issue.nodeId,
+              lastEditedAt: null,
+              userContentEdits: {
+                totalCount: 0,
+                nodes: [],
+                pageInfo: { hasNextPage: false, endCursor: null },
+              },
+            };
+            if (body.query.includes("ContractSourceEdits"))
+              return { data: { data: { nodes: [source] } } };
+            assert.match(body.query, /ContractSourceHistory/);
+            return { data: { data: { node: source } } };
+          },
+        },
       };
       (stage === "role" ? connection.access : connection.issueTracker)[stage] =
         async () => {

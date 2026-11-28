@@ -1,5 +1,11 @@
 # Make the validator's posted result the only contract decision
 
+Status: superseded in part (2026-11-26) by
+[ADR 0035's prepared-mode selection amendment](0035-keep-the-implementation-contract-in-the-issue-body.md#prepared-mode-selection-amendment):
+its category-dependent selection, validity and readiness rule is superseded,
+and category labels report classification only. The validator's single
+posted decision still holds.
+
 Repo Canon's issue-contract validator is the only program that decides what an
 issue's implementation contract is and whether its readiness holds. It posts
 that decision on the issue as its state line, which carries a format version,
@@ -46,3 +52,13 @@ because two implementations drift, as these had.
   inside Repo Canon.
 - [ADR 0023](0023-reach-the-hosting-platform-through-postern.md) still keeps
   Postern factual.
+
+## Content-selection amendment
+
+The 2026-11-26 decision in
+[ADR 0035's prepared-mode amendment](0035-keep-the-implementation-contract-in-the-issue-body.md#prepared-mode-selection-amendment)
+supersedes the category-dependent selection, validity and readiness rule above.
+Category labels now report classification discrepancies only. The validator
+still owns the single contract decision; content selects its kind and source,
+and authenticated source/edit transitions invalidate v1 approval without
+changing genuinely unchanged revision bytes.

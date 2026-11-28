@@ -44,7 +44,10 @@ nothing. Follow the planning rules' Owner questions section for question
 routing and their Triage section for inference. The repository owns `state:ready` readiness; `wontfix` marks an
 issue closed as will not be actioned.
 
-A triaged request carries one `type:` label, its category.
+`type:` labels report classification. Missing, multiple or mismatched category
+labels are reported discrepancies only: they never select a contract, change
+its kind or revision, make it invalid, or invalidate readiness. Content still
+has to satisfy its contract's required sections.
 
 Triage sets `priority:high` for harm (security, data loss, a broken default
 branch) and `priority:low` for everything else, unless a person or the agent
@@ -680,9 +683,12 @@ that an actor without one of these roles applied.
 The factory's own triage run is the one exception. Where `.scriptorium/config.json`
 names the factory's triage result under `triageResult`, readiness its `author`
 account applies counts without a role when the current Agent Brief is the
-triage result that account posted, naming its run, and that run did not write
-the issue. On a directly authored specification or implementation ticket, that
-readiness counts without a role when all of these hold:
+triage result that account posted, naming its run, with authenticated proof
+that the selected comment is unedited, and that run did not write the issue.
+Selection itself is independent of that account: an edited brief remains the
+selected contract at a new authenticated source version, requiring fresh notice
+and review, but inherits no factory self-acceptance.
+On a directly authored specification or implementation ticket, that readiness counts without a role when all of these hold:
 
 - a factory review attestation by that account names its triage run and the
   exact current body revision;
@@ -693,6 +699,13 @@ readiness counts without a role when all of these hold:
 An edited or deleted attestation backs no readiness, and a review attestation
 backs none on an Agent Brief. Without that configuration, readiness comes only
 from the roles above.
+
+Under v1, approval cannot carry across an actual selected-source or
+selected-source-edit change. Authenticated edit identities detect restoration,
+same-second edits and deletion even when restoration repeats the same v1
+content hash; an ended approval never revives. A genuinely
+unchanged selected source keeps its revision bytes and approval across this
+selection change. Category relabeling alone changes neither.
 
 An orchestrating agent that accepts an Agent Brief applies its readiness only
 when the credentials it was given hold one of these roles, and only after the
@@ -733,10 +746,18 @@ trusted complete cutoff, a compatible result reader and dual-route poster, and
 frozen publication during capture. Body mode, v2 results and refusal of new
 comment contracts start together; downloading a release never activates them.
 Only an exact unchanged inventoried legacy comment remains eligible, without
-expiry, until its next revision moves to the body. Follow the validator's
-selected source rather than selecting a competing comment.
+expiry, until its next revision moves to the body. In prepared mode, recognize
+a direct specification or ticket body structurally before validating its required
+sections and select it before every Agent Brief comment, including when that
+body is malformed. Otherwise select the newest Agent Brief comment by any
+author, otherwise the body. Never choose by relative body/comment timestamps or
+fall back from an invalid selected contract to another source. In body mode,
+the authenticated cutoff and ledger govern selection, including migrated
+bodies and retired legacy entries;
+prepared precedence cannot bypass protected legacy states. Follow the
+validator's selected source rather than selecting a competing comment.
 
-The selected source starts with one of these preambles, then a blank line,
+A selected Agent Brief source starts with one of these preambles, then a blank line,
 then the `## Agent Brief` heading:
 
 - the `comments` rules' lead line alone;
@@ -766,9 +787,10 @@ release boundary preserves an exact revision with trusted pre-release approval
 evidence, until its next revision; it never grants or restores readiness.
 The validator reports that exemption in its versioned result.
 
-Category is `bug` or `enhancement`, and the issue's one `type:` label names
-the same category. Empty content, template comments, empty task list items,
-GitHub's `_No response_`, `TBD`, `TODO` and bracketed prompts such as
+Category content is `bug` or `enhancement`. The validator reports differences
+between it and the issue's `type:` labels as classification discrepancies,
+without making label repair a validity or readiness gate. Empty content,
+template comments, empty task list items, GitHub's `_No response_`, `TBD`, `TODO` and bracketed prompts such as
 `[describe the bug]` are placeholders. Heading level, heading style and the
 casing of the heading and field names do not matter, and the workflow also
 accepts the disclaimer emphasized with `_` or without the blank line before

@@ -367,6 +367,21 @@ test("an issue citing a superseded ADR without a fate is refused", async (t) => 
   );
 });
 
+test("classification labels cannot bypass the readiness command's specification fate check", async (t) => {
+  await bothRefuse(
+    t,
+    {
+      labels: ["state:triage", "type:bug", "type:enhancement"],
+      body: `${specificationBody}${fields("#7")}`,
+      others: [{ number: 7, body: ticketBody }],
+    },
+    (reason) => {
+      assert.match(reason, /fate/);
+      assert.match(reason, /#7/);
+    },
+  );
+});
+
 test("with every fate posted, readiness proceeds", async (t) => {
   t.mock.method(console, "log", () => {});
   const world = contractWorld({

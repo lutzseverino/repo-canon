@@ -25,6 +25,15 @@ const request = async (connection, input) =>
   (await connection.access.request(input)).data;
 const base = (connection) => `/repos/${connection.repository.path}`;
 
+// The one interpretation of a trusted mode value. Each reader owns its error
+// for an invalid value; none falls back to prepared mode.
+export function contractSourceMode(value) {
+  if (value?.mode === "prepared") return { mode: "prepared" };
+  if (value?.mode === "body" && /^[a-f0-9]{40}$/.test(value.cutoff ?? ""))
+    return { mode: "body", cutoff: value.cutoff };
+  return null;
+}
+
 // Only trusted default-branch code/configuration calls this reader. No issue
 // text, feedback marker, release install or first observation activates mode.
 /** @param {string | URL} [path] */
@@ -38,12 +47,12 @@ export function contractSourceConfiguration(
     if (error.code === "ENOENT") return { mode: "prepared" };
     throw error;
   }
-  if (value?.mode === "prepared") return { mode: "prepared" };
-  if (value?.mode !== "body" || !/^[a-f0-9]{40}$/.test(value.cutoff ?? ""))
+  const mode = contractSourceMode(value);
+  if (!mode)
     throw new Error(
       "Invalid trusted issue-contract mode: body mode requires an immutable cutoff commit.",
     );
-  return { mode: "body", cutoff: value.cutoff };
+  return mode;
 }
 
 async function file(connection, path, ref) {
@@ -107,13 +116,17 @@ export async function sourceEditIdentities(connection, ids) {
       throw new Error(
         "Source edit history is unavailable; cannot prove exact contract identity.",
       );
-    for (const node of data.data.nodes) {
+    for (const [index, node] of data.data.nodes.entries()) {
       const edit = node?.userContentEdits?.nodes?.[0];
       if (
-        !node?.id ||
-        !Object.hasOwn(node, "lastEditedAt") ||
-        (node.lastEditedAt &&
-          (!edit?.id || edit.deletedAt || edit.editedAt !== node.lastEditedAt))
+        node?.id !== batch[index] ||
+        (node.lastEditedAt === null &&
+          node.userContentEdits?.nodes?.length !== 0) ||
+        (node.lastEditedAt !== null &&
+          (!Number.isFinite(Date.parse(node.lastEditedAt)) ||
+            !edit?.id ||
+            edit.deletedAt !== null ||
+            edit.editedAt !== node.lastEditedAt))
       )
         throw new Error(
           "Source edit history is incomplete; recover exact edit identity before reviewing.",
@@ -127,6 +140,74 @@ export async function sourceEditIdentities(connection, ids) {
   return result;
 }
 
+// Complete resulting-content history is needed when an edit temporarily made
+// an intake body a direct contract, or a newer discussion comment a Brief.
+// Latest edit identity alone proves an own-source edit, not those transitions.
+export async function sourceContentHistories(connection, ids) {
+  const histories = {};
+  for (const id of new Set(ids.filter(Boolean))) {
+    const edits = [];
+    let cursor = null;
+    let count = null;
+    let editedAt = null;
+    do {
+      const data = await request(connection, {
+        method: "POST",
+        path: "/graphql",
+        body: {
+          query: `query ContractSourceHistory($id:ID!,$after:String) { node(id:$id) { ... on Issue { id lastEditedAt userContentEdits(first:100,after:$after) { totalCount nodes { id editedAt deletedAt diff } pageInfo { hasNextPage endCursor } } } ... on IssueComment { id lastEditedAt userContentEdits(first:100,after:$after) { totalCount nodes { id editedAt deletedAt diff } pageInfo { hasNextPage endCursor } } } } }`,
+          variables: { id, after: cursor },
+        },
+      });
+      const node = data?.data?.node;
+      const page = node?.userContentEdits;
+      if (
+        data?.errors?.length ||
+        node?.id !== id ||
+        !Object.hasOwn(node, "lastEditedAt") ||
+        !Number.isSafeInteger(page?.totalCount) ||
+        page.totalCount < 0 ||
+        (count !== null &&
+          (count !== page.totalCount || editedAt !== node.lastEditedAt)) ||
+        !Array.isArray(page?.nodes) ||
+        typeof page.pageInfo?.hasNextPage !== "boolean" ||
+        (page.pageInfo.hasNextPage &&
+          (!page.pageInfo.endCursor || page.pageInfo.endCursor === cursor)) ||
+        page.nodes.some(
+          (edit) =>
+            !edit?.id ||
+            !Number.isFinite(Date.parse(edit.editedAt)) ||
+            edit.deletedAt ||
+            typeof edit.diff !== "string",
+        )
+      )
+        throw new Error(
+          "Complete authenticated source content history is unavailable; cannot prove contract-source continuity.",
+        );
+      count = page.totalCount;
+      editedAt = node.lastEditedAt;
+      edits.push(...page.nodes);
+      if (
+        new Set(edits.map((edit) => edit.id)).size !== edits.length ||
+        edits.length > count
+      )
+        throw new Error(
+          "Authenticated source content history repeats edits or changed during pagination.",
+        );
+      cursor = page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null;
+    } while (cursor);
+    if (
+      edits.length !== count ||
+      (editedAt === null ? count !== 0 : edits[0]?.editedAt !== editedAt)
+    )
+      throw new Error(
+        "Complete authenticated source content history is unavailable; recover every edit before reviewing.",
+      );
+    histories[id] = { complete: true, edits };
+  }
+  return histories;
+}
+
 // Host/operator callers pin repository configuration independently of their
 // checkout; malformed/unavailable reads never fall back to prepared mode.
 export async function readContractSourceConfiguration(connection) {
@@ -135,16 +216,13 @@ export async function readContractSourceConfiguration(connection) {
     path: `${base(connection)}/git/ref/heads/${repository.default_branch}`,
   });
   const selected = await file(connection, configurationPath, ref.object.sha);
-  if (!selected || selected.value?.mode === "prepared")
-    return { mode: "prepared" };
-  if (
-    selected.value?.mode !== "body" ||
-    !/^[a-f0-9]{40}$/.test(selected.value.cutoff ?? "")
-  )
+  if (!selected) return { mode: "prepared" };
+  const mode = contractSourceMode(selected.value);
+  if (!mode)
     throw new Error(
       "Unknown repository contract mode; restore trusted configuration before publication.",
     );
-  return { mode: "body", cutoff: selected.value.cutoff };
+  return mode;
 }
 
 export async function loadContractSources(

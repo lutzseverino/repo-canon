@@ -15,6 +15,7 @@ export const worldRepository = "owner/repo";
 export const validatorLogin = "github-actions[bot]";
 const page = (nodes) => ({
   nodes,
+  totalCount: nodes.length,
   pageInfo: { hasNextPage: false, endCursor: null },
 });
 const isBot = (login) => login.endsWith("[bot]");
@@ -60,12 +61,14 @@ export function contractWorld({
   let frozen = false;
   let pauses = 0;
   let nextId = 100;
+  let nextEditId = 1;
   const pending = [];
   const issue = {
     body,
     labels: [...labels],
     createdAt: stamp(),
     lastEditedAt: null,
+    edits: [],
   };
   const comments = [];
   // The issue was opened with its labels.
@@ -87,6 +90,16 @@ export function contractWorld({
     const value = stamp();
     if (!frozen) clock += 1000;
     return value;
+  }
+  function editContent(target, text, editedAt) {
+    target.body = text;
+    target.updatedAt = target.lastEditedAt = editedAt;
+    (target.edits ??= []).unshift({
+      id: `EDIT_${nextEditId++}`,
+      editedAt,
+      deletedAt: null,
+      diff: text,
+    });
   }
   const account = (login) => ({ login, type: isBot(login) ? "Bot" : "User" });
   const neutral = (kind, login, fields = {}) => ({
@@ -130,6 +143,7 @@ export function contractWorld({
       body: text,
       createdAt: time,
       updatedAt: time,
+      edits: [],
     };
     comments.push(created);
     if (queue)
@@ -212,15 +226,31 @@ export function contractWorld({
                       id,
                       lastEditedAt: editedAt,
                       userContentEdits: {
-                        nodes: editedAt
-                          ? [{ id: `EDIT_${id}_${editedAt}`, editedAt }]
-                          : [],
+                        nodes: target.edits?.slice(0, 1) ?? [],
                       },
                     }
                   : null;
               }),
             },
           });
+        if (query.includes("ContractSourceHistory")) {
+          const id = request.variables.id;
+          const target =
+            id === "ISSUE_42"
+              ? issue
+              : comments.find((entry) => `COMMENT_${entry.id}` === id);
+          return json({
+            data: {
+              node: target
+                ? {
+                    id,
+                    lastEditedAt: target.lastEditedAt ?? null,
+                    userContentEdits: page(target.edits ?? []),
+                  }
+                : null,
+            },
+          });
+        }
         if (query.includes("PinnedFilesRevision"))
           return json({
             data: {
@@ -322,8 +352,7 @@ export function contractWorld({
         const target = comments.find(
           ({ id }) => id === Number(path.split("/").at(-1)),
         );
-        target.body = request.body;
-        target.updatedAt = target.lastEditedAt = at();
+        editContent(target, request.body, at());
         return json(restComment(target));
       }
       if (path === `${repo}/issues/42/events`)
@@ -427,9 +456,7 @@ export function contractWorld({
     // earlier write it shares.
     comment: (text, login, time) => comment(text, login, true, time),
     editComment(target, text, login, time = at()) {
-      target.body = text;
-      target.updatedAt = time;
-      target.lastEditedAt = time;
+      editContent(target, text, time);
       pending.push(
         neutral("commentEdited", login, {
           comment: {
@@ -454,8 +481,7 @@ export function contractWorld({
       );
     },
     editBody(text, login) {
-      issue.body = text;
-      issue.lastEditedAt = at();
+      editContent(issue, text, at());
       pending.push(neutral("edited", login, { bodyChanged: true }));
     },
     label: (name, login) => addLabel(name, login, true),

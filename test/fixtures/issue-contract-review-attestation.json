@@ -62,7 +62,18 @@
           "marker": "factory:run",
           "author": "factory[bot]"
         },
-        "sourceEdits": {}
+        "sourceEdits": {
+          "ISSUE_42": {
+            "id": "created:ISSUE_42",
+            "editedAt": null
+          }
+        },
+        "sourceHistory": {
+          "ISSUE_42": {
+            "complete": true,
+            "edits": []
+          }
+        }
       },
       "state": {
         "format": "repo-canon/issue-contract-state/v1",
@@ -165,6 +176,20 @@
           "COMMENT_20": {
             "id": "created:COMMENT_20",
             "editedAt": null
+          },
+          "ISSUE_42": {
+            "id": "created:ISSUE_42",
+            "editedAt": null
+          }
+        },
+        "sourceHistory": {
+          "ISSUE_42": {
+            "complete": true,
+            "edits": []
+          },
+          "COMMENT_20": {
+            "complete": true,
+            "edits": []
           }
         }
       },
@@ -296,6 +321,20 @@
           "COMMENT_20": {
             "id": "created:COMMENT_20",
             "editedAt": null
+          },
+          "ISSUE_42": {
+            "id": "created:ISSUE_42",
+            "editedAt": null
+          }
+        },
+        "sourceHistory": {
+          "ISSUE_42": {
+            "complete": true,
+            "edits": []
+          },
+          "COMMENT_20": {
+            "complete": true,
+            "edits": []
           }
         }
       },
@@ -427,6 +466,20 @@
           "COMMENT_20": {
             "id": "created:COMMENT_20",
             "editedAt": null
+          },
+          "ISSUE_42": {
+            "id": "created:ISSUE_42",
+            "editedAt": null
+          }
+        },
+        "sourceHistory": {
+          "ISSUE_42": {
+            "complete": true,
+            "edits": []
+          },
+          "COMMENT_20": {
+            "complete": true,
+            "edits": []
           }
         }
       },

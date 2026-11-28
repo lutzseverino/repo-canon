@@ -20,3 +20,11 @@ the factory's triage run.
 extends this exception to a directly authored specification or implementation
 ticket that the factory's triage run reviewed and did not write, backed by a
 factory review attestation of the exact body revision.
+
+The [content-selection amendment](0035-keep-the-implementation-contract-in-the-issue-body.md#prepared-mode-selection-amendment)
+keeps any author's brief eligible for selection, while factory authority still
+requires the configured factory's own unedited result with authenticated edit
+proof. Editing that brief keeps it selected at a new authenticated source
+version requiring fresh notice and review, even if same-second restoration
+repeats the v1 hash. It inherits no factory self-acceptance; a missing edit
+history cannot confer authority.

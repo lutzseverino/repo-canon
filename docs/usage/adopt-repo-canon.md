@@ -174,6 +174,34 @@ for the pre-commit ready-to-commit verdict and delivery of one completed run.
 Keep repository-owned compatibility fixes in their prerequisite pull requests.
 This preparation adds no CLI gate or universal test command.
 
+## Check contract source changes
+
+Before adopting content selection, inventory every open issue, including held,
+skipped and unready work. Category labels no longer choose a contract or make
+it invalid. Prepared mode prefers a structurally recognized direct
+specification/ticket body, including a malformed one; otherwise it selects the
+newest Agent Brief by any author, otherwise the body. Body-mode cutoff history
+still protects unchanged legacy sources and migration/retirement holds.
+
+Use the proposed Repo Canon source checkout's
+[inventory command](../development/issue-contract-validation.md#source-change-inventory),
+with your repository explicit and an immutable checkout of your old installed
+validator. The command is a source maintenance tool, not an installed adopter
+script. Capture complete issue/discussion/edit histories and compare both
+production selectors on the same facts; an approximate sample cannot establish
+that no sources switch. Repeat capture/comparison before publication and retain
+the report with the adoption pull request. Failed or incomplete reads require
+recovery before claiming a complete inventory.
+
+Record every changed source, kind or revision. A changed selected source or
+selected-source edit inherits no approval: wait for its new validator notice
+and obtain fresh review through the normal readiness route. The inventory tool
+writes no labels and grants no readiness. Genuinely unchanged sources keep
+byte-identical hashes and existing approval; category-label discrepancies need
+no repair for a valid notice. An ended approval never revives through source
+restoration. This check does not activate body mode or change the v5 grant,
+stop-model or account-storage migration order.
+
 ## Language statistics
 
 The standard and factory profiles include the contextual `git-attributes`
