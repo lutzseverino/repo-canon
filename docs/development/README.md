@@ -451,6 +451,9 @@ already runs the suite on every pull request.
   closed-issue label sweep, and runnable fixtures.
 - [Body contract protocol](issue-contract-v2.md): explicit activation, durable
   legacy selection, host publication and the public v2 wire interface.
+- [Issue contract verdict v5 and Canon run identity](issue-contract-v5.md):
+  standalone grant and freshness protocol, retained proofs, writer identity,
+  schema and examples published ahead of producer changes.
 - [Upstream skill compatibility](upstream-compatibility.md): the vendored
   Matt Pocock snapshot as the owned skills' upstream base, the shared base record, provenance rendering and
   its check, the three-way reconciliation for each upstream release, the native

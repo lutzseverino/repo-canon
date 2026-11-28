@@ -1,0 +1,778 @@
+{
+  "format": "repo-canon/issue-contract-v5-examples/v1",
+  "provenance": {
+    "issue920": "https://github.com/lutzseverino/repo-canon/issues/920",
+    "captured": "2026-11-28",
+    "note": "Historical v3 state and exemption copied exactly; v5 envelope and other examples are illustrative, not published validator decisions."
+  },
+  "examples": [
+    {
+      "name": "person grant",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": true
+      }
+    },
+    {
+      "name": "factory brief grant",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"triaged Agent Brief\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"factory[bot]\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"factory[bot]\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":{\"mode\":\"body\",\"cutoff\":{\"id\":\"1111111111111111111111111111111111111111\",\"release\":\"v0.26.0\",\"sha\":\"2222222222222222222222222222222222222222\",\"epoch\":\"2026-11-11T06:00:00Z\"},\"state\":\"migrated\",\"reason\":null},\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":{\"run\":\"triage-run\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"editedAt\":\"2026-11-26T19:00:00Z\",\"editId\":\"EDIT_BODY_1\"},\"attestation\":{\"id\":\"200\",\"revision\":\"sha256:13de9691478b48bf5b371cb3acdb4e638cde50b9722ebda25ad1581a5756a21d\",\"edit\":{\"id\":\"created:COMMENT_200\",\"editedAt\":null}},\"intake\":{\"author\":\"factory[bot]\",\"writerRun\":\"writer-run\"}},\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": true
+      }
+    },
+    {
+      "name": "factory independent review grant",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"factory[bot]\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"factory[bot]\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":{\"id\":\"201\",\"revision\":\"sha256:db87a7f561833951e5044f3cdc91a599e2f13687661eabfdbb7016a7e5dd0577\",\"edit\":{\"id\":\"created:COMMENT_201\",\"editedAt\":null}},\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":{\"run\":\"review-run\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"attestation\":{\"id\":\"201\",\"revision\":\"sha256:db87a7f561833951e5044f3cdc91a599e2f13687661eabfdbb7016a7e5dd0577\",\"edit\":{\"id\":\"created:COMMENT_201\",\"editedAt\":null}},\"refusal\":null,\"publishedAt\":\"2026-11-26T19:20:00Z\"},\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": true
+      }
+    },
+    {
+      "name": "absent grant",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"absent\",\"grantor\":null,\"revision\":null,\"source\":null,\"application\":null,\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:605d7d69e724cb613fd1775741abf60bf5721c5f1ce5f15f3dc1cf31b663b1bb\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": [],
+          "comments": [],
+          "observedEventId": null
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": null,
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "refused grant",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"refused\",\"grantor\":\"outside\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"outside\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":\"The application actor has no grant authority.\"},\"selection\":null,\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "stale selected source edit",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:54cd3ca4ea47d23b99558c9fc58433cdae7f788b3ed425cb5c5ab9d3e381be5f\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_2\",\"editedAt\":\"2026-11-26T20:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"stale\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":{\"kind\":\"source-changed\",\"id\":\"EDIT_BODY_2\",\"at\":\"2026-11-26T20:00:00Z\"},\"reason\":\"The selected source changed.\"},\"selection\":null,\"observation\":{\"digest\":\"sha256:c9632f65a53e0de3b6b57ca0e8f4eefe4083a3aa6bed0ee9ac7e32000a14adeb\",\"bodyEdit\":{\"id\":\"EDIT_BODY_2\",\"editedAt\":\"2026-11-26T20:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":\"EDIT_BODY_2\"}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Edited intake.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_2",
+            "editedAt": "2026-11-26T20:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_2",
+            "editedAt": "2026-11-26T20:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "selected source restored without revival",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_3\",\"editedAt\":\"2026-11-26T20:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"stale\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":{\"kind\":\"source-changed\",\"id\":\"EDIT_BODY_2\",\"at\":\"2026-11-26T20:00:00Z\"},\"reason\":\"Restoring text cannot revive an ended grant.\"},\"selection\":null,\"observation\":{\"digest\":\"sha256:2bbdd5bbb3bc6b31ccdc7fffa8b10c7187ef50e8543e615b39287a694ae97e4a\",\"bodyEdit\":{\"id\":\"EDIT_BODY_3\",\"editedAt\":\"2026-11-26T20:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":\"EDIT_BODY_2\"}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_3",
+            "editedAt": "2026-11-26T20:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_3",
+            "editedAt": "2026-11-26T20:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "selected source deleted",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"intake request\",\"revision\":null,\"source\":null,\"status\":\"absent\",\"publishedAt\":null,\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"stale\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":{\"kind\":\"source-changed\",\"id\":\"DELETE_1\",\"at\":\"2026-11-26T20:00:00Z\"},\"reason\":\"Selected source was deleted; fallback is ungranted.\"},\"selection\":null,\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":\"DELETE_1\"}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": null,
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "withdrawn grant",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"withdrawn\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":{\"kind\":\"ready-removed\",\"id\":\"102\",\"at\":\"2026-11-26T20:00:00Z\"},\"reason\":\"Readiness was removed.\"},\"selection\":null,\"observation\":{\"digest\":\"sha256:cd7554bbf56a006f59505a1a25bd51b98d453a227a4eca10e9601a5f3023fc01\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"102\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": [],
+          "comments": [],
+          "observedEventId": "102"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": null,
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "new application after withdrawal",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"103\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T20:00:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:ce410efdaca5c3d7dc781825df97f5945d828b7841341298be6fc9ae865e49c6\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"103\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "103"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "103",
+        "expectedReady": true
+      }
+    },
+    {
+      "name": "kept grant beside state:triage",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:a555353e5994e15079489f06526449b2e92c72c3b7a16410b69e062db42c3635\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[\"state:triage\"],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready", "state:triage"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "kept grant beside state:owner",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:12196d04f6b21eede6b053eff783911bc14e88f5b1182ef6bae132a826e1c1fb\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[\"state:owner\"],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:owner", "state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "kept grant beside state:grill",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:8ebc1b818131e82879f88a8b7cb5891620e69da294c93348b5c7a63746cbe4f7\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[\"state:grill\"],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:grill", "state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "kept grant beside state:reporter",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:4e31e3cc17154a2a2027df460cee3a001e1cad2f04434241b10899b75517d914\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[\"state:reporter\"],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready", "state:reporter"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "kept grant beside state:carried",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:06f9542f0cfb70f1196d6c8999bb1557d2b0463ef5bb67a39b75543fad86f0a1\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[\"state:carried\"],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:carried", "state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "kept grant beside wontfix",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:c59e23f94bba4c46b98b2f612db92ba0e8c4df64614bb77b33d96b514365a810\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[\"wontfix\"],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready", "wontfix"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "answered stop keeps grant",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"unlabeled\",\"actor\":\"maintainer\",\"label\":\"state:owner\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": true
+      }
+    },
+    {
+      "name": "republication keeps grant",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"commentCreated\",\"actor\":\"maintainer\",\"label\":null,\"commentId\":\"300\"},\"evaluatedAt\":\"2026-11-26T20:01:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": true
+      }
+    },
+    {
+      "name": "freshness mismatch before reevaluation",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Edited before evaluation.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_2",
+            "editedAt": "2026-11-26T20:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_2",
+            "editedAt": "2026-11-26T20:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "new application before reevaluation",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "103",
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "held body-mode selection",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"intake request\",\"revision\":null,\"source\":null,\"status\":\"invalid\",\"publishedAt\":null,\"rejectionReason\":\"Missing authenticated cutoff record; recover history.\",\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"absent\",\"grantor\":null,\"revision\":null,\"source\":null,\"application\":null,\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":{\"mode\":\"body\",\"cutoff\":null,\"state\":\"held\",\"reason\":\"Missing authenticated cutoff record; recover history.\"},\"observation\":{\"digest\":\"sha256:605d7d69e724cb613fd1775741abf60bf5721c5f1ce5f15f3dc1cf31b663b1bb\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": [],
+          "comments": [],
+          "observedEventId": null
+        },
+        "source": null,
+        "latestReadyApplication": null,
+        "expectedReady": false
+      }
+    },
+    {
+      "name": "body-mode eligible selection",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"triaged Agent Brief\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"comment\",\"id\":\"12\",\"edit\":{\"id\":\"created:COMMENT_12\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"comment\",\"id\":\"12\",\"edit\":{\"id\":\"created:COMMENT_12\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":{\"mode\":\"body\",\"cutoff\":{\"id\":\"1111111111111111111111111111111111111111\",\"release\":\"v0.26.0\",\"sha\":\"2222222222222222222222222222222222222222\",\"epoch\":\"2026-11-11T06:00:00Z\"},\"state\":\"eligible\",\"reason\":null},\"observation\":{\"digest\":\"sha256:a860375f154dd495e03204f3b2fec231090fb42b19abda1103c333564dbb5589\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[{\"id\":\"12\",\"edit\":{\"id\":\"created:COMMENT_12\",\"editedAt\":\"2026-11-26T19:00:00Z\"}}]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [
+            {
+              "id": "12",
+              "body": "Selected Agent Brief; illustrative observation text.",
+              "author": "triager",
+              "editedAt": "2026-11-26T19:00:00Z",
+              "edit": {
+                "id": "created:COMMENT_12",
+                "editedAt": "2026-11-26T19:00:00Z"
+              }
+            }
+          ],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "comment",
+          "id": "12",
+          "edit": {
+            "id": "created:COMMENT_12",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": true
+      }
+    },
+    {
+      "name": "body-mode migrated selection",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":{\"mode\":\"body\",\"cutoff\":{\"id\":\"1111111111111111111111111111111111111111\",\"release\":\"v0.26.0\",\"sha\":\"2222222222222222222222222222222222222222\",\"epoch\":\"2026-11-11T06:00:00Z\"},\"state\":\"migrated\",\"reason\":null},\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": true
+      }
+    },
+    {
+      "name": "body-mode native selection",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"implementation ticket\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-26T19:15:00Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"maintainer\",\"revision\":\"sha256:07f6ca8432a2ce50d04dbd119527757e996d5e6fb92a5a7477cdbfd7b375e838\",\"source\":{\"type\":\"issue-body\",\"id\":\"ISSUE_42\",\"edit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"}},\"application\":{\"id\":\"101\",\"label\":\"state:ready\",\"actor\":\"maintainer\",\"at\":\"2026-11-26T19:30:00Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":{\"mode\":\"body\",\"cutoff\":{\"id\":\"1111111111111111111111111111111111111111\",\"release\":\"v0.26.0\",\"sha\":\"2222222222222222222222222222222222222222\",\"epoch\":\"2026-11-11T06:00:00Z\"},\"state\":\"native\",\"reason\":null},\"observation\":{\"digest\":\"sha256:e408ce67a8bbdc419bf47bb1473601a1828c8c00fefb773d28773c5669d369fe\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":null,\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"101\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [],
+          "observedEventId": "101"
+        },
+        "source": {
+          "type": "issue-body",
+          "id": "ISSUE_42",
+          "edit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          }
+        },
+        "latestReadyApplication": "101",
+        "expectedReady": true
+      }
+    },
+    {
+      "name": "issue 920 exempt Seams grant",
+      "line": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v5\",\"contract\":{\"kind\":\"triaged Agent Brief\",\"revision\":\"sha256:73042ff32233cb56d7de7c3f15c59c22ce00270816294174385f9af1660c8a49\",\"source\":{\"type\":\"comment\",\"id\":\"6730346641\",\"edit\":{\"id\":\"created:COMMENT_6730346641\",\"editedAt\":\"2026-11-09T01:51:48Z\"}},\"status\":\"valid\",\"publishedAt\":\"2026-11-09T01:51:57Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null},\"grant\":{\"status\":\"current\",\"grantor\":\"lutzseverino\",\"revision\":\"sha256:73042ff32233cb56d7de7c3f15c59c22ce00270816294174385f9af1660c8a49\",\"source\":{\"type\":\"comment\",\"id\":\"6730346641\",\"edit\":{\"id\":\"created:COMMENT_6730346641\",\"editedAt\":\"2026-11-09T01:51:48Z\"}},\"application\":{\"id\":\"35526739175\",\"label\":\"state:ready\",\"actor\":\"lutzseverino\",\"at\":\"2026-11-09T01:53:39Z\"},\"attestation\":null,\"endedBy\":null,\"reason\":null},\"selection\":null,\"observation\":{\"digest\":\"sha256:aa66cbc8c797e0b55378a7aee4ae5871369e56a8582992bc35c2b6b020a18df7\",\"bodyEdit\":{\"id\":\"EDIT_BODY_1\",\"editedAt\":\"2026-11-26T19:00:00Z\"},\"commentEdits\":[{\"id\":\"6730346641\",\"edit\":{\"id\":\"created:COMMENT_6730346641\",\"editedAt\":\"2026-11-09T01:51:48Z\"}}]},\"observedStops\":[],\"factoryTriage\":null,\"factoryReview\":null,\"seamsExemption\":{\"boundary\":{\"tag\":\"v0.26.0\",\"commit\":\"59969a4dc26ad7e2343d27e72983197e2ec5b4a9\",\"publishedAt\":\"2026-11-11T05:09:33Z\"},\"revision\":\"sha256:73042ff32233cb56d7de7c3f15c59c22ce00270816294174385f9af1660c8a49\",\"source\":{\"type\":\"comment\",\"id\":\"6730346641\",\"editedAt\":\"2026-11-09T01:51:48Z\"},\"evaluatedAt\":\"2026-11-09T01:53:49Z\",\"publishedAt\":\"2026-11-09T01:51:57Z\",\"reviewedAt\":\"2026-11-09T01:53:39Z\",\"reviewer\":\"lutzseverino\",\"reviewEventId\":\"35526739175\",\"label\":\"state:ready\"},\"evaluation\":{\"event\":{\"kind\":\"labeled\",\"actor\":\"maintainer\",\"label\":\"state:ready\",\"commentId\":null},\"evaluatedAt\":\"2026-11-26T20:00:00Z\",\"observedEventId\":\"35526739175\",\"sourceInvalidation\":null}} -->",
+      "live": {
+        "facts": {
+          "issue": "ISSUE_42",
+          "body": "Intake body protocol example.",
+          "bodyEdit": {
+            "id": "EDIT_BODY_1",
+            "editedAt": "2026-11-26T19:00:00Z"
+          },
+          "labels": ["state:ready"],
+          "comments": [
+            {
+              "id": "6730346641",
+              "body": "Selected Agent Brief; illustrative observation text.",
+              "author": "triager",
+              "editedAt": "2026-11-09T01:51:48Z",
+              "edit": {
+                "id": "created:COMMENT_6730346641",
+                "editedAt": "2026-11-09T01:51:48Z"
+              }
+            }
+          ],
+          "observedEventId": "35526739175"
+        },
+        "source": {
+          "type": "comment",
+          "id": "6730346641",
+          "edit": {
+            "id": "created:COMMENT_6730346641",
+            "editedAt": "2026-11-09T01:51:48Z"
+          }
+        },
+        "latestReadyApplication": "35526739175",
+        "expectedReady": true
+      }
+    }
+  ],
+  "transition": {
+    "previousLine": "<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v3\",\"baseFormat\":\"repo-canon/issue-contract-state/v1\",\"seamsExemption\":{\"boundary\":{\"tag\":\"v0.26.0\",\"commit\":\"59969a4dc26ad7e2343d27e72983197e2ec5b4a9\",\"publishedAt\":\"2026-11-11T05:09:33Z\"},\"revision\":\"sha256:73042ff32233cb56d7de7c3f15c59c22ce00270816294174385f9af1660c8a49\",\"source\":{\"type\":\"comment\",\"id\":\"6730346641\",\"editedAt\":\"2026-11-09T01:51:48Z\"},\"evaluatedAt\":\"2026-11-09T01:53:49Z\",\"publishedAt\":\"2026-11-09T01:51:57Z\",\"reviewedAt\":\"2026-11-09T01:53:39Z\",\"reviewer\":\"lutzseverino\",\"reviewEventId\":\"35526739175\",\"label\":\"state:ready\"},\"status\":\"approved\",\"kind\":\"triaged Agent Brief\",\"revision\":\"sha256:73042ff32233cb56d7de7c3f15c59c22ce00270816294174385f9af1660c8a49\",\"source\":{\"type\":\"comment\",\"id\":\"6730346641\",\"editedAt\":\"2026-11-09T01:51:48Z\"},\"label\":\"state:ready\",\"reviewer\":\"lutzseverino\",\"reviewEventId\":\"35526739175\",\"event\":{\"kind\":\"commentCreated\",\"actor\":\"lutzseverino\",\"label\":null,\"commentId\":\"6833006765\"},\"evaluatedAt\":\"2026-11-12T18:57:17Z\",\"observedEventId\":\"35526739175\",\"sourceInvalidation\":null,\"publishedAt\":\"2026-11-09T01:51:57Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null} -->",
+    "firstV5": "issue 920 exempt Seams grant",
+    "snapshot": {
+      "repository": "lutzseverino/repo-canon",
+      "issue": {
+        "number": 920,
+        "node_id": "ISSUE_920",
+        "body": "> *This was generated by AI during triage.*\n\n### Problem\n\nSource merges cannot establish which validator and host versions are released, adopted or installed, or prove that explicit legacy cutoffs and body-backed factory pickup work on the live system.\n\n### Desired outcome\n\nActivate body-contract triage across released validators, explicit adopter cutoffs and the factory host, and record actual compatible pickup. This issue closes only on recorded live acceptance; source merges alone cannot close it.\n\n### Proposed approach\n\nThe independently reviewed Agent Brief comment is the implementation contract. Follow its compatibility matrix, delivery responsibilities, per-adopter inventory and cutoff, recovery and live-evidence criteria.\n\n### Additional context\n\nBlocked by both source issues: [Repo Canon BR #919](https://github.com/lutzseverino/repo-canon/issues/919) and [Scriptorium BR-SC #148](https://github.com/lutzseverino/scriptorium/issues/148). Their normal releases, compatible adoption and authorized host access remain required acceptance inputs. Source pull requests link this live ticket without a closing reference.\n\nThe owner's 2026-11-08T19:07Z “yes” approved plans 19 and 20 as amended by grill G3, including independent review, filing and revision-bound readiness. The contract copies its relied-on dated decisions; no new owner intent is inferred.\n\nUse the serial direct-worker lane with `factory:skip`, `priority:normal` and `model:gpt-6.1-sol@high`. Repo Canon is not factory-served. Scheduling relations are not blockers. Readiness permits neither premature activation nor pickup before the contract's prerequisites hold.\n",
+        "labels": ["type:enhancement", "state:ready"],
+        "state": "open",
+        "user": {
+          "login": "lutzseverino"
+        },
+        "created_at": "2026-11-08T00:00:00Z"
+      },
+      "comments": [
+        {
+          "id": 6730346641,
+          "node_id": "IC_kwDOUYnvEM8AAAABkSjwkQ",
+          "body": "> *This was generated by AI during triage.*\n\n## Agent Brief\n\n**Category:** enhancement\n**Summary:** Activate body-contract triage across released validators, explicit adopter cutoffs and the factory host, and record actual compatible pickup; source merges alone cannot close this ticket.\n\n**Current behavior:**\nInspected source heads are Canon `bd4b59a6fde6ee252a3904775f8854cdd4e9960f`\nand Scriptorium `1ec2c8ba5c5794a5cb2fdd9a530cb2d363ab6c18` (3.0.1). They\nstill use comment-only factory triage contracts/provenance. No inspection of\nthose sources proves which package is installed on a host or adopted by a\nrepository. Two separate source changes must supply a prepared/body-mode\nvalidator with durable cutoff eligibility and a bridge host with both body\npublication and body-backed `triageBacked`/readiness consumption.\n\n**Desired behavior:**\nDeliver the rollout through the two source contracts, in repo-canon\n“Implement issue-body triage contracts with durable legacy eligibility” and\nin scriptorium “Publish and consume body-backed factory triage contracts.”\nBoth are native blockers of this repo-canon live-acceptance ticket when\nfiled. Record their actual repository issue/PR URLs; add further native\nrelease/adoption/host-delivery blockers if separately ticketed. No issue\nnumber is implied here. Source PRs close only their source issues and link\nthis ticket without closing references. This ticket cannot close on any merge.\n\nInventory every repository served by the target factory host, including\nCanon and Scriptorium's own delivery repositories and held/skip-routed ones;\nrecord each installed Canon release/full SHA, factory config version/run\nkinds, result format/mode, host reader/poster capability and authorized\ndelivery route. Record other selected adopters and non-factory consumers\nbefore switching them. The initial acceptance scope is every repository\nserved by that host plus every adopter explicitly enrolled in this rollout;\nnon-enrolled adopters stay in prepared legacy mode and are listed as such.\nNever claim an unknown adopter or host upgraded from a source merge. Record\nactual signed/released artifact identities or the repository's normal release\nidentity, installed host version/SHA and adopter destination-base versions.\nChoose concrete release numbers from the merged sources and record them\nbefore installation. The body cutoff is per adopter, not a global release\ntimestamp and not the first validator run after upgrade.\n\nThe compatibility contract is:\n\n| Host capability | Adopter validator state | Allowed publication/pickup and recovery |\n| --- | --- | --- |\n| Old: v1 reader, comment poster (including inspected 3.0.1) | Old v1 legacy validator | Existing legacy publication and pickup; source prerequisites can use the current authorized lane. |\n| Old | New release, preparation mode/v1 | Existing legacy route only. Do not enable body mode or v2; install the bridge host first. |\n| Old | New active body mode/v2 | Unsupported: new pickup is held by the unsupported result format; old posting is stopped by the rollout freeze/host hold. Install bridge and revalidate; never resume an old poster into this state. |\n| New bridge: v1+v2 reader, dual poster | Old v1 validator | Emit legacy comments and use existing authorization. No premature body publication. |\n| New bridge | Prepared validator/v1, no cutoff yet | Keep legacy route; release/adoption work remains deliverable. Drain/freeze triage before inventory and cutoff. |\n| New bridge | Active validator/v2, trusted cutoff | New/revised contracts publish bodies; unchanged inventoried legacy revisions retain their contract, review and pickup route. No new/edited comment creates a contract. |\n| Any | Unknown/malformed format, unreadable facts, missing/incomplete cutoff or mismatched capabilities | Hold affected publication/pickup, identify the missing proof, restore compatible components/receipt and re-evaluate. No guessed acceptance or implicit grandfathering. |\n\nV2 means `repo-canon/issue-contract-state/v2`, with status/revision/source,\ncurrent ready-event approval, cutoff selection state and verified\nrevision/run/attestation association. V1 keeps its old meaning. The bridge's\nbody reader requires the approved current ready event and matching\nconfigured-author attestation; the generic body-source freshness check alone\nis insufficient. It passes that verified factory status through\n`Issue.ready.triage`, role/refusal checks and factory implement admission.\nOrdinary authorized-person readiness remains available; it does not bypass\nan unsupported host result format or an unready/blocked contract.\n\nFollow this order, recording evidence and the delivery actor for each step:\n\n1. Publish the two merged source contracts, wire schema/fixtures, passing\n   source checks and normal releases. Keep Canon's new release in preparation\n   mode/v1. Existing compatible factory lanes can deliver these prerequisites;\n   source closure does not depend on deployment. Check destination-base\n   tooling and all self-hosted delivery repositories, not just PR heads.\n2. Install the bridge Scriptorium host while adopters are still v1 legacy.\n   A host operator with the established host access performs installation;\n   no sandbox agent gains host/issue-write credentials. Prove new-host/old-\n   validator legacy publication and pickup before proceeding. If the factory\n   cannot deliver its own prerequisite, use the already-authorized manual\n   gap path under installed rules or hold for an authorized operator; record\n   exactly who can complete it rather than assuming the broken factory can.\n3. Adopt the released prepared Canon validator, guidance/skills and required\n   workflow/configuration inputs per repository, retaining v1/legacy mode.\n   Prove installed source identity and mode, including Canon and Scriptorium\n   themselves. Old-host/prepared-validator remains compatible if encountered;\n   it is not permission to activate before the bridge is installed.\n4. Freeze new/revised triage publication from every poster, manual and\n   factory. Stop new triage admission and drain completed/in-flight results\n   under the legacy route, or hold them explicitly for fresh body-mode\n   triage; include preserved results that may retry after restart. Existing\n   unchanged accepted implement/review work can continue where the installed\n   admission/hold policy allows it. If only a repository-wide hold exists,\n   record that broader pause and the operator who can remove it. During this\n   boundary the operator delivers cutoff/adoption steps, not a triage worker.\n5. Capture and verify a complete trusted cutoff receipt: repository identity,\n   release/SHA, epoch, every selected eligible open legacy comment identity,\n   exact content/edit revision and existing notice/acceptance association.\n   Include unapproved/held issues without granting acceptance. Re-read for\n   concurrent changes; an incomplete/raced inventory cannot activate.\n   Persist eligibility and migrated/retired state outside replaceable contract\n   text, so upgrades, feedback deletion and body deletion cannot reset it.\n6. With the freeze still in force, activate that adopter's body mode and v2\n   results, re-evaluate the inventoried contracts and verify unchanged\n   approvals/current ready events survive. Inspect the mode/cutoff/legacy\n   diagnostic. After both host capabilities and installed validator agree,\n   reopen triage publication/admission in body mode. A waiting old result\n   cannot fall back to posting a new comment contract. Repeat per enrolled\n   adopter; repositories not yet switched keep their legacy lane.\n7. Demonstrate live read-only triage to body publication, exact-revision\n   notice, matching host attestation, applicable fresh acceptance, current\n   approved result and actual implement pickup. Record the implement run's\n   identity and selected source/revision; do not stop at a ready label,\n   notice, boolean or approved result. Retain independent review and all\n   admission/blocker/role rules. Record that a same/unknown intake-writer\n   run and absent/tampered/mismatched body proof do not grant factory pickup;\n   use controlled test issues for live negative cases, not arbitrary edits\n   to accepted production work.\n\nThere is no interval in the supported sequence where an old poster emits\nnew comment contracts that an active validator rejects: retain the old route\nuntil the freeze; resume only with a proven body poster/reader. An accidental\nold-host/active-validator mismatch is visibly held and repaired forward to\nthe bridge before any poster resumes. Before cutoff, rollback to legacy\ncomponents/mode is allowed while the trusted inventory remains uncommitted.\nAfter cutoff, retain the cutoff/migration records and compatible validator;\nrestore the bridge or repair it forward. Do not roll back to a validator that\ncan bless new comment contracts or resurrect retired ones. If host recovery\nis unavailable, keep the affected repository held, name the authorized\noperator/manual route and its prerequisites, and leave this ticket open.\nNo fabricated proof or forced migration is a recovery path.\n\nRetain support and stored eligibility for unchanged grandfathered revisions\nwithout an expiry date. A legacy contract migrates on its next revision,\npreserving one verbatim original request, publishing a new body notice and\nrequiring fresh applicable acceptance. A newer comment cannot override it;\ndeleting the body cannot restore it. Live evidence must show legacy\nretention, first migration and a later body edit, alongside restart/upgrade\nretention of the cutoff and retired state. Any future removal of the legacy\nroute needs its own accepted change; it is not hidden in this activation.\n\n**Key interfaces:**\n\n- Released Canon validator/guidance, installed adopter mode/cutoff and durable\n  source-selection history; actual native source/release/activation blockers.\n- Released/installed Scriptorium host, result poster and v1/v2 provenance\n  reader, original intake writer, current ready-event approval and actual\n  readiness/admission/pickup outcome.\n- Repository-facing activation evidence: release/adoption/host identities,\n  compatibility table, delivery actor, freezes/holds, issue/event/run links,\n  exact revisions, retained legacy receipts and recovery results. Secrets\n  and host-only logs are not the sole acceptance input.\n\n**Acceptance criteria:**\n\n- [ ] Both source tickets and any required delivery tickets have actual\n  repository-facing URLs/native blockers; source PRs do not close this issue.\n  Public wire schema/fixtures, releases and passing source checks are linked.\n- [ ] The host-served/enrolled adopter inventory is complete, with installed\n  versions/SHAs, modes, result/config versions, enabled run kinds and who can\n  deliver each intervening state. Self-hosted Canon/Scriptorium and\n  destination-base tooling retain a usable delivery or explicit held route.\n- [ ] Record new-host/old-validator and old-host/prepared-validator legacy\n  compatibility, and old-host/active-validator refusal/recovery. Unsafe\n  combinations are exercised with source fixtures or a controlled deployment;\n  no production outage is required. Unknown proof fails closed.\n- [ ] Record drain/freeze, cutoff inventory and race verification, per-adopter\n  switch and revalidation, and the point publication resumes. Installed mode,\n  cutoff and selected eligibility are observable. No new legacy posting can\n  escape through retry/restart during or after the switch.\n- [ ] A controlled live journey on an enrolled factory repository shows the\n  actual read-only triage result becoming a body contract with one original,\n  matching attestation/notice, fresh applicable acceptance and current\n  approved result, followed by actual implement pickup. Record issue/run/\n  event links and exact source/revision. End-to-end source integration tests\n  alone cannot replace this live evidence.\n- [ ] Live controlled negative evidence and focused source fixtures together\n  show absent/stale/tampered/mismatched proof and same/unknown intake writer\n  cannot authorize factory pickup; ordinary authorized-person acceptance and\n  triage-off behavior retain their rules. No app-authorship shortcut is used.\n- [ ] Demonstrate an unchanged eligible legacy contract/approval continuing,\n  its next revision migrating to the body with a fresh notice/acceptance,\n  a later edit invalidating readiness, and deletion not resurrecting legacy.\n  Record retained cutoff/migration state through host restart and validator\n  upgrade/re-evaluation; source fixtures cover destructive feedback/body\n  deletion and edit-and-restore cases without damaging real accepted work.\n- [ ] Every enrolled repository is active/compatible; any non-enrolled\n  adopter is explicitly listed in preparation mode. An unresolved held\n  enrolled repository or missing live proof leaves this issue open. Record\n  the tested recovery path and final host/adopter versions on this issue.\n\n**Out of scope:**\nChanging the approved contract home/legacy promise; source implementation\nhidden inside activation; mass migration; new credential/role/merge policy;\nclaiming every adopter in existence upgraded; closing #840/#841/#866 by\nassociation. Application source tests/Docker builds need not be rerun here\nwhen linked exact-source evidence already passes; run only the controlled\ncompatibility/journey checks needed to establish deployed behavior.\n\nTriage notes:\n\n- **Path:** live acceptance of two source contracts; host access requirements\n  follow the installed human/manual routing rules. No source merge is proof\n  of activation and no readiness is granted by this draft.\n- **Available inputs:** this entire contract; repository-facing Canon and\n  Scriptorium source/companion briefs, their PRs/releases/schema/fixtures,\n  Canon ADRs 0029/0030/0035 and Scriptorium ADRs 0007/0008;\n  [Canon #841](https://github.com/lutzseverino/repo-canon/issues/841),\n  [#840](https://github.com/lutzseverino/repo-canon/issues/840) and\n  [#866](https://github.com/lutzseverino/repo-canon/issues/866).\n  Publish non-secret installed-state evidence and delivery assignments on\n  this issue before starting dependent switches; no host-only record is a\n  required implementation input.\n- **Verification:** fetched/read Canon `bd4b59a6fde6ee252a3904775f8854cdd4e9960f`\n  and Scriptorium `1ec2c8ba5c5794a5cb2fdd9a530cb2d363ab6c18` via\n  `git show origin/main`. Current host code has run kinds, read-only triage,\n  result posting and v2 config compatibility, but the readiness provenance\n  reader is comment-only. No live host/adopter state or actual pickup was\n  inspected or claimed. No prior-rejection tree or existing BR activation\n  issue was identified; #841 is a general planning finding, not this rollout.\n- **Owner decision, 2026-11-06, G2 D1, approved about 21:42Z, “Agreed to all”:**\n  “One home for the implementation contract: the issue body”; “Triage writes\n  the Agent Brief over the body and keeps the reporter's text verbatim under\n  ‘Original request’.” Approved migration promise: “Open issues whose\n  contract is a brief comment keep it until their next revision, which moves\n  it into the body.” Public decision: ADR 0035/#874. Cutoff retention gives\n  that promise an operational boundary; it does not expire unchanged issues.\n- **Existing authorization decision, 2026-11-03, Canon ADR 0030:** “as long\n  as it did not write the issue”; “when triage is off, readiness still comes\n  from a person.” Scriptorium ADR 0008 records “the host, not the agent,\n  posts” and “triage is read-only and only review may merge.” Actual pickup\n  must preserve both boundaries.\n- **Existing closure rule, verified 2026-11-09, CONTRIBUTING:** “a source\n  ticket, which closes when its pull request merges” and “a live-acceptance\n  ticket, blocked by the source ticket, which closes only on its recorded\n  live acceptance.” This ticket is that independently closing live contract.\n- **Inferred implementation boundary, 2026-11-09:** “Bridge host first,\n  prepared adoption next, then frozen inventory and explicit per-adopter\n  cutoff, then verified body publication and pickup.” This preserves the\n  approved legacy exception and avoids changing either side before its\n  consumer can read it. Concrete versions, inventory and delivery actors are\n  required activation facts, not new owner intent or guessed release pins.\n- **Dependencies:** blocked by both source tickets and availability of their\n  normal releases, compatible adoption and authorized host access. Record\n  actual native blocker links at filing and expand them for separately\n  ticketed delivery steps. Source closures remain independent of live proof.\n- **Model:** `model:gpt-6.1-sol@high` for compatibility/evidence review; live\n  work follows installed host-access routing and operator authority.\n- **Owner questions:** none established. If an enrolled target, access grant\n  or delivery route requires a new owner choice, mark `gap: owner`, ask the\n  specific question and recommend keeping that repository held until its\n  authorized route is recorded. Never infer a new grant from this contract.\n",
+          "updated_at": "2026-11-09T01:51:48Z",
+          "user": {
+            "login": "lutzseverino"
+          }
+        },
+        {
+          "id": 90,
+          "body": "<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state {\"format\":\"repo-canon/issue-contract-state/v3\",\"baseFormat\":\"repo-canon/issue-contract-state/v1\",\"seamsExemption\":{\"boundary\":{\"tag\":\"v0.26.0\",\"commit\":\"59969a4dc26ad7e2343d27e72983197e2ec5b4a9\",\"publishedAt\":\"2026-11-11T05:09:33Z\"},\"revision\":\"sha256:73042ff32233cb56d7de7c3f15c59c22ce00270816294174385f9af1660c8a49\",\"source\":{\"type\":\"comment\",\"id\":\"6730346641\",\"editedAt\":\"2026-11-09T01:51:48Z\"},\"evaluatedAt\":\"2026-11-09T01:53:49Z\",\"publishedAt\":\"2026-11-09T01:51:57Z\",\"reviewedAt\":\"2026-11-09T01:53:39Z\",\"reviewer\":\"lutzseverino\",\"reviewEventId\":\"35526739175\",\"label\":\"state:ready\"},\"status\":\"approved\",\"kind\":\"triaged Agent Brief\",\"revision\":\"sha256:73042ff32233cb56d7de7c3f15c59c22ce00270816294174385f9af1660c8a49\",\"source\":{\"type\":\"comment\",\"id\":\"6730346641\",\"editedAt\":\"2026-11-09T01:51:48Z\"},\"label\":\"state:ready\",\"reviewer\":\"lutzseverino\",\"reviewEventId\":\"35526739175\",\"event\":{\"kind\":\"commentCreated\",\"actor\":\"lutzseverino\",\"label\":null,\"commentId\":\"6833006765\"},\"evaluatedAt\":\"2026-11-12T18:57:17Z\",\"observedEventId\":\"35526739175\",\"sourceInvalidation\":null,\"publishedAt\":\"2026-11-09T01:51:57Z\",\"rejectionReason\":null,\"rejectedCreationLabel\":null} -->",
+          "user": {
+            "login": "github-actions[bot]"
+          },
+          "updated_at": "2026-11-12T18:57:17Z"
+        }
+      ],
+      "blockedBy": [],
+      "parent": null,
+      "bodyRevision": {
+        "id": "ISSUE_920",
+        "lastEditedAt": null
+      },
+      "issueEvents": [
+        {
+          "id": "35526739175",
+          "event": "labeled",
+          "label": {
+            "name": "state:ready"
+          },
+          "actor": {
+            "login": "lutzseverino"
+          },
+          "created_at": "2026-11-09T01:53:39Z"
+        }
+      ],
+      "permissions": {
+        "lutzseverino": {
+          "role": "admin"
+        }
+      },
+      "event": {
+        "kind": "commentCreated",
+        "actor": "lutzseverino",
+        "comment": {
+          "id": "300",
+          "body": "Further discussion."
+        }
+      },
+      "evaluatedAt": "2026-11-28T05:00:00Z",
+      "seamsBoundary": {
+        "tag": "v0.26.0",
+        "commit": "59969a4dc26ad7e2343d27e72983197e2ec5b4a9",
+        "publishedAt": "2026-11-11T05:09:33Z"
+      }
+    }
+  },
+  "runLines": [
+    {
+      "name": "Agent Brief writer",
+      "line": "<!-- repo-canon:run {\"format\":\"repo-canon/run/v1\",\"run\":\"triage-run\"} -->"
+    },
+    {
+      "name": "factory-opened issue writer",
+      "line": "<!-- repo-canon:run {\"format\":\"repo-canon/run/v1\",\"run\":\"writer-run\"} -->"
+    }
+  ]
+}
