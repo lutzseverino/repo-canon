@@ -9,16 +9,34 @@ import { fileURLToPath } from "node:url";
 /** @typedef {{name: string, file?: string, line?: number, column?: number, testId?: number, entryFile?: string}} NestedTest */
 /** @typedef {{bound: string, boundMs: number, command: string[], elapsedMs: number, lastCompleted?: NestedTest, unfinished: NestedTest[]}} Timeout */
 /** @typedef {{status: number | null, signal: NodeJS.Signals | null, stdout: string, stderr: string, elapsedMs: number, error?: Error, timeout?: Timeout}} ChildResult */
+/** @typedef {{now: () => number, startTimer: (expire: () => void, boundMs: number, child: import("node:child_process").ChildProcess) => {refresh: () => void, clear: () => void}}} Timing */
+
+/** @type {Timing} */
+const realTime = {
+  now: () => performance.now(),
+  startTimer(expire, boundMs) {
+    const timer = setTimeout(expire, boundMs);
+    return {
+      refresh: () => timer.refresh(),
+      clear: () => clearTimeout(timer),
+    };
+  },
+};
 
 /**
  * Run an awaited child with an explicit bound; callers own the bound's value.
  * Nested Node test runs receive a live reporter alongside their TAP reporter.
+ * The runner's self-tests can supply timing driven by real child I/O.
  * @param {string} command
  * @param {string[]} args
- * @param {{kind: "command" | "nested", boundMs: number, cwd?: string, env?: NodeJS.ProcessEnv}} options
+ * @param {{kind: "command" | "nested", boundMs: number, cwd?: string, env?: NodeJS.ProcessEnv, timing?: Timing}} options
  * @returns {Promise<ChildResult>}
  */
-export async function runChild(command, args, { kind, boundMs, cwd, env }) {
+export async function runChild(
+  command,
+  args,
+  { kind, boundMs, cwd, env, timing = realTime },
+) {
   if (
     !["command", "nested"].includes(kind) ||
     !Number.isFinite(boundMs) ||
@@ -49,7 +67,7 @@ export async function runChild(command, args, { kind, boundMs, cwd, env }) {
         TEMP: temporary,
       }
     : env;
-  const started = performance.now();
+  const started = timing.now();
   try {
     return await new Promise((resolve) => {
       const child = spawn(command, childArgs, {
@@ -97,17 +115,21 @@ export async function runChild(command, args, { kind, boundMs, cwd, env }) {
       };
       process.once("exit", terminate);
       for (const signal of signals) process.on(signal, forward);
-      const timer = setTimeout(() => {
-        timeout = {
-          bound: nested ? "no-progress" : "total",
-          boundMs,
-          command: [command, ...childArgs],
-          elapsedMs: performance.now() - started,
-          lastCompleted,
-          unfinished: [...unfinished.values()],
-        };
-        terminate();
-      }, boundMs);
+      const timer = timing.startTimer(
+        () => {
+          timeout = {
+            bound: nested ? "no-progress" : "total",
+            boundMs,
+            command: [command, ...childArgs],
+            elapsedMs: timing.now() - started,
+            lastCompleted,
+            unfinished: [...unfinished.values()],
+          };
+          terminate();
+        },
+        boundMs,
+        child,
+      );
       const progress = () => {
         if (nested && !timeout) timer.refresh();
       };
@@ -157,9 +179,9 @@ export async function runChild(command, args, { kind, boundMs, cwd, env }) {
         error = cause;
       });
       child.on("close", (status, signal) => {
-        clearTimeout(timer);
+        timer.clear();
         release();
-        const elapsedMs = performance.now() - started;
+        const elapsedMs = timing.now() - started;
         if (timeout)
           error = new Error(
             `${timeout.bound} bound (${boundMs} ms) tripped after ${timeout.elapsedMs.toFixed(1)} ms: ${JSON.stringify(timeout.command)}\n` +

@@ -11,26 +11,68 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createInterface } from "node:readline";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { runChild } from "./helpers/child-runner.mjs";
+
+const boundMs = 1000;
+
+/** @typedef {(ms: number) => boolean} Advance */
+
+/**
+ * Advance time from observed child I/O, independently of the runner's refreshes.
+ * @param {(child: import("node:child_process").ChildProcess, advance: Advance) => void} observe
+ * @returns {NonNullable<Parameters<typeof runChild>[2]["timing"]>}
+ */
+function controlledTime(observe) {
+  let now = 0;
+  return {
+    now: () => now,
+    startTimer(expire, bound, child) {
+      let deadline = now + bound;
+      child.once("spawn", () => {
+        // The runner's listeners consume each chunk before the clock advances.
+        observe(child, (ms) => {
+          now += ms;
+          if (now < deadline) return true;
+          deadline = Infinity;
+          expire();
+          return false;
+        });
+      });
+      return {
+        refresh: () => {
+          deadline = now + bound;
+        },
+        clear: () => {
+          deadline = Infinity;
+        },
+      };
+    },
+  };
+}
 
 test("a command exceeding its total bound returns its partial output and diagnosis", async () => {
   const result = await runChild(
     process.execPath,
     [
       "-e",
-      `console.log("partial stdout"); console.error("partial stderr"); setInterval(() => console.log("still running"), 100);`,
+      `console.log("partial stdout"); console.error("partial stderr"); setInterval(() => {}, 1000);`,
     ],
     {
       kind: "command",
-      boundMs: 1000,
+      boundMs,
+      timing: controlledTime((child, advance) => {
+        for (const input of [child.stdout, child.stderr])
+          createInterface({ input }).once("line", () => advance(boundMs / 2));
+      }),
     },
   );
   assert.equal(result.status, null);
   assert.equal(result.signal, "SIGKILL");
   assert.equal(result.timeout.bound, "total");
-  assert.ok(result.elapsedMs >= 1000);
+  assert.equal(result.elapsedMs, boundMs);
   assert.match(result.stdout, /partial stdout/);
   assert.match(result.stderr, /partial stderr/);
   assert.match(
@@ -70,7 +112,11 @@ test("a signal ending the awaiting process also ends its detached child", async 
   assert.equal(alive(), false);
 });
 
-function nested(t, files, boundMs = 1000) {
+/** @typedef {{type: string, test?: {name: string}, message?: string}} LiveEvent */
+/** @typedef {(event: LiveEvent, advance: Advance, cwd: string) => void} ObserveNested */
+
+/** @param {ObserveNested} observe */
+function nested(t, files, observe) {
   const cwd = mkdtempSync(join(tmpdir(), "child-runner-"));
   t.after(() => rmSync(cwd, { recursive: true, force: true }));
   for (const [name, source] of Object.entries(files))
@@ -80,16 +126,42 @@ function nested(t, files, boundMs = 1000) {
   return runChild(
     process.execPath,
     ["--test", "--test-concurrency=2", ...Object.keys(files)],
-    { kind: "nested", boundMs, cwd, env },
+    {
+      kind: "nested",
+      boundMs,
+      cwd,
+      env,
+      timing: controlledTime((child, advance) => {
+        const input = /** @type {import("node:stream").Readable} */ (
+          child.stdio[3]
+        );
+        createInterface({ input }).on("line", (line) => {
+          observe(JSON.parse(line), advance, cwd);
+        });
+      }),
+    },
   );
 }
 
 test("a stalled nested run reports the last completion, all unfinished tests and partial output", async (t) => {
-  const result = await nested(t, {
-    "stall.mjs": `import test from "node:test";
+  const pending = new Set([
+    "test:complete:completed",
+    "test:dequeue:unfinished",
+    "test:stdout:nested partial",
+    "test:stderr:nested error",
+  ]);
+  const result = await nested(
+    t,
+    {
+      "stall.mjs": `import test from "node:test";
       test("completed", () => {});
       test("unfinished", async () => { console.log("nested partial"); console.error("nested error"); await new Promise(() => setInterval(() => {}, 1000)); });`,
-  });
+    },
+    (event, advance) => {
+      const record = `${event.type}:${event.test?.name ?? event.message?.trim()}`;
+      if (pending.delete(record) && pending.size === 0) advance(boundMs);
+    },
+  );
   assert.equal(result.status, null);
   assert.equal(result.signal, "SIGKILL");
   assert.equal(result.timeout.bound, "no-progress");
@@ -103,25 +175,54 @@ test("a stalled nested run reports the last completion, all unfinished tests and
   );
 });
 
+// Each fixture waits for acknowledgment so adjacent steps cannot arrive in
+// the same chunk. One step fits inside a bound, but the sequence spans several.
+const waitForStep = `
+  import { existsSync, writeFileSync } from "node:fs";
+  import { setTimeout } from "node:timers/promises";
+  async function waitForStep(step) {
+    while (!existsSync("step-" + step)) await setTimeout(10);
+  }`;
+
+/**
+ * @param {(event: LiveEvent) => boolean} matches
+ * @returns {ObserveNested}
+ */
+function advanceOn(matches) {
+  let step = 0;
+  return (event, advance, cwd) => {
+    if (matches(event) && advance(110))
+      writeFileSync(join(cwd, `step-${step++}`), "");
+  };
+}
+
 test("completion progress survives buffered TAP and several no-progress periods of total runtime", async (t) => {
-  const result = await nested(t, {
-    "a-slow.mjs": `import test from "node:test";
+  const result = await nested(
+    t,
+    {
+      "a-slow.mjs": `import test from "node:test";
       import { existsSync, writeFileSync } from "node:fs";
       import { setTimeout } from "node:timers/promises";
       test("earlier slow test", async () => {
         writeFileSync("started", "");
         while (!existsSync("finished")) await setTimeout(10);
       });`,
-    "b-progress.mjs": `import test from "node:test";
-      import { existsSync, writeFileSync } from "node:fs";
-      import { setTimeout } from "node:timers/promises";
+      "b-progress.mjs": `import test from "node:test";
+      ${waitForStep}
       while (!existsSync("started")) await setTimeout(10);
       for (let i = 0; i < 30; i++) {
-        await test("later completion " + i, async () => { await setTimeout(100); });
+        await test("later completion " + i, () => {});
+        await waitForStep(i);
       }
       writeFileSync("finished", "");
       process.exitCode = 7;`,
-  });
+    },
+    advanceOn(
+      (event) =>
+        event.type === "test:complete" &&
+        event.test?.name.startsWith("later completion "),
+    ),
+  );
   assert.equal(result.error, undefined);
   assert.equal(result.timeout, undefined);
   assert.equal(result.status, 1, result.stderr);
@@ -131,16 +232,24 @@ test("completion progress survives buffered TAP and several no-progress periods 
 });
 
 test("nested output counts as progress and returns a passing exit status", async (t) => {
-  const result = await nested(t, {
-    "output.mjs": `import test from "node:test";
-      import { setTimeout } from "node:timers/promises";
+  const result = await nested(
+    t,
+    {
+      "output.mjs": `import test from "node:test";
+      ${waitForStep}
       test("verbose test", async () => {
         for (let i = 0; i < 20; i++) {
           console.log("stdout progress"); console.error("stderr progress");
-          await setTimeout(100);
+          await waitForStep(i);
         }
       });`,
-  });
+    },
+    advanceOn(
+      (event) =>
+        event.type === "test:stdout" &&
+        event.message?.trim() === "stdout progress",
+    ),
+  );
   assert.equal(result.status, 0, result.error?.message ?? result.stderr);
   assert.equal(result.timeout, undefined);
   assert.ok(result.elapsedMs > 2000);
