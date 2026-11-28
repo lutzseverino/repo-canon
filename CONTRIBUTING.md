@@ -141,6 +141,15 @@ holds unrelated uncommitted edits, run them in a clean checkout of that commit,
 such as a temporary Git worktree. Run a check that reads a diff, such as
 `git diff --check`, over the whole change against the base.
 
+Exception: when a local run of the required checks command on the final commit
+is cut off by the run's own command bound, with no check failing before the
+cut-off, opening may proceed if the trusted required-check declaration places
+the checks at `github` or `runner`, as [Worker handoff](#worker-handoff)
+determines. That environment's required checks decide the head. Any real
+failure before the cut-off still blocks opening. At `self-reported`, complete
+the full local run before opening; the review run's reruns there also remain
+full.
+
 For an ordinary pull request, write the body with the `pr` skill. For an
 adoption pull request, use the adoption record as described below.
 
