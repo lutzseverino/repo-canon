@@ -712,6 +712,28 @@ implementation contract and one draft pull request implementing it, as an
 implementing agent would, then starts a fresh review session that never saw
 the implementation, naming the pull request.
 
+Before the first session, authenticate GitHub CLI in that session's isolated
+home and configure Git to use it for HTTPS access to the disposable repository.
+For example, run
+[`gh auth login --hostname github.com --git-protocol https`](https://cli.github.com/manual/gh_auth_login),
+then [`gh auth setup-git --hostname github.com`](https://cli.github.com/manual/gh_auth_setup-git),
+with `HOME` set to that isolated home and `GH_CONFIG_DIR` set to its
+`.config/gh` directory. Keep those settings for the review session and its
+axis sessions, and repeat the setup for each new isolated home. Never copy or
+link a credential into a fixture repository or workbench. Check GitHub CLI
+authentication with `gh auth status --hostname github.com` in that environment
+before starting the session.
+
+For all six scenarios, where the harness can nest sub-agents, the review
+session's `code-review` spawns its Standards and Spec axes itself in parallel.
+Where it cannot, pause the review session after it hands off each axis's
+prompt and inputs, including the pinned diff, commits and contract. The
+operator starts each axis as its own fresh session, one at a time, and relays
+each report to the review session verbatim before resuming it. For each head
+reviewed or reassessed, check that each axis ran in a context separate from
+the review session and from the other axis, and that the posted review's
+Standards and Spec outcomes come from those reports.
+
 Run six scenarios. The fourth continues the third's issue and pull request;
 the others each have their own:
 
@@ -749,6 +771,7 @@ the others each have their own:
 
 In every scenario, check each round's review against the comment rules'
 Reviews section and count exactly one review per reviewed head. Report the
-pull request links, heads, review links and observed outcomes with the pull
+pull request links, heads, review links, observed outcomes and whether the axes
+ran as nested sub-agents or operator-relayed sessions with the pull
 request that needs the exercise, and delete the disposable repository
 afterwards.
