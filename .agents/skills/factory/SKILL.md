@@ -5,32 +5,27 @@ description: Hand ready tickets to the factory, resolve holds, resume stopped wo
 
 A prompt or brief naming this skill is its invocation.
 
-Work in the repository the factory serves. Read its planning rules (its
-contribution guide if absent), `CONTRIBUTING.md` for delivery, the
-installed `factory-workflow`, `github-repository-configuration` and `comments`
-rules, and `.scriptorium/config.json` before acting. The guide and rules hold the requirements;
-this skill supplies the method. Use the configured label roles rather than
-assuming the shipped strings. Read the issue's authoritative contract, comments,
-blockers, and any existing PR and handoff before choosing a path below.
+In the served repository, read its planning rules (contribution guide if absent),
+`CONTRIBUTING.md`, installed `factory-workflow`, `github-repository-configuration`
+and `comments` rules, and `.scriptorium/config.json` before acting.
+Use configured label roles. Read the issue's authoritative contract, comments,
+blockers, and PR and handoff before choosing a path.
 
 ## Hand a ready ticket to the factory
 
 1. Check the contract's accepted revision and its validator notice, parent
    readiness and open blockers under the guide and installed rules. Resolve
    missing required inputs before seeking readiness.
-2. Choose the ticket's model under the installed `factory-workflow` rules'
-   Model selection rule, weighing its triage suggestion, and record the
-   one-line guidance-based reason that rule requires.
-   Use the rules' model-label syntax and metadata; the host operator resolves
-   an unavailable or disallowed model rather than substituting one silently.
+2. Follow the installed `factory-workflow` rules' **Model selection**, weighing
+   triage's suggestion and recording the guidance-based reason. Ask the host
+   operator to resolve an unavailable or disallowed model.
 3. Apply the readiness policy through `triage`'s readiness command. With an App
    or bot credential in a factory repository, hand the reviewed revision,
    suggested readiness, model and route labels, and blockers to an authorized
    person. Report pickup only when the factory actually records it.
-4. For a parent held under the latest-link-time fallback, wait until its latest
-   ticket link is visible in the timeline, then remove and re-add its ready
-   label after that timestamp. Each ticket still needs its own readiness.
-   With complete authorized link history, use the installed actor-history rule.
+4. For a held parent, follow the installed rules' **Parent readiness**:
+   under the latest-link-time fallback, wait for the latest timeline link,
+   then remove and re-add readiness after its timestamp.
 
 ## Read a hold
 
@@ -55,29 +50,23 @@ credentials and secret host material out of tracker records.
 
 ## Take the skip route
 
-For work excluded by the installed rules, arrange the ready, model and skip
-labels together through the authorized readiness path. When readiness is
-already approved without the skip or model label, run the same `triage`
-readiness command: it adds the missing labels and records readiness again. Launch `implement`
-directly with the contract, evidence, decisions, issue link and delivery role.
-The worker opens the PR and records its handoff in the body's Delivery subsection, as
-`.repo-standards/rules/comments.md#delivery-records` says. Continue as the orchestrating agent through `babysit` from that handoff;
+Follow the installed `factory-workflow` rules' **Skipped work** for eligibility,
+grant ownership, live acceptance and merge ownership. Arrange ready, model and
+skip labels through `triage`'s readiness command; rerun it for missing skip/model
+labels on approved readiness. Launch `implement` directly with the contract,
+evidence, decisions, issue link and delivery role. Continue as the orchestrating
+agent through `babysit` from the worker's
+Delivery handoff (`.repo-standards/rules/comments.md#delivery-records`);
 apply its current-head owner-approval gate when designated.
 
 For an unanswered owner question, retain the skip marker and the question's
 workflow state.
-After resolution and any required renewed readiness, resume the worker if no
-PR exists, or continue the same open PR and its handoff. Live host access gates
-only the authorized live steps.
+After resolution and required renewed readiness, resume the worker if no PR
+exists, or continue the existing PR and handoff.
 
-In the contribution guide's split case, a live-acceptance ticket takes this
-route. Its worker records the ticket's live acceptance on it, as
-`.repo-standards/rules/comments.md#disclaimers` says, instead of opening a PR,
-and reports back. It closes only once its live acceptance is recorded on it,
-never on a merge; its source ticket's PR links it without a closing reference.
-A time-bounded host access grant belongs to the orchestrating agent that asked
-the maintainer for it, which records the workers using it. Workers never end
-it: it ends when the last of them reports back, or at its own time bound.
+In the contribution guide's split case, launch the live-acceptance worker through
+this route to record acceptance on its ticket under
+`.repo-standards/rules/comments.md#disclaimers` and report back, without a PR.
 
 ## Resume stopped work
 
@@ -90,29 +79,22 @@ continue as Take the skip route says instead.
 
 ## Pause and resume one repository
 
-1. Read `labels.hold` in the repository configuration and locate every open
-   issue and PR carrying it. If the key is absent, arrange a compatible
-   configuration with the owner before attempting a pause. Distinguish this
-   repository hold from the release hold and the factory's per-run paused state.
-2. For an expedited change with an existing PR, put the hold on that PR. If
-   work starts before its PR exists, put it on the change's issue first and
-   record why the repository is paused and which change will carry it, as
-   `.repo-standards/rules/comments.md#disclaimers` says.
-3. Deliver the expedited change outside factory pickup: launch a worker
-   directly or implement as the orchestrating agent. A held repository launches
-   no new work. An already-open factory PR can instead carry the hold and finish
-   through its exempt merge relaunch. Runs already started finish without
-   merging while another open item holds the repository.
-4. Once the expedited PR opens, add the hold to it before removing the hold
-   from the issue. Verify that transfer on both items. Before merging, inspect
-   all other open items carrying either configured hold: only the PR being
-   merged is exempt, so a forgotten issue hold would block it too.
-5. Finish validation, applicable reviews and merge authorization through
-   `babysit`. Its merge check exempts this PR's own hold, allowing the expedited
-   change to merge. The PR's closure ends that hold automatically. To resume a
-   deliberate pause without merging, remove the hold from the item that carries
-   it; leave other owners' holds alone. Confirm no remaining open hold and
-   report the resulting state. A release hold still restricts merges separately.
+Follow the installed `factory-workflow` rules' **Repository and release holds**
+for pickup, merge and exemption semantics.
+
+1. Read configured `labels.hold` and locate every labelled open issue/PR.
+   If absent, arrange compatible configuration with the owner before pausing.
+   Distinguish repository/release holds from per-run pauses.
+2. Put the hold on the expedited PR, or its issue until opened. Record why
+   and which change carries it under
+   `.repo-standards/rules/comments.md#disclaimers`.
+3. Launch a worker directly or implement as the orchestrating agent outside
+   pickup; an already-open factory PR uses its exempt merge relaunch.
+4. Transfer an issue hold to the PR by adding before removing; verify both
+   items. Inspect other open items carrying either configured hold before merge.
+5. Invoke `babysit` for validation, reviews and merge authorization. To resume
+   without merging, remove only the deliberate pause's hold; leave other
+   owners' holds alone. Confirm no remaining open hold and report the state.
 
 <!-- Seam (deferred): Scriptorium configuration reads; consumers: 6; extraction proposed in https://github.com/lutzseverino/repo-canon/issues/967. -->
 
