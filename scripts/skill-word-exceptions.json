@@ -1,7 +1,6 @@
 {
   "introductionBase": "07a65afb875f81c4168e976a7cb66f94daab5d5a",
   "allowances": {
-    "code-review/SKILL.md": 1619,
     "orchestrate/SKILL.md": 1076,
     "orchestrate/references/launches.md": 1542,
     "orchestrate/references/templates.md": 1072
