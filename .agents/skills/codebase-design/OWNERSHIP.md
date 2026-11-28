@@ -4,9 +4,9 @@ For a proposed fix, apply these steps before choosing an ownership route,
 even when no trigger applies:
 
 1. **Checkable fixes first.** For a workflow or factory problem, lead with an
-   option code or CI can check. An explicit signal may add a manual step;
-   a prompt or skill-instruction change, or a time-based settle delay, is
-   never the primary fix.
+   option code or CI can check. An explicit signal is acceptable even when it
+   adds a manual step; a prompt or skill-instruction change, or a time-based
+   settle delay, is never the primary fix.
 2. **Long-term design over patches.** If a proposal could patch over a design
    problem, name the refactor and prefer it, or explain why not.
 

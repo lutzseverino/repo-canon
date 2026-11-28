@@ -69,7 +69,7 @@ Every research run performs both checks first, on either path:
   changelog or release notes and usage documentation for the reported symptom
   before writing reporter questions.
 
-For any recommended remedy, use [Fix proposals](REVIEW.md#fix-proposals).
+For any proposed fix, use [Fix proposals](REVIEW.md#fix-proposals).
 
 ## Sort by uncertainty
 

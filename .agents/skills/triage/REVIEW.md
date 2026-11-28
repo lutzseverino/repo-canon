@@ -14,11 +14,12 @@ Passing the issue-contract check proves the shape, never that the brief holds. W
 
 ## Fix proposals
 
-When proposing a fix, use this order in the brief and its triage notes:
+Order every proposed fix this way, whether in a brief, its triage notes or a
+question's options:
 
 1. **Checkable fixes first.** For a workflow or factory problem, lead with an
-   option code or CI can check. An explicit signal may add a manual step;
-   a prompt or skill-instruction change, or a time-based settle delay, is
-   never the primary fix.
+   option code or CI can check. An explicit signal is acceptable even when it
+   adds a manual step; a prompt or skill-instruction change, or a time-based
+   settle delay, is never the primary fix.
 2. **Long-term design over patches.** If a proposal could patch over a design
    problem, name the refactor and prefer it, or explain why not.
