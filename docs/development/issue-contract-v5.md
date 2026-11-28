@@ -12,13 +12,6 @@ Canon release or adoption. Emission belongs to
 run-line consumption belongs to
 [issue #1253](https://github.com/lutzseverino/repo-canon/issues/1253).
 
-The public names proposed here need independent review and explicit owner
-approval of the publishing PR's current head before merge, renewed after every
-head change. This is the designation in
-[issue #1263](https://github.com/lutzseverino/repo-canon/issues/1263), under the
-owner's 2026-11-26 clarification of the 2026-11-25 delegation. Publication and
-pinning follow that review, rather than approving the names by writing them.
-
 ## Envelope and source identity
 
 A verdict uses the existing marker, as one complete physical line:
@@ -58,8 +51,9 @@ the v1–v4 facts even when there is no grant.
 A current source is `{type,id,edit:{id,editedAt}}`. Type is `issue-body` or
 `comment`; the source ID is the issue node ID for a body and decimal REST comment
 ID for a comment. `edit.id` is the platform edit node identity, or
-`created:<platform node ID>` for a source with no edits; `editedAt` is a UTC
-instant or null. An unavailable edit identity cannot support a current grant.
+`created:<platform node ID>` for a source with no edits. `editedAt` is that
+edit's platform `lastEditedAt` UTC instant, null exactly when the ID is
+`created:`. An unavailable edit identity cannot support a current grant.
 Timestamps alone cannot distinguish same-second edit-and-restore.
 
 Revision values retain the existing `sha256:` revision serialization described
@@ -196,7 +190,7 @@ lossless representation, not a production v5 reader or emission switch.
 
 ## Canon writer run line
 
-For an Agent Brief or factory-opened issue body, propose one complete line:
+An Agent Brief or factory-opened issue body carries one complete line:
 
 ```text
 <!-- repo-canon:run {"format":"repo-canon/run/v1","run":"RUN_ID"} -->
@@ -233,7 +227,6 @@ copied historical proof. Full source validation stays in the
 Ownership check: triggers 3 and 4. Repo Canon owns this protocol and grant policy;
 the issue owns its grant/source/stop facts; hosts own execution and verdict-author
 trust. Consumers are the validator, readiness command and factory, with other
-hosts likely. Published names are hard to reverse; cost now M, carrying S after
-the bridge and M during coexistence. The existing posted-verdict seam and
-separate protocol/reader tickets retain one judgment without shared
+hosts likely. Published names are hard to reverse. The existing posted-verdict
+seam and separate protocol/reader tickets retain one judgment without shared
 cross-product authority code. No new deferred seam.

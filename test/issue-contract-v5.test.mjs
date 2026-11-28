@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import test from "node:test";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import { decideIssueContract } from "./helpers/contract-decision.mjs";
+import { bot } from "./helpers/issue-contracts.mjs";
 import {
   issueContractResult,
   issueContractObservation,
@@ -158,6 +159,31 @@ test("schema rejects malformed and incomplete grants, proofs and protocol varian
     (s) => {
       s.seamsExemption = { revision: s.contract.revision };
     },
+    (s) => {
+      s.grant.source.edit.id = "created:ISSUE_42";
+    },
+    (s) => {
+      s.grant.source.edit.editedAt = null;
+    },
+    (s) => {
+      s.grant.source = { ...s.grant.source, type: "comment", id: "COMMENT_12" };
+    },
+    (s) => {
+      s.grant.attestation = {
+        id: "200",
+        revision: s.grant.revision,
+        edit: null,
+      };
+    },
+    (s) => {
+      s.grant.status = "refused";
+      s.grant.reason = "The application actor has no grant authority.";
+      s.grant.endedBy = {
+        kind: "ready-removed",
+        id: "102",
+        at: "2026-11-26T20:00:00Z",
+      };
+    },
   ];
   for (const mutate of malformed) {
     const state = structuredClone(example);
@@ -167,9 +193,7 @@ test("schema rejects malformed and incomplete grants, proofs and protocol varian
 });
 
 test("the Canon writer run line has one versioned, nonempty run identity", () => {
-  const validateRun = new Ajv2020({ strict: true }).compile({
-    ...schema.$defs.run,
-  });
+  const validateRun = new Ajv2020({ strict: true }).compile(schema.$defs.run);
   for (const example of fixtures.runLines) {
     const match = /^<!-- repo-canon:run (.+) -->$/.exec(example.line);
     assert.ok(match, example.name);
@@ -189,18 +213,35 @@ test("issue 920's first v5 line retains proof recoverable at the existing histor
     fixtures.examples.find((e) => e.name === fixtures.transition.firstV5).line,
   );
   assert.deepEqual(first.seamsExemption, previous.seamsExemption);
-  const snapshot = structuredClone(fixtures.transition.snapshot);
+  assert.equal(first.grant.status, "current");
+  assert.equal(first.seamsExemption.revision, first.contract.revision);
   // Test-only compatibility adapter: production intentionally still refuses v5.
-  // Supply recovered proof to the existing v3 historical-evidence interpreter.
-  const recovered = { ...previous, seamsExemption: first.seamsExemption };
+  // Project only v5 facts onto the existing v3 historical-evidence interpreter.
+  // The exempt revision's public source is the exemption's own, as v3 records.
+  const recovered = {
+    format: "repo-canon/issue-contract-state/v3",
+    baseFormat: "repo-canon/issue-contract-state/v1",
+    seamsExemption: first.seamsExemption,
+    status: "approved",
+    kind: first.contract.kind,
+    revision: first.contract.revision,
+    source: first.seamsExemption.source,
+    label: first.grant.application.label,
+    reviewer: first.grant.grantor,
+    reviewEventId: first.grant.application.id,
+    ...first.evaluation,
+    publishedAt: first.contract.publishedAt,
+    rejectionReason: first.contract.rejectionReason,
+    rejectedCreationLabel: first.contract.rejectedCreationLabel,
+  };
+  // Only the triggering event and its time belong to one evaluation.
+  const retained = ({ event: _event, evaluatedAt: _at, ...facts }) => facts;
+  assert.deepEqual(retained(recovered), retained(previous));
+  const snapshot = structuredClone(fixtures.transition.snapshot);
   snapshot.comments[1].body = `<!-- repo-canon:issue-contract-feedback -->\n<!-- repo-canon:issue-contract-state ${JSON.stringify(recovered)} -->`;
   const decision = decideIssueContract(snapshot);
   const next = issueContractResult([
-    {
-      id: 90,
-      user: { login: "github-actions[bot]" },
-      body: decision.feedback.body,
-    },
+    { id: 90, user: bot, body: decision.feedback.body },
   ]).state;
   assert.equal(decision.exitCode, 0, decision.message);
   assert.equal(next.status, "approved");
@@ -215,21 +256,13 @@ test("publication changes none of the existing v1-v4 production state lines", ()
   for (const example of cases) {
     const decision = decideIssueContract(example.snapshot);
     const state = issueContractResult([
-      {
-        id: 90,
-        user: { login: "github-actions[bot]" },
-        body: decision.feedback.body,
-      },
+      { id: 90, user: bot, body: decision.feedback.body },
     ]).state;
     assert.deepEqual(state, example.state, example.name);
   }
   assert.equal(
     issueContractResult([
-      {
-        id: 90,
-        user: { login: "github-actions[bot]" },
-        body: fixtures.examples[0].line,
-      },
+      { id: 90, user: bot, body: fixtures.examples[0].line },
     ]).state,
     null,
   );
