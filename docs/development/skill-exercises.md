@@ -383,7 +383,10 @@ expected result, asking for `state:ready` with a brief, one allowed model and
 the owner's priority kept; a feature whose customer-facing look no dated ADR
 settles, asking for `state:grill` with facts and numbered questions; and an
 outside reporter's bug that names neither its version nor how it opens the
-export, asking for `state:reporter` with the reporter's questions. Four
+export, asking for `state:reporter` and `type:bug` with the reporter template
+citing the `CHANGELOG.md` 1.4.0 fix alongside the current-code reproduction
+result and asking for the exporting package version and the steps that open
+the export. Four
 directly authored tickets, each an issue-body contract with no category label,
 get no Agent Brief and no `type:` label: one that holds requests acceptance
 in a done result with `state:ready`, the exact `sha256:` revision of its

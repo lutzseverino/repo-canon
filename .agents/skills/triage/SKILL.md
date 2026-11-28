@@ -65,7 +65,9 @@ Every research run performs both checks first, on either path:
   where you looked.
 - **Verify the claim:** reproduce bugs from the reporter's steps; check out PRs
   and run relevant tests/commands. Report confirmed (with code path), failed,
-  or insufficient detail.
+  or insufficient detail. For a bug lacking detail or not reproduced, search
+  changelog or release notes and usage documentation for the reported symptom
+  before writing reporter questions.
 
 ## Sort by uncertainty
 
@@ -95,7 +97,11 @@ there is partial progress.
 ## Reporter template
 
 Post `## Triage Notes` with **What we've established so far:** listing resolved
-points, then **What we still need from you (@reporter):** with actionable questions.
+points, each relevant recorded fix or documented behavior with its version,
+and the reproduction result on current code. Then **What we still need from
+you (@reporter):** asks actionable questions; when a record covers the symptom,
+ask for the reporter's version and the steps that distinguish the recorded fix
+or documented use from a new bug.
 
 ## Reads
 
