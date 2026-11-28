@@ -116,7 +116,9 @@ involve real alternatives.
 - [Make the validator's posted result the only contract decision](0029-make-the-validators-posted-result-the-only-contract-decision.md):
   the issue-contract validator alone decides contracts and readiness and posts
   a versioned result, which the factory checks against platform facts without
-  interpreting the contract itself.
+  interpreting the contract itself; ADR 0035's prepared-mode selection
+  amendment supersedes its category-dependent selection, validity and
+  readiness rule.
 - [Let the factory's triage run accept its own brief](0030-let-factory-triage-accept-its-own-brief.md):
   the factory's triage run writes and accepts the brief for an issue it did
   not write, and the review run's Spec review is the independent check; ADR

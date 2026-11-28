@@ -234,34 +234,32 @@ test("a newer comment that became a brief then ordinary prose ends the old sourc
   assert.match(changed.message, /ended approval cannot revive/);
 });
 
-test("an intermediate comment also ends a prepared body Brief fallback's approval", () => {
-  const s = authenticatedSnapshot();
-  s.comments = [];
-  s.issue.body = completeAgentBrief;
-  notice(s, decideIssueContract(s), "2026-11-09T01:00:01Z");
-  s.issue.labels.push("state:ready");
-  s.permissions.maintainer = { role: "admin" };
-  s.issueEvents.push({
-    id: 101,
-    event: "labeled",
-    label: { name: "state:ready" },
-    actor: { login: "maintainer" },
-    created_at: "2026-11-09T01:00:10Z",
-  });
-  s.evaluatedAt = "2026-11-09T01:00:11Z";
-  const approved = decideIssueContract(s);
-  assert.equal(state(approved).status, "approved", approved.message);
-  notice(s, approved, "2026-11-09T01:00:12Z");
-  s.comments.push({ ...brief, body: "Discussion now." });
-  s.sourceHistory.C12.edits = [
-    {
-      id: "TEMP",
-      editedAt: "2026-11-09T01:00:20Z",
-      deletedAt: null,
-      diff: completeAgentBrief,
-    },
-  ];
-  assert.equal(state(decideIssueContract(s)).status, "awaiting-review");
+test("a prepared body Agent Brief is not a contract before body-mode activation", () => {
+  for (const labels of [[], ["type:enhancement"]]) {
+    const s = authenticatedSnapshot();
+    s.comments = [];
+    s.issue.body = completeAgentBrief;
+    s.issue.labels = labels;
+    const decision = decideIssueContract(s);
+    assert.equal(decision.exitCode, 1);
+    assert.match(decision.message, /Use one supported issue contract/);
+  }
+});
+
+test("deleting the only brief falls back to the intake body without approval", () => {
+  const s = approvedSnapshot();
+  s.comments = s.comments.filter((comment) => comment.id !== brief.id);
+  s.event = {
+    kind: "commentDeleted",
+    actor: { login: "reporter" },
+    comment: brief,
+  };
+  const decision = decideIssueContract(s);
+  assert.equal(decision.exitCode, 1);
+  assert.match(
+    decision.message,
+    /Add a reviewed Agent Brief before applying a readiness label/,
+  );
 });
 
 test("deleted feedback and missing authenticated history cannot reuse an old ready event", () => {

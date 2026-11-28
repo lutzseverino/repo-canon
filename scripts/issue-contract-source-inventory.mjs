@@ -21,6 +21,7 @@ import {
   resolveSeamsBoundary,
 } from "../vendor/repo-canon/validate-issue-contract.mjs";
 import {
+  contractSourceMode,
   loadContractSources,
   sourceEditIdentities,
   sourceContentHistories,
@@ -66,13 +67,9 @@ export async function captureSourceInventory(
   };
   const pinned = await pinnedFiles(connection, paths);
   const configuration = pinned.files.mode
-    ? JSON.parse(pinned.files.mode)
+    ? contractSourceMode(JSON.parse(pinned.files.mode))
     : { mode: "prepared" };
-  if (
-    !["prepared", "body"].includes(configuration.mode) ||
-    (configuration.mode === "body" &&
-      !/^[0-9a-f]{40}$/.test(configuration.cutoff ?? ""))
-  )
+  if (!configuration)
     throw new Error("Trusted source publication mode is unavailable.");
   const factory = pinned.files.factory
     ? JSON.parse(pinned.files.factory)

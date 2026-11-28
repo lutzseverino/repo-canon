@@ -25,6 +25,15 @@ const request = async (connection, input) =>
   (await connection.access.request(input)).data;
 const base = (connection) => `/repos/${connection.repository.path}`;
 
+// The one interpretation of a trusted mode value. Each reader owns its error
+// for an invalid value; none falls back to prepared mode.
+export function contractSourceMode(value) {
+  if (value?.mode === "prepared") return { mode: "prepared" };
+  if (value?.mode === "body" && /^[a-f0-9]{40}$/.test(value.cutoff ?? ""))
+    return { mode: "body", cutoff: value.cutoff };
+  return null;
+}
+
 // Only trusted default-branch code/configuration calls this reader. No issue
 // text, feedback marker, release install or first observation activates mode.
 /** @param {string | URL} [path] */
@@ -38,12 +47,12 @@ export function contractSourceConfiguration(
     if (error.code === "ENOENT") return { mode: "prepared" };
     throw error;
   }
-  if (value?.mode === "prepared") return { mode: "prepared" };
-  if (value?.mode !== "body" || !/^[a-f0-9]{40}$/.test(value.cutoff ?? ""))
+  const mode = contractSourceMode(value);
+  if (!mode)
     throw new Error(
       "Invalid trusted issue-contract mode: body mode requires an immutable cutoff commit.",
     );
-  return { mode: "body", cutoff: value.cutoff };
+  return mode;
 }
 
 async function file(connection, path, ref) {
@@ -207,16 +216,13 @@ export async function readContractSourceConfiguration(connection) {
     path: `${base(connection)}/git/ref/heads/${repository.default_branch}`,
   });
   const selected = await file(connection, configurationPath, ref.object.sha);
-  if (!selected || selected.value?.mode === "prepared")
-    return { mode: "prepared" };
-  if (
-    selected.value?.mode !== "body" ||
-    !/^[a-f0-9]{40}$/.test(selected.value.cutoff ?? "")
-  )
+  if (!selected) return { mode: "prepared" };
+  const mode = contractSourceMode(selected.value);
+  if (!mode)
     throw new Error(
       "Unknown repository contract mode; restore trusted configuration before publication.",
     );
-  return { mode: "body", cutoff: selected.value.cutoff };
+  return mode;
 }
 
 export async function loadContractSources(

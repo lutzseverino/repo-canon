@@ -175,6 +175,24 @@ test("factory readiness matches only ASCII casing and retains the independent wr
   }
 });
 
+test("an edited or unproven factory brief confers no self-acceptance", () => {
+  const edited = snapshot();
+  edited.sourceEdits.COMMENT_12 = {
+    id: "EDIT_1",
+    editedAt: "2026-11-06T09:59:00Z",
+  };
+  const unproven = snapshot();
+  delete unproven.sourceEdits;
+  for (const s of [edited, unproven])
+    assertRefused(
+      decideIssueContract(s),
+      /lacks authenticated unedited publication proof/,
+    );
+  const person = snapshot({ actor: "maintainer" });
+  person.sourceEdits.COMMENT_12 = edited.sourceEdits.COMMENT_12;
+  assert.equal(decideIssueContract(person).exitCode, 0);
+});
+
 test("factory refusals record the same notice under configured login casing", () => {
   const refusals = (configured) => [
     snapshot({ configured, contract: brief({ body: completeAgentBrief }) }),

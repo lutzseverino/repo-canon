@@ -1336,14 +1336,6 @@ function validate({
     });
   }
 
-  if (agentBriefHeading(body)) {
-    validateAgentBrief(body, errors, seamsRequired);
-    return outcome("triaged Agent Brief", errors, labels, true, {
-      type: "issue-body",
-      body,
-    });
-  }
-
   if (contractKind === "bug report") {
     requireSections(
       sections,
@@ -2074,17 +2066,12 @@ function openingReviewId(issue) {
 function supersedingDeletedBrief(currentEvent, result) {
   if (
     currentEvent.kind !== "commentDeleted" ||
+    result.contract.type !== "comment" ||
     !agentBriefHeading(currentEvent.comment?.body ?? "")
   ) {
     return null;
   }
   const deleted = currentEvent.comment;
-  if (result.contract.type === "issue-body") {
-    // Prepared direct-body precedence makes discussion deletion irrelevant to
-    // an unchanged native contract. A fallback from a deleted Brief does not.
-    if (directContractKinds.includes(result.kind)) return null;
-    return `deleted-comment:${deleted.nodeId ?? deleted.id}`;
-  }
   return latestAgentBrief([result.contract.comment, deleted]) === deleted
     ? `deleted-comment:${deleted.nodeId ?? deleted.id}`
     : null;
@@ -2815,19 +2802,13 @@ function selectedSourceTransition(snapshot, result, previousFeedback) {
   // A direct body is the prepared source throughout an unchanged body edit.
   // Discussion edits cannot displace it. Protected cutoff selection remains
   // solely owned by its receipt/ledger and is never reinterpreted here.
-  if (
-    snapshot.contractSources?.mode === "body" ||
-    directContractKinds.includes(result.kind) ||
-    !since
-  )
-    return null;
+  if (directContractKinds.includes(result.kind) || !since) return null;
   const bodyId = String(snapshot.bodyRevision.id);
   const bodyHistory = snapshot.sourceHistory?.[bodyId];
   if (!bodyHistory?.complete)
     return token("missing authenticated body history");
   const after = (edit) => Date.parse(edit.editedAt) >= Date.parse(since);
   if (
-    bodyHistory?.complete &&
     bodyHistory.edits.some(
       (edit) =>
         after(edit) &&
@@ -2860,7 +2841,6 @@ function selectedSourceTransition(snapshot, result, previousFeedback) {
       // A previously unseen edited comment could have begun as a Brief.
       return token(`unobserved initial content of newer comment ${id}`);
     if (
-      history?.complete &&
       history.edits.some((edit) => after(edit) && agentBriefHeading(edit.diff))
     )
       return token(`intermediate newer Brief ${id}`);
